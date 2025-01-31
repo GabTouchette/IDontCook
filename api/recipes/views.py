@@ -45,9 +45,11 @@ class RecipeListAPIView(APIView):
     def get(self, request):
         recipes = Recipe.objects.all()
         serializer = RecipeSerializer(recipes, many=True)
+        print(serializer.data)
         return Response(serializer.data)
 
     def post(self, request):
+        print(request.data)
         serializer = RecipeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
