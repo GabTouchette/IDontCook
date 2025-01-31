@@ -37,6 +37,7 @@ class _RecipePageState extends State<RecipePage> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.instructions);
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(

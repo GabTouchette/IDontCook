@@ -19,4 +19,24 @@ class ApiService {
       throw Exception('Failed to load recipes: $e');
     }
   }
+
+  Future<bool> createRecipe(Map<String, dynamic> recipeData) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/recipes/'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(recipeData),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        print('Failed to create recipe: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error creating recipe: $e');
+      return false;
+    }
+  }
 }

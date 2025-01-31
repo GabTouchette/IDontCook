@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mobile/api_service.dart';
 import 'package:mobile/theme/colors.dart';
 
 class CreateRecipePage extends StatefulWidget {
@@ -15,15 +16,13 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   final TextEditingController _cooktimeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _ingredientsController = TextEditingController();
-  final TextEditingController _instructionsController = TextEditingController();
 
-  List<_IngredientField> _ingredientsList = [
+  List<_IngredientField> _ingredients = [
     _IngredientField(
         controller: TextEditingController(), focusNode: FocusNode())
   ];
 
-  List<_InstructionField> _instructionsList = [
+  List<_InstructionField> _instructions = [
     _InstructionField(
         controller: TextEditingController(), focusNode: FocusNode())
   ];
@@ -50,12 +49,12 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
 
   @override
   void dispose() {
-    for (var ingredient in _ingredientsList) {
+    for (var ingredient in _ingredients) {
       ingredient.controller.dispose();
       ingredient.focusNode.dispose();
     }
 
-    for (var instruction in _instructionsList) {
+    for (var instruction in _instructions) {
       instruction.controller.dispose();
       instruction.focusNode.dispose();
     }
@@ -63,33 +62,90 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     super.dispose();
   }
 
-  void _submitRecipe() {
+  bool _isNumber(String str) {
+    return double.tryParse(str) != null;
+  }
+
+  void _submitRecipe() async {
     String title = _titleController.text;
-    String ingredients = _ingredientsController.text;
-    String instructions = _instructionsController.text;
-    String preptime = _preptimeController.text;
-    String cooktime = _cooktimeController.text;
+    List<Map<String, String>> ingredients = _ingredients
+        .map((field) {
+          List<String> parts = field.controller.text.split(" ");
+
+          if (parts.isEmpty) {
+            return {};
+          }
+          // Case 1: If it doesn't start with a number, treat the whole thing as the ingredient name
+          if (!_isNumber(parts[0])) {
+            return {
+              "quantity": "1", // Default quantity
+              "unit_of_measure": "", // Default unit
+              "name": parts.join(" "), // Treat all parts as the ingredient name
+            };
+          }
+
+          // Case 2: If there are exactly two parts, the first one is the quantity and the second one is the ingredient name
+          if (parts.length == 2) {
+            return {
+              "quantity": parts[0],
+              "unit_of_measure": "unit", // Default unit
+              "name": parts[1],
+            };
+          }
+
+          // Case 3: If there are three or more parts, assume the first is the quantity, the second is the unit, and the rest is the ingredient name
+          if (parts.length >= 3) {
+            return {
+              "quantity": parts[0],
+              "unit_of_measure": parts[1],
+              "name": parts.sublist(2).join(" "),
+            };
+          }
+
+          return {};
+        })
+        .where((ingredient) => ingredient.isNotEmpty)
+        .cast<Map<String, String>>()
+        .toList();
+
+    List<String> instructions = _instructions
+        .map((field) => field.controller.text)
+        .where((instruction) =>
+            instruction.isNotEmpty)
+        .toList();
+
+    int prepTime = int.tryParse(_preptimeController.text) ?? 0;
+    int cookTime = int.tryParse(_cooktimeController.text) ?? 0;
     String desc = _descriptionController.text;
     String notes = _notesController.text;
 
-    print("Recipe Title: $title");
-    print("Ingredients: $ingredients");
-    print("Instructions: $instructions");
-    print("Prep Time: $preptime");
-    print("Cook Time: $cooktime");
-    print("Desc: $desc");
-    print("Notes: $notes");
-    print("Tags: $_tagOptions");
+    Map<String, dynamic> recipeData = {
+      "title": title,
+      "ingredients": ingredients,
+      "instructions": instructions,
+      "preparation_time": prepTime,
+      "cooking_time": cookTime,
+      "description": desc,
+      "notes": notes,
+      "tags": _selectedTags,
+    };
+
+    print("Submitting Recipe: $recipeData");
+
+    bool success = await ApiService().createRecipe(recipeData);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Recipe Submitted'),
-        content: Text('Your recipe has been successfully submitted!'),
+        title: Text(success ? 'Recipe Submitted' : 'Submission Failed'),
+        content: Text(success
+            ? 'Your recipe has been successfully submitted!'
+            : 'There was an error submitting your recipe.'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
+              if (success) Navigator.pop(context);
             },
             child: Text('OK'),
           ),
@@ -243,7 +299,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   List<Widget> _buildIngredientsInputFields() {
     List<Widget> inputFields = [];
 
-    for (int i = 0; i < _ingredientsList.length; i++) {
+    for (int i = 0; i < _ingredients.length; i++) {
       inputFields.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
@@ -265,23 +321,18 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
-                    controller: _ingredientsList[i].controller,
-                    focusNode: _ingredientsList[i].focusNode,
+                    controller: _ingredients[i].controller,
+                    focusNode: _ingredients[i].focusNode,
                     style: TextStyle(
                       color: ColorPalette.offBlack,
                     ),
-                    onChanged: (text) {},
-                    onEditingComplete: () {
-                      if (i == _ingredientsList.length - 1 &&
-                          _ingredientsList[i].controller.text.isNotEmpty) {
+                    onChanged: (text) {
+                      if (i == _ingredients.length - 1 && text.isNotEmpty) {
                         setState(() {
-                          _ingredientsList.add(_IngredientField(
+                          _ingredients.add(_IngredientField(
                               controller: TextEditingController(),
                               focusNode: FocusNode()));
                         });
-
-                        FocusScope.of(context)
-                            .requestFocus(_ingredientsList[i + 1].focusNode);
                       }
                     },
                     decoration: InputDecoration(
@@ -298,10 +349,10 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
               ),
               IconButton(
                 icon: Icon(Icons.delete, color: ColorPalette.offWhite),
-                onPressed: _ingredientsList.length > 1
+                onPressed: _ingredients.length > 1
                     ? () {
                         setState(() {
-                          _ingredientsList.removeAt(i);
+                          _ingredients.removeAt(i);
                         });
                       }
                     : null,
@@ -349,7 +400,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   List<Widget> _buildInstructionsInputFields() {
     List<Widget> inputFields = [];
 
-    for (int i = 0; i < _instructionsList.length; i++) {
+    for (int i = 0; i < _instructions.length; i++) {
       inputFields.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
@@ -371,23 +422,19 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
-                    controller: _instructionsList[i].controller,
-                    focusNode: _instructionsList[i].focusNode,
+                    controller: _instructions[i].controller,
+                    focusNode: _instructions[i].focusNode,
+                    maxLines: 4,
                     style: TextStyle(
                       color: ColorPalette.offBlack,
                     ),
-                    onChanged: (text) {},
-                    onEditingComplete: () {
-                      if (i == _instructionsList.length - 1 &&
-                          _instructionsList[i].controller.text.isNotEmpty) {
+                    onChanged: (text) {
+                      if (i == _instructions.length - 1 && text.isNotEmpty) {
                         setState(() {
-                          _instructionsList.add(_InstructionField(
+                          _instructions.add(_InstructionField(
                               controller: TextEditingController(),
                               focusNode: FocusNode()));
                         });
-
-                        FocusScope.of(context)
-                            .requestFocus(_instructionsList[i + 1].focusNode);
                       }
                     },
                     decoration: InputDecoration(
@@ -404,10 +451,10 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
               ),
               IconButton(
                 icon: Icon(Icons.delete, color: ColorPalette.offWhite),
-                onPressed: _instructionsList.length > 1
+                onPressed: _instructions.length > 1
                     ? () {
                         setState(() {
-                          _instructionsList.removeAt(i);
+                          _instructions.removeAt(i);
                         });
                       }
                     : null,
