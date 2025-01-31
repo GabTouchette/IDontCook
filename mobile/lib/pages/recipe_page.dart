@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/ingredient.dart';
+import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class RecipePage extends StatefulWidget {
+  final int id;
   final String imageUrl;
   final String title;
   final int? preparationTime;
@@ -13,6 +15,7 @@ class RecipePage extends StatefulWidget {
 
   const RecipePage({
     Key? key,
+    required this.id,
     required this.imageUrl,
     required this.title,
     this.preparationTime,
@@ -37,7 +40,6 @@ class _RecipePageState extends State<RecipePage> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.instructions);
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
@@ -66,6 +68,20 @@ class _RecipePageState extends State<RecipePage> {
         ),
         actions: [
           IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UpdateRecipePage(recipeId: widget.id),
+                ),
+              );
+            },
+            icon: const FaIcon(
+              FontAwesomeIcons.pen,
+              color: ColorPalette.offWhite,
+            ),
+          ),
+          IconButton(
             onPressed: () {},
             icon: const FaIcon(
               FontAwesomeIcons.heart,
@@ -73,13 +89,6 @@ class _RecipePageState extends State<RecipePage> {
             ),
           ),
           const Padding(padding: EdgeInsets.only(right: 8.0)),
-          IconButton(
-            onPressed: () {},
-            icon: const FaIcon(
-              FontAwesomeIcons.share,
-              color: ColorPalette.offWhite,
-            ),
-          ),
           const Padding(padding: EdgeInsets.only(right: 16.0)),
         ],
       ),

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api_service.dart';
+import 'package:mobile/components/recipe_form/recipe_form_extra_section.dart';
+import 'package:mobile/components/recipe_form/recipe_form_ingredients_section.dart';
+import 'package:mobile/components/recipe_form/recipe_form_instructions_section.dart';
+import 'package:mobile/components/recipe_form/recipe_form_tags_section.dart';
+import 'package:mobile/components/recipe_form/recipe_form_time_section.dart';
+import 'package:mobile/components/recipe_form/recipe_form_title_section.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/models/recipe_form_fields.dart';
 
 class CreateRecipePage extends StatefulWidget {
   const CreateRecipePage({super.key});
@@ -17,18 +24,16 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  List<_IngredientField> _ingredients = [
-    _IngredientField(
-        controller: TextEditingController(), focusNode: FocusNode())
+  List<IngredientField> _ingredients = [
+    IngredientField(controller: TextEditingController(), focusNode: FocusNode())
   ];
 
-  List<_InstructionField> _instructions = [
-    _InstructionField(
+  List<InstructionField> _instructions = [
+    InstructionField(
         controller: TextEditingController(), focusNode: FocusNode())
   ];
 
   List<String> _selectedTags = [];
-  String? _selectedTag;
   List<String> _tagOptions = [
     'Vegetarian',
     'Gluten-Free',
@@ -75,25 +80,23 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
           if (parts.isEmpty) {
             return {};
           }
-          // Case 1: If it doesn't start with a number, treat the whole thing as the ingredient name
+
           if (!_isNumber(parts[0])) {
             return {
-              "quantity": "1", // Default quantity
-              "unit_of_measure": "", // Default unit
-              "name": parts.join(" "), // Treat all parts as the ingredient name
+              "quantity": "1",
+              "unit_of_measure": "",
+              "name": parts.join(" "),
             };
           }
 
-          // Case 2: If there are exactly two parts, the first one is the quantity and the second one is the ingredient name
           if (parts.length == 2) {
             return {
               "quantity": parts[0],
-              "unit_of_measure": "unit", // Default unit
+              "unit_of_measure": "unit",
               "name": parts[1],
             };
           }
 
-          // Case 3: If there are three or more parts, assume the first is the quantity, the second is the unit, and the rest is the ingredient name
           if (parts.length >= 3) {
             return {
               "quantity": parts[0],
@@ -110,8 +113,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
 
     List<String> instructions = _instructions
         .map((field) => field.controller.text)
-        .where((instruction) =>
-            instruction.isNotEmpty)
+        .where((instruction) => instruction.isNotEmpty)
         .toList();
 
     int prepTime = int.tryParse(_preptimeController.text) ?? 0;
@@ -129,8 +131,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       "notes": notes,
       "tags": _selectedTags,
     };
-
-    print("Submitting Recipe: $recipeData");
 
     bool success = await ApiService().createRecipe(recipeData);
 
@@ -152,6 +152,24 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
         ],
       ),
     );
+  }
+
+  void _onIngredientsChanged(List<IngredientField> ingredients) {
+    setState(() {
+      _ingredients = ingredients;
+    });
+  }
+
+  void _onInstructionsChanged(List<InstructionField> instructions) {
+    setState(() {
+      _instructions = instructions;
+    });
+  }
+
+  void _onTagsChanged(List<String> selectedTags) {
+    setState(() {
+      _selectedTags = selectedTags;
+    });
   }
 
   @override
@@ -206,494 +224,34 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildTitleSection(),
-                  _buildIngredientsSection(),
-                  _buildInstructionsSection(),
-                  _buildTimeSection(),
-                  _buildTagsSection(),
-                  _buildExtraSection(),
+                  TitleSection(titleController: _titleController),
+                  IngredientsSection(
+                    ingredients: _ingredients,
+                    onIngredientsChanged: _onIngredientsChanged,
+                  ),
+                  InstructionsSection(
+                    instructions: _instructions,
+                    onInstructionsChanged: _onInstructionsChanged,
+                  ),
+                  TimeSection(
+                    prepTimeController: _preptimeController,
+                    cookTimeController: _cooktimeController,
+                  ),
+                  TagsSection(
+                    selectedTags: _selectedTags,
+                    tagOptions: _tagOptions,
+                    onTagsChanged: _onTagsChanged,
+                  ),
+                  ExtraSection(
+                    descriptionController: _descriptionController,
+                    notesController: _notesController,
+                  ),
                   _buildCreateButton(),
                   SizedBox(height: 32.0),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTitleSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Title",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            decoration: BoxDecoration(
-              color: ColorPalette.lightgray,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextField(
-              controller: _titleController,
-              style: TextStyle(
-                color: ColorPalette.offBlack,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Recipe title',
-                hintStyle: TextStyle(
-                  color: ColorPalette.placeholdergray,
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIngredientsSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Ingredients",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          ..._buildIngredientsInputFields(),
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              "Enter in format: Qty Unit Ingredient (e.g., 100 g sugar)",
-              style: TextStyle(
-                color: ColorPalette.offWhite.withOpacity(0.7),
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildIngredientsInputFields() {
-    List<Widget> inputFields = [];
-
-    for (int i = 0; i < _ingredients.length; i++) {
-      inputFields.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: Row(
-            children: [
-              Text(
-                "${i + 1}.",
-                style: TextStyle(
-                  color: ColorPalette.offWhite,
-                  fontSize: 18,
-                ),
-              ),
-              SizedBox(width: 8.0),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.lightgray,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    controller: _ingredients[i].controller,
-                    focusNode: _ingredients[i].focusNode,
-                    style: TextStyle(
-                      color: ColorPalette.offBlack,
-                    ),
-                    onChanged: (text) {
-                      if (i == _ingredients.length - 1 && text.isNotEmpty) {
-                        setState(() {
-                          _ingredients.add(_IngredientField(
-                              controller: TextEditingController(),
-                              focusNode: FocusNode()));
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Ingredient (e.g., 100 g sugar)',
-                      hintStyle: TextStyle(
-                        color: ColorPalette.placeholdergray,
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete, color: ColorPalette.offWhite),
-                onPressed: _ingredients.length > 1
-                    ? () {
-                        setState(() {
-                          _ingredients.removeAt(i);
-                        });
-                      }
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return inputFields;
-  }
-
-  Widget _buildInstructionsSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Instructions",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          ..._buildInstructionsInputFields(),
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              "Enter each instruction step by step.",
-              style: TextStyle(
-                color: ColorPalette.offWhite.withOpacity(0.7),
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildInstructionsInputFields() {
-    List<Widget> inputFields = [];
-
-    for (int i = 0; i < _instructions.length; i++) {
-      inputFields.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: Row(
-            children: [
-              Text(
-                "${i + 1}.",
-                style: TextStyle(
-                  color: ColorPalette.offWhite,
-                  fontSize: 18,
-                ),
-              ),
-              SizedBox(width: 8.0),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.lightgray,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    controller: _instructions[i].controller,
-                    focusNode: _instructions[i].focusNode,
-                    maxLines: 4,
-                    style: TextStyle(
-                      color: ColorPalette.offBlack,
-                    ),
-                    onChanged: (text) {
-                      if (i == _instructions.length - 1 && text.isNotEmpty) {
-                        setState(() {
-                          _instructions.add(_InstructionField(
-                              controller: TextEditingController(),
-                              focusNode: FocusNode()));
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Instruction',
-                      hintStyle: TextStyle(
-                        color: ColorPalette.placeholdergray,
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete, color: ColorPalette.offWhite),
-                onPressed: _instructions.length > 1
-                    ? () {
-                        setState(() {
-                          _instructions.removeAt(i);
-                        });
-                      }
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return inputFields;
-  }
-
-  Widget _buildTimeSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Time",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.lightgray,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    controller: _preptimeController,
-                    style: TextStyle(
-                      color: ColorPalette.offBlack,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Prep Time (min)',
-                      hintStyle: TextStyle(
-                        color: ColorPalette.placeholdergray,
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ),
-              SizedBox(width: 16.0),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.lightgray,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    controller: _cooktimeController,
-                    style: TextStyle(
-                      color: ColorPalette.offBlack,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Cook Time (min)',
-                      hintStyle: TextStyle(
-                        color: ColorPalette.placeholdergray,
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTagsSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Tags",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: ColorPalette.lightgray,
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            hint: Text('Select tags'),
-            value: _selectedTag,
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedTag = newValue;
-                if (_selectedTag != null &&
-                    !_selectedTags.contains(_selectedTag)) {
-                  _selectedTags.add(_selectedTag!);
-                }
-              });
-            },
-            items: _tagOptions.map((String tag) {
-              return DropdownMenuItem<String>(
-                value: tag,
-                child: Text(tag),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 16.0),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: _selectedTags.map((tag) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedTags.remove(tag);
-                  });
-                },
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.darkgray,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        tag,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(width: 6.0),
-                      Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExtraSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Extra",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            decoration: BoxDecoration(
-              color: ColorPalette.lightgray,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextField(
-              controller: _descriptionController,
-              style: TextStyle(
-                color: ColorPalette.offBlack,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Description',
-                hintStyle: TextStyle(
-                  color: ColorPalette.placeholdergray,
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-              ),
-            ),
-          ),
-          SizedBox(height: 32.0),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            decoration: BoxDecoration(
-              color: ColorPalette.lightgray,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextField(
-              controller: _notesController,
-              style: TextStyle(
-                color: ColorPalette.offBlack,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Notes',
-                hintStyle: TextStyle(
-                  color: ColorPalette.placeholdergray,
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-              ),
-            ),
-          ),
-          SizedBox(height: 16.0),
+          )
         ],
       ),
     );
@@ -736,18 +294,4 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       ),
     );
   }
-}
-
-class _IngredientField {
-  TextEditingController controller;
-  FocusNode focusNode;
-
-  _IngredientField({required this.controller, required this.focusNode});
-}
-
-class _InstructionField {
-  TextEditingController controller;
-  FocusNode focusNode;
-
-  _InstructionField({required this.controller, required this.focusNode});
 }

@@ -15,7 +15,6 @@ class ApiService {
         throw Exception('Failed to load recipes');
       }
     } catch (e) {
-      print(e);
       throw Exception('Failed to load recipes: $e');
     }
   }
@@ -36,6 +35,42 @@ class ApiService {
       }
     } catch (e) {
       print('Error creating recipe: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getRecipeById(int recipeId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/recipes/$recipeId/'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print('Failed to load recipe: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching recipe by ID: $e');
+      return null;
+    }
+  }
+
+  Future<bool> updateRecipe(
+      int recipeId, Map<String, dynamic> recipeData) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/recipes/$recipeId/'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(recipeData),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print('Failed to update recipe: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error updating recipe: $e');
       return false;
     }
   }
