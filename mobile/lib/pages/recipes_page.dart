@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api_service.dart';
@@ -18,13 +20,22 @@ class _RecipesPageState extends State<RecipesPage> {
   int _selectedIndex = 0;
   int _tabIndex = 0;
 
-  Future<List<Recipe>>? _recipes;
+  List<Recipe> _allRecipes = [];
+  List<Recipe> _filteredRecipes = [];
+  Timer? _debounceTimer;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _fetchRecipes();
+  }
 
-    _recipes = ApiService().fetchRecipes();
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _onItemTapped(int index) {
@@ -36,6 +47,36 @@ class _RecipesPageState extends State<RecipesPage> {
   void _onTabTapped(int index) {
     setState(() {
       _tabIndex = index;
+    });
+  }
+
+  Future<void> _fetchRecipes() async {
+    final recipes = await ApiService().fetchRecipes();
+    setState(() {
+      _allRecipes = recipes;
+      _filteredRecipes = recipes;
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounceTimer?.isActive ?? false) {
+      _debounceTimer?.cancel();
+    }
+
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        if (query.isEmpty) {
+          _filteredRecipes = _allRecipes;
+        } else {
+          _filteredRecipes = _allRecipes
+              .where((recipe) =>
+                  recipe.title!.toLowerCase().contains(query.toLowerCase()) ||
+                  recipe.description!
+                      .toLowerCase()
+                      .contains(query.toLowerCase()))
+              .toList();
+        }
+      });
     });
   }
 
@@ -117,6 +158,7 @@ class _RecipesPageState extends State<RecipesPage> {
                       border: Border.all(color: ColorPalette.offWhite),
                     ),
                     child: TextField(
+                      controller: _searchController,
                       style: TextStyle(
                         color: ColorPalette.offWhite,
                       ),
@@ -131,6 +173,7 @@ class _RecipesPageState extends State<RecipesPage> {
                         ),
                         border: InputBorder.none,
                       ),
+                      onChanged: _onSearchChanged,
                     ),
                   ),
                 ),
@@ -157,39 +200,30 @@ class _RecipesPageState extends State<RecipesPage> {
                   ),
                 ),
                 Expanded(
-                  child: FutureBuilder<List<Recipe>>(
-                    future: _recipes,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(child: Text('No recipes available.'));
-                      } else {
-                        return ListView.builder(
+                  child: _filteredRecipes.isEmpty
+                      ? Center(child: Text('No recipes found.'))
+                      : ListView.builder(
                           padding: EdgeInsets.zero,
-                          itemCount: snapshot.data!.length,
+                          itemCount: _filteredRecipes.length,
                           itemBuilder: (context, index) {
-                            final recipe = snapshot.data![index];
+                            final recipe = _filteredRecipes[index];
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 RecipeTile(
+                                  id: recipe.id ?? 0,
                                   title: recipe.title ?? "",
                                   imageUrl: recipe.image_url ?? "",
                                   preparationTime: recipe.preparation_time,
                                   cookingTime: recipe.cooking_time,
                                   ingredients: recipe.ingredients,
                                   instructions: recipe.instructions,
+                                  tags: recipe.tags,
                                 ),
                               ],
                             );
                           },
-                        );
-                      }
-                    },
-                  ),
+                        ),
                 ),
               ],
             ),
