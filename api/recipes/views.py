@@ -6,7 +6,7 @@ from .models import Recipe, Ingredient
 from .serializers import RecipeSerializer, IngredientSerializer
 
 # Ingredient API View
-class IngredientListCreateAPIView(APIView):
+class IngredientListAPIView(APIView):
     def get(self, request):
         ingredients = Ingredient.objects.all()
         serializer = IngredientSerializer(ingredients, many=True)
@@ -41,7 +41,7 @@ class IngredientDetailAPIView(APIView):
 
 
 # Recipe API View
-class RecipeListCreateAPIView(APIView):
+class RecipeListAPIView(APIView):
     def get(self, request):
         recipes = Recipe.objects.all()
         serializer = RecipeSerializer(recipes, many=True)
