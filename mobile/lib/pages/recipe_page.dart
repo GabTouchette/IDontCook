@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/api_service.dart';
+import 'package:mobile/components/dialogs/confirmation_dialog.dart';
 import 'package:mobile/models/ingredient.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
@@ -68,6 +70,13 @@ class _RecipePageState extends State<RecipePage> {
         ),
         actions: [
           IconButton(
+            onPressed: () {},
+            icon: const FaIcon(
+              FontAwesomeIcons.heart,
+              color: ColorPalette.offWhite,
+            ),
+          ),
+          IconButton(
             onPressed: () {
               Navigator.push(
                 context,
@@ -82,9 +91,26 @@ class _RecipePageState extends State<RecipePage> {
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => ConfirmationDialog(
+                  message: "Are you sure you want to delete this recipe?",
+                  onConfirm: () async {
+                    Navigator.pop(context); //
+                    bool success = await ApiService().deleteRecipe(widget.id);
+                    if (success) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  onCancel: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              );
+            },
             icon: const FaIcon(
-              FontAwesomeIcons.heart,
+              FontAwesomeIcons.trash,
               color: ColorPalette.offWhite,
             ),
           ),
