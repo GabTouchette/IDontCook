@@ -59,7 +59,6 @@ class RecipeDetailAPIView(APIView):
     def get(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = RecipeSerializer(recipe)
-        print(serializer.data)
         return Response(serializer.data)
 
     def put(self, request, pk):
