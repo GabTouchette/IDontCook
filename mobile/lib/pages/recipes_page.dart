@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/api_service.dart';
-import 'package:mobile/components/navbar.dart';
+import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/components/recipe_tile.dart';
 import 'package:mobile/pages/create_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
@@ -17,7 +16,6 @@ class RecipesPage extends StatefulWidget {
 }
 
 class _RecipesPageState extends State<RecipesPage> {
-  int _selectedIndex = 0;
   int _tabIndex = 0;
 
   List<Recipe> _allRecipes = [];
@@ -38,12 +36,6 @@ class _RecipesPageState extends State<RecipesPage> {
     super.dispose();
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   void _onTabTapped(int index) {
     setState(() {
       _tabIndex = index;
@@ -51,7 +43,7 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   Future<void> _fetchRecipes() async {
-    final recipes = await ApiService().fetchRecipes();
+    final recipes = await RecipeApi().fetchRecipes();
     setState(() {
       _allRecipes = recipes;
       _filteredRecipes = recipes;
@@ -155,7 +147,7 @@ class _RecipesPageState extends State<RecipesPage> {
                     decoration: BoxDecoration(
                       color: ColorPalette.darkgray,
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: ColorPalette.offWhite),
+                      border: Border.all(color: ColorPalette.placeholdergray),
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -169,7 +161,7 @@ class _RecipesPageState extends State<RecipesPage> {
                         ),
                         hintText: 'Search for a recipe',
                         hintStyle: TextStyle(
-                          color: ColorPalette.offWhite,
+                          color: ColorPalette.placeholdergray,
                         ),
                         border: InputBorder.none,
                       ),
@@ -229,10 +221,6 @@ class _RecipesPageState extends State<RecipesPage> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: Navbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
       ),
     );
   }

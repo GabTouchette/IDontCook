@@ -1,0 +1,32 @@
+import 'package:mobile/api/api_helper.dart';
+import 'package:mobile/models/recipe.dart';
+
+class RecipeApi {
+  final ApiHelper _apiHelper = ApiHelper();
+
+  Future<List<Recipe>> fetchRecipes() async {
+    var data = await _apiHelper.getRequest('recipes/');
+    if (data != null) {
+      return (data as List).map((recipe) => Recipe.fromJson(recipe)).toList();
+    }
+    return [];
+  }
+
+  Future<bool> createRecipe(Map<String, dynamic> recipeData) async {
+    var response = await _apiHelper.postRequest('recipes/', recipeData);
+    return response != null;
+  }
+
+  Future<Map<String, dynamic>?> getRecipeById(int recipeId) async {
+    return await _apiHelper.getRequest('recipes/$recipeId/');
+  }
+
+  Future<bool> updateRecipe(int recipeId, Map<String, dynamic> recipeData) async {
+    var response = await _apiHelper.putRequest('recipes/$recipeId/', recipeData);
+    return response != null;
+  }
+
+  Future<bool> deleteRecipe(int recipeId) async {
+    return await _apiHelper.deleteRequest('recipes/$recipeId/');
+  }
+}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/api_service.dart';
+import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/components/recipe_form/recipe_form_extra_section.dart';
 import 'package:mobile/components/recipe_form/recipe_form_ingredients_section.dart';
 import 'package:mobile/components/recipe_form/recipe_form_instructions_section.dart';
@@ -132,7 +132,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       "tags": _selectedTags,
     };
 
-    bool success = await ApiService().createRecipe(recipeData);
+    bool success = await RecipeApi().createRecipe(recipeData);
 
     showDialog(
       context: context,

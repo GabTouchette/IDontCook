@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/ingredient.dart';
-import 'package:mobile/pages/recipe_page.dart';
+import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
 class RecipeTile extends StatelessWidget {
