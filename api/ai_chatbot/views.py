@@ -18,25 +18,32 @@ class ChatbotView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         query = serializer.validated_data['query']
-        intent = serializer.validated_data.get('intent', 'general') 
-
-        if intent == "generate_recipe":
-            return self.generate_recipe(query)
-        elif intent == "get_recipe":
-            return self.get_recipe(query)
-        else:
-            return self.chat_response(query)
+        return self.chat_response(query)
 
     def chat_response(self, query):
         """Handles general chatbot queries using OpenAI"""
-        response_text = self.ask_openai(query)
-        return Response({"response": response_text}, status=status.HTTP_200_OK)
+        prompt = (
+            f"You are a cookbook AI chatbot. Always try to provide a recipe if possible, and include it in your response. "
+            f"If the response is related to a recipe, provide it in the following JSON format, wrapped in a <recipe></recipe> tag:\n"
+            f"<recipe>{{\n"
+            f"  'title': 'Recipe Name',\n"
+            f"  'ingredients': [\n"
+            f"    {{'name': 'Ingredient Name', 'quantity': 1, 'unit_of_measure': 'unit', 'substitutes': []}},\n"
+            f"    ...\n"
+            f"  ],\n"
+            f"  'instructions': ['Step 1', 'Step 2', ...],\n"
+            f"  'cooking_time': 30,\n"
+            f"  'preparation_time': 15,\n"
+            f"  'tags': ['vegetarian', 'easy'],\n"
+            f"  'description': 'A brief description of the recipe',\n"
+            f"  'notes': 'Any extra notes for the recipe'\n"
+            f"}}</recipe>\n\n"
+            f"Please answer the user on the following query: {query}."
+        )
 
-    def generate_recipe(self, query):
-        """Generates a new recipe using OpenAI"""
-        prompt = f"Generate a detailed recipe based on this request: {query}"
-        recipe_text = self.ask_openai(prompt)
-        return Response({"recipe": recipe_text}, status=status.HTTP_200_OK)
+        openai_response = self.ask_openai(prompt)
+        return Response({"response": openai_response }, status=status.HTTP_200_OK)
+
 
     def get_recipe(self, query):
         """Retrieves an existing recipe by name"""

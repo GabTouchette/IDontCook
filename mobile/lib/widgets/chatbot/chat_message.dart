@@ -1,0 +1,31 @@
+import 'package:flutter/material.dart';
+import 'package:mobile/theme/colors.dart';
+
+class MessageWidget extends StatelessWidget {
+  final String messageText;
+  final bool isUser;
+
+  const MessageWidget({
+    super.key,
+    required this.messageText,
+    required this.isUser,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
+      decoration: BoxDecoration(
+        color: isUser ? ColorPalette.lightgray : ColorPalette.darkgray,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Text(
+        messageText,
+        style: TextStyle(
+          color: isUser ? ColorPalette.offBlack : ColorPalette.offWhite,
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+}
