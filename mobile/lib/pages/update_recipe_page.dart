@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/components/recipe_form/recipe_form_extra_section.dart';
-import 'package:mobile/components/recipe_form/recipe_form_ingredients_section.dart';
-import 'package:mobile/components/recipe_form/recipe_form_instructions_section.dart';
-import 'package:mobile/components/recipe_form/recipe_form_tags_section.dart';
-import 'package:mobile/components/recipe_form/recipe_form_time_section.dart';
-import 'package:mobile/components/recipe_form/recipe_form_title_section.dart';
+import 'package:mobile/widgets/recipe_form/recipe_form_extra_section.dart';
+import 'package:mobile/widgets/recipe_form/recipe_form_ingredients_section.dart';
+import 'package:mobile/widgets/recipe_form/recipe_form_instructions_section.dart';
+import 'package:mobile/widgets/recipe_form/recipe_form_tags_section.dart';
+import 'package:mobile/widgets/recipe_form/recipe_form_time_section.dart';
+import 'package:mobile/widgets/recipe_form/recipe_form_title_section.dart';
 import 'package:mobile/models/recipe_form_fields.dart';
 import 'package:mobile/theme/colors.dart';
 

@@ -57,6 +57,7 @@ class ApiHelper {
 
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      print('API response: ${response.statusCode}, ${response.body}');
       return response.body.isNotEmpty ? json.decode(response.body) : null;
     } else {
       print('API error: ${response.statusCode}, ${response.body}');
