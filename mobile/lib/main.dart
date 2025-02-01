@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'theme/theme.dart';
-import 'routes.dart';
+import 'package:mobile/routes.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'IDontCook',
-      theme: appTheme(),
+      theme: ThemeData.light(),
       initialRoute: '/',
       onGenerateRoute: generateRoute,
     );

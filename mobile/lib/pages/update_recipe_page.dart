@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api_service.dart';
+import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/components/recipe_form/recipe_form_extra_section.dart';
 import 'package:mobile/components/recipe_form/recipe_form_ingredients_section.dart';
 import 'package:mobile/components/recipe_form/recipe_form_instructions_section.dart';
@@ -69,7 +69,7 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
   }
 
   void _fetchRecipe() async {
-    var recipe = await ApiService().getRecipeById(widget.recipeId);
+    var recipe = await RecipeApi().getRecipeById(widget.recipeId);
 
     if (recipe != null) {
       setState(() {
@@ -181,7 +181,7 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
       "tags": _selectedTags,
     };
 
-    bool success = await ApiService().updateRecipe(widget.recipeId, recipeData);
+    bool success = await RecipeApi().updateRecipe(widget.recipeId, recipeData);
 
     showDialog(
       context: context,

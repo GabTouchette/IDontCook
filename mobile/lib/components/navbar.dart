@@ -4,16 +4,19 @@ import 'package:mobile/theme/colors.dart';
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;
-  final Function(int) onItemTapped;
+  final Function(int) onTabChanged;
 
-  const Navbar(
-      {super.key, required this.selectedIndex, required this.onItemTapped});
+  const Navbar({
+    super.key,
+    required this.selectedIndex,
+    required this.onTabChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: selectedIndex,
-      onTap: onItemTapped,
+      onTap: onTabChanged,
       backgroundColor: ColorPalette.lightgray,
       selectedItemColor: Colors.black,
       unselectedItemColor: ColorPalette.gray,
@@ -29,7 +32,7 @@ class Navbar extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Padding(
             padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.wandMagicSparkles),
+            child: FaIcon(FontAwesomeIcons.solidMessage),
           ),
           label: '',
         ),
