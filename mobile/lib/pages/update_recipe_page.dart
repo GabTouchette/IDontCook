@@ -72,27 +72,45 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
     var recipe = await ApiService().getRecipeById(widget.recipeId);
 
     if (recipe != null) {
-      _titleController.text = recipe['title'];
-      _preptimeController.text = recipe['preparation_time'].toString();
-      _cooktimeController.text = recipe['cooking_time'].toString();
-      _descriptionController.text = recipe['description'];
-      _notesController.text = recipe['notes'];
+      setState(() {
+        _titleController.text = recipe['title'] ?? '';
+        _preptimeController.text = recipe['preparation_time']?.toString() ?? '';
+        _cooktimeController.text = recipe['cooking_time']?.toString() ?? '';
+        _descriptionController.text = recipe['description'] ?? '';
+        _notesController.text = recipe['notes'] ?? '';
 
-      _ingredients = recipe['ingredients']
-          .map<IngredientField>((ingredient) => IngredientField(
-                controller: TextEditingController(text: ingredient['name']),
+        _ingredients = (recipe['ingredients'] as List?)
+                ?.map<IngredientField>((ingredient) {
+              return IngredientField(
+                controller:
+                    TextEditingController(text: ingredient['name'] ?? ''),
                 focusNode: FocusNode(),
-              ))
-          .toList();
+              );
+            }).toList() ??
+            [];
 
-      _instructions = recipe['instructions']
-          .map<InstructionField>((instruction) => InstructionField(
-                controller: TextEditingController(text: instruction),
+        _ingredients.add(IngredientField(
+          controller: TextEditingController(),
+          focusNode: FocusNode(),
+        ));
+
+        _instructions = (recipe['instructions'] as List?)
+                ?.map<InstructionField>((instruction) {
+              return InstructionField(
+                controller: TextEditingController(
+                    text: instruction is String ? instruction : ''),
                 focusNode: FocusNode(),
-              ))
-          .toList();
+              );
+            }).toList() ??
+            [];
 
-      _selectedTags = List<String>.from(recipe['tags']);
+        _instructions.add(InstructionField(
+          controller: TextEditingController(),
+          focusNode: FocusNode(),
+        ));
+
+        _selectedTags = List<String>.from(recipe['tags'] ?? []);
+      });
     }
   }
 
