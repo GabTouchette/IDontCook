@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/ai_chatbot_api.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/chatbot/ai_response_bubble.dart';
+import 'package:mobile/widgets/chatbot/chat_message.dart';
 
 class AiChatBotPage extends StatefulWidget {
   const AiChatBotPage({super.key});
@@ -14,7 +15,7 @@ class AiChatBotPage extends StatefulWidget {
 
 class AiChatBotPageState extends State<AiChatBotPage> {
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController(); // Add this
+  final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
   List<Map<String, String>> _messages = [];
 
@@ -27,7 +28,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
   void dispose() {
     _debounceTimer?.cancel();
     _searchController.dispose();
-    _scrollController.dispose(); // Dispose the scroll controller
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -67,7 +68,6 @@ class AiChatBotPageState extends State<AiChatBotPage> {
     }
   }
 
-  // Function to scroll to the bottom
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -88,7 +88,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'AI Chatbot',
+          'CookBot',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
@@ -128,12 +128,10 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 120.0), // Reduced top padding
+            padding: const EdgeInsets.only(top: 120.0),
             child: Column(
               children: [
-                // When there are no messages, center the search bar and breadcrumbs
                 if (_messages.isEmpty) ...[
-                  // Center search bar and breadcrumbs vertically when no messages
                   Expanded(
                     child: Center(
                       child: Column(
@@ -173,7 +171,6 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                               ),
                             ),
                           ),
-                          // Breadcrumbs
                           Padding(
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 16.0),
@@ -200,51 +197,39 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                     ),
                   ),
                 ],
-                // When there are messages, display the chat and place the search bar at the bottom
                 if (_messages.isNotEmpty) ...[
                   Expanded(
                     child: ListView.builder(
-                      controller:
-                          _scrollController, // Attach the scroll controller
+                      controller: _scrollController,
                       padding: EdgeInsets.zero,
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         final message = _messages[index];
+                        final bool isUser = message['sender'] == 'user';
+                        final bool isLoading = message['sender'] == 'ai' &&
+                            message['text'] == 'loading';
+
                         return Align(
-                          alignment: message['sender'] == 'user'
+                          alignment: isUser
                               ? Alignment.centerRight
                               : Alignment.centerLeft,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 8.0, horizontal: 16.0),
-                            child: message['sender'] == 'ai' &&
-                                    message['text'] == 'loading'
-                                ? const AiResponseBubble() // Show flashing ellipsis
-                                : Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10.0, horizontal: 16.0),
-                                    decoration: BoxDecoration(
-                                      color: message['sender'] == 'user'
-                                          ? ColorPalette.lightgray
-                                          : ColorPalette.darkgray,
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: Text(
-                                      message['text']!,
-                                      style: TextStyle(
-                                        color: message['sender'] == 'user'
-                                            ? ColorPalette.offBlack
-                                            : ColorPalette.offWhite,
-                                        fontSize: 16,
+                            child: isLoading
+                                ? const AiResponseBubble()
+                                : message['sender'] == 'ai'
+                                    ? AiResponseBubble(
+                                        message: message['text']!)
+                                    : MessageWidget(
+                                        messageText: message['text']!,
+                                        isUser: isUser,
                                       ),
-                                    ),
-                                  ),
                           ),
                         );
                       },
                     ),
                   ),
-                  // The search bar placed at the bottom
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Container(
@@ -286,7 +271,6 @@ class AiChatBotPageState extends State<AiChatBotPage> {
     );
   }
 
-  // Method to build breadcrumb tags
   Widget _buildBreadcrumb(String title, IconData icon, Color color) {
     return GestureDetector(
       onTap: () {},

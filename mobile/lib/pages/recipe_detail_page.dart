@@ -14,6 +14,9 @@ class RecipePage extends StatefulWidget {
   final int? cookingTime;
   final List<Ingredient>? ingredients;
   final List<String>? instructions;
+  final String? description;
+  final String? notes;
+  final List<String>? tags;
 
   const RecipePage({
     Key? key,
@@ -24,6 +27,9 @@ class RecipePage extends StatefulWidget {
     this.cookingTime,
     required this.ingredients,
     required this.instructions,
+    this.description,
+    this.notes,
+    this.tags,
   }) : super(key: key);
 
   @override
@@ -32,12 +38,58 @@ class RecipePage extends StatefulWidget {
 
 class _RecipePageState extends State<RecipePage> {
   List<bool> completedInstructions = [];
+  bool isSaved = false;
 
   @override
   void initState() {
     super.initState();
     completedInstructions =
         List<bool>.filled(widget.instructions?.length ?? 0, false);
+    isSaved = widget.id != -1;
+  }
+
+  void _saveRecipe() async {
+    if (widget.id == -1) {
+      Map<String, dynamic> recipeData = {
+        "title": widget.title,
+        "ingredients": widget.ingredients
+            ?.map((ingredient) => {
+                  "name": ingredient.name,
+                  "quantity": ingredient.quantity,
+                  "unit_of_measure": ingredient.unit_of_measure,
+                })
+            .toList(),
+        "instructions": widget.instructions,
+        "preparation_time": widget.preparationTime,
+        "cooking_time": widget.cookingTime,
+        "description": widget.description,
+        "notes": widget.notes,
+        "tags": widget.tags,
+      };
+
+      bool success = await RecipeApi().createRecipe(recipeData);
+
+      if (success) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(success ? 'Recipe Submitted' : 'Submission Failed'),
+            content: Text(success
+                ? 'Your recipe has been successfully submitted!'
+                : 'There was an error submitting your recipe.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (success) Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -69,53 +121,63 @@ class _RecipePageState extends State<RecipePage> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const FaIcon(
-              FontAwesomeIcons.heart,
-              color: ColorPalette.offWhite,
+          if (isSaved) ...[
+            IconButton(
+              onPressed: () {},
+              icon: const FaIcon(
+                FontAwesomeIcons.heart,
+                color: ColorPalette.offWhite,
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => UpdateRecipePage(recipeId: widget.id),
-                ),
-              );
-            },
-            icon: const FaIcon(
-              FontAwesomeIcons.pen,
-              color: ColorPalette.offWhite,
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UpdateRecipePage(recipeId: widget.id),
+                  ),
+                );
+              },
+              icon: const FaIcon(
+                FontAwesomeIcons.pen,
+                color: ColorPalette.offWhite,
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => ConfirmationDialog(
-                  message: "Are you sure you want to delete this recipe?",
-                  onConfirm: () async {
-                    Navigator.pop(context); //
-                    bool success = await RecipeApi().deleteRecipe(widget.id);
-                    if (success) {
+            IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => ConfirmationDialog(
+                    message: "Are you sure you want to delete this recipe?",
+                    onConfirm: () async {
                       Navigator.pop(context);
-                    }
-                  },
-                  onCancel: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              );
-            },
-            icon: const FaIcon(
-              FontAwesomeIcons.trash,
-              color: ColorPalette.offWhite,
+                      bool success = await RecipeApi().deleteRecipe(widget.id);
+                      if (success) {
+                        Navigator.pop(context);
+                      }
+                    },
+                    onCancel: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                );
+              },
+              icon: const FaIcon(
+                FontAwesomeIcons.trash,
+                color: ColorPalette.offWhite,
+              ),
             ),
-          ),
-          const Padding(padding: EdgeInsets.only(right: 8.0)),
-          const Padding(padding: EdgeInsets.only(right: 16.0)),
+          ] else ...[
+            IconButton(
+              onPressed: _saveRecipe,
+              icon: FaIcon(
+                isSaved
+                    ? FontAwesomeIcons.solidBookmark
+                    : FontAwesomeIcons.bookmark,
+                color: ColorPalette.offWhite,
+              ),
+            ),
+          ],
         ],
       ),
       body: SingleChildScrollView(
