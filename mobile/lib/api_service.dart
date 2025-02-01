@@ -42,6 +42,7 @@ class ApiService {
   Future<Map<String, dynamic>?> getRecipeById(int recipeId) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/recipes/$recipeId/'));
+      print(response.body);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
