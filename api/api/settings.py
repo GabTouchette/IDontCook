@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'recipes'
+    'recipes',
+    'ai_chatbot',
 ]
 
 MIDDLEWARE = [
