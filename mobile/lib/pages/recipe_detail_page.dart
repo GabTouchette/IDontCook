@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/components/dialogs/confirmation_dialog.dart';
+import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/models/ingredient.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';

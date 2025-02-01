@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/components/recipe_tile.dart';
+import 'package:mobile/widgets/recipe_tile.dart';
 import 'package:mobile/pages/create_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/models/recipe.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/components/navbar.dart';
+import 'package:mobile/widgets/navbar.dart';
 import 'package:mobile/pages/ai_chatbot_page.dart';
 import 'package:mobile/pages/recipes_page.dart';
 

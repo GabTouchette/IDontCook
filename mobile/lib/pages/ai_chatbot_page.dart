@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/ai_chatbot_api.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/chatbot/ai_response_bubble.dart';
 
 class AiChatBotPage extends StatefulWidget {
   const AiChatBotPage({super.key});
@@ -13,8 +14,9 @@ class AiChatBotPage extends StatefulWidget {
 
 class AiChatBotPageState extends State<AiChatBotPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController(); // Add this
   Timer? _debounceTimer;
-  List<Map<String, String>> _messages = []; // List of messages for chat
+  List<Map<String, String>> _messages = [];
 
   @override
   void initState() {
@@ -25,28 +27,57 @@ class AiChatBotPageState extends State<AiChatBotPage> {
   void dispose() {
     _debounceTimer?.cancel();
     _searchController.dispose();
+    _scrollController.dispose(); // Dispose the scroll controller
     super.dispose();
   }
 
-  // Function to handle sending the message when "Send" is pressed
-  void _sendMessage(String query) {
+  void _sendMessage(String query) async {
     if (query.isNotEmpty) {
-      // Add user message to chat
       setState(() {
         _messages.add({"sender": "user", "text": query});
+        _messages.add({"sender": "ai", "text": "loading"});
       });
 
-      // Simulate AI response (mock)
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          _messages
-              .add({"sender": "ai", "text": "Mock AI response to: '$query'"});
-        });
-      });
-
-      // Clear the input after sending
       _searchController.clear();
+      _scrollToBottom();
+
+      try {
+        final response = await AiChatbotApi().chatWithBot(query);
+
+        if (response != null && response['response'] != null) {
+          setState(() {
+            _messages.removeLast();
+            _messages.add({"sender": "ai", "text": response['response']});
+          });
+        } else {
+          setState(() {
+            _messages.removeLast();
+            _messages
+                .add({"sender": "ai", "text": "Sorry, something went wrong."});
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _messages.removeLast();
+          _messages.add({"sender": "ai", "text": "Error: ${e.toString()}"});
+        });
+      }
+
+      _scrollToBottom();
     }
+  }
+
+  // Function to scroll to the bottom
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -100,101 +131,153 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             padding: const EdgeInsets.only(top: 120.0), // Reduced top padding
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: ColorPalette.darkgray,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: ColorPalette.placeholdergray),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(
-                        color: ColorPalette.offWhite,
-                      ),
-                      decoration: InputDecoration(
-                        icon: const Icon(
-                          Icons.search,
-                          color: ColorPalette.placeholdergray,
-                        ),
-                        hintText: 'Ask a question...',
-                        hintStyle: TextStyle(
-                          color: ColorPalette.placeholdergray,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 16.0, horizontal: 8.0),
-                      ),
-                      onSubmitted: _sendMessage,
-                    ),
-                  ),
-                ),
-                // Breadcrumbs
-                _messages.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Align(
-                          alignment: Alignment
-                              .centerLeft, // Align the breadcrumbs to the left
-                          child: Wrap(
-                            spacing: 16.0,
-                            runSpacing: 12.0,
-                            children: [
-                              _buildBreadcrumb(
-                                  'New Idea',
-                                  FontAwesomeIcons.lightbulb,
-                                  ColorPalette.mustard),
-                              _buildBreadcrumb('Something I have',
-                                  FontAwesomeIcons.file, Colors.green),
-                              _buildBreadcrumb('A popular choice',
-                                  FontAwesomeIcons.fire, Colors.orange),
-                            ],
-                          ),
-                        ),
-                      )
-                    : Container(),
-                Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    reverse: true,
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return Align(
-                        alignment: message['sender'] == 'user'
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10.0, horizontal: 16.0),
-                            decoration: BoxDecoration(
-                              color: message['sender'] == 'user'
-                                  ? ColorPalette.lightgray
-                                  : ColorPalette.darkgray,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Text(
-                              message['text']!,
-                              style: TextStyle(
-                                color: message['sender'] == 'user'
-                                    ? ColorPalette.offBlack
-                                    : ColorPalette.offWhite,
-                                fontSize: 16,
+                // When there are no messages, center the search bar and breadcrumbs
+                if (_messages.isEmpty) ...[
+                  // Center search bar and breadcrumbs vertically when no messages
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Container(
+                              width: double.infinity,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              decoration: BoxDecoration(
+                                color: ColorPalette.darkgray,
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(
+                                    color: ColorPalette.placeholdergray),
+                              ),
+                              child: TextField(
+                                controller: _searchController,
+                                style: TextStyle(
+                                  color: ColorPalette.offWhite,
+                                ),
+                                decoration: InputDecoration(
+                                  icon: const Icon(
+                                    Icons.search,
+                                    color: ColorPalette.placeholdergray,
+                                  ),
+                                  hintText: 'Ask a question...',
+                                  hintStyle: TextStyle(
+                                    color: ColorPalette.placeholdergray,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 8.0),
+                                ),
+                                onSubmitted: _sendMessage,
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                          // Breadcrumbs
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Wrap(
+                                spacing: 16.0,
+                                runSpacing: 12.0,
+                                children: [
+                                  _buildBreadcrumb(
+                                      'New Idea',
+                                      FontAwesomeIcons.lightbulb,
+                                      ColorPalette.mustard),
+                                  _buildBreadcrumb('Something I have',
+                                      FontAwesomeIcons.file, Colors.green),
+                                  _buildBreadcrumb('A popular choice',
+                                      FontAwesomeIcons.fire, Colors.orange),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(height: 16.0), // Added bottom padding
+                ],
+                // When there are messages, display the chat and place the search bar at the bottom
+                if (_messages.isNotEmpty) ...[
+                  Expanded(
+                    child: ListView.builder(
+                      controller:
+                          _scrollController, // Attach the scroll controller
+                      padding: EdgeInsets.zero,
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        return Align(
+                          alignment: message['sender'] == 'user'
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 16.0),
+                            child: message['sender'] == 'ai' &&
+                                    message['text'] == 'loading'
+                                ? const AiResponseBubble() // Show flashing ellipsis
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10.0, horizontal: 16.0),
+                                    decoration: BoxDecoration(
+                                      color: message['sender'] == 'user'
+                                          ? ColorPalette.lightgray
+                                          : ColorPalette.darkgray,
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    child: Text(
+                                      message['text']!,
+                                      style: TextStyle(
+                                        color: message['sender'] == 'user'
+                                            ? ColorPalette.offBlack
+                                            : ColorPalette.offWhite,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  // The search bar placed at the bottom
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      decoration: BoxDecoration(
+                        color: ColorPalette.darkgray,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: ColorPalette.placeholdergray),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: TextStyle(
+                          color: ColorPalette.offWhite,
+                        ),
+                        decoration: InputDecoration(
+                          icon: const Icon(
+                            Icons.search,
+                            color: ColorPalette.placeholdergray,
+                          ),
+                          hintText: 'Ask a question...',
+                          hintStyle: TextStyle(
+                            color: ColorPalette.placeholdergray,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 8.0),
+                        ),
+                        onSubmitted: _sendMessage,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
