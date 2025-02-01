@@ -62,7 +62,7 @@ class _RecipesPageState extends State<RecipesPage> {
         } else {
           _filteredRecipes = _allRecipes
               .where((recipe) =>
-                  recipe.title!.toLowerCase().contains(query.toLowerCase()) ||
+                  recipe.title.toLowerCase().contains(query.toLowerCase()) ||
                   recipe.description!
                       .toLowerCase()
                       .contains(query.toLowerCase()))
@@ -202,16 +202,7 @@ class _RecipesPageState extends State<RecipesPage> {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                RecipeTile(
-                                  id: recipe.id ?? 0,
-                                  title: recipe.title ?? "",
-                                  imageUrl: recipe.image_url ?? "",
-                                  preparationTime: recipe.preparation_time,
-                                  cookingTime: recipe.cooking_time,
-                                  ingredients: recipe.ingredients,
-                                  instructions: recipe.instructions,
-                                  tags: recipe.tags,
-                                ),
+                                RecipeTile(recipe: recipe),
                               ],
                             );
                           },

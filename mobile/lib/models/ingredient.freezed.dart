@@ -23,8 +23,7 @@ mixin _$Ingredient {
   int? get id => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
   List<String>? get substitutes => throw _privateConstructorUsedError;
-  double? get quantity =>
-      throw _privateConstructorUsedError; // Changed to double for quantity
+  double? get quantity => throw _privateConstructorUsedError;
   String? get unit_of_measure => throw _privateConstructorUsedError;
 
   /// Serializes this Ingredient to a JSON map.
@@ -187,7 +186,6 @@ class _$IngredientImpl implements _Ingredient {
 
   @override
   final double? quantity;
-// Changed to double for quantity
   @override
   final String? unit_of_measure;
 
@@ -255,7 +253,7 @@ abstract class _Ingredient implements Ingredient {
   @override
   List<String>? get substitutes;
   @override
-  double? get quantity; // Changed to double for quantity
+  double? get quantity;
   @override
   String? get unit_of_measure;
 

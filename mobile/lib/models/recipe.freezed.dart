@@ -20,10 +20,10 @@ Recipe _$RecipeFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Recipe {
-  int? get id => throw _privateConstructorUsedError;
-  String? get title => throw _privateConstructorUsedError;
-  List<Ingredient>? get ingredients => throw _privateConstructorUsedError;
-  List<String>? get instructions => throw _privateConstructorUsedError;
+  int get id => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
+  List<Ingredient> get ingredients => throw _privateConstructorUsedError;
+  List<String> get instructions => throw _privateConstructorUsedError;
   int? get cooking_time => throw _privateConstructorUsedError;
   int? get preparation_time => throw _privateConstructorUsedError;
   List<String>? get tags => throw _privateConstructorUsedError;
@@ -47,10 +47,10 @@ abstract class $RecipeCopyWith<$Res> {
       _$RecipeCopyWithImpl<$Res, Recipe>;
   @useResult
   $Res call(
-      {int? id,
-      String? title,
-      List<Ingredient>? ingredients,
-      List<String>? instructions,
+      {int id,
+      String title,
+      List<Ingredient> ingredients,
+      List<String> instructions,
       int? cooking_time,
       int? preparation_time,
       List<String>? tags,
@@ -75,10 +75,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
-    Object? title = freezed,
-    Object? ingredients = freezed,
-    Object? instructions = freezed,
+    Object? id = null,
+    Object? title = null,
+    Object? ingredients = null,
+    Object? instructions = null,
     Object? cooking_time = freezed,
     Object? preparation_time = freezed,
     Object? tags = freezed,
@@ -88,22 +88,22 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? created_at = freezed,
   }) {
     return _then(_value.copyWith(
-      id: freezed == id
+      id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int?,
-      title: freezed == title
+              as int,
+      title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
-              as String?,
-      ingredients: freezed == ingredients
+              as String,
+      ingredients: null == ingredients
           ? _value.ingredients
           : ingredients // ignore: cast_nullable_to_non_nullable
-              as List<Ingredient>?,
-      instructions: freezed == instructions
+              as List<Ingredient>,
+      instructions: null == instructions
           ? _value.instructions
           : instructions // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
+              as List<String>,
       cooking_time: freezed == cooking_time
           ? _value.cooking_time
           : cooking_time // ignore: cast_nullable_to_non_nullable
@@ -144,10 +144,10 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {int? id,
-      String? title,
-      List<Ingredient>? ingredients,
-      List<String>? instructions,
+      {int id,
+      String title,
+      List<Ingredient> ingredients,
+      List<String> instructions,
       int? cooking_time,
       int? preparation_time,
       List<String>? tags,
@@ -170,10 +170,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
-    Object? title = freezed,
-    Object? ingredients = freezed,
-    Object? instructions = freezed,
+    Object? id = null,
+    Object? title = null,
+    Object? ingredients = null,
+    Object? instructions = null,
     Object? cooking_time = freezed,
     Object? preparation_time = freezed,
     Object? tags = freezed,
@@ -183,22 +183,22 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? created_at = freezed,
   }) {
     return _then(_$RecipeImpl(
-      id: freezed == id
+      id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int?,
-      title: freezed == title
+              as int,
+      title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
-              as String?,
-      ingredients: freezed == ingredients
+              as String,
+      ingredients: null == ingredients
           ? _value._ingredients
           : ingredients // ignore: cast_nullable_to_non_nullable
-              as List<Ingredient>?,
-      instructions: freezed == instructions
+              as List<Ingredient>,
+      instructions: null == instructions
           ? _value._instructions
           : instructions // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
+              as List<String>,
       cooking_time: freezed == cooking_time
           ? _value.cooking_time
           : cooking_time // ignore: cast_nullable_to_non_nullable
@@ -235,10 +235,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$RecipeImpl implements _Recipe {
   const _$RecipeImpl(
-      {this.id,
-      this.title,
-      final List<Ingredient>? ingredients,
-      final List<String>? instructions,
+      {this.id = 0,
+      this.title = "",
+      final List<Ingredient> ingredients = const [],
+      final List<String> instructions = const [],
       this.cooking_time,
       this.preparation_time,
       final List<String>? tags,
@@ -254,27 +254,27 @@ class _$RecipeImpl implements _Recipe {
       _$$RecipeImplFromJson(json);
 
   @override
-  final int? id;
+  @JsonKey()
+  final int id;
   @override
-  final String? title;
-  final List<Ingredient>? _ingredients;
+  @JsonKey()
+  final String title;
+  final List<Ingredient> _ingredients;
   @override
-  List<Ingredient>? get ingredients {
-    final value = _ingredients;
-    if (value == null) return null;
+  @JsonKey()
+  List<Ingredient> get ingredients {
     if (_ingredients is EqualUnmodifiableListView) return _ingredients;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
+    return EqualUnmodifiableListView(_ingredients);
   }
 
-  final List<String>? _instructions;
+  final List<String> _instructions;
   @override
-  List<String>? get instructions {
-    final value = _instructions;
-    if (value == null) return null;
+  @JsonKey()
+  List<String> get instructions {
     if (_instructions is EqualUnmodifiableListView) return _instructions;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
+    return EqualUnmodifiableListView(_instructions);
   }
 
   @override
@@ -364,10 +364,10 @@ class _$RecipeImpl implements _Recipe {
 
 abstract class _Recipe implements Recipe {
   const factory _Recipe(
-      {final int? id,
-      final String? title,
-      final List<Ingredient>? ingredients,
-      final List<String>? instructions,
+      {final int id,
+      final String title,
+      final List<Ingredient> ingredients,
+      final List<String> instructions,
       final int? cooking_time,
       final int? preparation_time,
       final List<String>? tags,
@@ -379,13 +379,13 @@ abstract class _Recipe implements Recipe {
   factory _Recipe.fromJson(Map<String, dynamic> json) = _$RecipeImpl.fromJson;
 
   @override
-  int? get id;
+  int get id;
   @override
-  String? get title;
+  String get title;
   @override
-  List<Ingredient>? get ingredients;
+  List<Ingredient> get ingredients;
   @override
-  List<String>? get instructions;
+  List<String> get instructions;
   @override
   int? get cooking_time;
   @override
