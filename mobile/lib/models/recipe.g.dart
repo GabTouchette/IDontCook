@@ -7,14 +7,16 @@ part of 'recipe.dart';
 // **************************************************************************
 
 _$RecipeImpl _$$RecipeImplFromJson(Map<String, dynamic> json) => _$RecipeImpl(
-      id: (json['id'] as num?)?.toInt(),
-      title: json['title'] as String?,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      title: json['title'] as String? ?? "",
       ingredients: (json['ingredients'] as List<dynamic>?)
-          ?.map((e) => Ingredient.fromJson(e as Map<String, dynamic>))
-          .toList(),
+              ?.map((e) => Ingredient.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       instructions: (json['instructions'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       cooking_time: (json['cooking_time'] as num?)?.toInt(),
       preparation_time: (json['preparation_time'] as num?)?.toInt(),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),

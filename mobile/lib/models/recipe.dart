@@ -7,10 +7,10 @@ part 'recipe.g.dart';
 @freezed
 class Recipe with _$Recipe {
   const factory Recipe({
-    int? id,
-    String? title,
-    List<Ingredient>? ingredients,
-    List<String>? instructions,
+    @Default(0) int id,
+    @Default("") String title,
+    @Default([]) List<Ingredient> ingredients,
+    @Default([]) List<String> instructions,
     int? cooking_time,
     int? preparation_time,
     List<String>? tags,

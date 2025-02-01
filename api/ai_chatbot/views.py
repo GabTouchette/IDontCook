@@ -28,7 +28,7 @@ class ChatbotView(APIView):
             f"<recipe>{{\n"
             f"  'title': 'Recipe Name',\n"
             f"  'ingredients': [\n"
-            f"    {{'name': 'Ingredient Name', 'quantity': 1, 'unit_of_measure': 'unit', 'substitutes': []}},\n"
+            f"    {{'name': 'Ingredient Name', 'quantity': 1 (must be a float), 'unit_of_measure': 'unit', 'substitutes': []}},\n"
             f"    ...\n"
             f"  ],\n"
             f"  'instructions': ['Step 1', 'Step 2', ...],\n"

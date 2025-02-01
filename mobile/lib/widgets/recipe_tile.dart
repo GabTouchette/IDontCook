@@ -1,28 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/ingredient.dart';
+import 'package:mobile/models/recipe.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
 class RecipeTile extends StatelessWidget {
-  final int id;
-  final String imageUrl;
-  final String title;
-  final int? preparationTime;
-  final int? cookingTime;
-  final List<Ingredient>? ingredients;
-  final List<String>? instructions;
-  final List<String>? tags;
+  final Recipe recipe;
 
   const RecipeTile({
     Key? key,
-    required this.id,
-    required this.imageUrl,
-    required this.title,
-    this.preparationTime,
-    this.cookingTime,
-    required this.ingredients,
-    required this.instructions,
-    this.tags,
+    required this.recipe,
   }) : super(key: key);
 
   @override
@@ -32,15 +18,7 @@ class RecipeTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipePage(
-              id: id,
-              imageUrl: imageUrl,
-              title: title,
-              preparationTime: preparationTime,
-              cookingTime: cookingTime,
-              ingredients: ingredients,
-              instructions: instructions,
-            ),
+            builder: (context) => RecipeDetailPage(recipe: recipe),
           ),
         );
       },
@@ -59,9 +37,9 @@ class RecipeTile extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: imageUrl.isNotEmpty
+                    child: recipe.image_url != null
                         ? Image.network(
-                            imageUrl,
+                            recipe.image_url!,
                             height: 80,
                             width: 80,
                             fit: BoxFit.cover,
@@ -83,7 +61,7 @@ class RecipeTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          title,
+                          recipe.title,
                           style: const TextStyle(
                             color: ColorPalette.offBlack,
                             fontSize: 20,
@@ -95,23 +73,24 @@ class RecipeTile extends StatelessWidget {
                         const SizedBox(height: 4.0),
                         Row(
                           children: [
-                            if (preparationTime != null) ...[
+                            if (recipe.preparation_time != null) ...[
                               const Icon(Icons.timer,
                                   size: 16, color: ColorPalette.offBlack),
                               const SizedBox(width: 4),
                               Text(
-                                '$preparationTime min',
+                                '${recipe.preparation_time} min',
                                 style: TextStyle(color: ColorPalette.offBlack),
                               ),
                             ],
-                            if (preparationTime != null && cookingTime != null)
+                            if (recipe.preparation_time != null &&
+                                recipe.cooking_time != null)
                               const SizedBox(width: 12),
-                            if (cookingTime != null) ...[
+                            if (recipe.cooking_time != null) ...[
                               const Icon(Icons.local_fire_department,
                                   size: 16, color: ColorPalette.offBlack),
                               const SizedBox(width: 4),
                               Text(
-                                '$cookingTime min',
+                                '${recipe.cooking_time} min',
                                 style: TextStyle(color: ColorPalette.offBlack),
                               ),
                             ],
@@ -123,11 +102,11 @@ class RecipeTile extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8.0),
-              if (tags != null && tags!.isNotEmpty) ...[
+              if (recipe.tags != null && recipe.tags!.isNotEmpty) ...[
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 4.0,
-                  children: tags!.map((tag) {
+                  children: recipe.tags!.map((tag) {
                     return Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

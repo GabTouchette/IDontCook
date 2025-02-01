@@ -1,42 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
+import 'package:mobile/models/recipe.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
-import 'package:mobile/models/ingredient.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class RecipePage extends StatefulWidget {
-  final int id;
-  final String imageUrl;
-  final String title;
-  final int? preparationTime;
-  final int? cookingTime;
-  final List<Ingredient>? ingredients;
-  final List<String>? instructions;
-  final String? description;
-  final String? notes;
-  final List<String>? tags;
+class RecipeDetailPage extends StatefulWidget {
+  final Recipe recipe;
 
-  const RecipePage({
-    Key? key,
-    required this.id,
-    required this.imageUrl,
-    required this.title,
-    this.preparationTime,
-    this.cookingTime,
-    required this.ingredients,
-    required this.instructions,
-    this.description,
-    this.notes,
-    this.tags,
-  }) : super(key: key);
+  const RecipeDetailPage({Key? key, required this.recipe}) : super(key: key);
 
   @override
-  _RecipePageState createState() => _RecipePageState();
+  _RecipeDetailPageState createState() => _RecipeDetailPageState();
 }
 
-class _RecipePageState extends State<RecipePage> {
+class _RecipeDetailPageState extends State<RecipeDetailPage> {
   List<bool> completedInstructions = [];
   bool isSaved = false;
 
@@ -44,27 +23,27 @@ class _RecipePageState extends State<RecipePage> {
   void initState() {
     super.initState();
     completedInstructions =
-        List<bool>.filled(widget.instructions?.length ?? 0, false);
-    isSaved = widget.id != -1;
+        List<bool>.filled(widget.recipe.instructions.length, false);
+    isSaved = widget.recipe.id != -1;
   }
 
   void _saveRecipe() async {
-    if (widget.id == -1) {
+    if (widget.recipe.id == -1) {
       Map<String, dynamic> recipeData = {
-        "title": widget.title,
-        "ingredients": widget.ingredients
-            ?.map((ingredient) => {
+        "title": widget.recipe.title,
+        "ingredients": widget.recipe.ingredients
+            .map((ingredient) => {
                   "name": ingredient.name,
                   "quantity": ingredient.quantity,
                   "unit_of_measure": ingredient.unit_of_measure,
                 })
             .toList(),
-        "instructions": widget.instructions,
-        "preparation_time": widget.preparationTime,
-        "cooking_time": widget.cookingTime,
-        "description": widget.description,
-        "notes": widget.notes,
-        "tags": widget.tags,
+        "instructions": widget.recipe.instructions,
+        "preparation_time": widget.recipe.preparation_time,
+        "cooking_time": widget.recipe.cooking_time,
+        "description": widget.recipe.description,
+        "notes": widget.recipe.notes,
+        "tags": widget.recipe.tags,
       };
 
       bool success = await RecipeApi().createRecipe(recipeData);
@@ -100,7 +79,7 @@ class _RecipePageState extends State<RecipePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          widget.title,
+          widget.recipe.title,
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
@@ -134,7 +113,8 @@ class _RecipePageState extends State<RecipePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => UpdateRecipePage(recipeId: widget.id),
+                    builder: (context) =>
+                        UpdateRecipePage(recipeId: widget.recipe.id),
                   ),
                 );
               },
@@ -151,7 +131,8 @@ class _RecipePageState extends State<RecipePage> {
                     message: "Are you sure you want to delete this recipe?",
                     onConfirm: () async {
                       Navigator.pop(context);
-                      bool success = await RecipeApi().deleteRecipe(widget.id);
+                      bool success =
+                          await RecipeApi().deleteRecipe(widget.recipe.id);
                       if (success) {
                         Navigator.pop(context);
                       }
@@ -187,9 +168,9 @@ class _RecipePageState extends State<RecipePage> {
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(bottom: Radius.circular(20)),
-              child: widget.imageUrl.isNotEmpty
+              child: widget.recipe.image_url != null
                   ? Image.network(
-                      widget.imageUrl,
+                      widget.recipe.image_url!,
                       height: 250,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -210,24 +191,24 @@ class _RecipePageState extends State<RecipePage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
-                  if (widget.preparationTime != null) ...[
+                  if (widget.recipe.preparation_time != null) ...[
                     const Icon(Icons.timer, size: 20, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      'Prep: ${widget.preparationTime} min',
+                      'Prep: ${widget.recipe.preparation_time} min',
                       style:
                           TextStyle(color: ColorPalette.offWhite, fontSize: 16),
                     ),
                   ],
-                  if (widget.preparationTime != null &&
-                      widget.cookingTime != null)
+                  if (widget.recipe.preparation_time != null &&
+                      widget.recipe.cooking_time != null)
                     const SizedBox(width: 16),
-                  if (widget.cookingTime != null) ...[
+                  if (widget.recipe.cooking_time != null) ...[
                     const Icon(Icons.local_fire_department,
                         size: 20, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      'Cook: ${widget.cookingTime} min',
+                      'Cook: ${widget.recipe.cooking_time} min',
                       style:
                           TextStyle(color: ColorPalette.offWhite, fontSize: 16),
                     ),
@@ -252,7 +233,7 @@ class _RecipePageState extends State<RecipePage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: (widget.ingredients ?? []).map((ingredient) {
+                children: (widget.recipe.ingredients).map((ingredient) {
                   String formattedIngredient =
                       "${ingredient.quantity ?? ''} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
                           .trim();
@@ -286,7 +267,7 @@ class _RecipePageState extends State<RecipePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children:
-                    List.generate(widget.instructions?.length ?? 0, (index) {
+                    List.generate(widget.recipe.instructions.length, (index) {
                   final isCompleted = completedInstructions[index];
                   return GestureDetector(
                     onTap: () {
@@ -322,7 +303,7 @@ class _RecipePageState extends State<RecipePage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                widget.instructions![index],
+                                widget.recipe.instructions[index],
                                 style: TextStyle(
                                   color: isCompleted
                                       ? Colors.green
@@ -341,8 +322,89 @@ class _RecipePageState extends State<RecipePage> {
                 }),
               ),
             ),
+            const SizedBox(height: 16),
+
+            if (widget.recipe.tags != null && widget.recipe.tags!.isNotEmpty)
+              _buildTagSection(widget.recipe.tags!),
+            // Description Section
+
+            if (widget.recipe.description != null &&
+                widget.recipe.description!.isNotEmpty)
+              _buildSection("Description", widget.recipe.description!),
+
+            // Notes Section
+            if (widget.recipe.notes != null && widget.recipe.notes!.isNotEmpty)
+              _buildSection("Notes", widget.recipe.notes!),
+            const SizedBox(height: 64),
+
+            // Tags Section
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTagSection(List<String> tags) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Tags",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: tags.map((tag) {
+              return Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                decoration: BoxDecoration(
+                  color: ColorPalette.darkgray,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  tag,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

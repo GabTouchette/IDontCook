@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/ingredient.dart';
+import 'package:mobile/models/recipe.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
@@ -35,12 +36,10 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title with Overflow Gradient
             Stack(
               children: [
                 Container(
-                  constraints: const BoxConstraints(
-                      maxHeight: 100), // Allow multiple lines
+                  constraints: const BoxConstraints(maxHeight: 100),
                   child: Text(
                     title,
                     style: const TextStyle(
@@ -48,17 +47,13 @@ class RecipeCard extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: ColorPalette.offWhite,
                     ),
-                    maxLines: 3, // Allow wrapping up to 3 lines
-                    overflow:
-                        TextOverflow.ellipsis, // Ellipsis if it still overflows
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 8),
-
-            // Description
             Text(
               description,
               maxLines: 3,
@@ -68,10 +63,7 @@ class RecipeCard extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // Cooking & Prep Time
             Row(
               children: [
                 const Icon(Icons.timer, color: ColorPalette.offWhite, size: 16),
@@ -90,10 +82,7 @@ class RecipeCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // Ingredients Title
             const Text(
               "Ingredients",
               style: TextStyle(
@@ -102,19 +91,15 @@ class RecipeCard extends StatelessWidget {
                 color: ColorPalette.offWhite,
               ),
             ),
-
             const SizedBox(height: 5),
-
-            // Ingredients List with Gradient Overlay
             Stack(
               children: [
                 Container(
-                  constraints:
-                      const BoxConstraints(maxHeight: 60), // Limit height
+                  constraints: const BoxConstraints(maxHeight: 60),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: ingredients
-                        .take(5) // Show only first 5 ingredients
+                        .take(3)
                         .map((ingredient) => Text(
                               "- ${ingredient.quantity} ${ingredient.unit_of_measure} ${ingredient.name}",
                               style:
@@ -124,7 +109,6 @@ class RecipeCard extends StatelessWidget {
                         .toList(),
                   ),
                 ),
-                // Gradient Overlay
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -134,8 +118,8 @@ class RecipeCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          ColorPalette.darkgray.withOpacity(0),
-                          ColorPalette.darkgray.withOpacity(1),
+                          ColorPalette.darkgray.withValues(alpha: 0),
+                          ColorPalette.darkgray.withValues(alpha: 255),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -145,24 +129,27 @@ class RecipeCard extends StatelessWidget {
                 ),
               ],
             ),
-
             Center(
               child: Column(
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      // Navigate to the full recipe page
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RecipePage(
-                            id: -1, // Replace with the actual recipe ID
-                            imageUrl: "", // Replace with the actual image URL
-                            title: title, // Replace with the actual  title
-                            preparationTime: preparationTime, // Replace with the actual prep time
-                            cookingTime: cookingTime, // Replace with the actual cook time
-                            ingredients: ingredients, // Replace with the actual ingredients list
-                            instructions: instructions, // Replace with the actual instructions list
+                          builder: (context) => RecipeDetailPage(
+                            recipe: Recipe(
+                              id: -1,
+                              image_url: "",
+                              title: title,
+                              preparation_time: preparationTime,
+                              cooking_time: cookingTime,
+                              ingredients: ingredients,
+                              instructions: instructions,
+                              description: description,
+                              notes: notes,
+                              tags: tags,
+                            ),
                           ),
                         ),
                       );
@@ -178,7 +165,7 @@ class RecipeCard extends StatelessWidget {
                         color: ColorPalette.offWhite,
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
-                        decoration: TextDecoration.underline, // Underline added
+                        decoration: TextDecoration.underline,
                         decorationColor: ColorPalette.offWhite,
                       ),
                     ),
