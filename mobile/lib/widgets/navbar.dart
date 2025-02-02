@@ -43,6 +43,13 @@ class Navbar extends StatelessWidget {
           ),
           label: '',
         ),
+        BottomNavigationBarItem(
+          icon: Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: FaIcon(FontAwesomeIcons.solidCalendar),
+          ),
+          label: '',
+        ),
       ],
     );
   }

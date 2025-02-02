@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:mobile/models/recipe.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
@@ -10,6 +13,51 @@ class RecipeTile extends StatelessWidget {
     Key? key,
     required this.recipe,
   }) : super(key: key);
+
+  Widget getSmallRecipeImage(String? imageUrl) {
+    final random = Random();
+    int imageNumber = random.nextInt(11) + 1;
+    print(imageNumber);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: imageUrl != null && imageUrl.isNotEmpty
+          ? Image.network(
+              imageUrl,
+              height: 80,
+              width: 80,
+              fit: BoxFit.cover,
+            )
+          : Container(
+              color: ColorPalette.offWhite,
+              height: 80,
+              width: 80,
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/images/stock_food_$imageNumber.jpg',
+                    fit: BoxFit.cover,
+                    height: 80,
+                    width: 80,
+                  ),
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(),
+                    ),
+                  ),
+                  Center(
+                    child: Icon(
+                      Icons.image,
+                      color: ColorPalette.lightgray,
+                      size: 40,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,26 +83,7 @@ class RecipeTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: recipe.image_url != null
-                        ? Image.network(
-                            recipe.image_url!,
-                            height: 80,
-                            width: 80,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            color: ColorPalette.offWhite,
-                            height: 80,
-                            width: 80,
-                            child: const Icon(
-                              Icons.image,
-                              color: ColorPalette.offBlack,
-                              size: 40,
-                            ),
-                          ),
-                  ),
+                  getSmallRecipeImage(recipe.image_url),
                   const SizedBox(width: 12.0),
                   Expanded(
                     child: Column(

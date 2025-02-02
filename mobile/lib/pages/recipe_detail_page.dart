@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe.dart';
@@ -69,6 +72,48 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         );
       }
     }
+  }
+
+  Widget getRecipeImage(String? imageUrl) {
+    final random = Random();
+    int imageNumber = random.nextInt(12) + 1;
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+      child: imageUrl != null && imageUrl.isNotEmpty
+          ? Image.network(
+              imageUrl,
+              height: 250,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            )
+          : Container(
+              height: 250,
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/images/stock_food_$imageNumber.jpg',
+                    fit: BoxFit.cover,
+                    height: 250,
+                    width: double.infinity,
+                  ),
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                      child: Container(),
+                    ),
+                  ),
+                  Center(
+                    child: Icon(
+                      Icons.image,
+                      color: ColorPalette.lightgray,
+                      size: 80,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
   }
 
   @override
@@ -165,27 +210,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(20)),
-              child: widget.recipe.image_url != null && widget.recipe.image_url != ""
-                  ? Image.network(
-                      widget.recipe.image_url!,
-                      height: 250,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      color: Colors.grey[700],
-                      height: 250,
-                      width: double.infinity,
-                      child: const Icon(
-                        Icons.image,
-                        color: Colors.white,
-                        size: 80,
-                      ),
-                    ),
-            ),
+            getRecipeImage(widget.recipe.image_url),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -323,21 +348,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ),
             ),
             const SizedBox(height: 16),
-
             if (widget.recipe.tags != null && widget.recipe.tags!.isNotEmpty)
               _buildTagSection(widget.recipe.tags!),
-            // Description Section
-
             if (widget.recipe.description != null &&
                 widget.recipe.description!.isNotEmpty)
               _buildSection("Description", widget.recipe.description!),
-
-            // Notes Section
             if (widget.recipe.notes != null && widget.recipe.notes!.isNotEmpty)
               _buildSection("Notes", widget.recipe.notes!),
             const SizedBox(height: 64),
-
-            // Tags Section
           ],
         ),
       ),
