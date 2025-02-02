@@ -24,6 +24,14 @@ class ChatbotView(APIView):
     def chat_response(self, query, chat_history=None):
         """Handles general chatbot queries using OpenAI"""
         
+        # Create a new conversation entry
+        conversation = Conversation.objects.create(user_query=query, ai_response="loading")
+        
+        # Save the chat history if any
+        if chat_history:
+            for message in chat_history:
+                ChatHistory.objects.create(conversation=conversation, sender=message['sender'], message=message['text'])
+
         # Fetch user's saved recipes
         saved_recipes = Recipe.objects.all()  # Adjust this to fetch only the user's recipes
         recipes_list = [
@@ -69,9 +77,15 @@ class ChatbotView(APIView):
         )
 
         openai_response = self.ask_openai(prompt, chat_history)
+
+        # Save AI response in the conversation
+        conversation.ai_response = openai_response
+        conversation.save()
+
+        # Optionally, save each AI message as a chat history
+        ChatHistory.objects.create(conversation=conversation, sender="ai", message=openai_response)
+
         return Response({"response": openai_response}, status=status.HTTP_200_OK)
-
-
 
     def get_recipe(self, query):
         """Retrieves an existing recipe by name"""
