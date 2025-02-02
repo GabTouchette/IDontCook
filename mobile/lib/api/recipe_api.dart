@@ -17,7 +17,7 @@ class RecipeApi {
     return response != null;
   }
 
-  Future<Map<String, dynamic>?> getRecipeById(int recipeId) async {
+  Future<Map<String, dynamic>> getRecipeById(int recipeId) async {
     return await _apiHelper.getRequest('recipes/$recipeId/');
   }
 

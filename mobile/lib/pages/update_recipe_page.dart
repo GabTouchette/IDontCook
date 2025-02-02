@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
+import 'package:mobile/models/recipe.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_extra_section.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_ingredients_section.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_instructions_section.dart';
@@ -69,49 +70,43 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
   }
 
   void _fetchRecipe() async {
-    var recipe = await RecipeApi().getRecipeById(widget.recipeId);
+    var response = await RecipeApi().getRecipeById(widget.recipeId);
+    var recipe = Recipe.fromJson(response);
 
-    if (recipe != null) {
-      setState(() {
-        _titleController.text = recipe['title'] ?? '';
-        _preptimeController.text = recipe['preparation_time']?.toString() ?? '';
-        _cooktimeController.text = recipe['cooking_time']?.toString() ?? '';
-        _descriptionController.text = recipe['description'] ?? '';
-        _notesController.text = recipe['notes'] ?? '';
+    setState(() {
+      _titleController.text = recipe.title;
+      _preptimeController.text = recipe.preparation_time?.toString() ?? '';
+      _cooktimeController.text = recipe.cooking_time?.toString() ?? '';
+      _descriptionController.text = recipe.description ?? '';
+      _notesController.text = recipe.notes ?? '';
 
-        _ingredients = (recipe['ingredients'] as List?)
-                ?.map<IngredientField>((ingredient) {
-              return IngredientField(
-                controller:
-                    TextEditingController(text: ingredient['name'] ?? ''),
-                focusNode: FocusNode(),
-              );
-            }).toList() ??
-            [];
-
-        _ingredients.add(IngredientField(
-          controller: TextEditingController(),
+      _ingredients = (recipe.ingredients).map<IngredientField>((ingredient) {
+        return IngredientField(
+          controller: TextEditingController(text: ingredient.name ?? ''),
           focusNode: FocusNode(),
-        ));
+        );
+      }).toList();
 
-        _instructions = (recipe['instructions'] as List?)
-                ?.map<InstructionField>((instruction) {
-              return InstructionField(
-                controller: TextEditingController(
-                    text: instruction is String ? instruction : ''),
-                focusNode: FocusNode(),
-              );
-            }).toList() ??
-            [];
+      _ingredients.add(IngredientField(
+        controller: TextEditingController(),
+        focusNode: FocusNode(),
+      ));
 
-        _instructions.add(InstructionField(
-          controller: TextEditingController(),
+      _instructions =
+          (recipe.instructions).map<InstructionField>((instruction) {
+        return InstructionField(
+          controller: TextEditingController(text: instruction),
           focusNode: FocusNode(),
-        ));
+        );
+      }).toList();
 
-        _selectedTags = List<String>.from(recipe['tags'] ?? []);
-      });
-    }
+      _instructions.add(InstructionField(
+        controller: TextEditingController(),
+        focusNode: FocusNode(),
+      ));
+
+      _selectedTags = List<String>.from(recipe.tags ?? []);
+    });
   }
 
   @override
