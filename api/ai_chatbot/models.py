@@ -1,7 +1,8 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Conversation(models.Model):
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     
     user_query = models.TextField()  
     ai_response = models.TextField()
@@ -15,6 +16,7 @@ class ChatHistory(models.Model):
     sender = models.CharField(max_length=50)  # 'user' or 'ai'
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.sender} - {self.created_at}"
