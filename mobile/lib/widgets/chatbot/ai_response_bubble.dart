@@ -61,24 +61,32 @@ class AiResponseBubble extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: recipeParts.map<Widget>((part) {
+          Widget widget;
           if (part.startsWith("<recipe>") && part.endsWith("</recipe>")) {
             final recipeJson = json.decode(part.substring(8, part.length - 9));
-            return RecipeCard(
+            widget = RecipeCard(
               recipe: Recipe.fromJson(recipeJson),
             );
           } else if (part.startsWith("<userRecipe>") &&
               part.endsWith("</userRecipe>")) {
             final userRecipeJson =
                 json.decode(part.substring(12, part.length - 13));
-            return UserRecipeCard(
+            widget = UserRecipeCard(
               recipeId: userRecipeJson['id'],
             );
           } else {
-            return MessageWidget(
+            widget = MessageWidget(
               messageText: part,
               isUser: false,
             );
           }
+
+          return Column(
+            children: [
+              widget,
+              SizedBox(height: 4.0),
+            ],
+          );
         }).toList(),
       ),
     );

@@ -3,7 +3,11 @@ from .models import ChatHistory, Conversation
 
 class ChatbotRequestSerializer(serializers.Serializer):
     query = serializers.CharField()
-    chat_history = serializers.CharField(required=False, allow_blank=True)
+    chat_history = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        allow_empty=True
+    )
 
 class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:

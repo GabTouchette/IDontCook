@@ -44,8 +44,8 @@ class AiChatBotPageState extends State<AiChatBotPage> {
 
       try {
         List<String> lastAiMessages = [];
-        for (int i = _messages.length - 1; i >= 0; i--) {
-          if (_messages[i]["sender"] == "user") break;
+        for (int i = _messages.length - 2; i >= 0; i--) {
+          if (_messages[i]["sender"] == "user") continue;
           lastAiMessages.insert(0, _messages[i]['text'] ?? '');
         }
 
