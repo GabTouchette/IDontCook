@@ -29,11 +29,6 @@ class ChatbotView(APIView):
         """Handles general chatbot queries using OpenAI"""
         
         conversation = Conversation.objects.create(user=user, user_query=query, ai_response="loading")
-        if chat_history:
-            print(chat_history)
-            for message in chat_history:
-                ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=message)
-
         saved_recipes = Recipe.objects.all()
         recipes_list = [
             {
@@ -105,7 +100,7 @@ class ChatbotView(APIView):
             if chat_history:
                 messages = [message, {
                     'role': 'assistant',
-                    'content': chat_history
+                    'content': "\n".join(chat_history)
                 }]
             else:
                 messages = [message]  
