@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe.dart';
+import 'package:mobile/widgets/dialogs/information_dialog.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_extra_section.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_ingredients_section.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_instructions_section.dart';
@@ -180,20 +181,15 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(success ? 'Recipe Updated' : 'Update Failed'),
-        content: Text(success
+      builder: (context) => InformationDialog(
+        title: success ? 'Recipe Updated' : 'Update Failed',
+        message: success
             ? 'Your recipe has been successfully updated!'
-            : 'There was an error updating your recipe.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (success) Navigator.pop(context);
-            },
-            child: Text('OK'),
-          ),
-        ],
+            : 'There was an error updating your recipe.',
+        onConfirm: () {
+          Navigator.of(context).pop();
+          if (success) Navigator.pop(context);
+        },
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/auth_api.dart';
+import 'package:mobile/widgets/dialogs/information_dialog.dart';
 import '../theme/colors.dart';
 
 class LandingPage extends StatefulWidget {
@@ -28,15 +29,10 @@ class _LandingPageState extends State<LandingPage> {
     } catch (e) {
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: Text("Login Failed"),
-          content: Text("Invalid username or password."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
+        builder: (_) => InformationDialog(
+          title: "Login Failed",
+          message: "Invalid username or password.",
+          onConfirm: () => Navigator.pop(context),
         ),
       );
     }
@@ -54,15 +50,10 @@ class _LandingPageState extends State<LandingPage> {
     } catch (e) {
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: Text("Registration Failed"),
-          content: Text("Failed to register, please try again."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
+        builder: (_) => InformationDialog(
+          title: "Registration Failed",
+          message: "Failed to register, please try again.",
+          onConfirm: () => Navigator.pop(context),
         ),
       );
     }
@@ -147,7 +138,8 @@ class _LandingPageState extends State<LandingPage> {
                             Icons.person,
                             color: ColorPalette.offWhite,
                           ),
-                          hintText: _isLoggingIn ? 'Username or email' : 'Username',
+                          hintText:
+                              _isLoggingIn ? 'Username or email' : 'Username',
                           hintStyle: TextStyle(
                             color: ColorPalette.placeholdergray,
                           ),
@@ -230,4 +222,4 @@ class _LandingPageState extends State<LandingPage> {
       ),
     );
   }
-} 
+}

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/widgets/recipe_tile.dart';
 import 'package:mobile/pages/create_recipe_page.dart';
@@ -22,6 +23,7 @@ class _RecipesPageState extends State<RecipesPage> {
   List<Recipe> _filteredRecipes = [];
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
+  final AuthApi _authApi = AuthApi();
 
   @override
   void initState() {
@@ -117,9 +119,13 @@ class _RecipesPageState extends State<RecipesPage> {
             padding: const EdgeInsets.only(right: 8.0),
           ),
           IconButton(
-            onPressed: () {},
-            icon: const FaIcon(
-              FontAwesomeIcons.camera,
+            onPressed: () async {
+              await _authApi.logout();
+              Navigator.pop(context);
+            },
+            icon: const Icon(
+              Icons.logout,
+              size: 32,
               color: ColorPalette.offWhite,
             ),
           ),

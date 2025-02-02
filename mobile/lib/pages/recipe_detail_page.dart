@@ -8,6 +8,7 @@ import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mobile/widgets/dialogs/information_dialog.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Recipe recipe;
@@ -54,20 +55,15 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       if (success) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(success ? 'Recipe Saved' : 'Submission Failed'),
-            content: Text(success
+          builder: (context) => InformationDialog(
+            title: success ? 'Recipe Saved' : 'Submission Failed',
+            message: success
                 ? 'Your recipe has been successfully saved!'
-                : 'There was an error submitting your recipe.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  if (success) Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
+                : 'There was an error submitting your recipe.',
+            onConfirm: () {
+              Navigator.of(context).pop();
+              if (success) Navigator.pop(context);
+            },
           ),
         );
       }
