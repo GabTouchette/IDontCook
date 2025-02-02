@@ -13,7 +13,7 @@ _$IngredientImpl _$$IngredientImplFromJson(Map<String, dynamic> json) =>
       substitutes: (json['substitutes'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
-      quantity: (json['quantity'] as num?)?.toDouble(),
+      quantity: json['quantity'] as String?,
       unit_of_measure: json['unit_of_measure'] as String?,
     );
 

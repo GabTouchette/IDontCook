@@ -52,9 +52,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(success ? 'Recipe Submitted' : 'Submission Failed'),
+            title: Text(success ? 'Recipe Saved' : 'Submission Failed'),
             content: Text(success
-                ? 'Your recipe has been successfully submitted!'
+                ? 'Your recipe has been successfully saved!'
                 : 'There was an error submitting your recipe.'),
             actions: [
               TextButton(
@@ -168,7 +168,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(bottom: Radius.circular(20)),
-              child: widget.recipe.image_url != null
+              child: widget.recipe.image_url != null && widget.recipe.image_url != ""
                   ? Image.network(
                       widget.recipe.image_url!,
                       height: 250,

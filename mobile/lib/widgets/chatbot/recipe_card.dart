@@ -1,29 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/ingredient.dart';
 import 'package:mobile/models/recipe.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
 class RecipeCard extends StatelessWidget {
-  final String title;
-  final List<Ingredient> ingredients;
-  final List<String> instructions;
-  final int cookingTime;
-  final int preparationTime;
-  final List<String> tags;
-  final String description;
-  final String notes;
+  final Recipe recipe;
 
   const RecipeCard({
     super.key,
-    required this.title,
-    required this.ingredients,
-    required this.instructions,
-    required this.cookingTime,
-    required this.preparationTime,
-    required this.tags,
-    required this.description,
-    required this.notes,
+    required this.recipe,
   });
 
   @override
@@ -41,7 +26,7 @@ class RecipeCard extends StatelessWidget {
                 Container(
                   constraints: const BoxConstraints(maxHeight: 100),
                   child: Text(
-                    title,
+                    recipe.title,
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w500,
@@ -54,22 +39,24 @@ class RecipeCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: ColorPalette.offWhite,
-                fontSize: 14,
-              ),
-            ),
+            recipe.description != null
+                ? Text(
+                    recipe.description!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: ColorPalette.offWhite,
+                      fontSize: 14,
+                    ),
+                  )
+                : const SizedBox.shrink(),
             const SizedBox(height: 8),
             Row(
               children: [
                 const Icon(Icons.timer, color: ColorPalette.offWhite, size: 16),
                 const SizedBox(width: 5),
                 Text(
-                  "$preparationTime min",
+                  "${recipe.preparation_time} min",
                   style: const TextStyle(color: ColorPalette.offWhite),
                 ),
                 const SizedBox(width: 15),
@@ -77,7 +64,7 @@ class RecipeCard extends StatelessWidget {
                     color: Colors.redAccent, size: 16),
                 const SizedBox(width: 5),
                 Text(
-                  "$cookingTime min",
+                  "${recipe.cooking_time} min",
                   style: const TextStyle(color: ColorPalette.offWhite),
                 ),
               ],
@@ -98,7 +85,7 @@ class RecipeCard extends StatelessWidget {
                   constraints: const BoxConstraints(maxHeight: 60),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: ingredients
+                    children: recipe.ingredients
                         .take(3)
                         .map((ingredient) => Text(
                               "- ${ingredient.quantity} ${ingredient.unit_of_measure} ${ingredient.name}",
@@ -118,8 +105,8 @@ class RecipeCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          ColorPalette.darkgray.withValues(alpha: 0),
-                          ColorPalette.darkgray.withValues(alpha: 255),
+                          ColorPalette.darkgray.withOpacity(0),
+                          ColorPalette.darkgray.withOpacity(1),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -141,14 +128,14 @@ class RecipeCard extends StatelessWidget {
                             recipe: Recipe(
                               id: -1,
                               image_url: "",
-                              title: title,
-                              preparation_time: preparationTime,
-                              cooking_time: cookingTime,
-                              ingredients: ingredients,
-                              instructions: instructions,
-                              description: description,
-                              notes: notes,
-                              tags: tags,
+                              title: recipe.title,
+                              preparation_time: recipe.preparation_time,
+                              cooking_time: recipe.cooking_time,
+                              ingredients: recipe.ingredients,
+                              instructions: recipe.instructions,
+                              description: recipe.description,
+                              notes: recipe.notes,
+                              tags: recipe.tags,
                             ),
                           ),
                         ),

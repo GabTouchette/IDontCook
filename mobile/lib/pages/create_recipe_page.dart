@@ -137,9 +137,9 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(success ? 'Recipe Submitted' : 'Submission Failed'),
+        title: Text(success ? 'Recipe Created' : 'Submission Failed'),
         content: Text(success
-            ? 'Your recipe has been successfully submitted!'
+            ? 'Your recipe has been successfully created!'
             : 'There was an error submitting your recipe.'),
         actions: [
           TextButton(

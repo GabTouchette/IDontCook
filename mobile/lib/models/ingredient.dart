@@ -9,7 +9,7 @@ class Ingredient with _$Ingredient {
     int? id,
     String? name,
     List<String>? substitutes,
-    double? quantity,
+    String? quantity,
     String? unit_of_measure,
   }) = _Ingredient;
 

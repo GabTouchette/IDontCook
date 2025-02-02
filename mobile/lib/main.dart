@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'IDontCook',
+      title: 'ICantCook',
       theme: ThemeData.light(),
       initialRoute: '/',
       onGenerateRoute: generateRoute,

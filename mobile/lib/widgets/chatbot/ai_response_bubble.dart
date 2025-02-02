@@ -1,43 +1,38 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:mobile/models/ingredient.dart';
+import 'package:mobile/models/recipe.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/chatbot/chat_message.dart';
 import 'package:mobile/widgets/chatbot/recipe_card.dart';
+import 'package:mobile/widgets/chatbot/user_recipe_card.dart';
 
 class AiResponseBubble extends StatelessWidget {
   final String? message;
 
   const AiResponseBubble({super.key, this.message});
 
-  Map<String, dynamic>? extractRecipe(String message) {
-    final recipeStart = message.indexOf("<recipe>");
-    final recipeEnd = message.indexOf("</recipe>");
+  List<String> splitRecipes(String message) {
+    final regex = RegExp(
+        r'(<recipe>.*?</recipe>)|(<userRecipe>.*?</userRecipe>)',
+        dotAll: true);
+    final matches = regex.allMatches(message);
 
-    if (recipeStart != -1 && recipeEnd != -1) {
-      final recipeJson = message.substring(recipeStart + 8, recipeEnd).trim();
+    List<String> parts = [];
+    int lastIndex = 0;
 
-      final fixedRecipeJson = recipeJson.replaceAll("'", '"');
-
-      try {
-        final recipe = json.decode(fixedRecipeJson);
-        final beforeRecipe = message.substring(0, recipeStart).trim();
-        final afterRecipe = message.substring(recipeEnd + 9).trim();
-        return {
-          'recipe': recipe,
-          'beforeRecipe': beforeRecipe,
-          'afterRecipe': afterRecipe,
-        };
-      } catch (e) {
-        print("Error decoding recipe JSON: $e");
-        return null;
+    for (final match in matches) {
+      if (match.start > lastIndex) {
+        parts.add(message.substring(lastIndex, match.start).trim());
       }
+      parts.add(match.group(0)!);
+      lastIndex = match.end;
     }
-    print(message);
-    return {
-      'beforeRecipe': message,
-      'afterRecipe': '',
-    };
+
+    if (lastIndex < message.length) {
+      parts.add(message.substring(lastIndex).trim());
+    }
+
+    return parts.where((part) => part.isNotEmpty).toList();
   }
 
   @override
@@ -59,37 +54,32 @@ class AiResponseBubble extends StatelessWidget {
       );
     }
 
-    final recipe = extractRecipe(message!);
+    final recipeParts = splitRecipes(message!);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (recipe!['beforeRecipe'].isNotEmpty)
-            MessageWidget(
-              messageText: recipe['beforeRecipe'],
+        children: recipeParts.map<Widget>((part) {
+          if (part.startsWith("<recipe>") && part.endsWith("</recipe>")) {
+            final recipeJson = json.decode(part.substring(8, part.length - 9));
+            return RecipeCard(
+              recipe: Recipe.fromJson(recipeJson),
+            );
+          } else if (part.startsWith("<userRecipe>") &&
+              part.endsWith("</userRecipe>")) {
+            final userRecipeJson =
+                json.decode(part.substring(12, part.length - 13));
+            return UserRecipeCard(
+              recipeId: userRecipeJson['id'],
+            );
+          } else {
+            return MessageWidget(
+              messageText: part,
               isUser: false,
-            ),
-          if (recipe['recipe'] != null)
-            RecipeCard(
-              title: recipe['recipe']['title'],
-              ingredients: List<Ingredient>.from(recipe['recipe']['ingredients']
-                  .map(
-                      (ingredientJson) => Ingredient.fromJson(ingredientJson))),
-              instructions: List<String>.from(recipe['recipe']['instructions']),
-              cookingTime: recipe['recipe']['cooking_time'],
-              preparationTime: recipe['recipe']['preparation_time'],
-              tags: List<String>.from(recipe['recipe']['tags']),
-              description: recipe['recipe']['description'],
-              notes: recipe['recipe']['notes'],
-            ),
-          if (recipe['afterRecipe'].isNotEmpty)
-            MessageWidget(
-              messageText: recipe['afterRecipe'],
-              isUser: false,
-            ),
-        ],
+            );
+          }
+        }).toList(),
       ),
     );
   }

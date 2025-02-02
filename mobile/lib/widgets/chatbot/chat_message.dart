@@ -13,6 +13,21 @@ class MessageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String finalMessageText = messageText;
+    TextStyle messageStyle = TextStyle(
+      color: isUser ? ColorPalette.offBlack : ColorPalette.offWhite,
+      fontSize: 16,
+    );
+
+    if (finalMessageText.startsWith("**") && finalMessageText.endsWith("**")) {
+      finalMessageText =
+          finalMessageText.substring(2, finalMessageText.length - 2);
+      messageStyle = messageStyle.copyWith(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
       decoration: BoxDecoration(
@@ -20,11 +35,8 @@ class MessageWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
-        messageText,
-        style: TextStyle(
-          color: isUser ? ColorPalette.offBlack : ColorPalette.offWhite,
-          fontSize: 16,
-        ),
+        finalMessageText,
+        style: messageStyle,
       ),
     );
   }

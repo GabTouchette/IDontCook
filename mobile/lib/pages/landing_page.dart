@@ -20,9 +20,9 @@ class LandingPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center, // Center vertically
             crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
             children: [
-              // 'IDontCook' title
+              // 'ICantCook' title
               Text(
-                'IDontCook',
+                'ICantCook',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       color: ColorPalette.offWhite,
                       fontSize: 72,

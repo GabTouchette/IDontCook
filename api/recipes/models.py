@@ -4,7 +4,7 @@ import json
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     substitutes = models.JSONField(default=list, blank=True, null=True)
-    quantity = models.FloatField(blank=True, null=True)
+    quantity = models.CharField(max_length=255, blank=True, null=True)
     unit_of_measure = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):

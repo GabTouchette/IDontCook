@@ -43,7 +43,13 @@ class AiChatBotPageState extends State<AiChatBotPage> {
       _scrollToBottom();
 
       try {
-        final response = await AiChatbotApi().chatWithBot(query);
+        String lastAiMessage = '';
+        for (int i = _messages.length - 3; i >= 0; i--) {
+          if (_messages[i]["sender"] == "user") break;
+          lastAiMessage = (_messages[i]['text'] ?? '') + ' ' + lastAiMessage;
+        }
+        lastAiMessage = lastAiMessage.trim();
+        final response = await AiChatbotApi().chatWithBot(query, lastAiMessage);
 
         if (response != null && response['response'] != null) {
           setState(() {
@@ -183,11 +189,17 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                   _buildBreadcrumb(
                                       'New Idea',
                                       FontAwesomeIcons.lightbulb,
-                                      ColorPalette.mustard),
+                                      ColorPalette.mustard, () {
+                                    _sendMessage('Can you suggest a new recipe idea?');
+                                  }),
                                   _buildBreadcrumb('Something I have',
-                                      FontAwesomeIcons.file, Colors.green),
+                                      FontAwesomeIcons.file, Colors.green, () {
+                                    _sendMessage('Can you suggest a recipe that i have?');
+                                  }),
                                   _buildBreadcrumb('A popular choice',
-                                      FontAwesomeIcons.fire, Colors.orange),
+                                      FontAwesomeIcons.fire, Colors.orange, () {
+                                    _sendMessage('Can you suggest a popular recipe at the moment?');
+                                  }),
                                 ],
                               ),
                             ),
@@ -271,9 +283,10 @@ class AiChatBotPageState extends State<AiChatBotPage> {
     );
   }
 
-  Widget _buildBreadcrumb(String title, IconData icon, Color color) {
+  Widget _buildBreadcrumb(
+      String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         decoration: BoxDecoration(
