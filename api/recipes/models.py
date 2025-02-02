@@ -1,5 +1,6 @@
 from django.db import models
 import json
+from django.contrib.auth.models import User
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -13,7 +14,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     title = models.CharField(max_length=255, blank=True, null=True)
-    ingredients = models.ManyToManyField(Ingredient, related_name="recipes", blank=True)
+    ingredients = models.ManyToManyField('Ingredient', related_name="recipes", blank=True)
     instructions = models.JSONField(blank=True, null=True)
     cooking_time = models.IntegerField(blank=True, null=True)
     preparation_time = models.IntegerField(blank=True, null=True)
@@ -22,6 +23,6 @@ class Recipe(models.Model):
     image_url = models.URLField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     def __str__(self):
         return self.title

@@ -14,7 +14,8 @@ class ApiHelper {
     }
   }
 
-  Future<dynamic> postRequest(String endpoint, Map<String, dynamic> data) async {
+  Future<dynamic> postRequest(
+      String endpoint, Map<String, dynamic> data) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/$endpoint'),
