@@ -41,13 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',  # Required for allauth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
-    'rest_framework.authtoken',
+    'rest_framework',
+    'rest_framework.authtoken', 
     'corsheaders',
     'recipes',
     'ai_chatbot',
@@ -55,10 +50,9 @@ INSTALLED_APPS = [
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # Default backend for regular users
-    'allauth.account.auth_backends.AuthenticationBackend',  # Backend for allauth
 )
 
-SITE_ID = 1  # Required for allauth
+# AUTH_USER_MODEL = 'myapp.CustomUser'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -69,7 +63,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
 ]
 
 # Rest Framework Settings
@@ -81,7 +74,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Use JWT for authentication
+        'rest_framework.authentication.TokenAuthentication',
     ],
 }
 
@@ -100,8 +93,6 @@ SIMPLE_JWT = {
     'JWK_URL': None,
     'LEeway': 0,
 }
-ACCOUNT_EMAIL_VERIFICATION = "none"
-
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

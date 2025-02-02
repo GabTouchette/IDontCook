@@ -17,7 +17,6 @@ class RecipeTile extends StatelessWidget {
   Widget getSmallRecipeImage(String? imageUrl) {
     final random = Random();
     int imageNumber = random.nextInt(11) + 1;
-    print(imageNumber);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),

@@ -1,12 +1,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'auth_api.dart';
 
 class ApiHelper {
   final String baseUrl = 'http://192.168.0.110:8000/api';
 
-  Future<dynamic> getRequest(String endpoint) async {
+  Future<dynamic> getRequest(String endpoint,
+      {bool requiresAuth = true}) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/$endpoint'));
+      final headers = requiresAuth
+          ? await AuthApi.getAuthHeader()
+          : {'Content-Type': 'application/json'};
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/$endpoint'),
+        headers: headers,
+      );
       return _handleResponse(response);
     } catch (e) {
       print('GET request error: $e');
@@ -14,12 +23,16 @@ class ApiHelper {
     }
   }
 
-  Future<dynamic> postRequest(
-      String endpoint, Map<String, dynamic> data) async {
+  Future<dynamic> postRequest(String endpoint, Map<String, dynamic> data,
+      {bool requiresAuth = true}) async {
     try {
+      final headers = requiresAuth
+          ? await AuthApi.getAuthHeader()
+          : {'Content-Type': 'application/json'};
+
       final response = await http.post(
         Uri.parse('$baseUrl/$endpoint'),
-        headers: {"Content-Type": "application/json"},
+        headers: headers,
         body: jsonEncode(data),
       );
       return _handleResponse(response);
@@ -29,11 +42,16 @@ class ApiHelper {
     }
   }
 
-  Future<dynamic> putRequest(String endpoint, Map<String, dynamic> data) async {
+  Future<dynamic> putRequest(String endpoint, Map<String, dynamic> data,
+      {bool requiresAuth = true}) async {
     try {
+      final headers = requiresAuth
+          ? await AuthApi.getAuthHeader()
+          : {'Content-Type': 'application/json'};
+
       final response = await http.put(
         Uri.parse('$baseUrl/$endpoint'),
-        headers: {"Content-Type": "application/json"},
+        headers: headers,
         body: jsonEncode(data),
       );
       return _handleResponse(response);
@@ -43,11 +61,16 @@ class ApiHelper {
     }
   }
 
-  Future<bool> deleteRequest(String endpoint) async {
+  Future<bool> deleteRequest(String endpoint,
+      {bool requiresAuth = true}) async {
     try {
+      final headers = requiresAuth
+          ? await AuthApi.getAuthHeader()
+          : {'Content-Type': 'application/json'};
+
       final response = await http.delete(
         Uri.parse('$baseUrl/$endpoint'),
-        headers: {"Content-Type": "application/json"},
+        headers: headers,
       );
       return response.statusCode == 204;
     } catch (e) {
