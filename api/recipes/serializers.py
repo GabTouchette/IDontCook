@@ -43,10 +43,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop("ingredients")
         instructions = validated_data.pop("instructions")
         validated_data["instructions"] = str(instructions)
-
+        
+        validated_data["user"] = self.context["request"].user
 
         recipe = Recipe.objects.create(**validated_data)
-
 
         for ingredient_data in ingredients_data:
             ingredient_obj = Ingredient.objects.create(
@@ -63,7 +63,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         instructions = validated_data.pop("instructions")
         validated_data["instructions"] = str(instructions)
 
-
         instance.title = validated_data.get("title", instance.title)
         instance.instructions = validated_data.get("instructions", instance.instructions)
         instance.cooking_time = validated_data.get("cooking_time", instance.cooking_time)
@@ -73,7 +72,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.image_url = validated_data.get("image_url", instance.image_url)  
         instance.notes = validated_data.get("notes", instance.notes)  
         instance.save()
-
 
         instance.ingredients.clear()
         for ingredient_data in ingredients_data:

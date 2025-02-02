@@ -26,7 +26,6 @@ class _LandingPageState extends State<LandingPage> {
 
       Navigator.pushNamed(context, '/recipes');
     } catch (e) {
-      print(e);
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -53,7 +52,6 @@ class _LandingPageState extends State<LandingPage> {
 
       Navigator.pushNamed(context, '/recipes');
     } catch (e) {
-      print(e);
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -232,4 +230,4 @@ class _LandingPageState extends State<LandingPage> {
       ),
     );
   }
-}
+} 

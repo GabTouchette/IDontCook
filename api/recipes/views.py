@@ -4,9 +4,12 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Recipe, Ingredient
 from .serializers import RecipeSerializer, IngredientSerializer
+from rest_framework.permissions import IsAuthenticated
 
-# Ingredient API View
+
 class IngredientListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         ingredients = Ingredient.objects.all()
         serializer = IngredientSerializer(ingredients, many=True)
@@ -21,6 +24,8 @@ class IngredientListAPIView(APIView):
 
 
 class IngredientDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, pk):
         ingredient = get_object_or_404(Ingredient, pk=pk)
         serializer = IngredientSerializer(ingredient)
@@ -40,15 +45,16 @@ class IngredientDetailAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Recipe API View
 class RecipeListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
         recipes = Recipe.objects.all()
         serializer = RecipeSerializer(recipes, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = RecipeSerializer(data=request.data)
+        serializer = RecipeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -56,6 +62,8 @@ class RecipeListAPIView(APIView):
 
 
 class RecipeDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = RecipeSerializer(recipe)

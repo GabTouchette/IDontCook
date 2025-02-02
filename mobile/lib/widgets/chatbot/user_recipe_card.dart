@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
-import 'package:mobile/theme/colors.dart'; // Import ColorPalette if needed
+import 'package:mobile/theme/colors.dart';
 
 class UserRecipeCard extends StatefulWidget {
   final int recipeId;
-  final bool isUser; // Add isUser to distinguish styling if necessary
+  final bool isUser;
 
   const UserRecipeCard({
     super.key,
     required this.recipeId,
-    this.isUser = false, // Default to false if not provided
+    this.isUser = false,
   });
 
   @override

@@ -8,10 +8,14 @@ from rest_framework import status
 from .serializers import ChatbotRequestSerializer
 from recipes.models import Recipe
 from recipes.serializers import RecipeSerializer
+from .models import Conversation, ChatHistory
+from rest_framework.permissions import IsAuthenticated
 
 load_dotenv()
 
 class ChatbotView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def post(self, request):
         serializer = ChatbotRequestSerializer(data=request.data)
         if not serializer.is_valid():
@@ -19,21 +23,18 @@ class ChatbotView(APIView):
 
         query = serializer.validated_data['query']
         chat_history = serializer.validated_data.get('chat_history', None)
-        return self.chat_response(query, chat_history)
+        return self.chat_response(request.user, query, chat_history)
 
-    def chat_response(self, query, chat_history=None):
+    def chat_response(self, user, query, chat_history=None):
         """Handles general chatbot queries using OpenAI"""
         
-        # Create a new conversation entry
-        conversation = Conversation.objects.create(user_query=query, ai_response="loading")
-        
-        # Save the chat history if any
+        conversation = Conversation.objects.create(user=user, user_query=query, ai_response="loading")
         if chat_history:
+            print(chat_history)
             for message in chat_history:
-                ChatHistory.objects.create(conversation=conversation, sender=message['sender'], message=message['text'])
+                ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=message)
 
-        # Fetch user's saved recipes
-        saved_recipes = Recipe.objects.all()  # Adjust this to fetch only the user's recipes
+        saved_recipes = Recipe.objects.all()
         recipes_list = [
             {
                 "id": recipe.id,
@@ -46,7 +47,6 @@ class ChatbotView(APIView):
             for recipe in saved_recipes
         ]
 
-        # Format recipes into prompt
         recipe_info = "\n".join([
             f"- {r['title']} (ID: {r['id']}) | Ingredients: {', '.join([i['name'] for i in r['ingredients']])}"
             for r in recipes_list
@@ -78,12 +78,10 @@ class ChatbotView(APIView):
 
         openai_response = self.ask_openai(prompt, chat_history)
 
-        # Save AI response in the conversation
         conversation.ai_response = openai_response
         conversation.save()
 
-        # Optionally, save each AI message as a chat history
-        ChatHistory.objects.create(conversation=conversation, sender="ai", message=openai_response)
+        ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
 
         return Response({"response": openai_response}, status=status.HTTP_200_OK)
 

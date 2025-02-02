@@ -43,13 +43,14 @@ class AiChatBotPageState extends State<AiChatBotPage> {
       _scrollToBottom();
 
       try {
-        String lastAiMessage = '';
-        for (int i = _messages.length - 3; i >= 0; i--) {
+        List<String> lastAiMessages = [];
+        for (int i = _messages.length - 1; i >= 0; i--) {
           if (_messages[i]["sender"] == "user") break;
-          lastAiMessage = (_messages[i]['text'] ?? '') + ' ' + lastAiMessage;
+          lastAiMessages.insert(0, _messages[i]['text'] ?? '');
         }
-        lastAiMessage = lastAiMessage.trim();
-        final response = await AiChatbotApi().chatWithBot(query, lastAiMessage);
+
+        final response =
+            await AiChatbotApi().chatWithBot(query, lastAiMessages);
 
         if (response != null && response['response'] != null) {
           setState(() {
@@ -190,15 +191,18 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                       'New Idea',
                                       FontAwesomeIcons.lightbulb,
                                       ColorPalette.mustard, () {
-                                    _sendMessage('Can you suggest a new recipe idea?');
+                                    _sendMessage(
+                                        'Can you suggest a new recipe idea?');
                                   }),
                                   _buildBreadcrumb('Something I have',
                                       FontAwesomeIcons.file, Colors.green, () {
-                                    _sendMessage('Can you suggest a recipe that i have?');
+                                    _sendMessage(
+                                        'Can you suggest a recipe that i have?');
                                   }),
                                   _buildBreadcrumb('A popular choice',
                                       FontAwesomeIcons.fire, Colors.orange, () {
-                                    _sendMessage('Can you suggest a popular recipe at the moment?');
+                                    _sendMessage(
+                                        'Can you suggest a popular recipe at the moment?');
                                   }),
                                 ],
                               ),
