@@ -56,7 +56,7 @@ class AuthApi {
     return prefs.getString('auth_token');
   }
 
-  static Future<void> logout() async {
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
   }

@@ -16,7 +16,7 @@ class ConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: ColorPalette.darkgray,
       title: const Text(
         "Confirm Action",
         style: TextStyle(color: ColorPalette.offWhite),
