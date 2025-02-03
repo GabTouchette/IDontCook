@@ -2,12 +2,12 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe.dart';
+import 'package:mobile/models/recipe_preview.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
 class RecipeTile extends StatelessWidget {
-  final Recipe recipe;
+  final RecipePreview recipe;
 
   const RecipeTile({
     Key? key,
@@ -65,7 +65,7 @@ class RecipeTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipeDetailPage(recipe: recipe),
+            builder: (context) => RecipeDetailPage(recipeId: recipe.id),
           ),
         );
       },

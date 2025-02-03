@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
+import 'package:mobile/models/recipe_preview.dart';
 import 'package:mobile/widgets/recipe_tile.dart';
 import 'package:mobile/pages/create_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
-import 'package:mobile/models/recipe.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -19,8 +19,8 @@ class RecipesPage extends StatefulWidget {
 class _RecipesPageState extends State<RecipesPage> {
   int _tabIndex = 0;
 
-  List<Recipe> _allRecipes = [];
-  List<Recipe> _filteredRecipes = [];
+  List<RecipePreview> _allRecipes = [];
+  List<RecipePreview> _filteredRecipes = [];
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
   final AuthApi _authApi = AuthApi();
@@ -42,10 +42,39 @@ class _RecipesPageState extends State<RecipesPage> {
     setState(() {
       _tabIndex = index;
     });
+    _refreshRecipes();
+  }
+
+  Future<void> _refreshRecipes() async {
+    await _fetchRecipes();
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    switch (_tabIndex) {
+      case 0: // All Recipes
+        _filteredRecipes = _allRecipes;
+        break;
+      case 1: // Recent Recipes
+        _filteredRecipes = _allRecipes
+            .where((recipe) => recipe.last_visited_at != null)
+            .toList()
+          ..sort((a, b) => b.last_visited_at!.compareTo(a.last_visited_at!));
+        break;
+      case 2: // Favorites
+        _filteredRecipes =
+            _allRecipes.where((recipe) => recipe.is_favorite == true).toList();
+        break;
+    }
+    _filteredRecipes.sort((a, b) => a.title.compareTo(b.title));
+
+    setState(() {});
   }
 
   Future<void> _fetchRecipes() async {
     final recipes = await RecipeApi().fetchRecipes();
+    recipes.sort((a, b) => a.title.compareTo(b.title));
+
     setState(() {
       _allRecipes = recipes;
       _filteredRecipes = recipes;
@@ -65,9 +94,8 @@ class _RecipesPageState extends State<RecipesPage> {
           _filteredRecipes = _allRecipes
               .where((recipe) =>
                   recipe.title.toLowerCase().contains(query.toLowerCase()) ||
-                  recipe.description!
-                      .toLowerCase()
-                      .contains(query.toLowerCase()))
+                  (recipe.tags ?? []).any(
+                      (tag) => tag.toLowerCase().contains(query.toLowerCase())))
               .toList();
         }
       });
@@ -184,8 +212,7 @@ class _RecipesPageState extends State<RecipesPage> {
                       children: [
                         _buildTab('All', 0),
                         _buildTab('Recent', 1),
-                        _buildTab('Tags', 2),
-                        _buildTab('Categories', 3),
+                        _buildTab('Favorites', 2),
                       ],
                     ),
                   ),

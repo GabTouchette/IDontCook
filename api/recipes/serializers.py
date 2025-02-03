@@ -6,27 +6,13 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = ['id', 'name', 'quantity', 'unit_of_measure', 'substitutes']
 
-from rest_framework import serializers
-from .models import Recipe, Ingredient
 
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True)
 
     class Meta:
         model = Recipe
-        fields = [
-            'id',
-            'title',
-            'ingredients',
-            'instructions',
-            'cooking_time',
-            'preparation_time',
-            'tags',
-            'description',
-            'image_url',
-            'notes',
-            'created_at'
-        ]
+        fields = '__all__'
 
     def to_representation(self, instance):
         """ Customize the GET response to properly format instructions as a list """
@@ -59,9 +45,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop("ingredients")
-        instructions = validated_data.pop("instructions")
-        validated_data["instructions"] = str(instructions)
+        """ Handle regular updates (PUT) """
+        is_favorite = validated_data.pop("is_favorite", None)
+        if is_favorite is not None:
+            instance.is_favorite = is_favorite
+
+        ingredients_data = validated_data.pop("ingredients", [])
+        instructions = validated_data.pop("instructions", None)
+        if instructions:
+            validated_data["instructions"] = str(instructions)
 
         instance.title = validated_data.get("title", instance.title)
         instance.instructions = validated_data.get("instructions", instance.instructions)
@@ -73,6 +65,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)  
         instance.save()
 
+        # Update ingredients if necessary
         instance.ingredients.clear()
         for ingredient_data in ingredients_data:
             ingredient_obj = Ingredient.objects.create(
@@ -83,3 +76,19 @@ class RecipeSerializer(serializers.ModelSerializer):
             instance.ingredients.add(ingredient_obj)
 
         return instance
+    
+    def patch(self, instance, validated_data):
+        """ Handle partial update (PATCH) requests to only update 'is_favorite' """
+        is_favorite = validated_data.get("is_favorite", None)
+        if is_favorite is not None:
+            instance.is_favorite = is_favorite
+
+        instance.save()
+
+        return instance
+    
+
+class RecipePreviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ['id', 'title', 'preparation_time', 'cooking_time', 'image_url', 'tags', 'is_favorite', 'last_visited_at']

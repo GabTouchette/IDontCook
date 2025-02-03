@@ -11,9 +11,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/widgets/dialogs/information_dialog.dart';
 
 class RecipeDetailPage extends StatefulWidget {
-  final Recipe recipe;
+  final Recipe? recipe;
+  final int? recipeId;
 
-  const RecipeDetailPage({Key? key, required this.recipe}) : super(key: key);
+  const RecipeDetailPage({
+    Key? key,
+    this.recipe,
+    this.recipeId,
+  }) : super(key: key);
 
   @override
   _RecipeDetailPageState createState() => _RecipeDetailPageState();
@@ -22,32 +27,48 @@ class RecipeDetailPage extends StatefulWidget {
 class _RecipeDetailPageState extends State<RecipeDetailPage> {
   List<bool> completedInstructions = [];
   bool isSaved = false;
+  late Recipe currentRecipe;
 
   @override
   void initState() {
     super.initState();
-    completedInstructions =
-        List<bool>.filled(widget.recipe.instructions.length, false);
-    isSaved = widget.recipe.id != -1;
+
+    if (widget.recipe != null) {
+      currentRecipe = widget.recipe!;
+      completedInstructions =
+          List<bool>.filled(currentRecipe.instructions.length, false);
+    } else if (widget.recipeId != null && widget.recipeId! > 0) {
+      _initializeRecipe(widget.recipeId!);
+    }
+  }
+
+  void _initializeRecipe(int recipeId) async {
+    var response = await RecipeApi().getRecipeById(recipeId);
+    setState(() {
+      currentRecipe = Recipe.fromJson(response);
+      isSaved = true;
+      completedInstructions =
+          List<bool>.filled(currentRecipe.instructions.length, false);
+    });
   }
 
   void _saveRecipe() async {
-    if (widget.recipe.id == -1) {
+    if (currentRecipe.id == -1) {
       Map<String, dynamic> recipeData = {
-        "title": widget.recipe.title,
-        "ingredients": widget.recipe.ingredients
+        "title": currentRecipe.title,
+        "ingredients": currentRecipe.ingredients
             .map((ingredient) => {
                   "name": ingredient.name,
                   "quantity": ingredient.quantity,
                   "unit_of_measure": ingredient.unit_of_measure,
                 })
             .toList(),
-        "instructions": widget.recipe.instructions,
-        "preparation_time": widget.recipe.preparation_time,
-        "cooking_time": widget.recipe.cooking_time,
-        "description": widget.recipe.description,
-        "notes": widget.recipe.notes,
-        "tags": widget.recipe.tags,
+        "instructions": currentRecipe.instructions,
+        "preparation_time": currentRecipe.preparation_time,
+        "cooking_time": currentRecipe.cooking_time,
+        "description": currentRecipe.description,
+        "notes": currentRecipe.notes,
+        "tags": currentRecipe.tags,
       };
 
       bool success = await RecipeApi().createRecipe(recipeData);
@@ -67,6 +88,35 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           ),
         );
       }
+    }
+  }
+
+  void _toggleFavorite() async {
+    final updatedFavoriteStatus = !(currentRecipe.is_favorite ?? true);
+
+    final result = await RecipeApi().patchRecipe(
+      currentRecipe.id,
+      {
+        'is_favorite': updatedFavoriteStatus,
+      },
+    );
+
+    if (result) {
+      setState(() {
+        currentRecipe =
+            currentRecipe.copyWith(is_favorite: updatedFavoriteStatus);
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => InformationDialog(
+          title: 'Update Failed',
+          message: 'There was an error updating the favorite status.',
+          onConfirm: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      );
     }
   }
 
@@ -120,7 +170,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          widget.recipe.title,
+          currentRecipe.title,
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
@@ -143,10 +193,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         actions: [
           if (isSaved) ...[
             IconButton(
-              onPressed: () {},
-              icon: const FaIcon(
-                FontAwesomeIcons.heart,
-                color: ColorPalette.offWhite,
+              onPressed: _toggleFavorite,
+              icon: FaIcon(
+                (currentRecipe.is_favorite ?? false)
+                    ? FontAwesomeIcons.solidHeart
+                    : FontAwesomeIcons.heart,
+                color: (currentRecipe.is_favorite ?? false)
+                    ? Colors.red
+                    : ColorPalette.offWhite,
               ),
             ),
             IconButton(
@@ -155,7 +209,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        UpdateRecipePage(recipeId: widget.recipe.id),
+                        UpdateRecipePage(recipeId: currentRecipe.id),
                   ),
                 );
               },
@@ -173,7 +227,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     onConfirm: () async {
                       Navigator.pop(context);
                       bool success =
-                          await RecipeApi().deleteRecipe(widget.recipe.id);
+                          await RecipeApi().deleteRecipe(currentRecipe.id);
                       if (success) {
                         Navigator.pop(context);
                       }
@@ -206,30 +260,30 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            getRecipeImage(widget.recipe.image_url),
+            getRecipeImage(currentRecipe.image_url),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
-                  if (widget.recipe.preparation_time != null) ...[
+                  if (currentRecipe.preparation_time != null) ...[
                     const Icon(Icons.timer, size: 20, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      'Prep: ${widget.recipe.preparation_time} min',
+                      'Prep: ${currentRecipe.preparation_time} min',
                       style:
                           TextStyle(color: ColorPalette.offWhite, fontSize: 16),
                     ),
                   ],
-                  if (widget.recipe.preparation_time != null &&
-                      widget.recipe.cooking_time != null)
+                  if (currentRecipe.preparation_time != null &&
+                      currentRecipe.cooking_time != null)
                     const SizedBox(width: 16),
-                  if (widget.recipe.cooking_time != null) ...[
+                  if (currentRecipe.cooking_time != null) ...[
                     const Icon(Icons.local_fire_department,
                         size: 20, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      'Cook: ${widget.recipe.cooking_time} min',
+                      'Cook: ${currentRecipe.cooking_time} min',
                       style:
                           TextStyle(color: ColorPalette.offWhite, fontSize: 16),
                     ),
@@ -254,7 +308,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: (widget.recipe.ingredients).map((ingredient) {
+                children: (currentRecipe.ingredients).map((ingredient) {
                   String formattedIngredient =
                       "${ingredient.quantity ?? ''} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
                           .trim();
@@ -288,7 +342,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children:
-                    List.generate(widget.recipe.instructions.length, (index) {
+                    List.generate(currentRecipe.instructions.length, (index) {
                   final isCompleted = completedInstructions[index];
                   return GestureDetector(
                     onTap: () {
@@ -324,7 +378,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                widget.recipe.instructions[index],
+                                currentRecipe.instructions[index],
                                 style: TextStyle(
                                   color: isCompleted
                                       ? Colors.green
@@ -344,13 +398,13 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ),
             ),
             const SizedBox(height: 16),
-            if (widget.recipe.tags != null && widget.recipe.tags!.isNotEmpty)
-              _buildTagSection(widget.recipe.tags!),
-            if (widget.recipe.description != null &&
-                widget.recipe.description!.isNotEmpty)
-              _buildSection("Description", widget.recipe.description!),
-            if (widget.recipe.notes != null && widget.recipe.notes!.isNotEmpty)
-              _buildSection("Notes", widget.recipe.notes!),
+            if (currentRecipe.tags != null && currentRecipe.tags!.isNotEmpty)
+              _buildTagSection(currentRecipe.tags!),
+            if (currentRecipe.description != null &&
+                currentRecipe.description!.isNotEmpty)
+              _buildSection("Description", currentRecipe.description!),
+            if (currentRecipe.notes != null && currentRecipe.notes!.isNotEmpty)
+              _buildSection("Notes", currentRecipe.notes!),
             const SizedBox(height: 64),
           ],
         ),

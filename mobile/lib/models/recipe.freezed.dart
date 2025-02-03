@@ -30,7 +30,9 @@ mixin _$Recipe {
   String? get description => throw _privateConstructorUsedError;
   String? get image_url => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
+  bool? get is_favorite => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
+  DateTime? get last_visited_at => throw _privateConstructorUsedError;
 
   /// Serializes this Recipe to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -57,7 +59,9 @@ abstract class $RecipeCopyWith<$Res> {
       String? description,
       String? image_url,
       String? notes,
-      DateTime? created_at});
+      bool? is_favorite,
+      DateTime? created_at,
+      DateTime? last_visited_at});
 }
 
 /// @nodoc
@@ -85,7 +89,9 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? description = freezed,
     Object? image_url = freezed,
     Object? notes = freezed,
+    Object? is_favorite = freezed,
     Object? created_at = freezed,
+    Object? last_visited_at = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -128,9 +134,17 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      is_favorite: freezed == is_favorite
+          ? _value.is_favorite
+          : is_favorite // ignore: cast_nullable_to_non_nullable
+              as bool?,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      last_visited_at: freezed == last_visited_at
+          ? _value.last_visited_at
+          : last_visited_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
     ) as $Val);
   }
@@ -154,7 +168,9 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       String? description,
       String? image_url,
       String? notes,
-      DateTime? created_at});
+      bool? is_favorite,
+      DateTime? created_at,
+      DateTime? last_visited_at});
 }
 
 /// @nodoc
@@ -180,7 +196,9 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? image_url = freezed,
     Object? notes = freezed,
+    Object? is_favorite = freezed,
     Object? created_at = freezed,
+    Object? last_visited_at = freezed,
   }) {
     return _then(_$RecipeImpl(
       id: null == id
@@ -223,9 +241,17 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      is_favorite: freezed == is_favorite
+          ? _value.is_favorite
+          : is_favorite // ignore: cast_nullable_to_non_nullable
+              as bool?,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      last_visited_at: freezed == last_visited_at
+          ? _value.last_visited_at
+          : last_visited_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
     ));
   }
@@ -245,7 +271,9 @@ class _$RecipeImpl implements _Recipe {
       this.description,
       this.image_url,
       this.notes,
-      this.created_at})
+      this.is_favorite,
+      this.created_at,
+      this.last_visited_at})
       : _ingredients = ingredients,
         _instructions = instructions,
         _tags = tags;
@@ -298,11 +326,15 @@ class _$RecipeImpl implements _Recipe {
   @override
   final String? notes;
   @override
+  final bool? is_favorite;
+  @override
   final DateTime? created_at;
+  @override
+  final DateTime? last_visited_at;
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, tags: $tags, description: $description, image_url: $image_url, notes: $notes, created_at: $created_at)';
+    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, tags: $tags, description: $description, image_url: $image_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -326,8 +358,12 @@ class _$RecipeImpl implements _Recipe {
             (identical(other.image_url, image_url) ||
                 other.image_url == image_url) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.is_favorite, is_favorite) ||
+                other.is_favorite == is_favorite) &&
             (identical(other.created_at, created_at) ||
-                other.created_at == created_at));
+                other.created_at == created_at) &&
+            (identical(other.last_visited_at, last_visited_at) ||
+                other.last_visited_at == last_visited_at));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -344,7 +380,9 @@ class _$RecipeImpl implements _Recipe {
       description,
       image_url,
       notes,
-      created_at);
+      is_favorite,
+      created_at,
+      last_visited_at);
 
   /// Create a copy of Recipe
   /// with the given fields replaced by the non-null parameter values.
@@ -374,7 +412,9 @@ abstract class _Recipe implements Recipe {
       final String? description,
       final String? image_url,
       final String? notes,
-      final DateTime? created_at}) = _$RecipeImpl;
+      final bool? is_favorite,
+      final DateTime? created_at,
+      final DateTime? last_visited_at}) = _$RecipeImpl;
 
   factory _Recipe.fromJson(Map<String, dynamic> json) = _$RecipeImpl.fromJson;
 
@@ -399,7 +439,11 @@ abstract class _Recipe implements Recipe {
   @override
   String? get notes;
   @override
+  bool? get is_favorite;
+  @override
   DateTime? get created_at;
+  @override
+  DateTime? get last_visited_at;
 
   /// Create a copy of Recipe
   /// with the given fields replaced by the non-null parameter values.

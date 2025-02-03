@@ -61,6 +61,25 @@ class ApiHelper {
     }
   }
 
+  Future<dynamic> patchRequest(String endpoint, Map<String, dynamic> data,
+      {bool requiresAuth = true}) async {
+    try {
+      final headers = requiresAuth
+          ? await AuthApi.getAuthHeader()
+          : {'Content-Type': 'application/json'};
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/$endpoint'),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      print('PATCH request error: $e');
+      return null;
+    }
+  }
+
   Future<bool> deleteRequest(String endpoint,
       {bool requiresAuth = true}) async {
     try {

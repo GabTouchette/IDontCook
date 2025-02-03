@@ -1,13 +1,15 @@
 import 'package:mobile/api/api_helper.dart';
-import 'package:mobile/models/recipe.dart';
+import 'package:mobile/models/recipe_preview.dart';
 
 class RecipeApi {
   final ApiHelper _apiHelper = ApiHelper();
 
-  Future<List<Recipe>> fetchRecipes() async {
+  Future<List<RecipePreview>> fetchRecipes() async {
     var data = await _apiHelper.getRequest('recipes/');
     if (data != null) {
-      return (data as List).map((recipe) => Recipe.fromJson(recipe)).toList();
+      return (data as List)
+          .map((recipe) => RecipePreview.fromJson(recipe))
+          .toList();
     }
     return [];
   }
@@ -21,8 +23,17 @@ class RecipeApi {
     return await _apiHelper.getRequest('recipes/$recipeId/');
   }
 
-  Future<bool> updateRecipe(int recipeId, Map<String, dynamic> recipeData) async {
-    var response = await _apiHelper.putRequest('recipes/$recipeId/', recipeData);
+  Future<bool> updateRecipe(
+      int recipeId, Map<String, dynamic> recipeData) async {
+    var response =
+        await _apiHelper.putRequest('recipes/$recipeId/', recipeData);
+    return response != null;
+  }
+
+  Future<bool> patchRecipe(
+      int recipeId, Map<String, dynamic> recipeData) async {
+    var response =
+        await _apiHelper.patchRequest('recipes/$recipeId/', recipeData);
     return response != null;
   }
 
