@@ -14,7 +14,6 @@ class AiChatbotApi {
   Future<Map<String, dynamic>?> generateRecipe(String query) async {
     var data = {
       'query': query,
-      'intent': 'generate_recipe',
     };
     return await _apiHelper.postRequest('ai/chat/', data);
   }
@@ -22,7 +21,6 @@ class AiChatbotApi {
   Future<Map<String, dynamic>?> getRecipe(String recipeName) async {
     var data = {
       'query': recipeName,
-      'intent': 'get_recipe',
     };
     return await _apiHelper.postRequest('ai/chat/', data);
   }
