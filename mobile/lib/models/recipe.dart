@@ -17,7 +17,9 @@ class Recipe with _$Recipe {
     String? description,
     String? image_url,
     String? notes,
+    bool? is_favorite,
     DateTime? created_at,
+    DateTime? last_visited_at,
   }) = _Recipe;
 
   factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);

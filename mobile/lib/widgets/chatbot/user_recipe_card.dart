@@ -51,7 +51,7 @@ class _UserRecipeCardState extends State<UserRecipeCard> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => RecipeDetailPage(recipe: recipe),
+                builder: (context) => RecipeDetailPage(recipeId: recipe.id),
               ),
             );
           },

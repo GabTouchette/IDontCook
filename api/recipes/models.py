@@ -22,7 +22,10 @@ class Recipe(models.Model):
     description = models.TextField(blank=True, null=True)
     image_url = models.URLField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    is_favorite = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    last_visited_at = models.DateTimeField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    
     def __str__(self):
         return self.title

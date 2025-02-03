@@ -52,9 +52,9 @@ class ChatbotView(APIView):
             f"Here is a list of the user's saved recipes:\n\n"
             f"{recipe_info if recipe_info else 'The user has no saved recipes yet.'}\n\n"
             f"Your task is to either suggest an existing recipe or create a new one based on the query:\n"
-            f"- If the query matches an existing recipe, respond with the following format surrounded with <userRecipe> tags:\n"
+            f"- If you chose to provide an existing recipe, respond with the following format surrounded with <userRecipe> tags:\n"
             f"  <userRecipe>{{ \"id\": <recipeId>, \"title\": \"<recipeTitle>\" }}</userRecipe>\n"
-            f"- If a new recipe is needed, create it and respond in the following format surrounded with <recipe> tags:\n"
+            f"- If you chose to provide a new recipe, create it and respond in the following format surrounded with <recipe> tags:\n"
             f"  <recipe>{{\n"
             f'    "title": "Recipe Name",\n'
             f'    "ingredients": [\n'
@@ -67,7 +67,8 @@ class ChatbotView(APIView):
             f'    "description": "A brief description of the recipe",\n'
             f'    "notes": "Any extra notes for the recipe"\n'
             f"  }}</recipe>\n\n"
-            f"Now, answer the following query:\n\n"
+            f"It is not necessary to prioritize one over the other, nor are the two choices mutually exclusive."
+            f"You can very well provide both in the same answer:\n\n"
             f"{query}"
         )
 
