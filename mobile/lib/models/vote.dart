@@ -11,7 +11,7 @@ class Vote with _$Vote {
     required int id,
     required User user,
     required Post post,
-    required bool is_upvote,
+    required int value,
     DateTime? created_at
   }) = _Vote;
 

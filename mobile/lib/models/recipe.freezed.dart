@@ -32,6 +32,7 @@ mixin _$Recipe {
   String? get notes => throw _privateConstructorUsedError;
   bool? get is_favorite => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
+  User? get created_by => throw _privateConstructorUsedError;
   DateTime? get last_visited_at => throw _privateConstructorUsedError;
 
   /// Serializes this Recipe to a JSON map.
@@ -61,7 +62,10 @@ abstract class $RecipeCopyWith<$Res> {
       String? notes,
       bool? is_favorite,
       DateTime? created_at,
+      User? created_by,
       DateTime? last_visited_at});
+
+  $UserCopyWith<$Res>? get created_by;
 }
 
 /// @nodoc
@@ -91,6 +95,7 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? notes = freezed,
     Object? is_favorite = freezed,
     Object? created_at = freezed,
+    Object? created_by = freezed,
     Object? last_visited_at = freezed,
   }) {
     return _then(_value.copyWith(
@@ -142,11 +147,29 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      created_by: freezed == created_by
+          ? _value.created_by
+          : created_by // ignore: cast_nullable_to_non_nullable
+              as User?,
       last_visited_at: freezed == last_visited_at
           ? _value.last_visited_at
           : last_visited_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
     ) as $Val);
+  }
+
+  /// Create a copy of Recipe
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $UserCopyWith<$Res>? get created_by {
+    if (_value.created_by == null) {
+      return null;
+    }
+
+    return $UserCopyWith<$Res>(_value.created_by!, (value) {
+      return _then(_value.copyWith(created_by: value) as $Val);
+    });
   }
 }
 
@@ -170,7 +193,11 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       String? notes,
       bool? is_favorite,
       DateTime? created_at,
+      User? created_by,
       DateTime? last_visited_at});
+
+  @override
+  $UserCopyWith<$Res>? get created_by;
 }
 
 /// @nodoc
@@ -198,6 +225,7 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? notes = freezed,
     Object? is_favorite = freezed,
     Object? created_at = freezed,
+    Object? created_by = freezed,
     Object? last_visited_at = freezed,
   }) {
     return _then(_$RecipeImpl(
@@ -249,6 +277,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      created_by: freezed == created_by
+          ? _value.created_by
+          : created_by // ignore: cast_nullable_to_non_nullable
+              as User?,
       last_visited_at: freezed == last_visited_at
           ? _value.last_visited_at
           : last_visited_at // ignore: cast_nullable_to_non_nullable
@@ -273,6 +305,7 @@ class _$RecipeImpl implements _Recipe {
       this.notes,
       this.is_favorite,
       this.created_at,
+      this.created_by,
       this.last_visited_at})
       : _ingredients = ingredients,
         _instructions = instructions,
@@ -330,11 +363,13 @@ class _$RecipeImpl implements _Recipe {
   @override
   final DateTime? created_at;
   @override
+  final User? created_by;
+  @override
   final DateTime? last_visited_at;
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, tags: $tags, description: $description, image_url: $image_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, last_visited_at: $last_visited_at)';
+    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, tags: $tags, description: $description, image_url: $image_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -362,6 +397,8 @@ class _$RecipeImpl implements _Recipe {
                 other.is_favorite == is_favorite) &&
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at) &&
+            (identical(other.created_by, created_by) ||
+                other.created_by == created_by) &&
             (identical(other.last_visited_at, last_visited_at) ||
                 other.last_visited_at == last_visited_at));
   }
@@ -382,6 +419,7 @@ class _$RecipeImpl implements _Recipe {
       notes,
       is_favorite,
       created_at,
+      created_by,
       last_visited_at);
 
   /// Create a copy of Recipe
@@ -414,6 +452,7 @@ abstract class _Recipe implements Recipe {
       final String? notes,
       final bool? is_favorite,
       final DateTime? created_at,
+      final User? created_by,
       final DateTime? last_visited_at}) = _$RecipeImpl;
 
   factory _Recipe.fromJson(Map<String, dynamic> json) = _$RecipeImpl.fromJson;
@@ -442,6 +481,8 @@ abstract class _Recipe implements Recipe {
   bool? get is_favorite;
   @override
   DateTime? get created_at;
+  @override
+  User? get created_by;
   @override
   DateTime? get last_visited_at;
 

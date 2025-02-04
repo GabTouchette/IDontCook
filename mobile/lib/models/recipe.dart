@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mobile/models/user.dart';
 import 'ingredient.dart';
 
 part 'recipe.freezed.dart';
@@ -19,6 +20,7 @@ class Recipe with _$Recipe {
     String? notes,
     bool? is_favorite,
     DateTime? created_at,
+    User? created_by,
     DateTime? last_visited_at,
   }) = _Recipe;
 

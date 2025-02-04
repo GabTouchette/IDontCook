@@ -1,14 +1,8 @@
 from rest_framework import serializers
 from .models import Post, Comment, Like, Vote
 from django.contrib.auth.models import User
-from recipes.serializers import RecipeSerializer
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email']       
-
+from recipes.serializers import RecipeSerializer      
+from api.serializers import UserSerializer
 
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -18,14 +12,33 @@ class PostSerializer(serializers.ModelSerializer):
     recipe_image_url = serializers.CharField(source='recipe.image_url', required=False, allow_blank=True)
     upvote_count = serializers.ReadOnlyField()
     downvote_count = serializers.ReadOnlyField()
-    net_vote_count = serializers.ReadOnlyField()
+    user_vote = serializers.SerializerMethodField()
+    user_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = [
-            'id', 'recipe_id', 'user', 'recipe_title', 'recipe_description', 'recipe_image_url', 
-            'content', 'created_at', 'updated_at', 'upvote_count', 'downvote_count', 'net_vote_count'
+            'id', 'user', 'user_vote', 'user_liked',
+            'upvote_count', 'downvote_count', 'recipe_id', 'recipe_title',
+            'recipe_description', 'recipe_image_url', 'content', 'created_at', 'updated_at'
         ]
+
+    def get_user_vote(self, obj):
+        """Returns -1 if the user downvoted, 1 if upvoted, 0 otherwise"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # Assuming you are using `user_vote` as the value field in `Vote` model, adjust as needed
+            vote = obj.votes.filter(user=request.user).first()
+            return vote.value if vote else 0
+        return 0
+
+    def get_user_liked(self, obj):
+        """Returns True if the user liked the post, False otherwise"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # Check if the user has liked the post
+            return obj.likes.filter(user=request.user).exists()
+        return False
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -39,8 +52,23 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ['id', 'user', 'post', 'comment', 'created_at']
 
+    def validate(self, data):
+        """
+        Ensure that at least one of 'post' or 'comment' is provided.
+        """
+        post = data.get('post')
+        comment = data.get('comment')
+
+        if not post and not comment:
+            raise serializers.ValidationError("At least one of 'post' or 'comment' must be provided.")
+
+        if post and comment:
+            raise serializers.ValidationError("Only one of 'post' or 'comment' can be provided, not both.")
+
+        return data
+
 
 class VoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vote
-        fields = ['id', 'user', 'post', 'is_upvote', 'created_at']
+        fields = ['id', 'user', 'post', 'value', 'created_at']

@@ -2,8 +2,10 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe.dart';
+import 'package:mobile/models/user.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
@@ -32,62 +34,77 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   void initState() {
     super.initState();
+    _initializePage();
+  }
 
+  void _initializePage() async {
     if (widget.recipe != null) {
       currentRecipe = widget.recipe!;
+      await _checkIfSaved();
       completedInstructions =
           List<bool>.filled(currentRecipe.instructions.length, false);
     } else if (widget.recipeId != null && widget.recipeId! > 0) {
-      _initializeRecipe(widget.recipeId!);
+      await _initializeRecipe(widget.recipeId!);
     }
   }
 
-  void _initializeRecipe(int recipeId) async {
+  Future<void> _initializeRecipe(int recipeId) async {
     var response = await RecipeApi().getRecipeById(recipeId);
     setState(() {
       currentRecipe = Recipe.fromJson(response);
-      isSaved = true;
       completedInstructions =
           List<bool>.filled(currentRecipe.instructions.length, false);
     });
+    await _checkIfSaved();
+  }
+
+  Future<void> _checkIfSaved() async {
+    User? user = await AuthApi.getUser();
+
+    if (user != null && currentRecipe.created_by?.id == user.id) {
+      setState(() {
+        isSaved = true;
+      });
+    }
   }
 
   void _saveRecipe() async {
-    if (currentRecipe.id == -1) {
-      Map<String, dynamic> recipeData = {
-        "title": currentRecipe.title,
-        "ingredients": currentRecipe.ingredients
-            .map((ingredient) => {
-                  "name": ingredient.name,
-                  "quantity": ingredient.quantity,
-                  "unit_of_measure": ingredient.unit_of_measure,
-                })
-            .toList(),
-        "instructions": currentRecipe.instructions,
-        "preparation_time": currentRecipe.preparation_time,
-        "cooking_time": currentRecipe.cooking_time,
-        "description": currentRecipe.description,
-        "notes": currentRecipe.notes,
-        "tags": currentRecipe.tags,
-      };
+    if (isSaved) return;
 
-      bool success = await RecipeApi().createRecipe(recipeData);
+    Map<String, dynamic> recipeData = {
+      "title": currentRecipe.title,
+      "ingredients": currentRecipe.ingredients
+          .map((ingredient) => {
+                "name": ingredient.name,
+                "quantity": ingredient.quantity,
+                "unit_of_measure": ingredient.unit_of_measure,
+              })
+          .toList(),
+      "instructions": currentRecipe.instructions,
+      "preparation_time": currentRecipe.preparation_time,
+      "cooking_time": currentRecipe.cooking_time,
+      "description": currentRecipe.description,
+      "notes": currentRecipe.notes,
+      "tags": currentRecipe.tags,
+      "parent": currentRecipe.id,
+    };
 
-      if (success) {
-        showDialog(
-          context: context,
-          builder: (context) => InformationDialog(
-            title: success ? 'Recipe Saved' : 'Submission Failed',
-            message: success
-                ? 'Your recipe has been successfully saved!'
-                : 'There was an error submitting your recipe.',
-            onConfirm: () {
-              Navigator.of(context).pop();
-              if (success) Navigator.pop(context);
-            },
-          ),
-        );
-      }
+    bool success = await RecipeApi().createRecipe(recipeData);
+
+    if (success) {
+      showDialog(
+        context: context,
+        builder: (context) => InformationDialog(
+          title: success ? 'Recipe Saved' : 'Submission Failed',
+          message: success
+              ? 'Your recipe has been successfully saved!'
+              : 'There was an error submitting your recipe.',
+          onConfirm: () {
+            Navigator.of(context).pop();
+            if (success) Navigator.pop(context);
+          },
+        ),
+      );
     }
   }
 
@@ -281,7 +298,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               child: Row(
                 children: [
                   if (currentRecipe.preparation_time != null) ...[
-                    const Icon(Icons.timer, size: 20, color: ColorPalette.yellow),
+                    const Icon(Icons.timer,
+                        size: 20, color: ColorPalette.yellow),
                     const SizedBox(width: 6),
                     Text(
                       'Prep: ${currentRecipe.preparation_time} min',
@@ -357,7 +375,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children:
                     List.generate(currentRecipe.instructions.length, (index) {
-                  final isCompleted = completedInstructions[index];
+                  final isCompleted = (index < completedInstructions.length)
+                      ? completedInstructions[index]
+                      : false;
                   return GestureDetector(
                     onTap: () {
                       setState(() {

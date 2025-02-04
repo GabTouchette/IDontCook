@@ -33,18 +33,22 @@ class SocialApi {
     return await _apiHelper.deleteRequest('social/posts/$postId/');
   }
 
-  // Fetch all comments
-  Future<List<Comment>> fetchComments() async {
-    var data = await _apiHelper.getRequest('social/comments/');
+  // Fetch all comments for a post
+  Future<List<Comment>> fetchComments(int postId) async {
+    var data = await _apiHelper.getRequest('social/posts/$postId/comments/');
     if (data != null) {
-      return (data as List).map((comment) => Comment.fromJson(comment)).toList();
+      return (data as List)
+          .map((comment) => Comment.fromJson(comment))
+          .toList();
     }
     return [];
   }
 
-  // Create a new comment
-  Future<bool> createComment(Map<String, dynamic> commentData) async {
-    var response = await _apiHelper.postRequest('social/comments/', commentData);
+  // Create a new comment for a post
+  Future<bool> createComment(
+      Map<String, dynamic> commentData, int postId) async {
+    var response = await _apiHelper.postRequest(
+        'social/posts/$postId/comments/', commentData);
     return response != null;
   }
 
@@ -53,37 +57,44 @@ class SocialApi {
     return await _apiHelper.deleteRequest('social/comments/$commentId/');
   }
 
-  // Fetch all likes
-  Future<List<Like>> fetchLikes() async {
-    var data = await _apiHelper.getRequest('social/likes/');
+  // Fetch all likes for a post
+  Future<List<Like>> fetchLikes(int postId) async {
+    var data = await _apiHelper.getRequest('social/posts/$postId/likes/');
     if (data != null) {
       return (data as List).map((like) => Like.fromJson(like)).toList();
     }
     return [];
   }
 
-  // Create a like
-  Future<bool> createLike(Map<String, dynamic> likeData) async {
-    var response = await _apiHelper.postRequest('social/likes/', likeData);
+  // Create a like for a post
+  Future<bool> createLike(Map<String, dynamic> likeData, int postId) async {
+    var response =
+        await _apiHelper.postRequest('social/posts/$postId/like/', likeData);
     return response != null;
   }
 
-  // Fetch all votes
+  // Delete a like for a post
+  Future<bool> deleteLike(int postId) async {
+    return await _apiHelper.deleteRequest('social/posts/$postId/like/delete/');
+  }
+
+  // Fetch all votes for a post
   Future<List<Vote>> fetchVotes(int postId) async {
-    var data = await _apiHelper.getRequest('social/posts/$postId/vote/');
+    var data = await _apiHelper.getRequest('social/posts/$postId/votes/');
     if (data != null) {
       return (data as List).map((vote) => Vote.fromJson(vote)).toList();
     }
     return [];
   }
 
-  // Create a vote (upvote/downvote)
+  // Create a vote (upvote/downvote) for a post
   Future<bool> createVote(int postId, Map<String, dynamic> voteData) async {
-    var response = await _apiHelper.postRequest('social/posts/$postId/vote/', voteData);
+    var response =
+        await _apiHelper.postRequest('social/posts/$postId/vote/', voteData);
     return response != null;
   }
 
-  // Delete a vote
+  // Delete a vote for a post
   Future<bool> deleteVote(int postId) async {
     return await _apiHelper.deleteRequest('social/posts/$postId/vote/delete/');
   }

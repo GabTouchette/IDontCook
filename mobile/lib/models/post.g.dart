@@ -9,6 +9,10 @@ part of 'post.dart';
 _$PostImpl _$$PostImplFromJson(Map<String, dynamic> json) => _$PostImpl(
       id: (json['id'] as num).toInt(),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
+      user_vote: (json['user_vote'] as num).toInt(),
+      user_liked: json['user_liked'] as bool,
+      upvote_count: (json['upvote_count'] as num).toInt(),
+      downvote_count: (json['downvote_count'] as num).toInt(),
       recipe_id: (json['recipe_id'] as num?)?.toInt(),
       recipe_title: json['recipe_title'] as String?,
       recipe_description: json['recipe_description'] as String?,
@@ -20,14 +24,16 @@ _$PostImpl _$$PostImplFromJson(Map<String, dynamic> json) => _$PostImpl(
       updated_at: json['updated_at'] == null
           ? null
           : DateTime.parse(json['updated_at'] as String),
-      upvote_count: (json['upvote_count'] as num?)?.toInt() ?? 0,
-      downvote_count: (json['downvote_count'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$PostImplToJson(_$PostImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'user': instance.user,
+      'user_vote': instance.user_vote,
+      'user_liked': instance.user_liked,
+      'upvote_count': instance.upvote_count,
+      'downvote_count': instance.downvote_count,
       'recipe_id': instance.recipe_id,
       'recipe_title': instance.recipe_title,
       'recipe_description': instance.recipe_description,
@@ -35,6 +41,4 @@ Map<String, dynamic> _$$PostImplToJson(_$PostImpl instance) =>
       'content': instance.content,
       'created_at': instance.created_at?.toIso8601String(),
       'updated_at': instance.updated_at?.toIso8601String(),
-      'upvote_count': instance.upvote_count,
-      'downvote_count': instance.downvote_count,
     };

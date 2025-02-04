@@ -160,14 +160,7 @@ class _ExplorePageState extends State<ExplorePage> {
                           itemBuilder: (context, index) {
                             final post = _posts[index];
                             return UserPostCard(
-                              userName: post.user.username,
-                              voteCount:
-                                  post.upvote_count - post.downvote_count,
-                              recipeId: post.recipe_id,
-                              recipeTitle: post.recipe_title,
-                              recipeDescription: post.recipe_description,
-                              recipeImageUrl: post.recipe_image_url,
-                              content: post.content,
+                              post: post,
                             );
                           },
                         ),
