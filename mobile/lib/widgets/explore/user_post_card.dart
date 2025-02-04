@@ -3,10 +3,13 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post.dart';
+import 'package:mobile/models/user.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
@@ -21,6 +24,7 @@ class _UserPostCardState extends State<UserPostCard> {
   late int _currentVoteCount;
   late int _userVote;
   late bool _userLiked;
+  late Future<User?> _currentUser;
 
   @override
   void initState() {
@@ -28,6 +32,11 @@ class _UserPostCardState extends State<UserPostCard> {
     _currentVoteCount = widget.post.upvote_count - widget.post.downvote_count;
     _userVote = widget.post.user_vote;
     _userLiked = widget.post.user_liked;
+    _currentUser = _fetchUser();
+  }
+
+  Future<User?> _fetchUser() async {
+    return await AuthApi.getUser();
   }
 
   Future<void> _handleVote(int voteValue) async {
@@ -72,6 +81,38 @@ class _UserPostCardState extends State<UserPostCard> {
     }
   }
 
+  Future<void> _deletePost() async {
+    final result = await SocialApi().deletePost(widget.post.id);
+
+    if (result) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post deleted successfully!')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete the post.')),
+      );
+    }
+  }
+
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ConfirmationDialog(
+          message: 'Are you sure you want to delete this post?',
+          onConfirm: () {
+            _deletePost();
+          },
+          onCancel: () {
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -112,8 +153,30 @@ class _UserPostCardState extends State<UserPostCard> {
                 color: ColorPalette.offWhite),
           ),
           const SizedBox(width: 8),
-          const Text("shared a new recipe",
+          const Text("shared a recipe",
               style: TextStyle(color: ColorPalette.placeholdergray)),
+          const Spacer(),
+          FutureBuilder<User?>(
+            future: _currentUser,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return const Icon(Icons.error, color: Colors.red);
+              } else if (snapshot.hasData) {
+                final currentUser = snapshot.data;
+                if (currentUser != null &&
+                    currentUser.username == widget.post.user.username) {
+                  return IconButton(
+                    icon: FaIcon(FontAwesomeIcons.trash, color: Colors.red),
+                    onPressed: _showDeleteDialog,
+                    iconSize: 24,
+                  );
+                }
+              }
+              return Container();
+            },
+          ),
         ],
       ),
     );

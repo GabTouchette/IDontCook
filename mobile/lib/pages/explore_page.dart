@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -89,9 +90,18 @@ class _ExplorePageState extends State<ExplorePage> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return PostDialog(
+                    recipe: null,
+                  );
+                },
+              );
+            },
             icon: const FaIcon(
-              FontAwesomeIcons.sliders,
+              FontAwesomeIcons.squarePlus,
               color: ColorPalette.offWhite,
             ),
           ),
@@ -153,7 +163,9 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
                 Expanded(
                   child: _posts.isEmpty
-                      ? const Center(child: Text('No posts available.'))
+                      ? const Center(
+                          child: Text('No posts available.',
+                              style: TextStyle(color: ColorPalette.offWhite)))
                       : ListView.builder(
                           padding: EdgeInsets.zero,
                           itemCount: _posts.length,

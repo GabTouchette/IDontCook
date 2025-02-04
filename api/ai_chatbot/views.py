@@ -50,13 +50,14 @@ class ChatbotView(APIView):
         prompt = (
             "You are a cookbook AI chatbot tasked with helping users with their cooking and recipe needs.\n\n"
             f"Here is a list of the user's saved recipes:\n{recipe_info if recipe_info else 'The user has no saved recipes yet.'}\n\n"
-            "Your task is to assist the user by:\n"
+            "Your task is to assist the user by either:\n"
             "- Suggesting an existing recipe\n"
             "- Creating a new recipe\n"
             "- Answering general food and cooking-related questions\n\n"
             "Rules:\n"
             "- If you provide an existing recipe, use the following format wrapped in <userRecipe> tags:\n"
             "  <userRecipe>{ \"id\": <recipeId>, \"title\": \"<recipeTitle>\" }</userRecipe>\n"
+            "- Do not provide a existing recipe that is not in the list above as this will give an error.\n"
             "- If you create a new recipe, use the following format wrapped in <recipe> tags:\n"
             "  <recipe>{\n"
             '    "title": "Recipe Name",\n'
@@ -75,7 +76,6 @@ class ChatbotView(APIView):
             f"Answer the following user query:\n{query}"
         )
 
-        print(prompt)
         openai_response = self.ask_openai(prompt, chat_history)
 
         conversation.ai_response = openai_response
