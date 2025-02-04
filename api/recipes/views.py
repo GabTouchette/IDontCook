@@ -8,6 +8,7 @@ from .models import Recipe, Ingredient
 from .serializers import RecipeSerializer, IngredientSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
+from django.http import JsonResponse
 
 
 class IngredientListAPIView(APIView):
@@ -16,14 +17,14 @@ class IngredientListAPIView(APIView):
     def get(self, request):
         ingredients = Ingredient.objects.all()
         serializer = IngredientSerializer(ingredients, many=True)
-        return Response(serializer.data)
+        return JsonResponse(serializer.data)
 
     def post(self, request):
         serializer = IngredientSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IngredientDetailAPIView(APIView):
@@ -32,20 +33,20 @@ class IngredientDetailAPIView(APIView):
     def get(self, request, pk):
         ingredient = get_object_or_404(Ingredient, pk=pk)
         serializer = IngredientSerializer(ingredient)
-        return Response(serializer.data)
+        return JsonResponse(serializer.data)
 
     def put(self, request, pk):
         ingredient = get_object_or_404(Ingredient, pk=pk)
         serializer = IngredientSerializer(ingredient, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         ingredient = get_object_or_404(Ingredient, pk=pk)
         ingredient.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse(status=status.HTTP_204_NO_CONTENT)
 
 
 class RecipeListAPIView(APIView):
@@ -55,14 +56,14 @@ class RecipeListAPIView(APIView):
         user = request.user
         recipes = Recipe.objects.filter(created_by=user)
         serializer = RecipePreviewSerializer(recipes, many=True)
-        return Response(serializer.data)
+        return JsonResponse(serializer.data, safe=False)
 
     def post(self, request):
         serializer = RecipeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RecipeDetailAPIView(APIView):
@@ -84,28 +85,28 @@ class RecipeDetailAPIView(APIView):
             recipe.save(update_fields=['last_visited_at'])
 
         serializer = RecipeSerializer(recipe)
-        return Response(serializer.data)
+        return JsonResponse(serializer.data)
 
     def put(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = RecipeSerializer(recipe, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = RecipeSerializer(recipe, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         recipe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse(status=status.HTTP_204_NO_CONTENT)
 
 
 class HasSavedRecipeAPIView(APIView):
@@ -117,4 +118,4 @@ class HasSavedRecipeAPIView(APIView):
             models.Q(id=recipe_id) | models.Q(parent=recipe_id)
         ).exists()
 
-        return Response({"is_saved": exists})
+        return JsonResponse({"is_saved": exists})

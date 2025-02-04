@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-
+from django.http import JsonResponse
 
 class RegisterView(APIView):
     permission_classes = []
@@ -18,14 +18,14 @@ class RegisterView(APIView):
 
         if not username or not email or not password:
             print("Please provide all fields (username, email, password)")
-            return Response(
+            return JsonResponse(
                 {'error': 'Please provide all fields (username, email, password)'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if User.objects.filter(username=username).exists():
             print("Username already exists")
-            return Response(
+            return JsonResponse(
                 {'error': 'Username already exists'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -33,7 +33,7 @@ class RegisterView(APIView):
         user = User.objects.create_user(username=username, email=email, password=password)
         token, _ = Token.objects.get_or_create(user=user)
 
-        return Response({
+        return JsonResponse({
             'token': token.key,
             'message': 'User created successfully',
             'user': {
@@ -51,7 +51,7 @@ class CustomAuthToken(ObtainAuthToken):
         response = super().post(request, *args, **kwargs)
         token = Token.objects.get(key=response.data['token'])
         user = token.user
-        return Response({
+        return JsonResponse({
             'token': token.key,
             'user': {
                 'id': user.id,
