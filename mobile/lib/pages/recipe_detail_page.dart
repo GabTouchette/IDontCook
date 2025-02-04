@@ -11,6 +11,7 @@ import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/widgets/dialogs/information_dialog.dart';
+import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Recipe? recipe;
@@ -209,6 +210,22 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         ),
         actions: [
           if (isSaved) ...[
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return PostDialog(
+                    recipe: currentRecipe,
+                  );
+                },
+              );
+            },
+            icon: const FaIcon(
+              FontAwesomeIcons.share,
+              color: ColorPalette.offWhite,
+            ),
+          ),
             IconButton(
               onPressed: _toggleFavorite,
               icon: FaIcon(

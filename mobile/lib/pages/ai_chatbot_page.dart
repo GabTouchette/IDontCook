@@ -113,18 +113,6 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             color: ColorPalette.offWhite,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const FaIcon(
-              FontAwesomeIcons.sliders,
-              color: ColorPalette.offWhite,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-          ),
-        ],
       ),
       body: Stack(
         children: [

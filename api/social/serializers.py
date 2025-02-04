@@ -3,11 +3,12 @@ from .models import Post, Comment, Like, Vote
 from django.contrib.auth.models import User
 from recipes.serializers import RecipeSerializer      
 from api.serializers import UserSerializer
+from recipes.models import Recipe
 
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    recipe_id = serializers.IntegerField(source='recipe.id', read_only=True)
-    recipe_title = serializers.CharField(source='recipe.title', read_only=True)
+    recipe_id = serializers.IntegerField(source='recipe.id', read_only=True, required=False)
+    recipe_title = serializers.CharField(source='recipe.title', read_only=True, required=False, allow_blank=True)
     recipe_description = serializers.CharField(source='recipe.description', required=False, allow_blank=True)
     recipe_image_url = serializers.CharField(source='recipe.image_url', required=False, allow_blank=True)
     upvote_count = serializers.ReadOnlyField()
@@ -23,11 +24,21 @@ class PostSerializer(serializers.ModelSerializer):
             'recipe_description', 'recipe_image_url', 'content', 'created_at', 'updated_at'
         ]
 
+    def create(self, validated_data):
+        recipe_id = self.context['request'].data.get('recipe_id')
+        recipe = None
+        if recipe_id:
+            recipe = Recipe.objects.get(id=recipe_id)
+
+        validated_data['user'] = self.context['request'].user
+        validated_data['recipe'] = recipe
+
+        return super().create(validated_data)
+    
     def get_user_vote(self, obj):
         """Returns -1 if the user downvoted, 1 if upvoted, 0 otherwise"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            # Assuming you are using `user_vote` as the value field in `Vote` model, adjust as needed
             vote = obj.votes.filter(user=request.user).first()
             return vote.value if vote else 0
         return 0
@@ -36,7 +47,6 @@ class PostSerializer(serializers.ModelSerializer):
         """Returns True if the user liked the post, False otherwise"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            # Check if the user has liked the post
             return obj.likes.filter(user=request.user).exists()
         return False
 

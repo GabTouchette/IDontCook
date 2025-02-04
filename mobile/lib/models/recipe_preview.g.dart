@@ -10,6 +10,7 @@ _$RecipePreviewImpl _$$RecipePreviewImplFromJson(Map<String, dynamic> json) =>
     _$RecipePreviewImpl(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
+      description: json['description'] as String?,
       preparation_time: (json['preparation_time'] as num?)?.toInt(),
       cooking_time: (json['cooking_time'] as num?)?.toInt(),
       image_url: json['image_url'] as String?,
@@ -24,6 +25,7 @@ Map<String, dynamic> _$$RecipePreviewImplToJson(_$RecipePreviewImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+      'description': instance.description,
       'preparation_time': instance.preparation_time,
       'cooking_time': instance.cooking_time,
       'image_url': instance.image_url,

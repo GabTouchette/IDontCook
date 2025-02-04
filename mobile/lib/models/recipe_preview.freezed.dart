@@ -22,6 +22,7 @@ RecipePreview _$RecipePreviewFromJson(Map<String, dynamic> json) {
 mixin _$RecipePreview {
   int get id => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
+  String? get description => throw _privateConstructorUsedError;
   int? get preparation_time => throw _privateConstructorUsedError;
   int? get cooking_time => throw _privateConstructorUsedError;
   String? get image_url => throw _privateConstructorUsedError;
@@ -48,6 +49,7 @@ abstract class $RecipePreviewCopyWith<$Res> {
   $Res call(
       {int id,
       String title,
+      String? description,
       int? preparation_time,
       int? cooking_time,
       String? image_url,
@@ -73,6 +75,7 @@ class _$RecipePreviewCopyWithImpl<$Res, $Val extends RecipePreview>
   $Res call({
     Object? id = null,
     Object? title = null,
+    Object? description = freezed,
     Object? preparation_time = freezed,
     Object? cooking_time = freezed,
     Object? image_url = freezed,
@@ -89,6 +92,10 @@ class _$RecipePreviewCopyWithImpl<$Res, $Val extends RecipePreview>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
       preparation_time: freezed == preparation_time
           ? _value.preparation_time
           : preparation_time // ignore: cast_nullable_to_non_nullable
@@ -128,6 +135,7 @@ abstract class _$$RecipePreviewImplCopyWith<$Res>
   $Res call(
       {int id,
       String title,
+      String? description,
       int? preparation_time,
       int? cooking_time,
       String? image_url,
@@ -151,6 +159,7 @@ class __$$RecipePreviewImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? title = null,
+    Object? description = freezed,
     Object? preparation_time = freezed,
     Object? cooking_time = freezed,
     Object? image_url = freezed,
@@ -167,6 +176,10 @@ class __$$RecipePreviewImplCopyWithImpl<$Res>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
       preparation_time: freezed == preparation_time
           ? _value.preparation_time
           : preparation_time // ignore: cast_nullable_to_non_nullable
@@ -201,6 +214,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
   const _$RecipePreviewImpl(
       {required this.id,
       required this.title,
+      this.description,
       this.preparation_time,
       this.cooking_time,
       this.image_url,
@@ -216,6 +230,8 @@ class _$RecipePreviewImpl implements _RecipePreview {
   final int id;
   @override
   final String title;
+  @override
+  final String? description;
   @override
   final int? preparation_time;
   @override
@@ -239,7 +255,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
 
   @override
   String toString() {
-    return 'RecipePreview(id: $id, title: $title, preparation_time: $preparation_time, cooking_time: $cooking_time, image_url: $image_url, tags: $tags, is_favorite: $is_favorite, last_visited_at: $last_visited_at)';
+    return 'RecipePreview(id: $id, title: $title, description: $description, preparation_time: $preparation_time, cooking_time: $cooking_time, image_url: $image_url, tags: $tags, is_favorite: $is_favorite, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -249,6 +265,8 @@ class _$RecipePreviewImpl implements _RecipePreview {
             other is _$RecipePreviewImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.title, title) || other.title == title) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
             (identical(other.preparation_time, preparation_time) ||
                 other.preparation_time == preparation_time) &&
             (identical(other.cooking_time, cooking_time) ||
@@ -268,6 +286,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
       runtimeType,
       id,
       title,
+      description,
       preparation_time,
       cooking_time,
       image_url,
@@ -295,6 +314,7 @@ abstract class _RecipePreview implements RecipePreview {
   const factory _RecipePreview(
       {required final int id,
       required final String title,
+      final String? description,
       final int? preparation_time,
       final int? cooking_time,
       final String? image_url,
@@ -309,6 +329,8 @@ abstract class _RecipePreview implements RecipePreview {
   int get id;
   @override
   String get title;
+  @override
+  String? get description;
   @override
   int? get preparation_time;
   @override

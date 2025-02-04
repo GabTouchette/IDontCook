@@ -222,14 +222,17 @@ class _RecipesPageState extends State<RecipesPage> {
                 ),
                 Expanded(
                   child: _filteredRecipes.isEmpty
-                      ? Center(child: Text('No recipes found.'))
+                      ? Center(
+                          child: Text('No recipes found.',
+                              style: TextStyle(color: ColorPalette.offWhite)))
                       : ListView.builder(
                           padding: EdgeInsets.zero,
                           itemCount: _filteredRecipes.length + 1,
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical:8.0, horizontal: 16.0),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 16.0),
                                 child: Text(
                                   'Showing ${_filteredRecipes.length} recipes',
                                   style: TextStyle(

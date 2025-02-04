@@ -9,6 +9,7 @@ class RecipePreview with _$RecipePreview {
   const factory RecipePreview({
     required int id,
     required String title,
+    String? description,
     int? preparation_time,
     int? cooking_time,
     String? image_url,
@@ -24,6 +25,7 @@ class RecipePreview with _$RecipePreview {
     return RecipePreview(
       id: recipe.id,
       title: recipe.title,
+      description: recipe.description,
       preparation_time: recipe.preparation_time,
       cooking_time: recipe.cooking_time,
       image_url: recipe.image_url,
