@@ -141,20 +141,29 @@ class _UserPostCardState extends State<UserPostCard> {
         children: [
           const CircleAvatar(
             backgroundColor: ColorPalette.lightgray,
-            child: FaIcon(FontAwesomeIcons.solidLemon,
-                color: ColorPalette.mustard),
+            child: FaIcon(
+              FontAwesomeIcons.solidLemon,
+              color: ColorPalette.mustard,
+            ),
           ),
           const SizedBox(width: 8),
-          Text(
-            "@${widget.post.user.username}",
-            style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w300,
-                color: ColorPalette.offWhite),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "@${widget.post.user.username}",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w300,
+                  color: ColorPalette.offWhite,
+                ),
+              ),
+              const Text(
+                "shared a recipe",
+                style: TextStyle(color: ColorPalette.placeholdergray),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          const Text("shared a recipe",
-              style: TextStyle(color: ColorPalette.placeholdergray)),
           const Spacer(),
           FutureBuilder<User?>(
             future: _currentUser,

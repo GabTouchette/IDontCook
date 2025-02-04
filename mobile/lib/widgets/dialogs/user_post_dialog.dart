@@ -27,6 +27,14 @@ class _PostDialogState extends State<PostDialog> {
   @override
   void initState() {
     super.initState();
+    if (widget.recipe != null) {
+      _selectedRecipe = RecipePreview(
+        id: widget.recipe!.id,
+        title: widget.recipe!.title,
+        description: widget.recipe!.description,
+        image_url: widget.recipe!.image_url,
+      );
+    }
     _fetchRecipes();
   }
 

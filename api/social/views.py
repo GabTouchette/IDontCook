@@ -16,10 +16,30 @@ class PostListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save()
 
+    def get(self, request, *args, **kwargs):
+        posts = self.get_queryset()
+        serializer = self.get_serializer(posts, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
 class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        post = self.get_object()
+        serializer = self.get_serializer(post)
+        return JsonResponse(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
 
 
 class CommentListCreateAPIView(generics.ListCreateAPIView):
@@ -30,10 +50,30 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def get(self, request, *args, **kwargs):
+        comments = self.get_queryset()
+        serializer = self.get_serializer(comments, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
 class CommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        comment = self.get_object()
+        serializer = self.get_serializer(comment)
+        return JsonResponse(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
 
 
 class LikeCreateAPIView(generics.CreateAPIView):
@@ -43,7 +83,10 @@ class LikeCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        
+
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class LikeDeleteAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -61,6 +104,11 @@ class LikeListAPIView(generics.ListAPIView):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        likes = self.get_queryset()
+        serializer = self.get_serializer(likes, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
 
 class VoteCreateAPIView(APIView):
@@ -89,6 +137,7 @@ class VoteCreateAPIView(APIView):
                 return JsonResponse({"message": "Vote created successfully"}, status=status.HTTP_201_CREATED)
 
         return JsonResponse({"message": "No action needed"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class VoteDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
