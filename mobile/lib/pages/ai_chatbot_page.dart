@@ -151,10 +151,10 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16.0),
                               decoration: BoxDecoration(
-                                color: ColorPalette.darkgray,
+                                color: ColorPalette.darkergray,
                                 borderRadius: BorderRadius.circular(30),
-                                border: Border.all(
-                                    color: ColorPalette.placeholdergray),
+                                border:
+                                    Border.all(color: ColorPalette.darkgray),
                               ),
                               child: TextField(
                                 controller: _searchController,

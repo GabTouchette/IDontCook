@@ -22,7 +22,7 @@ User _$UserFromJson(Map<String, dynamic> json) {
 mixin _$User {
   String get username => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
-  String get token => throw _privateConstructorUsedError;
+  String? get token => throw _privateConstructorUsedError;
 
   /// Serializes this User to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -38,7 +38,7 @@ abstract class $UserCopyWith<$Res> {
   factory $UserCopyWith(User value, $Res Function(User) then) =
       _$UserCopyWithImpl<$Res, User>;
   @useResult
-  $Res call({String username, String email, String token});
+  $Res call({String username, String email, String? token});
 }
 
 /// @nodoc
@@ -58,7 +58,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
   $Res call({
     Object? username = null,
     Object? email = null,
-    Object? token = null,
+    Object? token = freezed,
   }) {
     return _then(_value.copyWith(
       username: null == username
@@ -69,10 +69,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
               as String,
-      token: null == token
+      token: freezed == token
           ? _value.token
           : token // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ) as $Val);
   }
 }
@@ -84,7 +84,7 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       __$$UserImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String username, String email, String token});
+  $Res call({String username, String email, String? token});
 }
 
 /// @nodoc
@@ -101,7 +101,7 @@ class __$$UserImplCopyWithImpl<$Res>
   $Res call({
     Object? username = null,
     Object? email = null,
-    Object? token = null,
+    Object? token = freezed,
   }) {
     return _then(_$UserImpl(
       username: null == username
@@ -112,10 +112,10 @@ class __$$UserImplCopyWithImpl<$Res>
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
               as String,
-      token: null == token
+      token: freezed == token
           ? _value.token
           : token // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ));
   }
 }
@@ -123,8 +123,7 @@ class __$$UserImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$UserImpl implements _User {
-  const _$UserImpl(
-      {required this.username, required this.email, required this.token});
+  const _$UserImpl({required this.username, required this.email, this.token});
 
   factory _$UserImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserImplFromJson(json);
@@ -134,7 +133,7 @@ class _$UserImpl implements _User {
   @override
   final String email;
   @override
-  final String token;
+  final String? token;
 
   @override
   String toString() {
@@ -176,7 +175,7 @@ abstract class _User implements User {
   const factory _User(
       {required final String username,
       required final String email,
-      required final String token}) = _$UserImpl;
+      final String? token}) = _$UserImpl;
 
   factory _User.fromJson(Map<String, dynamic> json) = _$UserImpl.fromJson;
 
@@ -185,7 +184,7 @@ abstract class _User implements User {
   @override
   String get email;
   @override
-  String get token;
+  String? get token;
 
   /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.

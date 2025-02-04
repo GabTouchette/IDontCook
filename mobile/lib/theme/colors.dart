@@ -11,5 +11,6 @@ class ColorPalette {
   static const darkergray = Color(0xFF0F0F0F);
   static const orange = Color(0xFFEF7843);
   static const green = Color(0xFF00A447);
-  static const mustard = Color(0xFFE0BD49);  
+  static const mustard = Color(0xFFE0BD49);
+  static const red = Color(0xFFE53D00);
 }

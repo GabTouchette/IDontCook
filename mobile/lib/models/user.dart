@@ -8,12 +8,13 @@ class User with _$User {
   const factory User({
     required String username,
     required String email,
-    required String token,
+    String? token,
   }) = _User;
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
-  factory User.fromJsonWithUsername(Map<String, dynamic> json, String username) {
+  factory User.fromJsonWithUsername(
+      Map<String, dynamic> json, String username) {
     return User(
       username: username,
       email: json['email'] ?? '',

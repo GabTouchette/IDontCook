@@ -13,4 +13,5 @@ urlpatterns = [
 
     path("api/", include("recipes.urls")),
     path('api/ai/', include('ai_chatbot.urls')),
+    path('api/social/', include('social.urls')),
 ]
