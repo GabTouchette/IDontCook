@@ -43,14 +43,15 @@ class AiChatBotPageState extends State<AiChatBotPage> {
       _scrollToBottom();
 
       try {
-        List<String> lastAiMessages = [];
+        List<Map<String, String>> chatHistory = [];
         for (int i = _messages.length - 2; i >= 0; i--) {
-          if (_messages[i]["sender"] == "user") continue;
-          lastAiMessages.insert(0, _messages[i]['text'] ?? '');
+          chatHistory.insert(0, {
+            "message": _messages[i]['text'] ?? '',
+            "sender": _messages[i]['sender'] ?? ''
+          });
         }
-
-        final response =
-            await AiChatbotApi().chatWithBot(query, lastAiMessages);
+        print(chatHistory);
+        final response = await AiChatbotApi().chatWithBot(query, chatHistory);
 
         if (response != null && response['response'] != null) {
           setState(() {

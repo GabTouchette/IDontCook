@@ -29,7 +29,7 @@ class ChatbotView(APIView):
         """Handles general chatbot queries using OpenAI"""
         
         conversation = Conversation.objects.create(user=user, user_query=query, ai_response="loading")
-        saved_recipes = Recipe.objects.all()
+        saved_recipes = Recipe.objects.filter(created_by=user)
         recipes_list = [
             {
                 "id": recipe.id,
@@ -85,37 +85,30 @@ class ChatbotView(APIView):
 
         return Response({"response": openai_response}, status=status.HTTP_200_OK)
 
-    def get_recipe(self, query):
-        """Retrieves an existing recipe by name"""
-        recipe = Recipe.objects.filter(title__icontains=query).first()
-        if not recipe:
-            return Response({"error": "Recipe not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = RecipeSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def ask_openai(self, prompt, chat_history=None):
         """Sends a prompt to OpenAI's GPT model and returns the cleaned response"""
         try:
             client = OpenAI(api_key=os.getenv('OPENAI_KEY'))
-            message = {
+            
+            messages = [{
                 'role': 'user',
                 'content': prompt
-            }
-            if chat_history:
-                messages = [message, {
-                    'role': 'assistant',
-                    'content': "\n".join(chat_history)
-                }]
-            else:
-                messages = [message]  
+            }]
             
+            if chat_history:
+                for entry in chat_history:
+                    role = 'user' if entry['sender'] == 'user' else 'assistant'
+                    messages.append({
+                        'role': role,
+                        'content': entry['message']
+                    })
+            print(messages)
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=messages
             )
             return completion.choices[0].message.content
+            return "Nah bru"
 
         except OpenAIError as e:
             return f"Error communicating with OpenAI: {e}"
-
