@@ -171,7 +171,7 @@ class _RecipesPageState extends State<RecipesPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 120.0),
+            padding: const EdgeInsets.only(top: 100.0),
             child: Column(
               children: [
                 Padding(
@@ -179,9 +179,9 @@ class _RecipesPageState extends State<RecipesPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     decoration: BoxDecoration(
-                      color: ColorPalette.darkgray,
+                      color: ColorPalette.darkergray,
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: ColorPalette.placeholdergray),
+                      border: Border.all(color: ColorPalette.darkgray),
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -198,24 +198,20 @@ class _RecipesPageState extends State<RecipesPage> {
                           color: ColorPalette.placeholdergray,
                         ),
                         border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 16.0, horizontal: 8.0),
                       ),
                       onChanged: _onSearchChanged,
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildTab('All', 0),
-                        _buildTab('Recent', 1),
-                        _buildTab('Favorites', 2),
-                      ],
-                    ),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildTab('All', 0),
+                    _buildTab('Recent', 1),
+                    _buildTab('Favorites', 2),
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
@@ -229,15 +225,28 @@ class _RecipesPageState extends State<RecipesPage> {
                       ? Center(child: Text('No recipes found.'))
                       : ListView.builder(
                           padding: EdgeInsets.zero,
-                          itemCount: _filteredRecipes.length,
+                          itemCount: _filteredRecipes.length + 1,
                           itemBuilder: (context, index) {
-                            final recipe = _filteredRecipes[index];
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RecipeTile(recipe: recipe),
-                              ],
-                            );
+                            if (index == 0) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical:8.0, horizontal: 16.0),
+                                child: Text(
+                                  'Showing ${_filteredRecipes.length} recipes',
+                                  style: TextStyle(
+                                    color: ColorPalette.offWhite,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              final recipe = _filteredRecipes[index - 1];
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  RecipeTile(recipe: recipe),
+                                ],
+                              );
+                            }
                           },
                         ),
                 ),
@@ -251,23 +260,34 @@ class _RecipesPageState extends State<RecipesPage> {
 
   Widget _buildTab(String title, int index) {
     bool isSelected = _tabIndex == index;
-    return GestureDetector(
-      onTap: () => _onTabTapped(index),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color:
-                    isSelected ? ColorPalette.offWhite : ColorPalette.darkgray,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onTabTapped(index),
+        child: Container(
+          decoration: BoxDecoration(
+            border: isSelected
+                ? Border(bottom: BorderSide(color: Colors.white, width: 1.0))
+                : null,
+          ),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            child: Column(
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected
+                        ? ColorPalette.offWhite
+                        : ColorPalette.placeholdergray,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 8),
+              ],
             ),
-            SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );

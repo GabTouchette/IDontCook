@@ -84,7 +84,7 @@ class AiResponseBubble extends StatelessWidget {
           return Column(
             children: [
               widget,
-              SizedBox(height: 4.0),
+              SizedBox(height: 6.0),
             ],
           );
         }).toList(),

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'recipes',
     'ai_chatbot',
+    'social',
 ]
 
 AUTHENTICATION_BACKENDS = (

@@ -122,7 +122,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   Widget getRecipeImage(String? imageUrl) {
     final random = Random();
-    int imageNumber = random.nextInt(12) + 1;
+    int imageNumber = random.nextInt(11) + 1;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
@@ -165,21 +165,21 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: ColorPalette.darkergray,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: ColorPalette.darkergray,
         title: Text(
-          currentRecipe.title,
+          "Details",
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
-            fontSize: 28,
+            fontSize: 32,
             color: ColorPalette.offWhite,
           ),
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
+        elevation: 0,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -263,11 +263,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             getRecipeImage(currentRecipe.image_url),
             const SizedBox(height: 16),
             Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16),
+              child: Text(
+                currentRecipe.title,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 36,
+                  color: ColorPalette.offWhite,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
                   if (currentRecipe.preparation_time != null) ...[
-                    const Icon(Icons.timer, size: 20, color: Colors.white),
+                    const Icon(Icons.timer, size: 20, color: ColorPalette.yellow),
                     const SizedBox(width: 6),
                     Text(
                       'Prep: ${currentRecipe.preparation_time} min',
@@ -280,7 +294,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     const SizedBox(width: 16),
                   if (currentRecipe.cooking_time != null) ...[
                     const Icon(Icons.local_fire_department,
-                        size: 20, color: Colors.white),
+                        size: 20, color: ColorPalette.orange),
                     const SizedBox(width: 6),
                     Text(
                       'Cook: ${currentRecipe.cooking_time} min',
@@ -298,8 +312,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 "Ingredients",
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w300,
                 ),
               ),
             ),
@@ -330,8 +344,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 "Instructions",
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w300,
                 ),
               ),
             ),
@@ -422,8 +436,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontSize: 28,
+              fontWeight: FontWeight.w300,
             ),
           ),
           const SizedBox(height: 8),
@@ -446,8 +460,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             "Tags",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontSize: 28,
+              fontWeight: FontWeight.w300,
             ),
           ),
           const SizedBox(height: 8.0),
