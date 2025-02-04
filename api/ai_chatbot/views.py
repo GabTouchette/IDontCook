@@ -3,13 +3,13 @@ from openai import OpenAI, OpenAIError
 import os
 from dotenv import load_dotenv
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from .serializers import ChatbotRequestSerializer
 from recipes.models import Recipe
 from recipes.serializers import RecipeSerializer
 from .models import Conversation, ChatHistory
 from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
 
 load_dotenv()
 
@@ -19,7 +19,7 @@ class ChatbotView(APIView):
     def post(self, request):
         serializer = ChatbotRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         query = serializer.validated_data['query']
         chat_history = serializer.validated_data.get('chat_history', None)
@@ -83,7 +83,7 @@ class ChatbotView(APIView):
 
         ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
 
-        return Response({"response": openai_response}, status=status.HTTP_200_OK)
+        return JsonResponse({"response": openai_response}, status=status.HTTP_200_OK)
 
     def ask_openai(self, prompt, chat_history=None):
         """Sends a prompt to OpenAI's GPT model and returns the cleaned response"""
@@ -102,13 +102,15 @@ class ChatbotView(APIView):
                         'role': role,
                         'content': entry['message']
                     })
-            print(messages)
+
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=messages
             )
-            return completion.choices[0].message.content
-            return "Nah bru"
+            
+            response_content = completion.choices[0].message.content
+            response_content = response_content.encode('utf-8').decode('utf-8')
+            return response_content
 
         except OpenAIError as e:
             return f"Error communicating with OpenAI: {e}"

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from .models import Post, Comment, Like, Vote
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer, VoteSerializer
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 
 class PostListCreateAPIView(generics.ListCreateAPIView):
@@ -52,8 +53,8 @@ class LikeDeleteAPIView(APIView):
 
         if like:
             like.delete()
-            return Response({"message": "Like deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        return Response({"error": "Like not found"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"message": "Like deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({"error": "Like not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class LikeListAPIView(generics.ListAPIView):
@@ -69,7 +70,7 @@ class VoteCreateAPIView(APIView):
         value = request.data.get('value')  # Expected: -1 (downvote), 0 (remove vote), 1 (upvote)
 
         if value not in [-1, 0, 1]:
-            return Response({"error": "Invalid vote value. Must be -1, 0, or 1."}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": "Invalid vote value. Must be -1, 0, or 1."}, status=status.HTTP_400_BAD_REQUEST)
 
         post = get_object_or_404(Post, id=post_id)
         existing_vote = Vote.objects.filter(user=request.user, post=post).first()
@@ -77,17 +78,17 @@ class VoteCreateAPIView(APIView):
         if existing_vote:
             if value == 0:  # Remove the vote
                 existing_vote.delete()
-                return Response({"message": "Vote removed successfully"}, status=status.HTTP_200_OK)
+                return JsonResponse({"message": "Vote removed successfully"}, status=status.HTTP_200_OK)
             else:
                 existing_vote.value = value
                 existing_vote.save()
-                return Response({"message": "Vote updated successfully"}, status=status.HTTP_200_OK)
+                return JsonResponse({"message": "Vote updated successfully"}, status=status.HTTP_200_OK)
         else:
             if value != 0:  # Create a vote only if it's not zero
                 Vote.objects.create(user=request.user, post=post, value=value)
-                return Response({"message": "Vote created successfully"}, status=status.HTTP_201_CREATED)
+                return JsonResponse({"message": "Vote created successfully"}, status=status.HTTP_201_CREATED)
 
-        return Response({"message": "No action needed"}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"message": "No action needed"}, status=status.HTTP_400_BAD_REQUEST)
 
 class VoteDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -98,9 +99,9 @@ class VoteDetailAPIView(APIView):
         
         if vote:
             vote.delete()
-            return Response({"message": "Vote deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({"message": "Vote deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response({"error": "Vote not found"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"error": "Vote not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class VoteDeleteAPIView(APIView):
@@ -112,5 +113,5 @@ class VoteDeleteAPIView(APIView):
 
         if vote:
             vote.delete()
-            return Response({"message": "Vote deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        return Response({"error": "Vote not found"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"message": "Vote deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({"error": "Vote not found"}, status=status.HTTP_404_NOT_FOUND)
