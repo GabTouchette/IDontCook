@@ -3,52 +3,73 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mobile/api/social_api.dart';
+import 'package:mobile/models/post.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
 class UserPostCard extends StatefulWidget {
-  final String userName;
-  final int voteCount;
-  final String? content;
-  final int? recipeId;
-  final String? recipeTitle;
-  final String? recipeDescription;
-  final String? recipeImageUrl;
+  final Post post;
 
-  const UserPostCard({
-    super.key,
-    required this.userName,
-    required this.recipeId,
-    required this.recipeTitle,
-    this.recipeDescription,
-    this.recipeImageUrl,
-    this.voteCount = 0,
-    this.content,
-  });
+  const UserPostCard({super.key, required this.post});
 
   @override
   _UserPostCardState createState() => _UserPostCardState();
 }
 
 class _UserPostCardState extends State<UserPostCard> {
-  int _currentVoteCount = 0;
+  late int _currentVoteCount;
+  late int _userVote;
+  late bool _userLiked;
 
   @override
   void initState() {
     super.initState();
-    _currentVoteCount = widget.voteCount;
+    _currentVoteCount = widget.post.upvote_count - widget.post.downvote_count;
+    _userVote = widget.post.user_vote;
+    _userLiked = widget.post.user_liked;
   }
 
-  void _upvote() {
-    setState(() {
-      _currentVoteCount++;
-    });
+  Future<void> _handleVote(int voteValue) async {
+    if (_userVote == voteValue) {
+      bool success = await SocialApi().deleteVote(widget.post.id);
+      if (success) {
+        setState(() {
+          _currentVoteCount -= voteValue;
+          _userVote = 0;
+        });
+      }
+    } else {
+      Map<String, dynamic> voteData = {"value": voteValue};
+      bool success = await SocialApi().createVote(widget.post.id, voteData);
+      if (success) {
+        setState(() {
+          _currentVoteCount += (voteValue - _userVote);
+          _userVote = voteValue;
+        });
+      }
+    }
   }
 
-  void _downvote() {
-    setState(() {
-      _currentVoteCount--;
-    });
+  Future<void> _toggleLike() async {
+    Map<String, dynamic> likeData = {
+      "user": widget.post.user.id,
+      "post": widget.post.id,
+      "comment": null,
+    };
+
+    bool success;
+    if (_userLiked) {
+      success = await SocialApi().deleteLike(widget.post.id);
+    } else {
+      success = await SocialApi().createLike(likeData, widget.post.id);
+    }
+
+    if (success) {
+      setState(() {
+        _userLiked = !_userLiked;
+      });
+    }
   }
 
   @override
@@ -62,170 +83,162 @@ class _UserPostCardState extends State<UserPostCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: ColorPalette.lightgray,
-                    child: const FaIcon(FontAwesomeIcons.solidLemon, color: ColorPalette.mustard,),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    "@${widget.userName}",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w300,
-                      color: ColorPalette.offWhite,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    "shared a new recipe",
-                    style: TextStyle(color: ColorPalette.placeholdergray),
-                  ),
-                ],
-              ),
-            ),
-            if (widget.content != null) ...[
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Text(
-                  '"${widget.content!}"',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: ColorPalette.offWhite,
-                  ),
-                ),
-              ),
-            ],
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        style: ButtonStyle(
-                          padding: WidgetStateProperty.all(
-                            const EdgeInsets.all(0),
-                          ),
-                        ),
-                        icon: const Icon(Icons.keyboard_arrow_up),
-                        onPressed: _upvote,
-                        color: ColorPalette.gray,
-                        iconSize: 50,
-                      ),
-                      Text(
-                        "$_currentVoteCount",
-                        style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: ColorPalette.offWhite),
-                      ),
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        style: ButtonStyle(
-                          padding: WidgetStateProperty.all(
-                            const EdgeInsets.all(0),
-                          ),
-                        ),
-                        icon: const Icon(Icons.keyboard_arrow_down),
-                        onPressed: _downvote,
-                        color: ColorPalette.gray,
-                        iconSize: 50,
-                      ),
-                    ],
-                  ),
-                ),
-                getRecipeImage(widget.recipeImageUrl),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.recipeTitle ?? "${widget.userName}'s Recipe",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: ColorPalette.offWhite,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.recipeDescription?.isNotEmpty == true
-                            ? widget.recipeDescription!
-                            : "No description available.",
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: FaIcon(
-                    FontAwesomeIcons.heart,
-                    color: ColorPalette.offWhite,
-                    size: 28,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: FaIcon(
-                    FontAwesomeIcons.comment,
-                    color: ColorPalette.offWhite,
-                    size: 28,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => RecipeDetailPage(
-                          recipeId: widget.recipeId,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: FaIcon(
-                    FontAwesomeIcons.upRightFromSquare,
-                    color: ColorPalette.offWhite,
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
+            _buildHeader(),
+            if (widget.post.content != null) _buildContent(),
+            _buildPostDetails(),
+            _buildActionButtons(),
           ],
         ),
       ),
     );
   }
 
-  Widget getRecipeImage(String? imageUrl) {
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: ColorPalette.lightgray,
+            child: FaIcon(FontAwesomeIcons.solidLemon,
+                color: ColorPalette.mustard),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            "@${widget.post.user.username}",
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w300,
+                color: ColorPalette.offWhite),
+          ),
+          const SizedBox(width: 8),
+          const Text("shared a new recipe",
+              style: TextStyle(color: ColorPalette.placeholdergray)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 0, 8),
+      child: Text(
+        '"${widget.post.content}"',
+        style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: ColorPalette.offWhite),
+      ),
+    );
+  }
+
+  Widget _buildPostDetails() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildVoteButtons(),
+        _buildRecipeImage(),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.post.recipe_title ??
+                    "${widget.post.user.username}'s Recipe",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: ColorPalette.offWhite),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.post.recipe_description?.isNotEmpty == true
+                    ? widget.post.recipe_description!
+                    : "No description available.",
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontWeight: FontWeight.w300, color: Colors.grey[400]),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVoteButtons() {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(Icons.keyboard_arrow_up,
+              color: _userVote == 1 ? Colors.green : ColorPalette.gray),
+          iconSize: 50,
+          onPressed: () => _handleVote(1),
+        ),
+        Text(
+          "$_currentVoteCount",
+          style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: ColorPalette.offWhite),
+        ),
+        IconButton(
+          icon: Icon(Icons.keyboard_arrow_down,
+              color: _userVote == -1 ? Colors.red : ColorPalette.gray),
+          iconSize: 50,
+          onPressed: () => _handleVote(-1),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        IconButton(
+          onPressed: _toggleLike,
+          icon: FaIcon(
+            _userLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
+            color: _userLiked ? Colors.red : ColorPalette.offWhite,
+            size: 28,
+          ),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: const FaIcon(FontAwesomeIcons.comment,
+              color: ColorPalette.offWhite, size: 28),
+        ),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecipeDetailPage(
+                  recipeId: widget.post.recipe_id,
+                ),
+              ),
+            );
+          },
+          icon: const FaIcon(FontAwesomeIcons.upRightFromSquare,
+              color: ColorPalette.offWhite, size: 24),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecipeImage() {
     final random = Random();
     int imageNumber = random.nextInt(11) + 1;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: imageUrl != null && imageUrl.isNotEmpty
+      child: widget.post.recipe_image_url != null &&
+              widget.post.recipe_image_url!.isNotEmpty
           ? Image.network(
-              imageUrl,
+              widget.post.recipe_image_url!,
               height: 120,
               width: 120,
               fit: BoxFit.cover,
@@ -248,7 +261,7 @@ class _UserPostCardState extends State<UserPostCard> {
                       child: Container(),
                     ),
                   ),
-                  Center(
+                  const Center(
                     child: Icon(
                       Icons.image,
                       color: ColorPalette.lightgray,

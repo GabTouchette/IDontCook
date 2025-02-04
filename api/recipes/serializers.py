@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Recipe, Ingredient
+from api.serializers import UserSerializer
+
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,6 +11,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True)
+    created_by = UserSerializer(read_only=True)
 
     class Meta:
         model = Recipe
@@ -30,7 +33,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instructions = validated_data.pop("instructions")
         validated_data["instructions"] = str(instructions)
         
-        validated_data["user"] = self.context["request"].user
+        validated_data["created_by"] = self.context["request"].user
 
         recipe = Recipe.objects.create(**validated_data)
 

@@ -10,7 +10,7 @@ _$VoteImpl _$$VoteImplFromJson(Map<String, dynamic> json) => _$VoteImpl(
       id: (json['id'] as num).toInt(),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
       post: Post.fromJson(json['post'] as Map<String, dynamic>),
-      is_upvote: json['is_upvote'] as bool,
+      value: (json['value'] as num).toInt(),
       created_at: json['created_at'] == null
           ? null
           : DateTime.parse(json['created_at'] as String),
@@ -21,6 +21,6 @@ Map<String, dynamic> _$$VoteImplToJson(_$VoteImpl instance) =>
       'id': instance.id,
       'user': instance.user,
       'post': instance.post,
-      'is_upvote': instance.is_upvote,
+      'value': instance.value,
       'created_at': instance.created_at?.toIso8601String(),
     };

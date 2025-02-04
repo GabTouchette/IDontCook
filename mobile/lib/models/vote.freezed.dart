@@ -23,7 +23,7 @@ mixin _$Vote {
   int get id => throw _privateConstructorUsedError;
   User get user => throw _privateConstructorUsedError;
   Post get post => throw _privateConstructorUsedError;
-  bool get is_upvote => throw _privateConstructorUsedError;
+  int get value => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
 
   /// Serializes this Vote to a JSON map.
@@ -40,8 +40,7 @@ abstract class $VoteCopyWith<$Res> {
   factory $VoteCopyWith(Vote value, $Res Function(Vote) then) =
       _$VoteCopyWithImpl<$Res, Vote>;
   @useResult
-  $Res call(
-      {int id, User user, Post post, bool is_upvote, DateTime? created_at});
+  $Res call({int id, User user, Post post, int value, DateTime? created_at});
 
   $UserCopyWith<$Res> get user;
   $PostCopyWith<$Res> get post;
@@ -65,7 +64,7 @@ class _$VoteCopyWithImpl<$Res, $Val extends Vote>
     Object? id = null,
     Object? user = null,
     Object? post = null,
-    Object? is_upvote = null,
+    Object? value = null,
     Object? created_at = freezed,
   }) {
     return _then(_value.copyWith(
@@ -81,10 +80,10 @@ class _$VoteCopyWithImpl<$Res, $Val extends Vote>
           ? _value.post
           : post // ignore: cast_nullable_to_non_nullable
               as Post,
-      is_upvote: null == is_upvote
-          ? _value.is_upvote
-          : is_upvote // ignore: cast_nullable_to_non_nullable
-              as bool,
+      value: null == value
+          ? _value.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as int,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
@@ -120,8 +119,7 @@ abstract class _$$VoteImplCopyWith<$Res> implements $VoteCopyWith<$Res> {
       __$$VoteImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int id, User user, Post post, bool is_upvote, DateTime? created_at});
+  $Res call({int id, User user, Post post, int value, DateTime? created_at});
 
   @override
   $UserCopyWith<$Res> get user;
@@ -144,7 +142,7 @@ class __$$VoteImplCopyWithImpl<$Res>
     Object? id = null,
     Object? user = null,
     Object? post = null,
-    Object? is_upvote = null,
+    Object? value = null,
     Object? created_at = freezed,
   }) {
     return _then(_$VoteImpl(
@@ -160,10 +158,10 @@ class __$$VoteImplCopyWithImpl<$Res>
           ? _value.post
           : post // ignore: cast_nullable_to_non_nullable
               as Post,
-      is_upvote: null == is_upvote
-          ? _value.is_upvote
-          : is_upvote // ignore: cast_nullable_to_non_nullable
-              as bool,
+      value: null == value
+          ? _value.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as int,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
@@ -179,7 +177,7 @@ class _$VoteImpl implements _Vote {
       {required this.id,
       required this.user,
       required this.post,
-      required this.is_upvote,
+      required this.value,
       this.created_at});
 
   factory _$VoteImpl.fromJson(Map<String, dynamic> json) =>
@@ -192,13 +190,13 @@ class _$VoteImpl implements _Vote {
   @override
   final Post post;
   @override
-  final bool is_upvote;
+  final int value;
   @override
   final DateTime? created_at;
 
   @override
   String toString() {
-    return 'Vote(id: $id, user: $user, post: $post, is_upvote: $is_upvote, created_at: $created_at)';
+    return 'Vote(id: $id, user: $user, post: $post, value: $value, created_at: $created_at)';
   }
 
   @override
@@ -209,8 +207,7 @@ class _$VoteImpl implements _Vote {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.user, user) || other.user == user) &&
             (identical(other.post, post) || other.post == post) &&
-            (identical(other.is_upvote, is_upvote) ||
-                other.is_upvote == is_upvote) &&
+            (identical(other.value, value) || other.value == value) &&
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at));
   }
@@ -218,7 +215,7 @@ class _$VoteImpl implements _Vote {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, user, post, is_upvote, created_at);
+      Object.hash(runtimeType, id, user, post, value, created_at);
 
   /// Create a copy of Vote
   /// with the given fields replaced by the non-null parameter values.
@@ -241,7 +238,7 @@ abstract class _Vote implements Vote {
       {required final int id,
       required final User user,
       required final Post post,
-      required final bool is_upvote,
+      required final int value,
       final DateTime? created_at}) = _$VoteImpl;
 
   factory _Vote.fromJson(Map<String, dynamic> json) = _$VoteImpl.fromJson;
@@ -253,7 +250,7 @@ abstract class _Vote implements Vote {
   @override
   Post get post;
   @override
-  bool get is_upvote;
+  int get value;
   @override
   DateTime? get created_at;
 

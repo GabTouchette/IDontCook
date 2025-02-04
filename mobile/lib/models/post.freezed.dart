@@ -22,6 +22,10 @@ Post _$PostFromJson(Map<String, dynamic> json) {
 mixin _$Post {
   int get id => throw _privateConstructorUsedError;
   User get user => throw _privateConstructorUsedError;
+  int get user_vote => throw _privateConstructorUsedError;
+  bool get user_liked => throw _privateConstructorUsedError;
+  int get upvote_count => throw _privateConstructorUsedError;
+  int get downvote_count => throw _privateConstructorUsedError;
   int? get recipe_id => throw _privateConstructorUsedError;
   String? get recipe_title => throw _privateConstructorUsedError;
   String? get recipe_description => throw _privateConstructorUsedError;
@@ -29,8 +33,6 @@ mixin _$Post {
   String? get content => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
   DateTime? get updated_at => throw _privateConstructorUsedError;
-  int get upvote_count => throw _privateConstructorUsedError;
-  int get downvote_count => throw _privateConstructorUsedError;
 
   /// Serializes this Post to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -49,15 +51,17 @@ abstract class $PostCopyWith<$Res> {
   $Res call(
       {int id,
       User user,
+      int user_vote,
+      bool user_liked,
+      int upvote_count,
+      int downvote_count,
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
       String? recipe_image_url,
       String? content,
       DateTime? created_at,
-      DateTime? updated_at,
-      int upvote_count,
-      int downvote_count});
+      DateTime? updated_at});
 
   $UserCopyWith<$Res> get user;
 }
@@ -79,6 +83,10 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
   $Res call({
     Object? id = null,
     Object? user = null,
+    Object? user_vote = null,
+    Object? user_liked = null,
+    Object? upvote_count = null,
+    Object? downvote_count = null,
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
@@ -86,8 +94,6 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
     Object? content = freezed,
     Object? created_at = freezed,
     Object? updated_at = freezed,
-    Object? upvote_count = null,
-    Object? downvote_count = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -98,6 +104,22 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
               as User,
+      user_vote: null == user_vote
+          ? _value.user_vote
+          : user_vote // ignore: cast_nullable_to_non_nullable
+              as int,
+      user_liked: null == user_liked
+          ? _value.user_liked
+          : user_liked // ignore: cast_nullable_to_non_nullable
+              as bool,
+      upvote_count: null == upvote_count
+          ? _value.upvote_count
+          : upvote_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      downvote_count: null == downvote_count
+          ? _value.downvote_count
+          : downvote_count // ignore: cast_nullable_to_non_nullable
+              as int,
       recipe_id: freezed == recipe_id
           ? _value.recipe_id
           : recipe_id // ignore: cast_nullable_to_non_nullable
@@ -126,14 +148,6 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
           ? _value.updated_at
           : updated_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      upvote_count: null == upvote_count
-          ? _value.upvote_count
-          : upvote_count // ignore: cast_nullable_to_non_nullable
-              as int,
-      downvote_count: null == downvote_count
-          ? _value.downvote_count
-          : downvote_count // ignore: cast_nullable_to_non_nullable
-              as int,
     ) as $Val);
   }
 
@@ -158,15 +172,17 @@ abstract class _$$PostImplCopyWith<$Res> implements $PostCopyWith<$Res> {
   $Res call(
       {int id,
       User user,
+      int user_vote,
+      bool user_liked,
+      int upvote_count,
+      int downvote_count,
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
       String? recipe_image_url,
       String? content,
       DateTime? created_at,
-      DateTime? updated_at,
-      int upvote_count,
-      int downvote_count});
+      DateTime? updated_at});
 
   @override
   $UserCopyWith<$Res> get user;
@@ -186,6 +202,10 @@ class __$$PostImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? user = null,
+    Object? user_vote = null,
+    Object? user_liked = null,
+    Object? upvote_count = null,
+    Object? downvote_count = null,
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
@@ -193,8 +213,6 @@ class __$$PostImplCopyWithImpl<$Res>
     Object? content = freezed,
     Object? created_at = freezed,
     Object? updated_at = freezed,
-    Object? upvote_count = null,
-    Object? downvote_count = null,
   }) {
     return _then(_$PostImpl(
       id: null == id
@@ -205,6 +223,22 @@ class __$$PostImplCopyWithImpl<$Res>
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
               as User,
+      user_vote: null == user_vote
+          ? _value.user_vote
+          : user_vote // ignore: cast_nullable_to_non_nullable
+              as int,
+      user_liked: null == user_liked
+          ? _value.user_liked
+          : user_liked // ignore: cast_nullable_to_non_nullable
+              as bool,
+      upvote_count: null == upvote_count
+          ? _value.upvote_count
+          : upvote_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      downvote_count: null == downvote_count
+          ? _value.downvote_count
+          : downvote_count // ignore: cast_nullable_to_non_nullable
+              as int,
       recipe_id: freezed == recipe_id
           ? _value.recipe_id
           : recipe_id // ignore: cast_nullable_to_non_nullable
@@ -233,14 +267,6 @@ class __$$PostImplCopyWithImpl<$Res>
           ? _value.updated_at
           : updated_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      upvote_count: null == upvote_count
-          ? _value.upvote_count
-          : upvote_count // ignore: cast_nullable_to_non_nullable
-              as int,
-      downvote_count: null == downvote_count
-          ? _value.downvote_count
-          : downvote_count // ignore: cast_nullable_to_non_nullable
-              as int,
     ));
   }
 }
@@ -251,15 +277,17 @@ class _$PostImpl implements _Post {
   _$PostImpl(
       {required this.id,
       required this.user,
+      required this.user_vote,
+      required this.user_liked,
+      required this.upvote_count,
+      required this.downvote_count,
       this.recipe_id,
       this.recipe_title,
       this.recipe_description,
       this.recipe_image_url,
       this.content,
       this.created_at,
-      this.updated_at,
-      this.upvote_count = 0,
-      this.downvote_count = 0});
+      this.updated_at});
 
   factory _$PostImpl.fromJson(Map<String, dynamic> json) =>
       _$$PostImplFromJson(json);
@@ -268,6 +296,14 @@ class _$PostImpl implements _Post {
   final int id;
   @override
   final User user;
+  @override
+  final int user_vote;
+  @override
+  final bool user_liked;
+  @override
+  final int upvote_count;
+  @override
+  final int downvote_count;
   @override
   final int? recipe_id;
   @override
@@ -282,16 +318,10 @@ class _$PostImpl implements _Post {
   final DateTime? created_at;
   @override
   final DateTime? updated_at;
-  @override
-  @JsonKey()
-  final int upvote_count;
-  @override
-  @JsonKey()
-  final int downvote_count;
 
   @override
   String toString() {
-    return 'Post(id: $id, user: $user, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_image_url: $recipe_image_url, content: $content, created_at: $created_at, updated_at: $updated_at, upvote_count: $upvote_count, downvote_count: $downvote_count)';
+    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_image_url: $recipe_image_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
   }
 
   @override
@@ -301,6 +331,14 @@ class _$PostImpl implements _Post {
             other is _$PostImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.user, user) || other.user == user) &&
+            (identical(other.user_vote, user_vote) ||
+                other.user_vote == user_vote) &&
+            (identical(other.user_liked, user_liked) ||
+                other.user_liked == user_liked) &&
+            (identical(other.upvote_count, upvote_count) ||
+                other.upvote_count == upvote_count) &&
+            (identical(other.downvote_count, downvote_count) ||
+                other.downvote_count == downvote_count) &&
             (identical(other.recipe_id, recipe_id) ||
                 other.recipe_id == recipe_id) &&
             (identical(other.recipe_title, recipe_title) ||
@@ -313,11 +351,7 @@ class _$PostImpl implements _Post {
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at) &&
             (identical(other.updated_at, updated_at) ||
-                other.updated_at == updated_at) &&
-            (identical(other.upvote_count, upvote_count) ||
-                other.upvote_count == upvote_count) &&
-            (identical(other.downvote_count, downvote_count) ||
-                other.downvote_count == downvote_count));
+                other.updated_at == updated_at));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -326,15 +360,17 @@ class _$PostImpl implements _Post {
       runtimeType,
       id,
       user,
+      user_vote,
+      user_liked,
+      upvote_count,
+      downvote_count,
       recipe_id,
       recipe_title,
       recipe_description,
       recipe_image_url,
       content,
       created_at,
-      updated_at,
-      upvote_count,
-      downvote_count);
+      updated_at);
 
   /// Create a copy of Post
   /// with the given fields replaced by the non-null parameter values.
@@ -356,15 +392,17 @@ abstract class _Post implements Post {
   factory _Post(
       {required final int id,
       required final User user,
+      required final int user_vote,
+      required final bool user_liked,
+      required final int upvote_count,
+      required final int downvote_count,
       final int? recipe_id,
       final String? recipe_title,
       final String? recipe_description,
       final String? recipe_image_url,
       final String? content,
       final DateTime? created_at,
-      final DateTime? updated_at,
-      final int upvote_count,
-      final int downvote_count}) = _$PostImpl;
+      final DateTime? updated_at}) = _$PostImpl;
 
   factory _Post.fromJson(Map<String, dynamic> json) = _$PostImpl.fromJson;
 
@@ -372,6 +410,14 @@ abstract class _Post implements Post {
   int get id;
   @override
   User get user;
+  @override
+  int get user_vote;
+  @override
+  bool get user_liked;
+  @override
+  int get upvote_count;
+  @override
+  int get downvote_count;
   @override
   int? get recipe_id;
   @override
@@ -386,10 +432,6 @@ abstract class _Post implements Post {
   DateTime? get created_at;
   @override
   DateTime? get updated_at;
-  @override
-  int get upvote_count;
-  @override
-  int get downvote_count;
 
   /// Create a copy of Post
   /// with the given fields replaced by the non-null parameter values.

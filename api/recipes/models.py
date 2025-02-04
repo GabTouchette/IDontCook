@@ -23,9 +23,10 @@ class Recipe(models.Model):
     image_url = models.URLField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     is_favorite = models.BooleanField(default=False)
+    parent = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     last_visited_at = models.DateTimeField(blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     
     def __str__(self):
         return self.title

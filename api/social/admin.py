@@ -31,7 +31,7 @@ class FollowAdmin(admin.ModelAdmin):
 
 @admin.register(Vote)
 class VoteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'post', 'is_upvote', 'created_at')
+    list_display = ('id', 'user', 'post', 'value', 'created_at')
     search_fields = ('user__username',)
-    list_filter = ('created_at', 'is_upvote')
+    list_filter = ('created_at', 'value')
     ordering = ('-created_at',)
