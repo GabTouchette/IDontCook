@@ -4,7 +4,10 @@ from .models import ChatHistory, Conversation
 class ChatbotRequestSerializer(serializers.Serializer):
     query = serializers.CharField()
     chat_history = serializers.ListField(
-        child=serializers.CharField(),
+        child=serializers.DictField(
+            child=serializers.CharField(),
+            required=False
+        ),
         required=False,
         allow_empty=True
     )
