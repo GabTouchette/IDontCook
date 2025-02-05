@@ -24,6 +24,7 @@ mixin _$User {
   String get username => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   String? get token => throw _privateConstructorUsedError;
+  int? get follower_count => throw _privateConstructorUsedError;
 
   /// Serializes this User to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -39,7 +40,12 @@ abstract class $UserCopyWith<$Res> {
   factory $UserCopyWith(User value, $Res Function(User) then) =
       _$UserCopyWithImpl<$Res, User>;
   @useResult
-  $Res call({int id, String username, String email, String? token});
+  $Res call(
+      {int id,
+      String username,
+      String email,
+      String? token,
+      int? follower_count});
 }
 
 /// @nodoc
@@ -61,6 +67,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? username = null,
     Object? email = null,
     Object? token = freezed,
+    Object? follower_count = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -79,6 +86,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           ? _value.token
           : token // ignore: cast_nullable_to_non_nullable
               as String?,
+      follower_count: freezed == follower_count
+          ? _value.follower_count
+          : follower_count // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -90,7 +101,12 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       __$$UserImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String username, String email, String? token});
+  $Res call(
+      {int id,
+      String username,
+      String email,
+      String? token,
+      int? follower_count});
 }
 
 /// @nodoc
@@ -109,6 +125,7 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? username = null,
     Object? email = null,
     Object? token = freezed,
+    Object? follower_count = freezed,
   }) {
     return _then(_$UserImpl(
       id: null == id
@@ -127,6 +144,10 @@ class __$$UserImplCopyWithImpl<$Res>
           ? _value.token
           : token // ignore: cast_nullable_to_non_nullable
               as String?,
+      follower_count: freezed == follower_count
+          ? _value.follower_count
+          : follower_count // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -138,7 +159,8 @@ class _$UserImpl implements _User {
       {required this.id,
       required this.username,
       required this.email,
-      this.token});
+      this.token,
+      this.follower_count});
 
   factory _$UserImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserImplFromJson(json);
@@ -151,10 +173,12 @@ class _$UserImpl implements _User {
   final String email;
   @override
   final String? token;
+  @override
+  final int? follower_count;
 
   @override
   String toString() {
-    return 'User(id: $id, username: $username, email: $email, token: $token)';
+    return 'User(id: $id, username: $username, email: $email, token: $token, follower_count: $follower_count)';
   }
 
   @override
@@ -166,12 +190,15 @@ class _$UserImpl implements _User {
             (identical(other.username, username) ||
                 other.username == username) &&
             (identical(other.email, email) || other.email == email) &&
-            (identical(other.token, token) || other.token == token));
+            (identical(other.token, token) || other.token == token) &&
+            (identical(other.follower_count, follower_count) ||
+                other.follower_count == follower_count));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, username, email, token);
+  int get hashCode =>
+      Object.hash(runtimeType, id, username, email, token, follower_count);
 
   /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.
@@ -194,7 +221,8 @@ abstract class _User implements User {
       {required final int id,
       required final String username,
       required final String email,
-      final String? token}) = _$UserImpl;
+      final String? token,
+      final int? follower_count}) = _$UserImpl;
 
   factory _User.fromJson(Map<String, dynamic> json) = _$UserImpl.fromJson;
 
@@ -206,6 +234,8 @@ abstract class _User implements User {
   String get email;
   @override
   String? get token;
+  @override
+  int? get follower_count;
 
   /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.

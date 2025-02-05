@@ -2,6 +2,7 @@ import 'package:mobile/api/api_helper.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/comment.dart';
 import 'package:mobile/models/like.dart';
+import 'package:mobile/models/recipe.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/models/vote.dart';
 
@@ -106,5 +107,42 @@ class SocialApi {
     return data != null
         ? (data as List).map((user) => User.fromJson(user)).toList()
         : [];
+  }
+
+  Future<List<Recipe>> fetchUserRecipes(int userId) async {
+    var data = await _apiHelper.getRequest('social/users/$userId/recipes/');
+    if (data != null) {
+      return (data as List).map((recipe) => Recipe.fromJson(recipe)).toList();
+    }
+    return [];
+  }
+
+  Future<List<Post>> fetchUserPosts(int userId) async {
+    var data = await _apiHelper.getRequest('social/users/$userId/posts/');
+    if (data != null) {
+      return (data as List).map((post) => Post.fromJson(post)).toList();
+    }
+    return [];
+  }
+
+  Future<bool> createFollow(int userId) async {
+    var response =
+        await _apiHelper.postRequest('social/users/$userId/follow/', {});
+    return response != null;
+  }
+
+  Future<bool> deleteFollow(int userId) async {
+    return await _apiHelper
+        .deleteRequest('social/users/$userId/follow/delete/');
+  }
+
+  Future<bool> isUserFollowing(int userId) async {
+    var response =
+        await _apiHelper.getRequest('social/users/$userId/is_following/');
+
+    if (response != null && response.containsKey('is_following')) {
+      return response['is_following'];
+    }
+    return false;
   }
 }

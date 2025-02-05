@@ -8,8 +8,8 @@ part 'follow.g.dart';
 class Follow with _$Follow {
   factory Follow({
     required int id,
-    required User user,
-    required User followed_user,
+    required User follower,
+    required User followed,
     DateTime? created_at
   }) = _Follow;
 

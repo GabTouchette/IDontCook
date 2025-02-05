@@ -8,9 +8,8 @@ part of 'follow.dart';
 
 _$FollowImpl _$$FollowImplFromJson(Map<String, dynamic> json) => _$FollowImpl(
       id: (json['id'] as num).toInt(),
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      followed_user:
-          User.fromJson(json['followed_user'] as Map<String, dynamic>),
+      follower: User.fromJson(json['follower'] as Map<String, dynamic>),
+      followed: User.fromJson(json['followed'] as Map<String, dynamic>),
       created_at: json['created_at'] == null
           ? null
           : DateTime.parse(json['created_at'] as String),
@@ -19,7 +18,7 @@ _$FollowImpl _$$FollowImplFromJson(Map<String, dynamic> json) => _$FollowImpl(
 Map<String, dynamic> _$$FollowImplToJson(_$FollowImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'user': instance.user,
-      'followed_user': instance.followed_user,
+      'follower': instance.follower,
+      'followed': instance.followed,
       'created_at': instance.created_at?.toIso8601String(),
     };

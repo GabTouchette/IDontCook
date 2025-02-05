@@ -42,12 +42,11 @@ class RecipeApi {
   }
 
   Future<bool> isRecipeSaved(int recipeId) async {
-  var response = await _apiHelper.getRequest('recipes/$recipeId/is_saved/');
+    var response = await _apiHelper.getRequest('recipes/$recipeId/is_saved/');
 
-  if (response != null && response.containsKey('is_saved')) {
-    return response['is_saved'];
+    if (response != null && response.containsKey('is_saved')) {
+      return response['is_saved'];
+    }
+    return false;
   }
-  return false;
-}
-
 }

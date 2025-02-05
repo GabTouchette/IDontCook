@@ -10,17 +10,8 @@ class User with _$User {
     required String username,
     required String email,
     String? token,
+    int? follower_count,
   }) = _User;
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-
-  factory User.fromJsonWithUsername(
-      Map<String, dynamic> json, String username) {
-    return User(
-      id: json['id'],
-      username: username,
-      email: json['email'] ?? '',
-      token: json['key'],
-    );
-  }
 }

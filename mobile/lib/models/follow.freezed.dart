@@ -21,8 +21,8 @@ Follow _$FollowFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Follow {
   int get id => throw _privateConstructorUsedError;
-  User get user => throw _privateConstructorUsedError;
-  User get followed_user => throw _privateConstructorUsedError;
+  User get follower => throw _privateConstructorUsedError;
+  User get followed => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
 
   /// Serializes this Follow to a JSON map.
@@ -39,10 +39,10 @@ abstract class $FollowCopyWith<$Res> {
   factory $FollowCopyWith(Follow value, $Res Function(Follow) then) =
       _$FollowCopyWithImpl<$Res, Follow>;
   @useResult
-  $Res call({int id, User user, User followed_user, DateTime? created_at});
+  $Res call({int id, User follower, User followed, DateTime? created_at});
 
-  $UserCopyWith<$Res> get user;
-  $UserCopyWith<$Res> get followed_user;
+  $UserCopyWith<$Res> get follower;
+  $UserCopyWith<$Res> get followed;
 }
 
 /// @nodoc
@@ -61,8 +61,8 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
   @override
   $Res call({
     Object? id = null,
-    Object? user = null,
-    Object? followed_user = null,
+    Object? follower = null,
+    Object? followed = null,
     Object? created_at = freezed,
   }) {
     return _then(_value.copyWith(
@@ -70,13 +70,13 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int,
-      user: null == user
-          ? _value.user
-          : user // ignore: cast_nullable_to_non_nullable
+      follower: null == follower
+          ? _value.follower
+          : follower // ignore: cast_nullable_to_non_nullable
               as User,
-      followed_user: null == followed_user
-          ? _value.followed_user
-          : followed_user // ignore: cast_nullable_to_non_nullable
+      followed: null == followed
+          ? _value.followed
+          : followed // ignore: cast_nullable_to_non_nullable
               as User,
       created_at: freezed == created_at
           ? _value.created_at
@@ -89,9 +89,9 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $UserCopyWith<$Res> get user {
-    return $UserCopyWith<$Res>(_value.user, (value) {
-      return _then(_value.copyWith(user: value) as $Val);
+  $UserCopyWith<$Res> get follower {
+    return $UserCopyWith<$Res>(_value.follower, (value) {
+      return _then(_value.copyWith(follower: value) as $Val);
     });
   }
 
@@ -99,9 +99,9 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $UserCopyWith<$Res> get followed_user {
-    return $UserCopyWith<$Res>(_value.followed_user, (value) {
-      return _then(_value.copyWith(followed_user: value) as $Val);
+  $UserCopyWith<$Res> get followed {
+    return $UserCopyWith<$Res>(_value.followed, (value) {
+      return _then(_value.copyWith(followed: value) as $Val);
     });
   }
 }
@@ -113,12 +113,12 @@ abstract class _$$FollowImplCopyWith<$Res> implements $FollowCopyWith<$Res> {
       __$$FollowImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, User user, User followed_user, DateTime? created_at});
+  $Res call({int id, User follower, User followed, DateTime? created_at});
 
   @override
-  $UserCopyWith<$Res> get user;
+  $UserCopyWith<$Res> get follower;
   @override
-  $UserCopyWith<$Res> get followed_user;
+  $UserCopyWith<$Res> get followed;
 }
 
 /// @nodoc
@@ -135,8 +135,8 @@ class __$$FollowImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? user = null,
-    Object? followed_user = null,
+    Object? follower = null,
+    Object? followed = null,
     Object? created_at = freezed,
   }) {
     return _then(_$FollowImpl(
@@ -144,13 +144,13 @@ class __$$FollowImplCopyWithImpl<$Res>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int,
-      user: null == user
-          ? _value.user
-          : user // ignore: cast_nullable_to_non_nullable
+      follower: null == follower
+          ? _value.follower
+          : follower // ignore: cast_nullable_to_non_nullable
               as User,
-      followed_user: null == followed_user
-          ? _value.followed_user
-          : followed_user // ignore: cast_nullable_to_non_nullable
+      followed: null == followed
+          ? _value.followed
+          : followed // ignore: cast_nullable_to_non_nullable
               as User,
       created_at: freezed == created_at
           ? _value.created_at
@@ -165,8 +165,8 @@ class __$$FollowImplCopyWithImpl<$Res>
 class _$FollowImpl implements _Follow {
   _$FollowImpl(
       {required this.id,
-      required this.user,
-      required this.followed_user,
+      required this.follower,
+      required this.followed,
       this.created_at});
 
   factory _$FollowImpl.fromJson(Map<String, dynamic> json) =>
@@ -175,15 +175,15 @@ class _$FollowImpl implements _Follow {
   @override
   final int id;
   @override
-  final User user;
+  final User follower;
   @override
-  final User followed_user;
+  final User followed;
   @override
   final DateTime? created_at;
 
   @override
   String toString() {
-    return 'Follow(id: $id, user: $user, followed_user: $followed_user, created_at: $created_at)';
+    return 'Follow(id: $id, follower: $follower, followed: $followed, created_at: $created_at)';
   }
 
   @override
@@ -192,9 +192,10 @@ class _$FollowImpl implements _Follow {
         (other.runtimeType == runtimeType &&
             other is _$FollowImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.user, user) || other.user == user) &&
-            (identical(other.followed_user, followed_user) ||
-                other.followed_user == followed_user) &&
+            (identical(other.follower, follower) ||
+                other.follower == follower) &&
+            (identical(other.followed, followed) ||
+                other.followed == followed) &&
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at));
   }
@@ -202,7 +203,7 @@ class _$FollowImpl implements _Follow {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, user, followed_user, created_at);
+      Object.hash(runtimeType, id, follower, followed, created_at);
 
   /// Create a copy of Follow
   /// with the given fields replaced by the non-null parameter values.
@@ -223,8 +224,8 @@ class _$FollowImpl implements _Follow {
 abstract class _Follow implements Follow {
   factory _Follow(
       {required final int id,
-      required final User user,
-      required final User followed_user,
+      required final User follower,
+      required final User followed,
       final DateTime? created_at}) = _$FollowImpl;
 
   factory _Follow.fromJson(Map<String, dynamic> json) = _$FollowImpl.fromJson;
@@ -232,9 +233,9 @@ abstract class _Follow implements Follow {
   @override
   int get id;
   @override
-  User get user;
+  User get follower;
   @override
-  User get followed_user;
+  User get followed;
   @override
   DateTime? get created_at;
 
