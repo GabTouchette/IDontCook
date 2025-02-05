@@ -2,13 +2,14 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Post, Comment, Like, Vote
+from .models import Post, Comment, Like, Vote, Follow
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer, VoteSerializer
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from api.serializers import UserSerializer
-
+from recipes.models import Recipe
+from recipes.serializers import RecipeSerializer
 
 class PostListCreateAPIView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
@@ -105,7 +106,7 @@ class VoteCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, post_id):
-        value = request.data.get('value')  # Expected: -1 (downvote), 0 (remove vote), 1 (upvote)
+        value = request.data.get('value')  
 
         if value not in [-1, 0, 1]:
             return JsonResponse({"error": "Invalid vote value. Must be -1, 0, or 1."}, status=status.HTTP_400_BAD_REQUEST)
@@ -114,7 +115,7 @@ class VoteCreateAPIView(APIView):
         existing_vote = Vote.objects.filter(user=request.user, post=post).first()
 
         if existing_vote:
-            if value == 0:  # Remove the vote
+            if value == 0:  
                 existing_vote.delete()
                 return JsonResponse({"message": "Vote removed successfully"}, status=status.HTTP_200_OK)
             else:
@@ -122,7 +123,7 @@ class VoteCreateAPIView(APIView):
                 existing_vote.save()
                 return JsonResponse({"message": "Vote updated successfully"}, status=status.HTTP_200_OK)
         else:
-            if value != 0:  # Create a vote only if it's not zero
+            if value != 0:  
                 Vote.objects.create(user=request.user, post=post, value=value)
                 return JsonResponse({"message": "Vote created successfully"}, status=status.HTTP_201_CREATED)
 
@@ -130,10 +131,10 @@ class VoteCreateAPIView(APIView):
 
 
 class UserSearchAPIView(APIView):
-    permission_classes = [IsAuthenticated]  # Optional: Add authentication if needed
+    permission_classes = [IsAuthenticated]  
 
     def get(self, request):
-        query = request.query_params.get('q', '').strip()  # Get the search query
+        query = request.query_params.get('q', '').strip()  
 
         if not query:
             return Response(
@@ -145,6 +146,81 @@ class UserSearchAPIView(APIView):
 
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    
+class UserPostsAPIView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        user = get_object_or_404(User, id=user_id)
+        return Post.objects.filter(user=user)
+
+    def get(self, request, *args, **kwargs):
+        posts = self.get_queryset()
+        serializer = self.get_serializer(posts, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+
+class UserRecipesAPIView(generics.ListAPIView):
+    serializer_class = RecipeSerializer  
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        user = get_object_or_404(User, id=user_id)
+        return Recipe.objects.filter(created_by=user)  
+
+    def get(self, request, *args, **kwargs):
+        recipes = self.get_queryset()
+        serializer = self.get_serializer(recipes, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+
+class CreateFollowAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        current_user = request.user
+        user_to_follow = get_object_or_404(User, id=user_id)
+
+        if current_user == user_to_follow:
+            return Response({"error": "You cannot follow yourself."}, status=400)
+
+        if not Follow.objects.filter(follower=current_user, followed=user_to_follow).exists():
+            Follow.objects.create(follower=current_user, followed=user_to_follow)
+            return Response({"message": "You are now following this user."}, status=201)
+        else:
+            return Response({"error": "You are already following this user."}, status=400)
+
+
+class DeleteFollowAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, user_id):
+        current_user = request.user
+        user_to_unfollow = get_object_or_404(User, id=user_id)
+
+        follow = Follow.objects.filter(follower=current_user, followed=user_to_unfollow).first()
+
+        if follow:
+            follow.delete()
+            return Response({"message": "You have unfollowed this user."}, status=204)
+        else:
+            return Response({"error": "You are not following this user."}, status=400)
+        
+
+class IsUserFollowingAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        follower = request.user
+        followed = get_object_or_404(User, id=user_id)
+        
+        is_following = follower.following.filter(id=followed.id).exists()
+
+        return JsonResponse({"is_following": is_following})
 
 
 class VoteDetailAPIView(APIView):

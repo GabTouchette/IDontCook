@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/user.dart';
+import 'package:mobile/pages/user_profile_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
@@ -83,6 +84,19 @@ class _ExplorePageState extends State<ExplorePage> {
     _debounceTimer = Timer(const Duration(milliseconds: 250), () {
       _fetchUsers(query);
     });
+  }
+
+  void _onUserTap(BuildContext context, User selectedUser) {
+    _searchController.text = selectedUser.username;
+    setState(() {
+      _showDropdown = false;
+    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfilePage(user: selectedUser),
+      ),
+    );
   }
 
   @override
@@ -237,10 +251,9 @@ class _ExplorePageState extends State<ExplorePage> {
                                 const TextStyle(color: ColorPalette.offWhite),
                           ),
                           onTap: () {
-                            _searchController.text = user.username;
-                            setState(() {
-                              _showDropdown = false;
-                            });
+                            User selectedUser = _searchResults[
+                                index]; // Assuming you're iterating through _searchResults
+                            _onUserTap(context, selectedUser);
                           },
                         );
                       },
