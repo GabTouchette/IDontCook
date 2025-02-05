@@ -4,49 +4,11 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import models
-from .models import Recipe, Ingredient
-from .serializers import RecipeSerializer, IngredientSerializer
+from .models import Recipe
+from .serializers import RecipeSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
 from django.http import JsonResponse
-
-
-class IngredientListAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        ingredients = Ingredient.objects.all()
-        serializer = IngredientSerializer(ingredients, many=True)
-        return JsonResponse(serializer.data)
-
-    def post(self, request):
-        serializer = IngredientSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class IngredientDetailAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request, pk):
-        ingredient = get_object_or_404(Ingredient, pk=pk)
-        serializer = IngredientSerializer(ingredient)
-        return JsonResponse(serializer.data)
-
-    def put(self, request, pk):
-        ingredient = get_object_or_404(Ingredient, pk=pk)
-        serializer = IngredientSerializer(ingredient, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        ingredient = get_object_or_404(Ingredient, pk=pk)
-        ingredient.delete()
-        return JsonResponse(status=status.HTTP_204_NO_CONTENT)
 
 
 class RecipeListAPIView(APIView):

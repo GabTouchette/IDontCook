@@ -2,16 +2,17 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
+from accounts.models import CustomUser
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from django.http import JsonResponse
+import random
+
 
 class RegisterView(APIView):
     permission_classes = []
 
     def post(self, request):
-        print("hey")
         username = request.data.get('username')
         email = request.data.get('email')
         password = request.data.get('password')
@@ -23,14 +24,19 @@ class RegisterView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if User.objects.filter(username=username).exists():
+        if CustomUser.objects.filter(username=username).exists():
             print("Username already exists")
             return JsonResponse(
                 {'error': 'Username already exists'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = User.objects.create_user(username=username, email=email, password=password)
+        avatar_icon = self.get_random_avatar_icon()
+
+        user = CustomUser.objects.create_user(
+            username=username, email=email, password=password, avatar_icon=avatar_icon
+        )
+        
         token, _ = Token.objects.get_or_create(user=user)
 
         return JsonResponse({
@@ -40,8 +46,17 @@ class RegisterView(APIView):
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
+                'avatar_icon': user.avatar_icon,
             }
         }, status=status.HTTP_201_CREATED)
+
+    def get_random_avatar_icon(self):
+        icons = [
+            'burger', 'pizza', 'apple', 'iceCream', 'carrot', 'fish', 
+            'lemon', 'coffee', 'cake', 'hotdog'
+        ]
+        return random.choice(icons)
+
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -57,5 +72,6 @@ class CustomAuthToken(ObtainAuthToken):
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
+                'avatar_icon': user.avatar_icon,
             }
         })
