@@ -10,6 +10,7 @@ import 'package:mobile/models/user.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
+import 'package:mobile/widgets/dialogs/post_comments_dialog.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
@@ -22,6 +23,8 @@ class UserPostCard extends StatefulWidget {
 
 class _UserPostCardState extends State<UserPostCard> {
   late int _currentVoteCount;
+  late int _currentCommentCount;
+  late int _currentLikeCount;
   late int _userVote;
   late bool _userLiked;
   late Future<User?> _currentUser;
@@ -32,6 +35,8 @@ class _UserPostCardState extends State<UserPostCard> {
     _currentVoteCount = widget.post.upvote_count - widget.post.downvote_count;
     _userVote = widget.post.user_vote;
     _userLiked = widget.post.user_liked;
+    _currentCommentCount = widget.post.comment_count;
+    _currentLikeCount = widget.post.like_count;
     _currentUser = _fetchUser();
   }
 
@@ -77,6 +82,7 @@ class _UserPostCardState extends State<UserPostCard> {
     if (success) {
       setState(() {
         _userLiked = !_userLiked;
+        _currentLikeCount += _userLiked ? 1 : -1;
       });
     }
   }
@@ -270,18 +276,60 @@ class _UserPostCardState extends State<UserPostCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        IconButton(
-          onPressed: _toggleLike,
-          icon: FaIcon(
-            _userLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
-            color: _userLiked ? Colors.red : ColorPalette.offWhite,
-            size: 28,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: _toggleLike,
+              icon: FaIcon(
+                _userLiked
+                    ? FontAwesomeIcons.solidHeart
+                    : FontAwesomeIcons.heart,
+                color: _userLiked ? Colors.red : ColorPalette.offWhite,
+                size: 28,
+              ),
+            ),
+            Text(
+              _currentLikeCount.toString(),
+              style: const TextStyle(
+                color: ColorPalette.offWhite,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
-        IconButton(
-          onPressed: () {},
-          icon: const FaIcon(FontAwesomeIcons.comment,
-              color: ColorPalette.offWhite, size: 28),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => CommentDrawer(
+                      post: widget.post,
+                      onCommentAdded: () {
+                        setState(() {
+                          _currentCommentCount++;
+                        });
+                      }),
+                );
+              },
+              icon: const FaIcon(
+                FontAwesomeIcons.comment,
+                color: ColorPalette.offWhite,
+                size: 28,
+              ),
+            ),
+            Text(
+              _currentCommentCount.toString(),
+              style: const TextStyle(
+                color: ColorPalette.offWhite,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
         IconButton(
           onPressed: () {
@@ -294,8 +342,11 @@ class _UserPostCardState extends State<UserPostCard> {
               ),
             );
           },
-          icon: const FaIcon(FontAwesomeIcons.upRightFromSquare,
-              color: ColorPalette.offWhite, size: 24),
+          icon: const FaIcon(
+            FontAwesomeIcons.upRightFromSquare,
+            color: ColorPalette.offWhite,
+            size: 24,
+          ),
         ),
       ],
     );

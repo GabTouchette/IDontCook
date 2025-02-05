@@ -22,9 +22,9 @@ Comment _$CommentFromJson(Map<String, dynamic> json) {
 mixin _$Comment {
   int get id => throw _privateConstructorUsedError;
   User get user => throw _privateConstructorUsedError;
-  Post get post => throw _privateConstructorUsedError;
+  int get post_id => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime get created_at => throw _privateConstructorUsedError;
 
   /// Serializes this Comment to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -40,10 +40,10 @@ abstract class $CommentCopyWith<$Res> {
   factory $CommentCopyWith(Comment value, $Res Function(Comment) then) =
       _$CommentCopyWithImpl<$Res, Comment>;
   @useResult
-  $Res call({int id, User user, Post post, String content, DateTime createdAt});
+  $Res call(
+      {int id, User user, int post_id, String content, DateTime created_at});
 
   $UserCopyWith<$Res> get user;
-  $PostCopyWith<$Res> get post;
 }
 
 /// @nodoc
@@ -63,9 +63,9 @@ class _$CommentCopyWithImpl<$Res, $Val extends Comment>
   $Res call({
     Object? id = null,
     Object? user = null,
-    Object? post = null,
+    Object? post_id = null,
     Object? content = null,
-    Object? createdAt = null,
+    Object? created_at = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -76,17 +76,17 @@ class _$CommentCopyWithImpl<$Res, $Val extends Comment>
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
               as User,
-      post: null == post
-          ? _value.post
-          : post // ignore: cast_nullable_to_non_nullable
-              as Post,
+      post_id: null == post_id
+          ? _value.post_id
+          : post_id // ignore: cast_nullable_to_non_nullable
+              as int,
       content: null == content
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
+      created_at: null == created_at
+          ? _value.created_at
+          : created_at // ignore: cast_nullable_to_non_nullable
               as DateTime,
     ) as $Val);
   }
@@ -100,16 +100,6 @@ class _$CommentCopyWithImpl<$Res, $Val extends Comment>
       return _then(_value.copyWith(user: value) as $Val);
     });
   }
-
-  /// Create a copy of Comment
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $PostCopyWith<$Res> get post {
-    return $PostCopyWith<$Res>(_value.post, (value) {
-      return _then(_value.copyWith(post: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -119,12 +109,11 @@ abstract class _$$CommentImplCopyWith<$Res> implements $CommentCopyWith<$Res> {
       __$$CommentImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, User user, Post post, String content, DateTime createdAt});
+  $Res call(
+      {int id, User user, int post_id, String content, DateTime created_at});
 
   @override
   $UserCopyWith<$Res> get user;
-  @override
-  $PostCopyWith<$Res> get post;
 }
 
 /// @nodoc
@@ -142,9 +131,9 @@ class __$$CommentImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? user = null,
-    Object? post = null,
+    Object? post_id = null,
     Object? content = null,
-    Object? createdAt = null,
+    Object? created_at = null,
   }) {
     return _then(_$CommentImpl(
       id: null == id
@@ -155,17 +144,17 @@ class __$$CommentImplCopyWithImpl<$Res>
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
               as User,
-      post: null == post
-          ? _value.post
-          : post // ignore: cast_nullable_to_non_nullable
-              as Post,
+      post_id: null == post_id
+          ? _value.post_id
+          : post_id // ignore: cast_nullable_to_non_nullable
+              as int,
       content: null == content
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
+      created_at: null == created_at
+          ? _value.created_at
+          : created_at // ignore: cast_nullable_to_non_nullable
               as DateTime,
     ));
   }
@@ -177,9 +166,9 @@ class _$CommentImpl implements _Comment {
   _$CommentImpl(
       {required this.id,
       required this.user,
-      required this.post,
+      required this.post_id,
       required this.content,
-      required this.createdAt});
+      required this.created_at});
 
   factory _$CommentImpl.fromJson(Map<String, dynamic> json) =>
       _$$CommentImplFromJson(json);
@@ -189,15 +178,15 @@ class _$CommentImpl implements _Comment {
   @override
   final User user;
   @override
-  final Post post;
+  final int post_id;
   @override
   final String content;
   @override
-  final DateTime createdAt;
+  final DateTime created_at;
 
   @override
   String toString() {
-    return 'Comment(id: $id, user: $user, post: $post, content: $content, createdAt: $createdAt)';
+    return 'Comment(id: $id, user: $user, post_id: $post_id, content: $content, created_at: $created_at)';
   }
 
   @override
@@ -207,16 +196,16 @@ class _$CommentImpl implements _Comment {
             other is _$CommentImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.user, user) || other.user == user) &&
-            (identical(other.post, post) || other.post == post) &&
+            (identical(other.post_id, post_id) || other.post_id == post_id) &&
             (identical(other.content, content) || other.content == content) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            (identical(other.created_at, created_at) ||
+                other.created_at == created_at));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, user, post, content, createdAt);
+      Object.hash(runtimeType, id, user, post_id, content, created_at);
 
   /// Create a copy of Comment
   /// with the given fields replaced by the non-null parameter values.
@@ -238,9 +227,9 @@ abstract class _Comment implements Comment {
   factory _Comment(
       {required final int id,
       required final User user,
-      required final Post post,
+      required final int post_id,
       required final String content,
-      required final DateTime createdAt}) = _$CommentImpl;
+      required final DateTime created_at}) = _$CommentImpl;
 
   factory _Comment.fromJson(Map<String, dynamic> json) = _$CommentImpl.fromJson;
 
@@ -249,11 +238,11 @@ abstract class _Comment implements Comment {
   @override
   User get user;
   @override
-  Post get post;
+  int get post_id;
   @override
   String get content;
   @override
-  DateTime get createdAt;
+  DateTime get created_at;
 
   /// Create a copy of Comment
   /// with the given fields replaced by the non-null parameter values.
