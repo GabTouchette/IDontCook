@@ -43,12 +43,17 @@ class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CommentListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        post_id = self.kwargs.get('post_id')
+        return Comment.objects.filter(post_id=post_id)
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        post_id = self.kwargs.get('post_id')
+        post = get_object_or_404(Post, id=post_id)
+        serializer.save(user=self.request.user, post=post)
 
     def get(self, request, *args, **kwargs):
         comments = self.get_queryset()
@@ -57,23 +62,6 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
-
-class CommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        comment = self.get_object()
-        serializer = self.get_serializer(comment)
-        return JsonResponse(serializer.data)
-
-    def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return super().delete(request, *args, **kwargs)
 
 
 class LikeCreateAPIView(generics.CreateAPIView):
