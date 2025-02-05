@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import Post, Comment, Like, Vote
-from django.contrib.auth.models import User
+from accounts.models import CustomUser
 from recipes.serializers import RecipeSerializer      
-from api.serializers import UserSerializer
+from accounts.serializers import UserSerializer
 from recipes.models import Recipe
 
 class PostSerializer(serializers.ModelSerializer):

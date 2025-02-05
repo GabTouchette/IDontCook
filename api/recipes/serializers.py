@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Recipe, Ingredient
-from api.serializers import UserSerializer
-
+from accounts.serializers import UserSerializer
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:

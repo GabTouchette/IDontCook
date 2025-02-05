@@ -6,8 +6,8 @@ from .models import Post, Comment, Like, Vote, Follow
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer, VoteSerializer
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from django.contrib.auth.models import User
-from api.serializers import UserSerializer
+from accounts.models import CustomUser
+from accounts.serializers import UserSerializer
 from recipes.models import Recipe
 from recipes.serializers import RecipeSerializer
 
@@ -142,7 +142,7 @@ class UserSearchAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        users = User.objects.filter(username__icontains=query)
+        users = CustomUser.objects.filter(username__icontains=query)
 
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -154,7 +154,7 @@ class UserPostsAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user_id = self.kwargs.get('user_id')
-        user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(CustomUser, id=user_id)
         return Post.objects.filter(user=user)
 
     def get(self, request, *args, **kwargs):
@@ -169,7 +169,7 @@ class UserRecipesAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user_id = self.kwargs.get('user_id')
-        user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(CustomUser, id=user_id)
         return Recipe.objects.filter(created_by=user)  
 
     def get(self, request, *args, **kwargs):
@@ -183,7 +183,7 @@ class CreateFollowAPIView(APIView):
 
     def post(self, request, user_id):
         current_user = request.user
-        user_to_follow = get_object_or_404(User, id=user_id)
+        user_to_follow = get_object_or_404(CustomUser, id=user_id)
 
         if current_user == user_to_follow:
             return Response({"error": "You cannot follow yourself."}, status=400)
@@ -200,7 +200,7 @@ class DeleteFollowAPIView(APIView):
 
     def delete(self, request, user_id):
         current_user = request.user
-        user_to_unfollow = get_object_or_404(User, id=user_id)
+        user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
 
         follow = Follow.objects.filter(follower=current_user, followed=user_to_unfollow).first()
 
@@ -216,7 +216,7 @@ class IsUserFollowingAPIView(APIView):
 
     def get(self, request, user_id):
         follower = request.user
-        followed = get_object_or_404(User, id=user_id)
+        followed = get_object_or_404(CustomUser, id=user_id)
         
         is_following = follower.following.filter(id=followed.id).exists()
 

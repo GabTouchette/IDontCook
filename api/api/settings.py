@@ -47,13 +47,14 @@ INSTALLED_APPS = [
     'recipes',
     'ai_chatbot',
     'social',
+    'accounts',
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',  # Default backend for regular users
+    'django.contrib.auth.backends.ModelBackend',
 )
 
-# AUTH_USER_MODEL = 'myapp.CustomUser'
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
