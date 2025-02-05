@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'user.dart';
-import 'post.dart';
 
 part 'comment.freezed.dart';
 part 'comment.g.dart';
@@ -10,9 +9,9 @@ class Comment with _$Comment {
   factory Comment({
     required int id,
     required User user,
-    required Post post,
+    required int post_id,
     required String content,
-    required DateTime createdAt,
+    required DateTime created_at,
   }) = _Comment;
 
   factory Comment.fromJson(Map<String, dynamic> json) => _$CommentFromJson(json);

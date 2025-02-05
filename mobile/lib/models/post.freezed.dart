@@ -26,6 +26,8 @@ mixin _$Post {
   bool get user_liked => throw _privateConstructorUsedError;
   int get upvote_count => throw _privateConstructorUsedError;
   int get downvote_count => throw _privateConstructorUsedError;
+  int get comment_count => throw _privateConstructorUsedError;
+  int get like_count => throw _privateConstructorUsedError;
   int? get recipe_id => throw _privateConstructorUsedError;
   String? get recipe_title => throw _privateConstructorUsedError;
   String? get recipe_description => throw _privateConstructorUsedError;
@@ -55,6 +57,8 @@ abstract class $PostCopyWith<$Res> {
       bool user_liked,
       int upvote_count,
       int downvote_count,
+      int comment_count,
+      int like_count,
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
@@ -87,6 +91,8 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
     Object? user_liked = null,
     Object? upvote_count = null,
     Object? downvote_count = null,
+    Object? comment_count = null,
+    Object? like_count = null,
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
@@ -119,6 +125,14 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
       downvote_count: null == downvote_count
           ? _value.downvote_count
           : downvote_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      comment_count: null == comment_count
+          ? _value.comment_count
+          : comment_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      like_count: null == like_count
+          ? _value.like_count
+          : like_count // ignore: cast_nullable_to_non_nullable
               as int,
       recipe_id: freezed == recipe_id
           ? _value.recipe_id
@@ -176,6 +190,8 @@ abstract class _$$PostImplCopyWith<$Res> implements $PostCopyWith<$Res> {
       bool user_liked,
       int upvote_count,
       int downvote_count,
+      int comment_count,
+      int like_count,
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
@@ -206,6 +222,8 @@ class __$$PostImplCopyWithImpl<$Res>
     Object? user_liked = null,
     Object? upvote_count = null,
     Object? downvote_count = null,
+    Object? comment_count = null,
+    Object? like_count = null,
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
@@ -238,6 +256,14 @@ class __$$PostImplCopyWithImpl<$Res>
       downvote_count: null == downvote_count
           ? _value.downvote_count
           : downvote_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      comment_count: null == comment_count
+          ? _value.comment_count
+          : comment_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      like_count: null == like_count
+          ? _value.like_count
+          : like_count // ignore: cast_nullable_to_non_nullable
               as int,
       recipe_id: freezed == recipe_id
           ? _value.recipe_id
@@ -281,6 +307,8 @@ class _$PostImpl implements _Post {
       required this.user_liked,
       required this.upvote_count,
       required this.downvote_count,
+      required this.comment_count,
+      required this.like_count,
       this.recipe_id,
       this.recipe_title,
       this.recipe_description,
@@ -305,6 +333,10 @@ class _$PostImpl implements _Post {
   @override
   final int downvote_count;
   @override
+  final int comment_count;
+  @override
+  final int like_count;
+  @override
   final int? recipe_id;
   @override
   final String? recipe_title;
@@ -321,7 +353,7 @@ class _$PostImpl implements _Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_image_url: $recipe_image_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
+    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, comment_count: $comment_count, like_count: $like_count, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_image_url: $recipe_image_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
   }
 
   @override
@@ -339,6 +371,10 @@ class _$PostImpl implements _Post {
                 other.upvote_count == upvote_count) &&
             (identical(other.downvote_count, downvote_count) ||
                 other.downvote_count == downvote_count) &&
+            (identical(other.comment_count, comment_count) ||
+                other.comment_count == comment_count) &&
+            (identical(other.like_count, like_count) ||
+                other.like_count == like_count) &&
             (identical(other.recipe_id, recipe_id) ||
                 other.recipe_id == recipe_id) &&
             (identical(other.recipe_title, recipe_title) ||
@@ -364,6 +400,8 @@ class _$PostImpl implements _Post {
       user_liked,
       upvote_count,
       downvote_count,
+      comment_count,
+      like_count,
       recipe_id,
       recipe_title,
       recipe_description,
@@ -396,6 +434,8 @@ abstract class _Post implements Post {
       required final bool user_liked,
       required final int upvote_count,
       required final int downvote_count,
+      required final int comment_count,
+      required final int like_count,
       final int? recipe_id,
       final String? recipe_title,
       final String? recipe_description,
@@ -418,6 +458,10 @@ abstract class _Post implements Post {
   int get upvote_count;
   @override
   int get downvote_count;
+  @override
+  int get comment_count;
+  @override
+  int get like_count;
   @override
   int? get recipe_id;
   @override

@@ -13,6 +13,8 @@ class Post with _$Post {
     required bool user_liked,
     required int upvote_count,
     required int downvote_count,
+    required int comment_count,
+    required int like_count,
     int? recipe_id,
     String? recipe_title,
     String? recipe_description,
