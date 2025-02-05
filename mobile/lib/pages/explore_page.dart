@@ -5,6 +5,7 @@ import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/pages/user_profile_page.dart';
+import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
@@ -28,7 +29,7 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   void initState() {
     super.initState();
-    _fetchSocials();
+    _fetchPosts();
   }
 
   @override
@@ -46,10 +47,10 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<void> _refresh() async {
-    await _fetchSocials();
+    await _fetchPosts();
   }
 
-  Future<void> _fetchSocials() async {
+  Future<void> _fetchPosts() async {
     List<Post> posts = await _socialApi.fetchPosts();
     setState(() {
       _posts = posts;
@@ -243,7 +244,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: ColorPalette.lightgray,
-                            child: Text(user.username[0]),
+                            child: Avatars.getAvatarIcon(user.avatar_icon),
                           ),
                           title: Text(
                             "@${user.username}",
@@ -251,8 +252,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                 const TextStyle(color: ColorPalette.offWhite),
                           ),
                           onTap: () {
-                            User selectedUser = _searchResults[
-                                index]; // Assuming you're iterating through _searchResults
+                            User selectedUser = _searchResults[index];
                             _onUserTap(context, selectedUser);
                           },
                         );

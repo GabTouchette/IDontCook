@@ -8,6 +8,8 @@ import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
+import 'package:mobile/pages/user_profile_page.dart';
+import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/widgets/dialogs/post_comments_dialog.dart';
@@ -145,30 +147,41 @@ class _UserPostCardState extends State<UserPostCard> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: ColorPalette.lightgray,
-            child: FaIcon(
-              FontAwesomeIcons.solidLemon,
-              color: ColorPalette.mustard,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "@${widget.post.user.username}",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w300,
-                  color: ColorPalette.offWhite,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfilePage(user: widget.post.user),
                 ),
-              ),
-              const Text(
-                "shared a recipe",
-                style: TextStyle(color: ColorPalette.placeholdergray),
-              ),
-            ],
+              );
+            },
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: ColorPalette.lightgray,
+                  child: Avatars.getAvatarIcon(widget.post.user.avatar_icon),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "@${widget.post.user.username}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w300,
+                        color: ColorPalette.offWhite,
+                      ),
+                    ),
+                    const Text(
+                      "shared a recipe",
+                      style: TextStyle(color: ColorPalette.placeholdergray),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           const Spacer(),
           FutureBuilder<User?>(
@@ -211,38 +224,50 @@ class _UserPostCardState extends State<UserPostCard> {
   }
 
   Widget _buildPostDetails() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _buildVoteButtons(),
-        _buildRecipeImage(),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.post.recipe_title ??
-                    "${widget.post.user.username}'s Recipe",
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: ColorPalette.offWhite),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.post.recipe_description?.isNotEmpty == true
-                    ? widget.post.recipe_description!
-                    : "No description available.",
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontWeight: FontWeight.w300, color: Colors.grey[400]),
-              ),
-            ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailPage(
+              recipeId: widget.post.recipe_id,
+            ),
           ),
-        ),
-      ],
+        );
+      },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildVoteButtons(),
+          _buildRecipeImage(),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.post.recipe_title ??
+                      "${widget.post.user.username}'s Recipe",
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: ColorPalette.offWhite),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.post.recipe_description?.isNotEmpty == true
+                      ? widget.post.recipe_description!
+                      : "No description available.",
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w300, color: Colors.grey[400]),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -330,23 +355,6 @@ class _UserPostCardState extends State<UserPostCard> {
               ),
             ),
           ],
-        ),
-        IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RecipeDetailPage(
-                  recipeId: widget.post.recipe_id,
-                ),
-              ),
-            );
-          },
-          icon: const FaIcon(
-            FontAwesomeIcons.upRightFromSquare,
-            color: ColorPalette.offWhite,
-            size: 24,
-          ),
         ),
       ],
     );
