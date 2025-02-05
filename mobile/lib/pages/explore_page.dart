@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post.dart';
+import 'package:mobile/models/user.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
@@ -19,6 +20,8 @@ class _ExplorePageState extends State<ExplorePage> {
   List<Post> _posts = [];
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
+  List<User> _searchResults = [];
+  bool _showDropdown = false;
   final SocialApi _socialApi = SocialApi();
 
   @override
@@ -52,13 +55,33 @@ class _ExplorePageState extends State<ExplorePage> {
     });
   }
 
+  Future<void> _fetchUsers(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _showDropdown = false;
+      });
+      return;
+    }
+
+    try {
+      final users = await SocialApi().searchUsers(query);
+      setState(() {
+        _searchResults = users;
+        _showDropdown = true;
+      });
+    } catch (e) {
+      print('Error fetching users: $e');
+    }
+  }
+
   void _onSearchChanged(String query) {
     if (_debounceTimer?.isActive ?? false) {
       _debounceTimer?.cancel();
     }
 
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      setState(() {});
+    _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+      _fetchUsers(query);
     });
   }
 
@@ -180,6 +203,52 @@ class _ExplorePageState extends State<ExplorePage> {
               ],
             ),
           ),
+          if (_showDropdown && _searchResults.length > 0)
+            Positioned(
+              top: 180,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: ColorPalette.darkergray,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: ColorPalette.darkgray),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxHeight: 300,
+                    ),
+                    child: ListView.builder(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shrinkWrap: true,
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, index) {
+                        final user = _searchResults[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: ColorPalette.lightgray,
+                            child: Text(user.username[0]),
+                          ),
+                          title: Text(
+                            "@${user.username}",
+                            style:
+                                const TextStyle(color: ColorPalette.offWhite),
+                          ),
+                          onTap: () {
+                            _searchController.text = user.username;
+                            setState(() {
+                              _showDropdown = false;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
