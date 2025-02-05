@@ -15,13 +15,16 @@ class PostSerializer(serializers.ModelSerializer):
     downvote_count = serializers.ReadOnlyField()
     user_vote = serializers.SerializerMethodField()
     user_liked = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = [
             'id', 'user', 'user_vote', 'user_liked',
             'upvote_count', 'downvote_count', 'recipe_id', 'recipe_title',
-            'recipe_description', 'recipe_image_url', 'content', 'created_at', 'updated_at'
+            'recipe_description', 'recipe_image_url', 'content', 'created_at', 
+            'updated_at', 'comment_count', 'like_count'
         ]
 
     def create(self, validated_data):
@@ -49,12 +52,21 @@ class PostSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
         return False
+    
+    def get_comment_count(self, obj):
+        return obj.comments.count()
+    
+    def get_like_count(self, obj):
+        return obj.likes.count()
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    post_id = serializers.IntegerField(source='post.id', read_only=True)
+
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'post', 'content', 'created_at']
+        fields = ['id', 'user', 'post_id', 'content', 'created_at']
 
 
 class LikeSerializer(serializers.ModelSerializer):
