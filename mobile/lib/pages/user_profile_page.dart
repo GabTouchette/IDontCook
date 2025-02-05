@@ -5,6 +5,7 @@ import 'package:mobile/models/post.dart';
 import 'package:mobile/models/recipe.dart';
 import 'package:mobile/models/recipe_preview.dart';
 import 'package:mobile/models/user.dart';
+import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
 import 'package:mobile/widgets/recipe_tile.dart';
@@ -120,11 +121,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: ColorPalette.lightgray,
-                        child: Text(
-                          widget.user.username[0],
-                          style: const TextStyle(
-                              fontSize: 32, color: ColorPalette.offBlack),
-                        ),
+                        child: Avatars.getAvatarIcon(widget.user.avatar_icon, size: 50),
                       ),
                       const SizedBox(height: 8),
                       Text(

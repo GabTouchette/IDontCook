@@ -3,6 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/comment.dart';
 import 'package:mobile/models/post.dart';
+import 'package:mobile/pages/user_profile_page.dart';
+import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 
 class CommentDrawer extends StatefulWidget {
@@ -87,19 +89,32 @@ class _CommentDrawerState extends State<CommentDrawer> {
                             final comment = snapshot.data![index];
                             return Padding(
                               padding: const EdgeInsets.only(left: 16.0),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: ColorPalette.lightgray,
-                                  child: Text(comment.user.username[0]),
-                                ),
-                                title: Text(
-                                  "@${comment.user.username}",
-                                  style: const TextStyle(
-                                      color: ColorPalette.offWhite),
-                                ),
-                                subtitle: Text(
-                                  comment.content,
-                                  style: const TextStyle(color: Colors.white70),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          UserProfilePage(user: comment.user),
+                                    ),
+                                  );
+                                },
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: ColorPalette.lightgray,
+                                    child: Avatars.getAvatarIcon(
+                                        comment.user.avatar_icon),
+                                  ),
+                                  title: Text(
+                                    "@${comment.user.username}",
+                                    style: const TextStyle(
+                                        color: ColorPalette.offWhite),
+                                  ),
+                                  subtitle: Text(
+                                    comment.content,
+                                    style:
+                                        const TextStyle(color: Colors.white70),
+                                  ),
                                 ),
                               ),
                             );

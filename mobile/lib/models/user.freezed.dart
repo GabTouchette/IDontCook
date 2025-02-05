@@ -23,6 +23,7 @@ mixin _$User {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
+  String get avatar_icon => throw _privateConstructorUsedError;
   String? get token => throw _privateConstructorUsedError;
   int? get follower_count => throw _privateConstructorUsedError;
 
@@ -44,6 +45,7 @@ abstract class $UserCopyWith<$Res> {
       {int id,
       String username,
       String email,
+      String avatar_icon,
       String? token,
       int? follower_count});
 }
@@ -66,6 +68,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? id = null,
     Object? username = null,
     Object? email = null,
+    Object? avatar_icon = null,
     Object? token = freezed,
     Object? follower_count = freezed,
   }) {
@@ -81,6 +84,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
       email: null == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
+              as String,
+      avatar_icon: null == avatar_icon
+          ? _value.avatar_icon
+          : avatar_icon // ignore: cast_nullable_to_non_nullable
               as String,
       token: freezed == token
           ? _value.token
@@ -105,6 +112,7 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       {int id,
       String username,
       String email,
+      String avatar_icon,
       String? token,
       int? follower_count});
 }
@@ -124,6 +132,7 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? id = null,
     Object? username = null,
     Object? email = null,
+    Object? avatar_icon = null,
     Object? token = freezed,
     Object? follower_count = freezed,
   }) {
@@ -139,6 +148,10 @@ class __$$UserImplCopyWithImpl<$Res>
       email: null == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
+              as String,
+      avatar_icon: null == avatar_icon
+          ? _value.avatar_icon
+          : avatar_icon // ignore: cast_nullable_to_non_nullable
               as String,
       token: freezed == token
           ? _value.token
@@ -159,6 +172,7 @@ class _$UserImpl implements _User {
       {required this.id,
       required this.username,
       required this.email,
+      required this.avatar_icon,
       this.token,
       this.follower_count});
 
@@ -172,13 +186,15 @@ class _$UserImpl implements _User {
   @override
   final String email;
   @override
+  final String avatar_icon;
+  @override
   final String? token;
   @override
   final int? follower_count;
 
   @override
   String toString() {
-    return 'User(id: $id, username: $username, email: $email, token: $token, follower_count: $follower_count)';
+    return 'User(id: $id, username: $username, email: $email, avatar_icon: $avatar_icon, token: $token, follower_count: $follower_count)';
   }
 
   @override
@@ -190,6 +206,8 @@ class _$UserImpl implements _User {
             (identical(other.username, username) ||
                 other.username == username) &&
             (identical(other.email, email) || other.email == email) &&
+            (identical(other.avatar_icon, avatar_icon) ||
+                other.avatar_icon == avatar_icon) &&
             (identical(other.token, token) || other.token == token) &&
             (identical(other.follower_count, follower_count) ||
                 other.follower_count == follower_count));
@@ -197,8 +215,8 @@ class _$UserImpl implements _User {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, username, email, token, follower_count);
+  int get hashCode => Object.hash(
+      runtimeType, id, username, email, avatar_icon, token, follower_count);
 
   /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.
@@ -221,6 +239,7 @@ abstract class _User implements User {
       {required final int id,
       required final String username,
       required final String email,
+      required final String avatar_icon,
       final String? token,
       final int? follower_count}) = _$UserImpl;
 
@@ -232,6 +251,8 @@ abstract class _User implements User {
   String get username;
   @override
   String get email;
+  @override
+  String get avatar_icon;
   @override
   String? get token;
   @override

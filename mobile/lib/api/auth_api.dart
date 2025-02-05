@@ -7,7 +7,7 @@ class AuthApi {
   final String _baseUrl = 'http://192.168.0.110:8000';
 
   Future<void> login(String username, String password) async {
-    final url = Uri.parse('$_baseUrl/api/login/');
+    final url = Uri.parse('$_baseUrl/api/accounts/login/');
     final response = await http.post(
       url,
       body: {
@@ -26,13 +26,14 @@ class AuthApi {
       await prefs.setInt('user_id', user['id']);
       await prefs.setString('username', user['username']);
       await prefs.setString('email', user['email']);
+      await prefs.setString('avatar_icon', user['avatar_icon']);
     } else {
       throw Exception('Failed to login: ${response.body}');
     }
   }
 
   Future<void> register(String username, String email, String password) async {
-    final url = Uri.parse('$_baseUrl/api/register/');
+    final url = Uri.parse('$_baseUrl/api/accounts/register/');
     final response = await http.post(
       url,
       headers: {
@@ -65,10 +66,19 @@ class AuthApi {
     int? id = prefs.getInt('user_id');
     String? username = prefs.getString('username');
     String? email = prefs.getString('email');
+    String? avatar_icon = prefs.getString('avatar_icon');
     String? token = prefs.getString('auth_token');
 
-    if (id != null && username != null && email != null) {
-      return User(id: id, username: username, email: email, token: token);
+    if (id != null &&
+        username != null &&
+        email != null &&
+        avatar_icon != null) {
+      return User(
+          id: id,
+          username: username,
+          email: email,
+          token: token,
+          avatar_icon: avatar_icon);
     }
     return null;
   }

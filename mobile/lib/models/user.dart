@@ -9,6 +9,7 @@ class User with _$User {
     required int id,
     required String username,
     required String email,
+    required String avatar_icon,
     String? token,
     int? follower_count,
   }) = _User;
