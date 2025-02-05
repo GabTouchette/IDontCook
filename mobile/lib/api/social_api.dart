@@ -2,6 +2,7 @@ import 'package:mobile/api/api_helper.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/comment.dart';
 import 'package:mobile/models/like.dart';
+import 'package:mobile/models/user.dart';
 import 'package:mobile/models/vote.dart';
 
 class SocialApi {
@@ -97,5 +98,13 @@ class SocialApi {
   // Delete a vote for a post
   Future<bool> deleteVote(int postId) async {
     return await _apiHelper.deleteRequest('social/posts/$postId/vote/delete/');
+  }
+
+  Future<List<User>> searchUsers(String query) async {
+    var data = await _apiHelper.getRequest('social/users/search/?q=$query');
+
+    return data != null
+        ? (data as List).map((user) => User.fromJson(user)).toList()
+        : [];
   }
 }

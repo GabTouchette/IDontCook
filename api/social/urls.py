@@ -3,7 +3,8 @@ from .views import (
     PostListCreateAPIView, PostDetailAPIView, 
     CommentListCreateAPIView,
     LikeCreateAPIView, LikeListAPIView, LikeDeleteAPIView,
-    VoteCreateAPIView, VoteDeleteAPIView
+    VoteCreateAPIView, VoteDeleteAPIView,
+    UserSearchAPIView
 )
 
 urlpatterns = [
@@ -21,4 +22,7 @@ urlpatterns = [
     # Vote URLs
     path('posts/<int:post_id>/vote/', VoteCreateAPIView.as_view(), name='vote-create'),
     path('posts/<int:post_id>/vote/delete/', VoteDeleteAPIView.as_view(), name='vote-delete'),
+
+    # User Search URL
+    path('users/search/', UserSearchAPIView.as_view(), name='user-search'),
 ]

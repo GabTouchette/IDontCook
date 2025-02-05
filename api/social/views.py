@@ -6,6 +6,8 @@ from .models import Post, Comment, Like, Vote
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer, VoteSerializer
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.contrib.auth.models import User
+from api.serializers import UserSerializer
 
 
 class PostListCreateAPIView(generics.ListCreateAPIView):
@@ -125,6 +127,24 @@ class VoteCreateAPIView(APIView):
                 return JsonResponse({"message": "Vote created successfully"}, status=status.HTTP_201_CREATED)
 
         return JsonResponse({"message": "No action needed"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserSearchAPIView(APIView):
+    permission_classes = [IsAuthenticated]  # Optional: Add authentication if needed
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()  # Get the search query
+
+        if not query:
+            return Response(
+                {"error": "Search query parameter 'q' is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        users = User.objects.filter(username__icontains=query)
+
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class VoteDetailAPIView(APIView):
