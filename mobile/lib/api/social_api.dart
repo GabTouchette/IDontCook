@@ -1,4 +1,5 @@
 import 'package:mobile/api/api_helper.dart';
+import 'package:mobile/models/paginated_posts.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/comment.dart';
 import 'package:mobile/models/like.dart';
@@ -9,13 +10,17 @@ import 'package:mobile/models/vote.dart';
 class SocialApi {
   final ApiHelper _apiHelper = ApiHelper();
 
-  // Fetch all posts
-  Future<List<Post>> fetchPosts() async {
-    var data = await _apiHelper.getRequest('social/posts/');
+  // Fetch paginated posts
+  Future<PaginatedPosts> fetchPosts(
+      {required int page, required String category}) async {
+    String url = 'social/posts/?page=$page&category=$category';
+    var data = await _apiHelper.getRequest(url);
+
     if (data != null) {
-      return (data as List).map((post) => Post.fromJson(post)).toList();
+      return PaginatedPosts.fromJson(data);
     }
-    return [];
+
+    return PaginatedPosts(count: 0, results: []);
   }
 
   // Create a new post
@@ -139,7 +144,6 @@ class SocialApi {
   Future<bool> isUserFollowing(int userId) async {
     var response =
         await _apiHelper.getRequest('social/users/$userId/is_following/');
-
     if (response != null && response.containsKey('is_following')) {
       return response['is_following'];
     }

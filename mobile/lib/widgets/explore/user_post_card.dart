@@ -128,7 +128,7 @@ class _UserPostCardState extends State<UserPostCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       color: ColorPalette.darkgray,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

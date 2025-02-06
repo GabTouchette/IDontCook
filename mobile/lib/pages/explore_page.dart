@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/social_api.dart';
+import 'package:mobile/models/paginated_posts.dart';
 import 'package:mobile/models/post.dart';
 import 'package:mobile/models/user.dart';
 import 'package:mobile/pages/user_profile_page.dart';
@@ -18,17 +19,22 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
   int _tabIndex = 0;
   List<Post> _posts = [];
   Timer? _debounceTimer;
-  final TextEditingController _searchController = TextEditingController();
   List<User> _searchResults = [];
   bool _showDropdown = false;
-  final SocialApi _socialApi = SocialApi();
+  int _currentPage = 1;
+  String? _nextPageUrl;
+  bool _isFetching = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_scrollListener);
     _fetchPosts();
   }
 
@@ -36,6 +42,7 @@ class _ExplorePageState extends State<ExplorePage> {
   void dispose() {
     _debounceTimer?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -47,14 +54,46 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<void> _refresh() async {
+    _currentPage = 1;
+    _posts.clear();
     await _fetchPosts();
   }
 
   Future<void> _fetchPosts() async {
-    List<Post> posts = await _socialApi.fetchPosts();
+    if (_isFetching) return;
     setState(() {
-      _posts = posts;
+      _isFetching = true;
     });
+    PaginatedPosts paginatedPosts = await SocialApi()
+        .fetchPosts(page: _currentPage, category: _getCategoryFilter());
+    setState(() {
+      _nextPageUrl = paginatedPosts.next;
+      _posts.addAll(paginatedPosts.results);
+      _isFetching = false;
+    });
+  }
+
+  String _getCategoryFilter() {
+    switch (_tabIndex) {
+      case 0:
+        return "all";
+      case 1:
+        return "trending";
+      case 2:
+        return "following";
+      default:
+        return "all";
+    }
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      if (_nextPageUrl != null) {
+        _currentPage++;
+        _fetchPosts();
+      }
+    }
   }
 
   Future<void> _fetchUsers(String query) async {
@@ -187,9 +226,9 @@ class _ExplorePageState extends State<ExplorePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildTab('Charts', 0),
-                    _buildTab('Latest', 1),
-                    _buildTab('Friends', 2),
+                    _buildTab('All', 0),
+                    _buildTab('Trending', 1),
+                    _buildTab('Following', 2),
                   ],
                 ),
                 Padding(
@@ -205,12 +244,24 @@ class _ExplorePageState extends State<ExplorePage> {
                           child: Text('No posts available.',
                               style: TextStyle(color: ColorPalette.offWhite)))
                       : ListView.builder(
+                          controller: _scrollController,
                           padding: EdgeInsets.zero,
-                          itemCount: _posts.length,
+                          itemCount: _posts.length + 1,
                           itemBuilder: (context, index) {
-                            final post = _posts[index];
+                            if (index == _posts.length) {
+                              return _isFetching
+                                  ? SizedBox(
+                                      height: 100,
+                                      child: Center(
+                                          child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                ColorPalette.offWhite),
+                                      )))
+                                  : SizedBox(height: 100);
+                            }
                             return UserPostCard(
-                              post: post,
+                              post: _posts[index],
                             );
                           },
                         ),
