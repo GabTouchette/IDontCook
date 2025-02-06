@@ -10,19 +10,40 @@ from accounts.models import CustomUser
 from accounts.serializers import UserSerializer
 from recipes.models import Recipe
 from recipes.serializers import RecipeSerializer
+from .pagination import PostPagination
+from django.db.models import Sum
 
 class PostListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PostPagination  
+
+    def get_queryset(self):
+        category = self.request.query_params.get('category', 'all')
+        queryset = Post.objects.all().order_by('-created_at')  
+
+        if category == 'trending':
+            queryset = queryset.annotate(net_votes=Sum('votes__value')).order_by('-net_votes', '-created_at')
+
+        elif category == 'following':
+            following_users = self.request.user.following.values_list('followed', flat=True)
+            queryset = queryset.filter(user_id__in=following_users)
+        
+        return queryset
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save(user=self.request.user)
 
     def get(self, request, *args, **kwargs):
         posts = self.get_queryset()
+        page = self.paginate_queryset(posts)  
+        
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data) 
+        
         serializer = self.get_serializer(posts, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -217,9 +238,7 @@ class IsUserFollowingAPIView(APIView):
     def get(self, request, user_id):
         follower = request.user
         followed = get_object_or_404(CustomUser, id=user_id)
-        
-        is_following = follower.following.filter(id=followed.id).exists()
-
+        is_following = Follow.objects.filter(follower=follower, followed=followed).exists()
         return JsonResponse({"is_following": is_following})
 
 
