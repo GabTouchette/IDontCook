@@ -81,8 +81,7 @@ def populate_mock_data(apps, schema_editor):
 
 
 def reverse_populate_mock_data(apps, schema_editor):
-    User = get_user_model()
-    User.objects.all().delete()
+    CustomUser.objects.all().delete()
     Ingredient.objects.all().delete()
     Recipe.objects.all().delete()
     Post.objects.all().delete()
