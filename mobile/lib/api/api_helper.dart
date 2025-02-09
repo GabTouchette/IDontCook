@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'auth_api.dart';
 
@@ -95,6 +96,34 @@ class ApiHelper {
     } catch (e) {
       print('DELETE request error: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> uploadFile(String endpoint, File file,
+      {bool requiresAuth = true}) async {
+    try {
+      var uri = Uri.parse('$baseUrl/$endpoint');
+      var request = http.MultipartRequest('POST', uri);
+
+      if (requiresAuth) {
+        final headers = await AuthApi.getAuthHeader();
+        request.headers.addAll(headers);
+      }
+
+      request.files.add(await http.MultipartFile.fromPath('image', file.path));
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print("Image upload failed: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print('File upload error: $e');
+      return null;
     }
   }
 
