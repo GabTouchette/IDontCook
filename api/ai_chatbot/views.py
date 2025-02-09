@@ -1,12 +1,11 @@
+import pytesseract
+from PIL import Image
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
-import pytesseract
-from PIL import Image
-
 from .api import OpenAIService, PromptTemplates
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
@@ -48,7 +47,6 @@ class ChatbotView(APIView):
         ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
 
         return JsonResponse({"response": openai_response}, status=status.HTTP_200_OK)
-
 
 class RecipeOCRView(APIView):
     parser_classes = [MultiPartParser]
