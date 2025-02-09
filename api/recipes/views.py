@@ -35,13 +35,11 @@ class RecipeDetailAPIView(APIView):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
 
-        # Check if the user has a copy of the recipe
         if recipe.created_by != user:
             user_recipe = Recipe.objects.filter(created_by=user, parent=recipe.id).first()            
             if user_recipe:
                 recipe = user_recipe
 
-        # Update the last_visited_at field is the recipe is owned by the user
         if recipe.created_by == user:
             recipe.last_visited_at = now()
             recipe.save(update_fields=['last_visited_at'])

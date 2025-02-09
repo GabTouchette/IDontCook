@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mobile/api/ai_chatbot_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/widgets/dialogs/information_dialog.dart';
 import 'package:mobile/widgets/recipe_form/camera_capture.dart';
@@ -77,7 +78,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       builder: (context) => CameraCaptureWidget(
         onImageCaptured: (File image) {
           Navigator.pop(context);
-          print("Captured Image Path: ${image.path}");
+          AiChatbotApi().uploadRecipeImage(image);
         },
       ),
     );

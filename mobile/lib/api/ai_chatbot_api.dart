@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mobile/api/api_helper.dart';
 
 class AiChatbotApi {
@@ -23,5 +25,14 @@ class AiChatbotApi {
       'query': recipeName,
     };
     return await _apiHelper.postRequest('ai/chat/', data);
+  }
+
+    Future<Map<String, dynamic>?> uploadRecipeImage(File image) async {
+    var response = await _apiHelper.uploadFile(
+      'ai/ocr/',
+      image,
+    );
+
+    return response;
   }
 }

@@ -18,14 +18,11 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
   File? _image;
 
   Future<void> _takePicture() async {
-    print("Opening camera preview...");
-
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
       print("No cameras available!");
       return;
     }
-
     final imagePath = await Navigator.push<String>(
       context,
       MaterialPageRoute(
@@ -45,29 +42,78 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
     return AlertDialog(
       backgroundColor: ColorPalette.offBlack,
       contentPadding: const EdgeInsets.all(16),
+      title: Text(
+        "Capture Recipe Image",
+        style: TextStyle(
+          color: ColorPalette.offWhite,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Text(
+            "Please take a picture of the recipe so that we can translate it into the site. The clearer the image, the better the result!",
+            style: TextStyle(
+              color: ColorPalette.offWhite,
+              fontSize: 16,
+              fontWeight: FontWeight.w300,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
           if (_image == null)
             ElevatedButton(
               onPressed: _takePicture,
-              child: const Text("Take Picture"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorPalette.offWhite,
+              ),
+              child: const Text(
+                "Take Picture",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: ColorPalette.offBlack,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             )
           else ...[
-            Image.file(_image!, height: 250),
+            Image.file(_image!, height: 350),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => widget.onImageCaptured(_image!),
-                  icon: const Icon(Icons.upload),
-                  label: const Text("Send"),
-                ),
-                ElevatedButton.icon(
                   onPressed: _takePicture,
                   icon: const Icon(Icons.refresh),
-                  label: const Text("Retake"),
+                  label: const Text(
+                    "Retake",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: ColorPalette.offBlack,
+                        fontWeight: FontWeight.w500),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorPalette.offWhite,
+                    iconColor: ColorPalette.offBlack,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => widget.onImageCaptured(_image!),
+                  icon: const Icon(Icons.upload),
+                  label: const Text(
+                    "Send",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: ColorPalette.offWhite,
+                        fontWeight: FontWeight.w500),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorPalette.offBlack,
+                    iconColor: ColorPalette.offWhite,
+                  ),
                 ),
               ],
             ),

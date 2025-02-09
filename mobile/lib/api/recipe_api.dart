@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:mobile/api/api_helper.dart';
 import 'package:mobile/models/recipe_preview.dart';
 
@@ -50,14 +48,5 @@ class RecipeApi {
       return response['is_saved'];
     }
     return false;
-  }
-
-  Future<Map<String, dynamic>?> uploadRecipeImage(File image) async {
-    var response = await _apiHelper.uploadFile(
-      'recipes/ocr/',
-      image,
-    );
-
-    return response;
   }
 }
