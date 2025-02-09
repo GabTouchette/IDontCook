@@ -48,25 +48,32 @@ class OpenAIService:
                         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
                     ]
                 })
+
+                completion = self.client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages
+                )
+
+                response_content = completion.choices[0].message.content
+                response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+
+                recipe_json = json.loads(response_content)
+                return recipe_json
+
             else:
                 chatbot_prompt = PromptTemplates.chatbot_prompt([], prompt)
                 messages.append({"role": "user", "content": chatbot_prompt})
 
-            completion = self.client.chat.completions.create(
-                model="gpt-4o-mini" if image_path else "gpt-3.5-turbo",
-                messages=messages
-            )
+                completion = self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages
+                )
 
-            response_content = completion.choices[0].message.content
-            response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+                response_content = completion.choices[0].message.content
+                return response_content
 
-            try:
-                recipe_json = json.loads(response_content)
-                return recipe_json
-            except json.JSONDecodeError:
-                print("Error: The response was not valid JSON.")
-                return None
-
+        except json.JSONDecodeError:
+            return "Error: The response was not valid JSON."
         except OpenAIError as e:
             return f"Error communicating with OpenAI: {e}"
         except Exception as e:

@@ -50,7 +50,7 @@ class ChatbotView(APIView):
 
         ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
 
-        return JsonResponse(openai_response, status=status.HTTP_200_OK)
+        return JsonResponse(openai_response, status=status.HTTP_200_OK, safe=False)
 
 
 

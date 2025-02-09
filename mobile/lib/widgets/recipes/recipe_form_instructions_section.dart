@@ -1,27 +1,27 @@
 
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe_form_fields.dart';
+import 'package:mobile/models/recipe_form_fields/recipe_form_fields.dart';
 import 'package:mobile/theme/colors.dart';
 
-class IngredientsSection extends StatefulWidget {
-  final List<IngredientField> ingredients;
-  final ValueChanged<List<IngredientField>> onIngredientsChanged;
+class InstructionsSection extends StatefulWidget {
+  final List<InstructionField> instructions;
+  final ValueChanged<List<InstructionField>> onInstructionsChanged;
 
-  const IngredientsSection({
+  const InstructionsSection({
     Key? key,
-    required this.ingredients,
-    required this.onIngredientsChanged,
+    required this.instructions,
+    required this.onInstructionsChanged,
   }) : super(key: key);
 
   @override
-  _IngredientsSectionState createState() => _IngredientsSectionState();
+  _InstructionsSectionState createState() => _InstructionsSectionState();
 }
 
-class _IngredientsSectionState extends State<IngredientsSection> {
-  List<Widget> _buildIngredientsInputFields() {
+class _InstructionsSectionState extends State<InstructionsSection> {
+  List<Widget> _buildInstructionsInputFields() {
     List<Widget> inputFields = [];
 
-    for (int i = 0; i < widget.ingredients.length; i++) {
+    for (int i = 0; i < widget.instructions.length; i++) {
       inputFields.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
@@ -43,23 +43,24 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
-                    controller: widget.ingredients[i].controller,
-                    focusNode: widget.ingredients[i].focusNode,
+                    controller: widget.instructions[i].controller,
+                    focusNode: widget.instructions[i].focusNode,
+                    maxLines: 4,
                     style: TextStyle(
                       color: ColorPalette.offBlack,
                     ),
                     onChanged: (text) {
-                      if (i == widget.ingredients.length - 1 && text.isNotEmpty) {
+                      if (i == widget.instructions.length - 1 && text.isNotEmpty) {
                         setState(() {
-                          widget.ingredients.add(IngredientField(
+                          widget.instructions.add(InstructionField(
                               controller: TextEditingController(),
                               focusNode: FocusNode()));
                         });
-                        widget.onIngredientsChanged(widget.ingredients);
+                        widget.onInstructionsChanged(widget.instructions);
                       }
                     },
                     decoration: InputDecoration(
-                      hintText: 'Ingredient (e.g., 100 g sugar)',
+                      hintText: 'Instruction',
                       hintStyle: TextStyle(
                         color: ColorPalette.placeholdergray,
                         fontSize: 14,
@@ -72,12 +73,12 @@ class _IngredientsSectionState extends State<IngredientsSection> {
               ),
               IconButton(
                 icon: Icon(Icons.delete, color: ColorPalette.offWhite),
-                onPressed: widget.ingredients.length > 1
+                onPressed: widget.instructions.length > 1
                     ? () {
                         setState(() {
-                          widget.ingredients.removeAt(i);
+                          widget.instructions.removeAt(i);
                         });
-                        widget.onIngredientsChanged(widget.ingredients);
+                        widget.onInstructionsChanged(widget.instructions);
                       }
                     : null,
               ),
@@ -98,7 +99,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Ingredients",
+            "Instructions",
             style: TextStyle(
               color: ColorPalette.offWhite,
               fontWeight: FontWeight.w300,
@@ -106,11 +107,11 @@ class _IngredientsSectionState extends State<IngredientsSection> {
             ),
           ),
           SizedBox(height: 8.0),
-          ..._buildIngredientsInputFields(),
+          ..._buildInstructionsInputFields(),
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Text(
-              "Enter in format: Qty Unit Ingredient (e.g., 100 g sugar)",
+              "Enter each instruction step by step.",
               style: TextStyle(
                 color: ColorPalette.offWhite.withOpacity(0.7),
                 fontSize: 14,

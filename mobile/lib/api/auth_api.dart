@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:mobile/models/user.dart';
+import 'package:mobile/models/user/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthApi {

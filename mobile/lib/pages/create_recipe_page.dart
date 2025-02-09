@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/widgets/dialogs/information_dialog.dart';
-import 'package:mobile/widgets/recipe_form/camera_capture.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_extra_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_ingredients_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_instructions_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_tags_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_time_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_title_section.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:mobile/widgets/recipes/camera_capture.dart';
+import 'package:mobile/widgets/recipes/recipe_form_extra_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_ingredients_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_instructions_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_tags_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_time_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_title_section.dart';
 import 'package:mobile/theme/colors.dart';
-import 'package:mobile/models/recipe_form_fields.dart';
+import 'package:mobile/models/recipe_form_fields/recipe_form_fields.dart';
 
 class CreateRecipePage extends StatefulWidget {
   const CreateRecipePage({super.key});
@@ -143,19 +143,14 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
 
     bool success = await RecipeApi().createRecipe(recipeData);
 
-    showDialog(
+    InformationToast.show(
       context: context,
-      builder: (context) => InformationDialog(
-        title: success ? 'Recipe Created' : 'Submission Failed',
-        message: success
-            ? 'Your recipe has been successfully created!'
-            : 'There was an error submitting your recipe.',
-        onConfirm: () {
-          Navigator.of(context).pop();
-          if (success) Navigator.pop(context);
-        },
-      ),
+      message: success
+          ? 'Your recipe has been successfully created!'
+          : 'There was an error submitting your recipe.',
+      textColor: success ? ColorPalette.green : ColorPalette.red,
     );
+    if (success) Navigator.pop(context);
   }
 
   void _onIngredientsChanged(List<IngredientField> ingredients) {

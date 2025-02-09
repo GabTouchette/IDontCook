@@ -66,7 +66,7 @@ class RecipeDetailAPIView(APIView):
     def delete(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         recipe.delete()
-        return JsonResponse(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class HasSavedRecipeAPIView(APIView):

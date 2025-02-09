@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'user.dart';
-import 'post.dart';
+import '../user/user.dart';
+import '../post/post.dart';
 
 part 'vote.freezed.dart';
 part 'vote.g.dart';

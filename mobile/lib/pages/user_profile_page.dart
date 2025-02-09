@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/post.dart';
-import 'package:mobile/models/recipe.dart';
-import 'package:mobile/models/recipe_preview.dart';
-import 'package:mobile/models/user.dart';
+import 'package:mobile/models/post/post.dart';
+import 'package:mobile/models/recipe/recipe.dart';
+import 'package:mobile/models/recipe_preview/recipe_preview.dart';
+import 'package:mobile/models/user/user.dart';
 import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
-import 'package:mobile/widgets/recipe_tile.dart';
+import 'package:mobile/widgets/recipes/recipe_tile.dart';
 
 class UserProfilePage extends StatefulWidget {
   final User user;
@@ -121,7 +121,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: ColorPalette.lightgray,
-                        child: Avatars.getAvatarIcon(widget.user.avatar_icon, size: 50),
+                        child: Avatars.getAvatarIcon(widget.user.avatar_icon,
+                            size: 50),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -218,7 +219,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 } else {
                                   return RecipeTile(
                                     recipe: RecipePreview.fromRecipe(
-                                        _recipes[index - 1]),
+                                      _recipes[index - 1],
+                                    ),
                                   );
                                 }
                               },

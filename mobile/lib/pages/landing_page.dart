@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/auth_api.dart';
-import 'package:mobile/widgets/dialogs/information_dialog.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
 import '../theme/colors.dart';
 
 class LandingPage extends StatefulWidget {
@@ -27,13 +27,10 @@ class _LandingPageState extends State<LandingPage> {
 
       Navigator.pushNamed(context, '/recipes');
     } catch (e) {
-      showDialog(
+      InformationToast.show(
         context: context,
-        builder: (_) => InformationDialog(
-          title: "Login Failed",
-          message: "Invalid username or password.",
-          onConfirm: () => Navigator.pop(context),
-        ),
+        message: 'Invalid username or password.',
+        backgroundColor: ColorPalette.red,
       );
     }
   }
@@ -48,13 +45,10 @@ class _LandingPageState extends State<LandingPage> {
 
       Navigator.pushNamed(context, '/recipes');
     } catch (e) {
-      showDialog(
+      InformationToast.show(
         context: context,
-        builder: (_) => InformationDialog(
-          title: "Registration Failed",
-          message: "Failed to register, please try again.",
-          onConfirm: () => Navigator.pop(context),
-        ),
+        message: 'Failed to register. Please try again.',
+        textColor: ColorPalette.red,
       );
     }
   }

@@ -5,7 +5,7 @@ import 'package:mobile/api/api_helper.dart';
 class AiChatbotApi {
   final ApiHelper _apiHelper = ApiHelper();
 
-  Future<Map<String, dynamic>?> chatWithBot(
+  Future<String> chatWithBot(
       String query, List<Map<String, String>>? chatHistory) async {
     var data = {
       'query': query,
