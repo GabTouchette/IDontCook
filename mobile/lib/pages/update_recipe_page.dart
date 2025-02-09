@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/models/recipe.dart';
-import 'package:mobile/widgets/dialogs/information_dialog.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_extra_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_ingredients_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_instructions_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_tags_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_time_section.dart';
-import 'package:mobile/widgets/recipe_form/recipe_form_title_section.dart';
-import 'package:mobile/models/recipe_form_fields.dart';
+import 'package:mobile/models/recipe/recipe.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:mobile/widgets/recipes/recipe_form_extra_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_ingredients_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_instructions_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_tags_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_time_section.dart';
+import 'package:mobile/widgets/recipes/recipe_form_title_section.dart';
+import 'package:mobile/models/recipe_form_fields/recipe_form_fields.dart';
 import 'package:mobile/theme/colors.dart';
 
 class UpdateRecipePage extends StatefulWidget {
@@ -179,19 +179,15 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
 
     bool success = await RecipeApi().updateRecipe(widget.recipeId, recipeData);
 
-    showDialog(
+    InformationToast.show(
       context: context,
-      builder: (context) => InformationDialog(
-        title: success ? 'Recipe Updated' : 'Update Failed',
-        message: success
-            ? 'Your recipe has been successfully updated!'
-            : 'There was an error updating your recipe.',
-        onConfirm: () {
-          Navigator.of(context).pop();
-          if (success) Navigator.pop(context);
-        },
-      ),
+      message: success
+          ? 'Your recipe has been successfully updated!'
+          : 'There was an error updating your recipe.',
+      textColor: success ? ColorPalette.green : ColorPalette.red,
     );
+
+    Navigator.pop(context);
   }
 
   void _onIngredientsChanged(List<IngredientField> ingredients) {

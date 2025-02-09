@@ -4,13 +4,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/models/recipe.dart';
-import 'package:mobile/models/user.dart';
+import 'package:mobile/models/recipe/recipe.dart';
+import 'package:mobile/models/user/user.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/widgets/dialogs/information_dialog.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
 import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 
 class RecipeDetailPage extends StatefulWidget {
@@ -93,18 +93,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     bool success = await RecipeApi().createRecipe(recipeData);
 
     if (success) {
-      showDialog(
+      InformationToast.show(
         context: context,
-        builder: (context) => InformationDialog(
-          title: success ? 'Recipe Saved' : 'Submission Failed',
-          message: success
-              ? 'Your recipe has been successfully saved!'
-              : 'There was an error submitting your recipe.',
-          onConfirm: () {
-            Navigator.of(context).pop();
-            if (success) Navigator.pop(context);
-          },
-        ),
+        message: "Recipe saved successfully!",
+        textColor: ColorPalette.green,
       );
     }
   }
@@ -125,15 +117,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             currentRecipe.copyWith(is_favorite: updatedFavoriteStatus);
       });
     } else {
-      showDialog(
+      InformationToast.show(
         context: context,
-        builder: (context) => InformationDialog(
-          title: 'Update Failed',
-          message: 'There was an error updating the favorite status.',
-          onConfirm: () {
-            Navigator.of(context).pop();
-          },
-        ),
+        message: 'There was an error updating the favorite status.',
+        textColor: ColorPalette.red,
       );
     }
   }
@@ -210,22 +197,22 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         ),
         actions: [
           if (isSaved) ...[
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return PostDialog(
-                    recipe: currentRecipe,
-                  );
-                },
-              );
-            },
-            icon: const FaIcon(
-              FontAwesomeIcons.share,
-              color: ColorPalette.offWhite,
+            IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return PostDialog(
+                      recipe: currentRecipe,
+                    );
+                  },
+                );
+              },
+              icon: const FaIcon(
+                FontAwesomeIcons.share,
+                color: ColorPalette.offWhite,
+              ),
             ),
-          ),
             IconButton(
               onPressed: _toggleFavorite,
               icon: FaIcon(
@@ -245,6 +232,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     builder: (context) =>
                         UpdateRecipePage(recipeId: currentRecipe.id),
                   ),
+                ).then(
+                  (_) {
+                    _initializePage();
+                  },
                 );
               },
               icon: const FaIcon(
@@ -262,9 +253,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       Navigator.pop(context);
                       bool success =
                           await RecipeApi().deleteRecipe(currentRecipe.id);
-                      if (success) {
-                        Navigator.pop(context);
-                      }
+                      if (success) Navigator.pop(context);
+                      InformationToast.show(
+                          context: context,
+                          message: success
+                              ? "Recipe deleted successfully!"
+                              : "There was an error deleting the recipe.",
+                          textColor:
+                              success ? ColorPalette.green : ColorPalette.red);
                     },
                     onCancel: () {
                       Navigator.pop(context);
@@ -274,7 +270,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               },
               icon: const FaIcon(
                 FontAwesomeIcons.trash,
-                color: ColorPalette.offWhite,
+                color: ColorPalette.red,
               ),
             ),
           ] else ...[

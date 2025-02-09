@@ -1,11 +1,11 @@
 import 'package:mobile/api/api_helper.dart';
-import 'package:mobile/models/paginated_posts.dart';
-import 'package:mobile/models/post.dart';
-import 'package:mobile/models/comment.dart';
-import 'package:mobile/models/like.dart';
-import 'package:mobile/models/recipe.dart';
-import 'package:mobile/models/user.dart';
-import 'package:mobile/models/vote.dart';
+import 'package:mobile/models/paginated_posts/paginated_posts.dart';
+import 'package:mobile/models/post/post.dart';
+import 'package:mobile/models/comment/comment.dart';
+import 'package:mobile/models/like/like.dart';
+import 'package:mobile/models/recipe/recipe.dart';
+import 'package:mobile/models/user/user.dart';
+import 'package:mobile/models/vote/vote.dart';
 
 class SocialApi {
   final ApiHelper _apiHelper = ApiHelper();
