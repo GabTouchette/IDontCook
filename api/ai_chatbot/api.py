@@ -1,29 +1,76 @@
 import os
+import base64
 from openai import OpenAI, OpenAIError
+from io import BytesIO
+from PIL import Image
+import json
+import re
+
+
+def encode_image(image_path):
+    """Encode an image to Base64."""
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
 class OpenAIService:
     def __init__(self):
+        """Initialize the OpenAI client with the API key."""
         self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
-    def ask_openai(self, prompt, chat_history=None):
-        """Send a prompt to OpenAI and return a structured response."""
+    def ask_openai(self, prompt=None, chat_history=None, image_path=None):
+        """
+        Send a prompt or an image to OpenAI and return a structured response.
+        
+        Args:
+            prompt (str): The text prompt to send to OpenAI.
+            chat_history (list): A list of previous chat messages for context.
+            image_path (str): The path to the image file to process.
+        
+        Returns:
+            str: The response content from OpenAI.
+        """
         try:
-            messages = [{"role": "user", "content": prompt}]
+            messages = []
+
             if chat_history:
                 for entry in chat_history:
                     role = "user" if entry["sender"] == "user" else "assistant"
                     messages.append({"role": role, "content": entry["message"]})
 
+            if image_path:
+                base64_image = encode_image(image_path)
+
+                ocr_prompt = PromptTemplates.ocr_prompt()
+                messages.append({
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": ocr_prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                    ]
+                })
+            else:
+                chatbot_prompt = PromptTemplates.chatbot_prompt([], prompt)
+                messages.append({"role": "user", "content": chatbot_prompt})
+
             completion = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini" if image_path else "gpt-3.5-turbo",
                 messages=messages
             )
 
             response_content = completion.choices[0].message.content
-            return response_content.encode("utf-8").decode("utf-8")
+            response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+
+            try:
+                recipe_json = json.loads(response_content)
+                return recipe_json
+            except json.JSONDecodeError:
+                print("Error: The response was not valid JSON.")
+                return None
 
         except OpenAIError as e:
             return f"Error communicating with OpenAI: {e}"
+        except Exception as e:
+            return f"An unexpected error occurred: {e}"
 
 class PromptTemplates:
     @staticmethod
@@ -64,13 +111,12 @@ class PromptTemplates:
         )
 
     @staticmethod
-    def ocr_prompt(extracted_text):
+    def ocr_prompt():
         """Generates a prompt for extracting and structuring recipe data from OCR text."""
         return (
-            "Extract and structure the following text into a valid JSON recipe format:\n\n"
-            f"{extracted_text}\n\n"
-            "Format:\n"
-            "{\n"
+            "Extract and structure the text from the recipe image into the recipe format below:\n\n"
+            "The format should be a valid JSON object and not a JSON string, just like in this example:\n"
+            '{\n'
             '  "title": "Recipe Name",\n'
             '  "ingredients": [{"name": "Ingredient", "quantity": "Amount", "unit_of_measure": "Unit"}],\n'
             '  "instructions": ["Step 1", "Step 2"],\n'
@@ -79,5 +125,6 @@ class PromptTemplates:
             '  "tags": ["tag1", "tag2"],\n'
             '  "description": "Brief description",\n'
             '  "notes": "Additional notes"\n'
-            "}"
+            '}'
         )
+       

@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:mobile/models/recipe.dart';
+import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/recipe_form/camera_preview_screen.dart';
+import 'package:mobile/api/ai_chatbot_api.dart';
 
 class CameraCaptureWidget extends StatefulWidget {
-  final Function(File) onImageCaptured;
-
-  const CameraCaptureWidget({Key? key, required this.onImageCaptured})
-      : super(key: key);
+  const CameraCaptureWidget({Key? key}) : super(key: key);
 
   @override
   _CameraCaptureWidgetState createState() => _CameraCaptureWidgetState();
@@ -16,6 +16,7 @@ class CameraCaptureWidget extends StatefulWidget {
 
 class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
   File? _image;
+  bool isLoading = false;
 
   Future<void> _takePicture() async {
     final cameras = await availableCameras();
@@ -33,6 +34,39 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
     if (imagePath != null) {
       setState(() {
         _image = File(imagePath);
+      });
+    }
+  }
+
+  Future<void> _sendImage() async {
+    if (_image == null) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await AiChatbotApi().uploadRecipeImage(_image!);
+      print(response);
+
+      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecipeDetailPage(
+            recipe: Recipe.fromJson(response['response']),
+          ),
+        ),
+      );
+    } catch (e) {
+      print("Error during API call: $e");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load recipe. Please try again.")),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
       });
     }
   }
@@ -101,7 +135,7 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => widget.onImageCaptured(_image!),
+                  onPressed: _sendImage,
                   icon: const Icon(Icons.upload),
                   label: const Text(
                     "Send",
@@ -117,7 +151,14 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
                 ),
               ],
             ),
-          ]
+          ],
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: CircularProgressIndicator(
+                color: ColorPalette.offWhite,
+              ),
+            ),
         ],
       ),
     );

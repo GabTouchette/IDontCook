@@ -99,7 +99,7 @@ class ApiHelper {
     }
   }
 
-  Future<Map<String, dynamic>?> uploadFile(String endpoint, File file,
+  Future<dynamic> uploadFile(String endpoint, File file,
       {bool requiresAuth = true}) async {
     try {
       var uri = Uri.parse('$baseUrl/$endpoint');
@@ -115,12 +115,7 @@ class ApiHelper {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        print("Image upload failed: ${response.body}");
-        return null;
-      }
+      return _handleResponse(response);
     } catch (e) {
       print('File upload error: $e');
       return null;

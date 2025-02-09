@@ -1,5 +1,7 @@
-import pytesseract
-from PIL import Image
+import os
+import tempfile
+
+from dotenv import load_dotenv
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
@@ -10,6 +12,8 @@ from .api import OpenAIService, PromptTemplates
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
 from recipes.serializers import RecipeSerializer
+
+load_dotenv()
 
 class ChatbotView(APIView):
     permission_classes = [IsAuthenticated]
@@ -46,20 +50,35 @@ class ChatbotView(APIView):
 
         ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
 
-        return JsonResponse({"response": openai_response}, status=status.HTTP_200_OK)
+        return JsonResponse(openai_response, status=status.HTTP_200_OK)
+
+
 
 class RecipeOCRView(APIView):
     parser_classes = [MultiPartParser]
 
-    def post(self, request):
-        if "image" not in request.FILES:
-            return JsonResponse({"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        image = request.FILES.get('image')
 
-        image_file = request.FILES["image"]
-        image_path = default_storage.save("temp_recipe.jpg", image_file)
-        extracted_text = pytesseract.image_to_string(Image.open(image_path))
+        if not image:
+            return JsonResponse({"error": "No image provided"}, status=400)
 
-        prompt = PromptTemplates.ocr_prompt(extracted_text)
-        structured_recipe = OpenAIService().ask_openai(prompt)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_image:
+            for chunk in image.chunks():
+                temp_image.write(chunk)
+            temp_image_path = temp_image.name
 
-        return JsonResponse(structured_recipe, status=status.HTTP_200_OK)
+        try:
+            openai_service = OpenAIService()
+            structured_recipe = openai_service.ask_openai(image_path=temp_image_path)
+            if structured_recipe:
+                return JsonResponse({"response": structured_recipe}, status=200, safe=False)
+            else:
+                return JsonResponse({"error": "Failed to generate structured recipe"}, status=500)
+
+        except Exception as e:
+            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+
+        finally:
+            if os.path.exists(temp_image_path):
+                os.remove(temp_image_path)
