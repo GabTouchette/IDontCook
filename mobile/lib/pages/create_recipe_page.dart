@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/widgets/dialogs/information_dialog.dart';
+import 'package:mobile/widgets/recipe_form/camera_capture.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_extra_section.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_ingredients_section.dart';
 import 'package:mobile/widgets/recipe_form/recipe_form_instructions_section.dart';
@@ -66,6 +69,18 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     }
 
     super.dispose();
+  }
+
+  void _openCamera(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => CameraCaptureWidget(
+        onImageCaptured: (File image) {
+          Navigator.pop(context);
+          print("Captured Image Path: ${image.path}");
+        },
+      ),
+    );
   }
 
   bool _isNumber(String str) {
@@ -196,7 +211,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => _openCamera(context),
             icon: const FaIcon(
               FontAwesomeIcons.camera,
               color: ColorPalette.offWhite,
