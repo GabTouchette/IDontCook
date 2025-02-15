@@ -15,6 +15,8 @@ from datetime import timedelta
 import environ
 env = environ.Env()
 environ.Env.read_env()
+import dj_database_url
+import os
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
