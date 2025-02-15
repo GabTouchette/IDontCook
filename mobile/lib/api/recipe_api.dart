@@ -1,5 +1,5 @@
 import 'package:mobile/api/api_helper.dart';
-import 'package:mobile/models/recipe_preview.dart';
+import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 
 class RecipeApi {
   final ApiHelper _apiHelper = ApiHelper();

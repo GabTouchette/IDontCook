@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'user.dart';
-import 'post.dart';
-import 'comment.dart';
+import '../user/user.dart';
+import '../post/post.dart';
+import '../comment/comment.dart';
 
 part 'like.freezed.dart';
 part 'like.g.dart';
