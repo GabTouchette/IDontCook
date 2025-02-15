@@ -17,6 +17,7 @@ env = environ.Env()
 environ.Env.read_env()
 import dj_database_url
 import os
+import json
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
@@ -37,6 +38,7 @@ ALLOWED_HOSTS = [
     'i-cant-cook-1500fc1d933c.herokuapp.com',  # Heroku URL
 ]
 
+GOOGLE_APPLICATION_CREDENTIALS_JSON = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON', '{}'))
 
 # Application definition
 INSTALLED_APPS = [
