@@ -34,14 +34,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    '192.168.0.110',
-    '0.0.0.0',
-    'https://i-cant-cook-1500fc1d933c.herokuapp.com/',
+    'i-cant-cook-1500fc1d933c.herokuapp.com',  # Heroku URL
 ]
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -104,10 +101,6 @@ SIMPLE_JWT = {
     'LEeway': 0,
 }
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8080",
-]
 
 
 ROOT_URLCONF = 'api.urls'
