@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'post.dart';
+import '../post/post.dart';
 
 part 'paginated_posts.freezed.dart';
 part 'paginated_posts.g.dart';

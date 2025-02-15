@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mobile/models/user.dart';
-import 'ingredient.dart';
+import 'package:mobile/models/user/user.dart';
+import '../ingredient/ingredient.dart';
 
 part 'recipe.freezed.dart';
 part 'recipe.g.dart';

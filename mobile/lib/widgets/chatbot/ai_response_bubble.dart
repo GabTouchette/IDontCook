@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe.dart';
+import 'package:mobile/models/recipe/recipe.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/chatbot/chat_message.dart';
 import 'package:mobile/widgets/chatbot/recipe_card.dart';

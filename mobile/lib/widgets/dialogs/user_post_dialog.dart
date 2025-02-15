@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/recipe.dart';
-import 'package:mobile/models/recipe_preview.dart';
+import 'package:mobile/models/recipe/recipe.dart';
+import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
 
 class PostDialog extends StatefulWidget {
   final Recipe? recipe;
@@ -77,16 +78,16 @@ class _PostDialogState extends State<PostDialog> {
 
     final result = await SocialApi().createPost(postData);
 
-    if (result) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post created successfully!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create post.')),
-      );
-    }
+    if (result) Navigator.pop(context);
+
+    InformationToast.show(
+      context: context,
+      message: result ? "Post created successfully!" : "Failed to create post.",
+      textColor: result ? ColorPalette.green : ColorPalette.red,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Post created successfully!')),
+    );
   }
 
   @override

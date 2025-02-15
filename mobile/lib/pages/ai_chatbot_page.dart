@@ -50,21 +50,12 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             "sender": _messages[i]['sender'] ?? ''
           });
         }
-        print(chatHistory);
         final response = await AiChatbotApi().chatWithBot(query, chatHistory);
 
-        if (response != null && response['response'] != null) {
-          setState(() {
-            _messages.removeLast();
-            _messages.add({"sender": "ai", "text": response['response']});
-          });
-        } else {
-          setState(() {
-            _messages.removeLast();
-            _messages
-                .add({"sender": "ai", "text": "Sorry, something went wrong."});
-          });
-        }
+        setState(() {
+          _messages.removeLast();
+          _messages.add({"sender": "ai", "text": response});
+        });
       } catch (e) {
         setState(() {
           _messages.removeLast();

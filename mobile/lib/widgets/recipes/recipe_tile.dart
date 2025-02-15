@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe_preview.dart';
+import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 
