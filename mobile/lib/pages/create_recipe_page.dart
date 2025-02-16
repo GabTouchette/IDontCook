@@ -36,23 +36,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   ];
 
   List<String> _selectedTags = [];
-  List<String> _tagOptions = [
-    'Vegetarian',
-    'Gluten-Free',
-    'Quick',
-    'Low Carb',
-    'Vegan',
-    'Keto',
-    'Dairy-Free',
-    'Paleo',
-    'High Protein',
-    'Nut-Free',
-    'Sugar-Free',
-    'Healthy',
-    'Low Fat',
-    'High Fiber',
-    'Meal Prep',
-  ];
 
   @override
   void dispose() {
@@ -238,7 +221,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                   ),
                   TagsSection(
                     selectedTags: _selectedTags,
-                    tagOptions: _tagOptions,
                     onTagsChanged: _onTagsChanged,
                   ),
                   ExtraSection(
