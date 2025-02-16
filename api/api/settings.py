@@ -19,6 +19,7 @@ import json
 from google.cloud import storage
 from google.auth import load_credentials_from_file
 from dotenv import load_dotenv
+from google.oauth2.service_account import Credentials
 
 # Initialize environment
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,8 +47,9 @@ if is_prod:
     google_credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON', '{}')
     credentials_dict = json.loads(google_credentials_json)
 
-    # Load credentials from the dictionary
-    credentials, project = load_credentials_from_file(credentials_dict)
+    # Load credentials from dictionary
+    credentials = Credentials.from_service_account_info(credentials_dict)
+    project = credentials.project_id
 else:
     # In development, load credentials from a local gcp.json file
     credentials, project = load_credentials_from_file('gcp.json')
