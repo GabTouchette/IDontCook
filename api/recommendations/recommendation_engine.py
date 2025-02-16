@@ -93,21 +93,37 @@ def get_content_based_recommendations(user_id, top_n=10):
 def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_weight=0.4):
     """
     Generate hybrid recommendations by combining collaborative and content-based filtering.
+    If the user is new, recommend recipes with the highest upvotes, excluding recipes they have saved.
     """
     interactions = get_interaction_data()
     interaction_matrix = preprocess_interactions(interactions)
     reconstructed_matrix = train_collaborative_filtering(interaction_matrix)
 
+    # Get the list of recipes the user has saved
+    user_saved_recipes = set(
+        UserRecipeInteraction.objects
+        .filter(user_id=user_id, interaction_type='save')  # Only exclude saved recipes
+        .values_list('recipe_id', flat=True)
+    )
+
     if user_id not in reconstructed_matrix.index:
-        # Handle the case where the user is not in the matrix
-        return []
+        # If user is new, recommend recipes sorted by highest upvotes
+        top_upvoted_recipes = (
+            UserRecipeInteraction.objects
+            .filter(interaction_type='upvote')
+            .exclude(recipe_id__in=user_saved_recipes)  # Exclude saved recipes
+            .values('recipe_id')
+            .annotate(upvote_count=pd.Count('recipe_id'))
+            .order_by('-upvote_count')[:top_n]
+        )
+        return [recipe['recipe_id'] for recipe in top_upvoted_recipes]
 
     # Get collaborative filtering recommendations
     user_interactions = reconstructed_matrix.loc[user_id]
-    collab_recs = user_interactions.sort_values(ascending=False).index.tolist()[:top_n]
+    collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in user_saved_recipes][:top_n]
 
     # Get content-based recommendations
-    content_recs = get_content_based_recommendations(user_id, top_n)
+    content_recs = [recipe_id for recipe_id in get_content_based_recommendations(user_id, top_n) if recipe_id not in user_saved_recipes]
 
     # Combine recommendations
     combined_recs = {}
@@ -116,6 +132,7 @@ def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_wei
     for i, recipe_id in enumerate(content_recs):
         combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * content_weight
 
-    # Sort by combined score
+    # Sort by combined score and exclude saved recipes
     sorted_recs = sorted(combined_recs.items(), key=lambda x: x[1], reverse=True)
-    return [recipe_id for recipe_id, score in sorted_recs[:top_n]]
+    
+    return [recipe_id for recipe_id, score in sorted_recs if recipe_id not in user_saved_recipes][:top_n]

@@ -18,11 +18,11 @@ class RecipeTile extends StatelessWidget {
       child: imageUrl != null && imageUrl.isNotEmpty
           ? Image.network(
               imageUrl,
-              height: 80,
-              width: 80,
+              height: 100,
+              width: 100,
               fit: BoxFit.cover,
             )
-          : PlaceholderImageWidget(recipeId: recipe.id, height: 80),
+          : PlaceholderImageWidget(recipeId: recipe.id, height: 100),
     );
   }
 

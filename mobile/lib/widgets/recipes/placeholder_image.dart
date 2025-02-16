@@ -15,15 +15,15 @@ class PlaceholderImageWidget extends StatelessWidget {
 
     return Container(
       color: ColorPalette.offWhite,
-      height: 120,
-      width: 120,
+      height: height.toDouble(),
+      width: height.toDouble(),
       child: Stack(
         children: [
           Image.asset(
             'assets/images/stock_food_$imageNumber.jpg',
             fit: BoxFit.cover,
-            height: 120,
-            width: 120,
+            height: height.toDouble(),
+            width: height.toDouble(),
           ),
           Positioned.fill(
             child: BackdropFilter(
