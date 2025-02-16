@@ -67,11 +67,12 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     String title = _titleController.text;
     List<Map<String, String>> ingredients = _ingredients
         .map((field) {
-          List<String> parts = field.controller.text.split(" ");
-
-          if (parts.isEmpty) {
+          String text = field.controller.text.trim();
+          if (text.isEmpty) {
             return {};
           }
+
+          List<String> parts = text.split(" ");
 
           if (!_isNumber(parts[0])) {
             return {
@@ -80,15 +81,13 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
               "name": parts.join(" "),
             };
           }
-
           if (parts.length == 2) {
             return {
               "quantity": parts[0],
-              "unit_of_measure": "unit",
+              "unit_of_measure": "",
               "name": parts[1],
             };
           }
-
           if (parts.length >= 3) {
             return {
               "quantity": parts[0],
@@ -96,7 +95,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
               "name": parts.sublist(2).join(" "),
             };
           }
-
           return {};
         })
         .where((ingredient) => ingredient.isNotEmpty)
