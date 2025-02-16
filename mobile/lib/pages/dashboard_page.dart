@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/explore_page.dart';
+import 'package:mobile/pages/recommendations_page.dart';
 import 'package:mobile/widgets/navbar.dart';
 import 'package:mobile/pages/ai_chatbot_page.dart';
 import 'package:mobile/pages/recipes_page.dart';
@@ -36,6 +37,8 @@ class _DashboardPageState extends State<DashboardPage> {
       case 1:
         return const AiChatBotPage();
       case 2:
+        return const RecommendationsPage();
+      case 3:
         return const ExplorePage();
       default:
         return const Center(child: Text('Page Not Found'));

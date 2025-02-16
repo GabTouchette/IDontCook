@@ -59,7 +59,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                       }
                     },
                     decoration: InputDecoration(
-                      hintText: 'Ingredient (e.g., 100 g sugar)',
+                      hintText: 'Ingredient (e.g., 100 g sugar, 1 slice bread)',
                       hintStyle: TextStyle(
                         color: ColorPalette.placeholdergray,
                         fontSize: 14,
