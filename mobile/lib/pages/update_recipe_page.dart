@@ -66,7 +66,9 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
 
       _ingredients = (recipe.ingredients).map<IngredientField>((ingredient) {
         return IngredientField(
-          controller: TextEditingController(text: ingredient.name ?? ''),
+          controller: TextEditingController(
+              text:
+                  "${ingredient.quantity} ${ingredient.unit_of_measure} ${ingredient.name}"),
           focusNode: FocusNode(),
         );
       }).toList();
@@ -107,11 +109,13 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
     String title = _titleController.text;
     List<Map<String, String>> ingredients = _ingredients
         .map((field) {
-          List<String> parts = field.controller.text.split(" ");
-
-          if (parts.isEmpty) {
+          String text = field.controller.text.trim();
+          if (text.isEmpty) {
             return {};
           }
+
+          List<String> parts = text.split(" ");
+
           if (!_isNumber(parts[0])) {
             return {
               "quantity": "1",
@@ -122,7 +126,7 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
           if (parts.length == 2) {
             return {
               "quantity": parts[0],
-              "unit_of_measure": "unit",
+              "unit_of_measure": "",
               "name": parts[1],
             };
           }
