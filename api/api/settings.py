@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'social',
     'accounts',
     'storages',
+    'recommendations',
 ]
 
 AUTHENTICATION_BACKENDS = (
