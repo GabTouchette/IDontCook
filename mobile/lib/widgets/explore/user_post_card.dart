@@ -363,7 +363,6 @@ class _UserPostCardState extends State<UserPostCard> {
   Widget _buildRecipeImage() {
     final random = Random();
     int imageNumber = random.nextInt(11) + 1;
-    print("imageUrl ${widget.post.recipe_image_url}");
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),

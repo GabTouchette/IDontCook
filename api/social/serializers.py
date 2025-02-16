@@ -10,7 +10,7 @@ class PostSerializer(serializers.ModelSerializer):
     recipe_id = serializers.IntegerField(source='recipe.id', read_only=True, required=False)
     recipe_title = serializers.CharField(source='recipe.title', read_only=True, required=False, allow_blank=True)
     recipe_description = serializers.CharField(source='recipe.description', required=False, allow_blank=True)
-    recipe_image_url = serializers.CharField(source='recipe.image_url', required=False, allow_blank=True)
+    recipe_image_url = serializers.SerializerMethodField()
     upvote_count = serializers.ReadOnlyField()
     downvote_count = serializers.ReadOnlyField()
     user_vote = serializers.SerializerMethodField()
@@ -58,6 +58,9 @@ class PostSerializer(serializers.ModelSerializer):
     
     def get_like_count(self, obj):
         return obj.likes.count()
+    
+    def get_recipe_image_url(self, obj):
+        return obj.recipe.image_url.url if obj.recipe.image_url else None
 
 
 class CommentSerializer(serializers.ModelSerializer):
