@@ -95,16 +95,6 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             color: ColorPalette.offWhite,
           ),
         ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.chevron_left,
-            size: 32,
-            color: ColorPalette.offWhite,
-          ),
-        ),
       ),
       body: Stack(
         children: [
