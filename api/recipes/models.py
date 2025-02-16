@@ -5,7 +5,7 @@ from storages.backends.gcloud import GoogleCloudStorage
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     substitutes = models.JSONField(default=list, blank=True, null=True)
-    quantity = models.CharField(max_length=255, blank=True, null=True)
+    quantity = models.FloatField(blank=True, null=True)
     unit_of_measure = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
@@ -18,6 +18,7 @@ class Recipe(models.Model):
     instructions = models.JSONField(blank=True, null=True)
     cooking_time = models.IntegerField(blank=True, null=True)
     preparation_time = models.IntegerField(blank=True, null=True)
+    servings = models.IntegerField(blank=True, null=True)
     tags = models.JSONField(default=list, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     image_url = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)

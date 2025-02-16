@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/constants/constants.dart';
+import 'package:mobile/utils/constants.dart';
 import 'package:mobile/theme/colors.dart';
 
 class TagsSection extends StatefulWidget {
