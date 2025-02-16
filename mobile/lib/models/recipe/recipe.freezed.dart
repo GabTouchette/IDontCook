@@ -26,6 +26,7 @@ mixin _$Recipe {
   List<String> get instructions => throw _privateConstructorUsedError;
   int? get cooking_time => throw _privateConstructorUsedError;
   int? get preparation_time => throw _privateConstructorUsedError;
+  int? get servings => throw _privateConstructorUsedError;
   List<String>? get tags => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String? get image_url => throw _privateConstructorUsedError;
@@ -56,6 +57,7 @@ abstract class $RecipeCopyWith<$Res> {
       List<String> instructions,
       int? cooking_time,
       int? preparation_time,
+      int? servings,
       List<String>? tags,
       String? description,
       String? image_url,
@@ -89,6 +91,7 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? instructions = null,
     Object? cooking_time = freezed,
     Object? preparation_time = freezed,
+    Object? servings = freezed,
     Object? tags = freezed,
     Object? description = freezed,
     Object? image_url = freezed,
@@ -122,6 +125,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
       preparation_time: freezed == preparation_time
           ? _value.preparation_time
           : preparation_time // ignore: cast_nullable_to_non_nullable
+              as int?,
+      servings: freezed == servings
+          ? _value.servings
+          : servings // ignore: cast_nullable_to_non_nullable
               as int?,
       tags: freezed == tags
           ? _value.tags
@@ -187,6 +194,7 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       List<String> instructions,
       int? cooking_time,
       int? preparation_time,
+      int? servings,
       List<String>? tags,
       String? description,
       String? image_url,
@@ -219,6 +227,7 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? instructions = null,
     Object? cooking_time = freezed,
     Object? preparation_time = freezed,
+    Object? servings = freezed,
     Object? tags = freezed,
     Object? description = freezed,
     Object? image_url = freezed,
@@ -252,6 +261,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
       preparation_time: freezed == preparation_time
           ? _value.preparation_time
           : preparation_time // ignore: cast_nullable_to_non_nullable
+              as int?,
+      servings: freezed == servings
+          ? _value.servings
+          : servings // ignore: cast_nullable_to_non_nullable
               as int?,
       tags: freezed == tags
           ? _value._tags
@@ -299,6 +312,7 @@ class _$RecipeImpl implements _Recipe {
       final List<String> instructions = const [],
       this.cooking_time,
       this.preparation_time,
+      this.servings,
       final List<String>? tags,
       this.description,
       this.image_url,
@@ -342,6 +356,8 @@ class _$RecipeImpl implements _Recipe {
   final int? cooking_time;
   @override
   final int? preparation_time;
+  @override
+  final int? servings;
   final List<String>? _tags;
   @override
   List<String>? get tags {
@@ -369,7 +385,7 @@ class _$RecipeImpl implements _Recipe {
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, tags: $tags, description: $description, image_url: $image_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
+    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -387,6 +403,8 @@ class _$RecipeImpl implements _Recipe {
                 other.cooking_time == cooking_time) &&
             (identical(other.preparation_time, preparation_time) ||
                 other.preparation_time == preparation_time) &&
+            (identical(other.servings, servings) ||
+                other.servings == servings) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             (identical(other.description, description) ||
                 other.description == description) &&
@@ -413,6 +431,7 @@ class _$RecipeImpl implements _Recipe {
       const DeepCollectionEquality().hash(_instructions),
       cooking_time,
       preparation_time,
+      servings,
       const DeepCollectionEquality().hash(_tags),
       description,
       image_url,
@@ -446,6 +465,7 @@ abstract class _Recipe implements Recipe {
       final List<String> instructions,
       final int? cooking_time,
       final int? preparation_time,
+      final int? servings,
       final List<String>? tags,
       final String? description,
       final String? image_url,
@@ -469,6 +489,8 @@ abstract class _Recipe implements Recipe {
   int? get cooking_time;
   @override
   int? get preparation_time;
+  @override
+  int? get servings;
   @override
   List<String>? get tags;
   @override

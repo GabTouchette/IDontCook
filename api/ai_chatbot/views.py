@@ -7,11 +7,9 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
-from django.core.files.storage import default_storage
 from .api import OpenAIService, PromptTemplates
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
-from recipes.serializers import RecipeSerializer
 
 load_dotenv()
 

@@ -85,9 +85,6 @@ class _PostDialogState extends State<PostDialog> {
       message: result ? "Post created successfully!" : "Failed to create post.",
       textColor: result ? ColorPalette.green : ColorPalette.red,
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Post created successfully!')),
-    );
   }
 
   @override

@@ -23,7 +23,7 @@ mixin _$Ingredient {
   int? get id => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
   List<String>? get substitutes => throw _privateConstructorUsedError;
-  String? get quantity => throw _privateConstructorUsedError;
+  double? get quantity => throw _privateConstructorUsedError;
   String? get unit_of_measure => throw _privateConstructorUsedError;
 
   /// Serializes this Ingredient to a JSON map.
@@ -46,7 +46,7 @@ abstract class $IngredientCopyWith<$Res> {
       {int? id,
       String? name,
       List<String>? substitutes,
-      String? quantity,
+      double? quantity,
       String? unit_of_measure});
 }
 
@@ -87,7 +87,7 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
       quantity: freezed == quantity
           ? _value.quantity
           : quantity // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as double?,
       unit_of_measure: freezed == unit_of_measure
           ? _value.unit_of_measure
           : unit_of_measure // ignore: cast_nullable_to_non_nullable
@@ -108,7 +108,7 @@ abstract class _$$IngredientImplCopyWith<$Res>
       {int? id,
       String? name,
       List<String>? substitutes,
-      String? quantity,
+      double? quantity,
       String? unit_of_measure});
 }
 
@@ -147,7 +147,7 @@ class __$$IngredientImplCopyWithImpl<$Res>
       quantity: freezed == quantity
           ? _value.quantity
           : quantity // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as double?,
       unit_of_measure: freezed == unit_of_measure
           ? _value.unit_of_measure
           : unit_of_measure // ignore: cast_nullable_to_non_nullable
@@ -185,7 +185,7 @@ class _$IngredientImpl implements _Ingredient {
   }
 
   @override
-  final String? quantity;
+  final double? quantity;
   @override
   final String? unit_of_measure;
 
@@ -240,7 +240,7 @@ abstract class _Ingredient implements Ingredient {
       {final int? id,
       final String? name,
       final List<String>? substitutes,
-      final String? quantity,
+      final double? quantity,
       final String? unit_of_measure}) = _$IngredientImpl;
 
   factory _Ingredient.fromJson(Map<String, dynamic> json) =
@@ -253,7 +253,7 @@ abstract class _Ingredient implements Ingredient {
   @override
   List<String>? get substitutes;
   @override
-  String? get quantity;
+  double? get quantity;
   @override
   String? get unit_of_measure;
 

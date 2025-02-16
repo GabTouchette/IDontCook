@@ -59,7 +59,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                       }
                     },
                     decoration: InputDecoration(
-                      hintText: 'Ingredient (e.g., 100 g sugar, 1 slice bread)',
+                      hintText: 'Ingredient',
                       hintStyle: TextStyle(
                         color: ColorPalette.placeholdergray,
                         fontSize: 14,
@@ -110,7 +110,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Text(
-              "Enter in format: Qty Unit Ingredient (e.g., 100 g sugar)",
+              "Enter in format: Qty Unit Ingredient (e.g., 100 g sugar, 1.75 cups flour)",
               style: TextStyle(
                 color: ColorPalette.offWhite.withOpacity(0.7),
                 fontSize: 14,

@@ -1,6 +1,3 @@
-import 'dart:math';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/auth_api.dart';
@@ -13,6 +10,8 @@ import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/widgets/dialogs/post_comments_dialog.dart';
+import 'package:mobile/widgets/recipes/placeholder_image.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
@@ -92,16 +91,11 @@ class _UserPostCardState extends State<UserPostCard> {
   Future<void> _deletePost() async {
     final result = await SocialApi().deletePost(widget.post.id);
 
-    if (result) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post deleted successfully!')),
-      );
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete the post.')),
-      );
-    }
+    InformationToast.show(
+      context: context,
+      message: result ? "Post deleted successfully!" : "Failed to delete post.",
+      textColor: result ? ColorPalette.green : ColorPalette.red,
+    );
   }
 
   void _showDeleteDialog() {
@@ -361,9 +355,6 @@ class _UserPostCardState extends State<UserPostCard> {
   }
 
   Widget _buildRecipeImage() {
-    final random = Random();
-    int imageNumber = random.nextInt(11) + 1;
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: widget.post.recipe_image_url != null &&
@@ -374,34 +365,7 @@ class _UserPostCardState extends State<UserPostCard> {
               width: 120,
               fit: BoxFit.cover,
             )
-          : Container(
-              color: ColorPalette.offWhite,
-              height: 120,
-              width: 120,
-              child: Stack(
-                children: [
-                  Image.asset(
-                    'assets/images/stock_food_$imageNumber.jpg',
-                    fit: BoxFit.cover,
-                    height: 120,
-                    width: 120,
-                  ),
-                  Positioned.fill(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                      child: Container(),
-                    ),
-                  ),
-                  const Center(
-                    child: Icon(
-                      Icons.image,
-                      color: ColorPalette.lightgray,
-                      size: 50,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          : PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
     );
   }
 }
