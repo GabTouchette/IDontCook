@@ -13,27 +13,33 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import environ
-env = environ.Env()
-environ.Env.read_env()
 import dj_database_url
 import os
 import json
 from google.cloud import storage
 from google.auth import load_credentials_from_file
+from dotenv import load_dotenv
 
-SECRET_KEY = env('DJANGO_SECRET_KEY')
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Initialize environment
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-DEBUG = False
-
-ALLOWED_HOSTS = [
-    'i-cant-cook-1500fc1d933c.herokuapp.com',
-]
+env = environ.Env()
+load_dotenv()
 
 # Check if the app is running in production
 is_prod = os.getenv('DYNO') is not None
+
+# Load secret key
+SECRET_KEY = env("DJANGO_SECRET_KEY")
+
+DEBUG = is_prod is False
+
+ALLOWED_HOSTS = [
+    'i-cant-cook-1500fc1d933c.herokuapp.com',
+] if is_prod else [
+    '*',
+]
+
+
 
 if is_prod:
     # In production, get the credentials from the environment variable
