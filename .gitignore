@@ -8,3 +8,6 @@ __pycache__/
 
 /api/.env
 .env
+
+# Ignore SQLite database
+db.sqlite3
