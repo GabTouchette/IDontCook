@@ -6,6 +6,7 @@ import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/recipes/camera_preview_screen.dart';
 import 'package:mobile/api/ai_chatbot_api.dart';
+import 'package:mobile/widgets/toasts/information_toast.dart';
 
 class CameraCaptureWidget extends StatefulWidget {
   const CameraCaptureWidget({Key? key}) : super(key: key);
@@ -21,7 +22,11 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
   Future<void> _takePicture() async {
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
-      print("No cameras available!");
+      InformationToast.show(
+        context: context,
+        message: "No cameras available!",
+        textColor: ColorPalette.red,
+      );
       return;
     }
     final imagePath = await Navigator.push<String>(
@@ -47,7 +52,6 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
 
     try {
       final response = await AiChatbotApi().uploadRecipeImage(_image!);
-      print(response);
 
       Navigator.pop(context);
       Navigator.push(
@@ -59,10 +63,10 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
         ),
       );
     } catch (e) {
-      print("Error during API call: $e");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load recipe. Please try again.")),
+      InformationToast.show(
+        context: context,
+        message: "Failed to load recipe. Please try again.",
+        textColor: ColorPalette.red,
       );
     } finally {
       setState(() {

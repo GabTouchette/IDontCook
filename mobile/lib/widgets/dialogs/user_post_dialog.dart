@@ -85,9 +85,6 @@ class _PostDialogState extends State<PostDialog> {
       message: result ? "Post created successfully!" : "Failed to create post.",
       textColor: result ? ColorPalette.green : ColorPalette.red,
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Post created successfully!')),
-    );
   }
 
   @override
@@ -95,6 +92,7 @@ class _PostDialogState extends State<PostDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       surfaceTintColor: ColorPalette.darkergray,
+      backgroundColor: ColorPalette.offWhite,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
@@ -132,7 +130,6 @@ class _PostDialogState extends State<PostDialog> {
                               vertical: 12.0, horizontal: 16.0),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
                           ),
                         ),
                         hint: const Text('Select a recipe'),
@@ -188,18 +185,20 @@ class _PostDialogState extends State<PostDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton(
+                  ElevatedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(color: ColorPalette.red),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: ColorPalette.offWhite,
+                      backgroundColor: ColorPalette.red,
+                      elevation: 0,
                     ),
+                    child: const Text("Cancel"),
                   ),
                   ElevatedButton(
                     onPressed: handlePost,
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: ColorPalette.darkergray,
-                      backgroundColor: ColorPalette.offWhite,
+                      foregroundColor: ColorPalette.offWhite,
+                      backgroundColor: ColorPalette.darkgray,
                       elevation: 0,
                     ),
                     child: const Text("Post"),

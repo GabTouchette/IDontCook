@@ -4,12 +4,12 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import models
-from .models import Recipe
+from .models import Recipe, Save
 from .serializers import RecipeSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
 from django.http import JsonResponse
-
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -21,11 +21,44 @@ class RecipeListAPIView(APIView):
         return JsonResponse(serializer.data, safe=False)
 
     def post(self, request):
-        serializer = RecipeSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        data = request.data
+
+        parent_id = data.get('parent')
+        
+        if parent_id is not None and parent_id != -1:
+            try:
+                parent_recipe = Recipe.objects.get(id=parent_id)
+            except Recipe.DoesNotExist:
+                return Response(
+                    {"error": "Parent recipe not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Check if the user has already saved this parent recipe
+            if Save.objects.filter(user=user, recipe=parent_recipe).exists():
+                return Response(
+                    {"error": "You have already saved this recipe"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Save the parent recipe
+            Save.objects.create(user=user, recipe=parent_recipe)
+
+            # Create the new recipe with the parent reference
+            serializer = RecipeSerializer(data=data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(created_by=user, parent=parent_id)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            # Recipe is created from scratch (no parent)
+            serializer = RecipeSerializer(data=data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(created_by=user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RecipeDetailAPIView(APIView):
@@ -68,6 +101,30 @@ class RecipeDetailAPIView(APIView):
         recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class RecipeImageUploadAPIView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, recipe_id):
+        try:
+            recipe = Recipe.objects.get(id=recipe_id)
+            image = request.FILES.get('image')
+            
+            print(request.FILES)
+            
+            if image:
+                recipe.image_url = image
+                recipe.save()
+
+                if recipe.image_url:
+                    return Response({"image_url": recipe.image_url.url}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"error": "Image upload failed."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
+        except Recipe.DoesNotExist:
+            return Response({"error": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
+        
 
 class HasSavedRecipeAPIView(APIView):
     permission_classes = [IsAuthenticated]

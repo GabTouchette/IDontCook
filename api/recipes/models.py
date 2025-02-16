@@ -1,11 +1,11 @@
 from django.db import models
-import json
 from accounts.models import CustomUser
+from storages.backends.gcloud import GoogleCloudStorage
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     substitutes = models.JSONField(default=list, blank=True, null=True)
-    quantity = models.CharField(max_length=255, blank=True, null=True)
+    quantity = models.FloatField(blank=True, null=True)
     unit_of_measure = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
@@ -18,9 +18,10 @@ class Recipe(models.Model):
     instructions = models.JSONField(blank=True, null=True)
     cooking_time = models.IntegerField(blank=True, null=True)
     preparation_time = models.IntegerField(blank=True, null=True)
+    servings = models.IntegerField(blank=True, null=True)
     tags = models.JSONField(default=list, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
+    image_url = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     is_favorite = models.BooleanField(default=False)
     parent = models.IntegerField(blank=True, null=True)
@@ -30,3 +31,15 @@ class Recipe(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class Save(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='saves')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'recipe')
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.recipe.title}"

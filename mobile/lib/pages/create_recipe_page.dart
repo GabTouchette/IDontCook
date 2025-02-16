@@ -36,23 +36,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   ];
 
   List<String> _selectedTags = [];
-  List<String> _tagOptions = [
-    'Vegetarian',
-    'Gluten-Free',
-    'Quick',
-    'Low Carb',
-    'Vegan',
-    'Keto',
-    'Dairy-Free',
-    'Paleo',
-    'High Protein',
-    'Nut-Free',
-    'Sugar-Free',
-    'Healthy',
-    'Low Fat',
-    'High Fiber',
-    'Meal Prep',
-  ];
 
   @override
   void dispose() {
@@ -84,11 +67,12 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     String title = _titleController.text;
     List<Map<String, String>> ingredients = _ingredients
         .map((field) {
-          List<String> parts = field.controller.text.split(" ");
-
-          if (parts.isEmpty) {
+          String text = field.controller.text.trim();
+          if (text.isEmpty) {
             return {};
           }
+
+          List<String> parts = text.split(" ");
 
           if (!_isNumber(parts[0])) {
             return {
@@ -97,15 +81,13 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
               "name": parts.join(" "),
             };
           }
-
           if (parts.length == 2) {
             return {
               "quantity": parts[0],
-              "unit_of_measure": "unit",
+              "unit_of_measure": "",
               "name": parts[1],
             };
           }
-
           if (parts.length >= 3) {
             return {
               "quantity": parts[0],
@@ -113,7 +95,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
               "name": parts.sublist(2).join(" "),
             };
           }
-
           return {};
         })
         .where((ingredient) => ingredient.isNotEmpty)
@@ -238,7 +219,6 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                   ),
                   TagsSection(
                     selectedTags: _selectedTags,
-                    tagOptions: _tagOptions,
                     onTagsChanged: _onTagsChanged,
                   ),
                   ExtraSection(

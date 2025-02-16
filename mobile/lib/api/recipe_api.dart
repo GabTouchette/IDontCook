@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mobile/api/api_helper.dart';
 import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 
@@ -35,6 +37,10 @@ class RecipeApi {
     var response =
         await _apiHelper.patchRequest('recipes/$recipeId/', recipeData);
     return response != null;
+  }
+
+  Future<bool> uploadRecipeImage(int recipeId, File imageFile) async {
+    return await _apiHelper.imageRequest('recipes/$recipeId/image', imageFile);
   }
 
   Future<bool> deleteRecipe(int recipeId) async {

@@ -14,6 +14,7 @@ class Recipe with _$Recipe {
     @Default([]) List<String> instructions,
     int? cooking_time,
     int? preparation_time,
+    int? servings,
     List<String>? tags,
     String? description,
     String? image_url,

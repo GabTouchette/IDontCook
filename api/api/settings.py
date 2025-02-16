@@ -13,32 +13,53 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import environ
-env = environ.Env()
-environ.Env.read_env()
 import dj_database_url
 import os
 import json
+from google.cloud import storage
+from google.auth import load_credentials_from_file
+from dotenv import load_dotenv
 
-SECRET_KEY = env('DJANGO_SECRET_KEY')
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Initialize environment
 BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env()
+load_dotenv()
 
+# Check if the app is running in production
+is_prod = os.getenv('DYNO') is not None
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# Load secret key
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-y&==^9$@y4e-aadc36t%b-50jbrbluuv$2tsr$15!2ou#%f&rs'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = is_prod is False
 
 ALLOWED_HOSTS = [
-    'i-cant-cook-1500fc1d933c.herokuapp.com',  # Heroku URL
+    'i-cant-cook-1500fc1d933c.herokuapp.com',
+] if is_prod else [
+    '*',
 ]
 
-GOOGLE_APPLICATION_CREDENTIALS_JSON = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON', '{}'))
+
+
+if is_prod:
+    # In production, get the credentials from the environment variable
+    google_credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON', '{}')
+    credentials_dict = json.loads(google_credentials_json)
+
+    # Load credentials from the dictionary
+    credentials, project = load_credentials_from_file(credentials_dict)
+else:
+    # In development, load credentials from a local gcp.json file
+    credentials, project = load_credentials_from_file('gcp.json')
+
+# Google Cloud Storage client setup
+storage_client = storage.Client(credentials=credentials, project=project)
+
+# Storage settings
+GS_BUCKET_NAME = "i-cant-cook" if is_prod else "i-cant-cook-dev"
+DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+GS_CREDENTIALS = credentials
+MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
 
 # Application definition
 INSTALLED_APPS = [
@@ -55,6 +76,8 @@ INSTALLED_APPS = [
     'ai_chatbot',
     'social',
     'accounts',
+    'storages',
+    'recommendations',
 ]
 
 AUTHENTICATION_BACKENDS = (
