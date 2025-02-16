@@ -9,7 +9,7 @@ from .serializers import RecipeSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
 from django.http import JsonResponse
-
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -68,6 +68,30 @@ class RecipeDetailAPIView(APIView):
         recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class RecipeImageUploadAPIView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, recipe_id):
+        try:
+            recipe = Recipe.objects.get(id=recipe_id)
+            image = request.FILES.get('image')
+            
+            print(request.FILES)
+            
+            if image:
+                recipe.image_url = image
+                recipe.save()
+
+                if recipe.image_url:
+                    return Response({"image_url": recipe.image_url.url}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"error": "Image upload failed."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
+        except Recipe.DoesNotExist:
+            return Response({"error": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
+        
 
 class HasSavedRecipeAPIView(APIView):
     permission_classes = [IsAuthenticated]

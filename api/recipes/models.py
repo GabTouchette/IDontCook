@@ -1,6 +1,6 @@
 from django.db import models
-import json
 from accounts.models import CustomUser
+from storages.backends.gcloud import GoogleCloudStorage
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -20,7 +20,7 @@ class Recipe(models.Model):
     preparation_time = models.IntegerField(blank=True, null=True)
     tags = models.JSONField(default=list, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
+    image_url = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     is_favorite = models.BooleanField(default=False)
     parent = models.IntegerField(blank=True, null=True)
