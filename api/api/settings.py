@@ -12,36 +12,45 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import environ
+env = environ.Env()
+environ.Env.read_env()
+import dj_database_url
 import os
 import json
-from dotenv import load_dotenv
 from google.cloud import storage
 from google.auth import load_credentials_from_file
 
+SECRET_KEY = env('DJANGO_SECRET_KEY')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv()
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y&==^9$@y4e-aadc36t%b-50jbrbluuv$2tsr$15!2ou#%f&rs'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    '*'
+    'i-cant-cook-1500fc1d933c.herokuapp.com',
 ]
 
+# Check if the app is running in production
+is_prod = os.getenv('DYNO') is not None
 
-credentials, project = load_credentials_from_file('gcp.json')
+if is_prod:
+    # In production, get the credentials from the environment variable
+    google_credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON', '{}')
+    credentials_dict = json.loads(google_credentials_json)
 
+    # Load credentials from the dictionary
+    credentials, project = load_credentials_from_file(credentials_dict)
+else:
+    # In development, load credentials from a local gcp.json file
+    credentials, project = load_credentials_from_file('gcp.json')
+
+# Google Cloud Storage client setup
 storage_client = storage.Client(credentials=credentials, project=project)
 
-GS_BUCKET_NAME = "i-cant-cook"
+# Storage settings
+GS_BUCKET_NAME = "i-cant-cook" if is_prod else "i-cant-cook-dev"
 DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 GS_CREDENTIALS = credentials
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
@@ -111,10 +120,6 @@ SIMPLE_JWT = {
     'LEeway': 0,
 }
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8080",
-]
 
 
 ROOT_URLCONF = 'api.urls'
@@ -142,10 +147,9 @@ WSGI_APPLICATION = 'api.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
 
 
