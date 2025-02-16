@@ -1,8 +1,11 @@
 import os
 import django
 import random
+import csv
 from faker import Faker
 from django.contrib.auth.hashers import make_password
+import json
+import ast
 
 # Set up Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
@@ -38,31 +41,60 @@ def create_mock_users(num_users=100):
         users.append(user)
     return users
 
-def create_mock_ingredients():
-    """Create mock ingredients."""
-    ingredients = [
-        Ingredient.objects.create(name="Tomato", quantity="2", unit_of_measure="pieces"),
-        Ingredient.objects.create(name="Cheese", quantity="100", unit_of_measure="grams"),
-        Ingredient.objects.create(name="Olive Oil", quantity="50", unit_of_measure="ml"),
-        Ingredient.objects.create(name="Basil", quantity="10", unit_of_measure="leaves"),
-        Ingredient.objects.create(name="Garlic", quantity="2", unit_of_measure="cloves"),
-    ]
-    return ingredients
 
-def create_mock_recipes(num_recipes=100, users=None, ingredients=None):
-    """Create mock recipes."""
-    recipes = []
-    for _ in range(num_recipes):
-        recipe = Recipe.objects.create(
-            title=fake.sentence(nb_words=4),
-            description=fake.paragraph(nb_sentences=3),
-            cooking_time=random.randint(10, 60),
-            preparation_time=random.randint(5, 30),
-            created_by=random.choice(users)
-        )
-        recipe.ingredients.set(ingredients)
-        recipes.append(recipe)
-    return recipes
+def parse_ingredient(ingredient_str):
+    """Extracts quantity, unit, and name from an ingredient string."""
+    ingredient_str = ingredient_str.strip()
+    
+    # Check for a numeric value at the beginning
+    parts = ingredient_str.split(" ", 2)  # Try to split into three parts: quantity, unit, name
+    if len(parts) == 3 and parts[0].replace(".", "", 1).isdigit():
+        quantity = float(parts[0])
+        unit = parts[1]
+        name = parts[2]
+    else:
+        quantity, unit, name = None, None, ingredient_str  # Default case: Just the name
+    
+    return name, quantity, unit
+
+def load_recipes_from_csv(csv_file, users):
+    """Load recipes from a CSV file and format data properly."""
+    with open(csv_file, newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            # Extract ingredients (stored as a string list in the CSV)
+            raw_ingredients = ast.literal_eval(row['ingredients'])  # Convert string list to actual list
+            ingredients = []
+            for ingredient_str in raw_ingredients:
+                name, quantity, unit = parse_ingredient(ingredient_str)
+                
+                # Always create a new ingredient
+                ingredient = Ingredient.objects.create(
+                    name=name,
+                    quantity=quantity,
+                    unit_of_measure=unit
+                )
+                ingredients.append(ingredient)
+            
+            # Extract instructions
+            instructions = ast.literal_eval(row['directions'])  # Convert string list to actual list
+            
+            # Create the recipe
+            recipe = Recipe.objects.create(
+                title=row['title'],
+                instructions=instructions,  # Store as JSON
+                cooking_time=random.randint(10, 60),  
+                preparation_time=random.randint(5, 30),  
+                servings=random.randint(1, 6),  
+                tags=ast.literal_eval(row['NER']),  # Convert tag list from string to actual list
+                description="Generated from dataset",
+                image_url=None,  # Set later if needed
+                created_by=random.choice(users)
+            )
+
+            # Add ingredients to the recipe
+            recipe.ingredients.set(ingredients)
+
 
 def create_mock_posts(num_posts=200, users=None, recipes=None):
     """Create mock posts."""
@@ -132,15 +164,12 @@ def main():
     users = create_mock_users(num_users=100)
     print(f"Created {len(users)} users.")
 
-    # Create mock ingredients
-    ingredients = create_mock_ingredients()
-    print(f"Created {len(ingredients)} ingredients.")
-
-    # Create mock recipes
-    recipes = create_mock_recipes(num_recipes=100, users=users, ingredients=ingredients)
-    print(f"Created {len(recipes)} recipes.")
+    # Load recipes from CSV
+    load_recipes_from_csv('recipes_data_truncated.csv', users)
+    print("Loaded recipes from CSV.")
 
     # Create mock posts, comments, likes, and votes
+    recipes = Recipe.objects.all()
     create_mock_posts(num_posts=200, users=users, recipes=recipes)
     print("Created posts, comments, likes, and votes.")
 
