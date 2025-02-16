@@ -103,15 +103,20 @@ class PromptTemplates:
             "  <recipe>{\n"
             '    "title": "Recipe Name",\n'
             '    "ingredients": [\n'
-            '      {"name": "Ingredient Name", "quantity": "1", "unit_of_measure": "unit", "substitutes": []}\n'
+            '      {"name": "Flour", "quantity": 0.75, "unit_of_measure": "cups"},\n'
+            '      {"name": "Sugar", "quantity": 0.5, "unit_of_measure": "cups"}\n'
+            '      ...\n'
             '    ],\n'
             '    "instructions": ["Step 1", "Step 2"],\n'
             '    "cooking_time": 30,\n'
             '    "preparation_time": 15,\n'
+            '    "servings": 2,\n'
             '    "tags": ["vegetarian", "easy"],\n'
             '    "description": "A brief description of the recipe",\n'
             '    "notes": "Any extra notes for the recipe"\n'
             "  }</recipe>\n\n"
+            "Important: Ensure that the quantity for each ingredient is a decimal (e.g., 0.75, 1.0, 0.25). "
+            "Do not use fractions (e.g., 1/2, 3/4) or integers (e.g., 1). Always represent quantities as doubles.\n\n"
             "You are not limited to choosing only one option; you can provide both an existing and a new recipe in the same response.\n"
             "Additionally, when answering general cooking questions, remind the user that you can also assist with finding or creating recipes.\n\n"
             f"Answer the following user query:\n{query}"
@@ -125,9 +130,10 @@ class PromptTemplates:
             "The format should be a valid JSON object and not a JSON string, just like in this example:\n"
             '{\n'
             '  "title": "Recipe Name",\n'
-            '  "ingredients": [{"name": "Ingredient", "quantity": "Amount", "unit_of_measure": "Unit"}],\n'
+            '  "ingredients": [{"name": "Ingredient", "quantity": 1, "unit_of_measure": "Unit"}],\n'
             '  "instructions": ["Step 1", "Step 2"],\n'
             '  "cooking_time": 30,\n'
+            '  "servings": 2,\n'
             '  "preparation_time": 15,\n'
             '  "tags": ["tag1", "tag2"],\n'
             '  "description": "Brief description",\n'

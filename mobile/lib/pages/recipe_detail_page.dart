@@ -1,11 +1,13 @@
-import 'dart:math';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe/recipe.dart';
 import 'package:mobile/models/user/user.dart';
+import 'package:mobile/utils/functions.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
@@ -30,7 +32,10 @@ class RecipeDetailPage extends StatefulWidget {
 class _RecipeDetailPageState extends State<RecipeDetailPage> {
   List<bool> completedInstructions = [];
   bool isSaved = false;
-  late Recipe currentRecipe;
+  late Recipe _currentRecipe;
+  late int _servings;
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -40,10 +45,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   void _initializePage() async {
     if (widget.recipe != null) {
-      currentRecipe = widget.recipe!;
+      _currentRecipe = widget.recipe!;
+      _servings = _currentRecipe.servings ?? 1;
       await _checkIfSaved();
       completedInstructions =
-          List<bool>.filled(currentRecipe.instructions.length, false);
+          List<bool>.filled(_currentRecipe.instructions.length, false);
     } else if (widget.recipeId != null && widget.recipeId! > 0) {
       await _initializeRecipe(widget.recipeId!);
     }
@@ -52,9 +58,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Future<void> _initializeRecipe(int recipeId) async {
     var response = await RecipeApi().getRecipeById(recipeId);
     setState(() {
-      currentRecipe = Recipe.fromJson(response);
+      _currentRecipe = Recipe.fromJson(response);
+      _servings = _currentRecipe.servings ?? 1;
       completedInstructions =
-          List<bool>.filled(currentRecipe.instructions.length, false);
+          List<bool>.filled(_currentRecipe.instructions.length, false);
     });
     await _checkIfSaved();
   }
@@ -62,7 +69,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Future<void> _checkIfSaved() async {
     User? user = await AuthApi.getUser();
 
-    if (user != null && currentRecipe.created_by?.id == user.id) {
+    if (user != null && _currentRecipe.created_by?.id == user.id) {
       setState(() {
         isSaved = true;
       });
@@ -73,39 +80,38 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     if (isSaved) return;
 
     Map<String, dynamic> recipeData = {
-      "title": currentRecipe.title,
-      "ingredients": currentRecipe.ingredients
+      "title": _currentRecipe.title,
+      "ingredients": _currentRecipe.ingredients
           .map((ingredient) => {
                 "name": ingredient.name,
                 "quantity": ingredient.quantity,
                 "unit_of_measure": ingredient.unit_of_measure,
               })
           .toList(),
-      "instructions": currentRecipe.instructions,
-      "preparation_time": currentRecipe.preparation_time,
-      "cooking_time": currentRecipe.cooking_time,
-      "description": currentRecipe.description,
-      "notes": currentRecipe.notes,
-      "tags": currentRecipe.tags,
-      "parent": currentRecipe.id,
+      "instructions": _currentRecipe.instructions,
+      "preparation_time": _currentRecipe.preparation_time,
+      "cooking_time": _currentRecipe.cooking_time,
+      "description": _currentRecipe.description,
+      "notes": _currentRecipe.notes,
+      "tags": _currentRecipe.tags,
+      "parent": _currentRecipe.id,
     };
 
     bool success = await RecipeApi().createRecipe(recipeData);
 
-    if (success) {
-      InformationToast.show(
-        context: context,
-        message: "Recipe saved successfully!",
-        textColor: ColorPalette.green,
-      );
-    }
+    InformationToast.show(
+      context: context,
+      message:
+          success ? "Recipe saved successfully!" : "Failed to save recipe.",
+      textColor: success ? ColorPalette.green : ColorPalette.red,
+    );
   }
 
   void _toggleFavorite() async {
-    final updatedFavoriteStatus = !(currentRecipe.is_favorite ?? true);
+    final updatedFavoriteStatus = !(_currentRecipe.is_favorite ?? true);
 
     final result = await RecipeApi().patchRecipe(
-      currentRecipe.id,
+      _currentRecipe.id,
       {
         'is_favorite': updatedFavoriteStatus,
       },
@@ -113,8 +119,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     if (result) {
       setState(() {
-        currentRecipe =
-            currentRecipe.copyWith(is_favorite: updatedFavoriteStatus);
+        _currentRecipe =
+            _currentRecipe.copyWith(is_favorite: updatedFavoriteStatus);
       });
     } else {
       InformationToast.show(
@@ -125,46 +131,96 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     }
   }
 
-  Widget getRecipeImage(String? imageUrl) {
-    final random = Random();
-    int imageNumber = random.nextInt(11) + 1;
+  void _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-      child: imageUrl != null && imageUrl.isNotEmpty
-          ? Image.network(
-              imageUrl,
-              height: 250,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            )
-          : Container(
-              height: 250,
-              child: Stack(
-                children: [
-                  Image.asset(
-                    'assets/images/stock_food_$imageNumber.jpg',
-                    fit: BoxFit.cover,
-                    height: 250,
-                    width: double.infinity,
-                  ),
-                  Positioned.fill(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                      child: Container(),
+      bool success = await _uploadImageToServer(_imageFile!, _currentRecipe.id);
+      if (success) {
+        InformationToast.show(
+            context: context,
+            message: success
+                ? "Image uploaded successfully!"
+                : "Failed to upload image.",
+            textColor: success ? ColorPalette.green : ColorPalette.red);
+      }
+    }
+  }
+
+  Future<bool> _uploadImageToServer(File imageFile, int recipeId) async {
+    try {
+      return await RecipeApi().uploadRecipeImage(recipeId, imageFile);
+    } catch (e) {
+      InformationToast.show(
+        context: context,
+        message: "An error occurred while uploading the image.",
+        textColor: ColorPalette.red,
+      );
+      return false;
+    }
+  }
+
+  Widget getRecipeImage(String? imageUrl) {
+    int imageNumber = (_currentRecipe.id % 11) + 1;
+
+    return GestureDetector(
+      onTap: () {
+        _pickImage();
+      },
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+        child: imageUrl != null && imageUrl.isNotEmpty
+            ? Image.network(
+                imageUrl,
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              )
+            : Container(
+                height: 250,
+                child: Stack(
+                  children: [
+                    Image.asset(
+                      'assets/images/stock_food_$imageNumber.jpg',
+                      fit: BoxFit.cover,
+                      height: 250,
+                      width: double.infinity,
                     ),
-                  ),
-                  Center(
-                    child: Icon(
-                      Icons.image,
-                      color: ColorPalette.lightgray,
-                      size: 80,
+                    Positioned.fill(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        child: Container(),
+                      ),
                     ),
-                  ),
-                ],
+                    Center(
+                      child: Icon(
+                        Icons.image,
+                        color: ColorPalette.lightgray,
+                        size: 80,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
+  }
+
+  void _incrementServings() {
+    setState(() {
+      _servings++;
+    });
+  }
+
+  void _decrementServings() {
+    setState(() {
+      if (_servings > 1) {
+        _servings--;
+      }
+    });
   }
 
   @override
@@ -203,7 +259,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   context: context,
                   builder: (BuildContext context) {
                     return PostDialog(
-                      recipe: currentRecipe,
+                      recipe: _currentRecipe,
                     );
                   },
                 );
@@ -216,10 +272,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             IconButton(
               onPressed: _toggleFavorite,
               icon: FaIcon(
-                (currentRecipe.is_favorite ?? false)
+                (_currentRecipe.is_favorite ?? false)
                     ? FontAwesomeIcons.solidHeart
                     : FontAwesomeIcons.heart,
-                color: (currentRecipe.is_favorite ?? false)
+                color: (_currentRecipe.is_favorite ?? false)
                     ? Colors.red
                     : ColorPalette.offWhite,
               ),
@@ -230,7 +286,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        UpdateRecipePage(recipeId: currentRecipe.id),
+                        UpdateRecipePage(recipeId: _currentRecipe.id),
                   ),
                 ).then(
                   (_) {
@@ -252,7 +308,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     onConfirm: () async {
                       Navigator.pop(context);
                       bool success =
-                          await RecipeApi().deleteRecipe(currentRecipe.id);
+                          await RecipeApi().deleteRecipe(_currentRecipe.id);
                       if (success) Navigator.pop(context);
                       InformationToast.show(
                           context: context,
@@ -290,49 +346,85 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            getRecipeImage(currentRecipe.image_url),
+            getRecipeImage(_currentRecipe.image_url),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16),
               child: Text(
-                currentRecipe.title,
+                _currentRecipe.title,
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
                   fontSize: 36,
                   color: ColorPalette.offWhite,
                 ),
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
+              child: Column(
                 children: [
-                  if (currentRecipe.preparation_time != null) ...[
-                    const Icon(Icons.timer,
-                        size: 20, color: ColorPalette.yellow),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Prep: ${currentRecipe.preparation_time} min',
-                      style:
-                          TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+                  Row(
+                    children: [
+                      if (_currentRecipe.preparation_time != null) ...[
+                        const Icon(Icons.timer,
+                            size: 20, color: ColorPalette.yellow),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Prep: ${_currentRecipe.preparation_time} min',
+                          style: TextStyle(
+                              color: ColorPalette.offWhite, fontSize: 16),
+                        ),
+                      ],
+                      if (_currentRecipe.preparation_time != null &&
+                          _currentRecipe.cooking_time != null)
+                        const SizedBox(width: 16),
+                      if (_currentRecipe.cooking_time != null) ...[
+                        const Icon(Icons.local_fire_department,
+                            size: 20, color: ColorPalette.orange),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Cook: ${_currentRecipe.cooking_time} min',
+                          style: TextStyle(
+                              color: ColorPalette.offWhite, fontSize: 16),
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  // Servings control buttons
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Serves: ',
+                          style: TextStyle(
+                              color: ColorPalette.offWhite,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.remove,
+                              color: ColorPalette.offWhite),
+                          onPressed: _decrementServings,
+                        ),
+                        Text(
+                          '$_servings',
+                          style: TextStyle(
+                              color: ColorPalette.offWhite, fontSize: 18),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add,
+                              color: ColorPalette.offWhite),
+                          onPressed: _incrementServings,
+                        ),
+                      ],
                     ),
-                  ],
-                  if (currentRecipe.preparation_time != null &&
-                      currentRecipe.cooking_time != null)
-                    const SizedBox(width: 16),
-                  if (currentRecipe.cooking_time != null) ...[
-                    const Icon(Icons.local_fire_department,
-                        size: 20, color: ColorPalette.orange),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Cook: ${currentRecipe.cooking_time} min',
-                      style:
-                          TextStyle(color: ColorPalette.offWhite, fontSize: 16),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -353,10 +445,16 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: (currentRecipe.ingredients).map((ingredient) {
+                children: _currentRecipe.ingredients.map((ingredient) {
+                  double adjustedQuantity = adjustQuantityForServings(
+                      ingredient.quantity ?? 0,
+                      _currentRecipe.servings ?? 1,
+                      _servings);
+
                   String formattedIngredient =
-                      "${ingredient.quantity ?? ''} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
+                      "${formatQuantity(adjustedQuantity)} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
                           .trim();
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Text(
@@ -387,7 +485,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children:
-                    List.generate(currentRecipe.instructions.length, (index) {
+                    List.generate(_currentRecipe.instructions.length, (index) {
                   final isCompleted = (index < completedInstructions.length)
                       ? completedInstructions[index]
                       : false;
@@ -425,7 +523,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                currentRecipe.instructions[index],
+                                _currentRecipe.instructions[index],
                                 style: TextStyle(
                                   color: isCompleted
                                       ? Colors.green
@@ -445,13 +543,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ),
             ),
             const SizedBox(height: 16),
-            if (currentRecipe.tags != null && currentRecipe.tags!.isNotEmpty)
-              _buildTagSection(currentRecipe.tags!),
-            if (currentRecipe.description != null &&
-                currentRecipe.description!.isNotEmpty)
-              _buildSection("Description", currentRecipe.description!),
-            if (currentRecipe.notes != null && currentRecipe.notes!.isNotEmpty)
-              _buildSection("Notes", currentRecipe.notes!),
+            if (_currentRecipe.tags != null && _currentRecipe.tags!.isNotEmpty)
+              _buildTagSection(_currentRecipe.tags!),
+            if (_currentRecipe.description != null &&
+                _currentRecipe.description!.isNotEmpty)
+              _buildSection("Description", _currentRecipe.description!),
+            if (_currentRecipe.notes != null &&
+                _currentRecipe.notes!.isNotEmpty)
+              _buildSection("Notes", _currentRecipe.notes!),
             const SizedBox(height: 64),
           ],
         ),

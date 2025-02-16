@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/utils/constants.dart';
 import 'package:mobile/theme/colors.dart';
 
 class TagsSection extends StatefulWidget {
-  final List<String> tagOptions;
   final List<String> selectedTags;
   final ValueChanged<List<String>> onTagsChanged;
 
   const TagsSection({
     Key? key,
-    required this.tagOptions,
     required this.selectedTags,
     required this.onTagsChanged,
   }) : super(key: key);
@@ -19,6 +18,7 @@ class TagsSection extends StatefulWidget {
 
 class _TagsSectionState extends State<TagsSection> {
   String? _selectedTag;
+  String? _currentlyExpandedCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -36,35 +36,38 @@ class _TagsSectionState extends State<TagsSection> {
             ),
           ),
           SizedBox(height: 8.0),
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: ColorPalette.lightgray,
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+          Container(
+            decoration: BoxDecoration(
+              color: ColorPalette.lightgray,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: InkWell(
+              onTap: () {
+                _showHierarchicalDropdown(context);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12.0,
+                  horizontal: 16.0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _selectedTag ?? 'Select Tag',
+                      style: TextStyle(
+                        color:
+                            _selectedTag == null ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.black,
+                    ),
+                  ],
+                ),
               ),
             ),
-            hint: Text('Select tags'),
-            value: _selectedTag,
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedTag = newValue;
-                if (_selectedTag != null &&
-                    !widget.selectedTags.contains(_selectedTag)) {
-                  widget.selectedTags.add(_selectedTag!);
-                }
-                widget.onTagsChanged(widget.selectedTags);
-              });
-            },
-            items: widget.tagOptions.map((String tag) {
-              return DropdownMenuItem<String>(
-                value: tag,
-                child: Text(tag),
-              );
-            }).toList(),
           ),
           SizedBox(height: 16.0),
           Wrap(
@@ -109,6 +112,58 @@ class _TagsSectionState extends State<TagsSection> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showHierarchicalDropdown(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.zero,
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (var category in tagOptions.keys)
+                  ExpansionTile(
+                    title: Text(category),
+                    initiallyExpanded: _currentlyExpandedCategory == category,
+                    onExpansionChanged: (isExpanded) {
+                      setState(() {
+                        if (isExpanded) {
+                          _currentlyExpandedCategory = category;
+                        } else {
+                          _currentlyExpandedCategory = null;
+                        }
+                      });
+                    },
+                    children: [
+                      for (var tag in tagOptions[category]!)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 24.0),
+                          child: ListTile(
+                            title: Text(tag),
+                            onTap: () {
+                              setState(() {
+                                _selectedTag = tag;
+                                if (!widget.selectedTags.contains(tag)) {
+                                  widget.selectedTags.add(tag);
+                                }
+                                widget.onTagsChanged(widget.selectedTags);
+                              });
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

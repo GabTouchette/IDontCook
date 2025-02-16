@@ -1,10 +1,8 @@
-import 'dart:math';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 import 'package:mobile/pages/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/recipes/placeholder_image.dart';
 
 class RecipeTile extends StatelessWidget {
   final RecipePreview recipe;
@@ -15,46 +13,16 @@ class RecipeTile extends StatelessWidget {
   }) : super(key: key);
 
   Widget getSmallRecipeImage(String? imageUrl) {
-    final random = Random();
-    int imageNumber = random.nextInt(11) + 1;
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: imageUrl != null && imageUrl.isNotEmpty
           ? Image.network(
               imageUrl,
-              height: 80,
-              width: 80,
+              height: 100,
+              width: 100,
               fit: BoxFit.cover,
             )
-          : Container(
-              color: ColorPalette.offWhite,
-              height: 80,
-              width: 80,
-              child: Stack(
-                children: [
-                  Image.asset(
-                    'assets/images/stock_food_$imageNumber.jpg',
-                    fit: BoxFit.cover,
-                    height: 80,
-                    width: 80,
-                  ),
-                  Positioned.fill(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                      child: Container(),
-                    ),
-                  ),
-                  Center(
-                    child: Icon(
-                      Icons.image,
-                      color: ColorPalette.lightgray,
-                      size: 40,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          : PlaceholderImageWidget(recipeId: recipe.id, height: 100),
     );
   }
 
@@ -95,7 +63,7 @@ class RecipeTile extends StatelessWidget {
                             fontSize: 20,
                             fontWeight: FontWeight.w300,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4.0),

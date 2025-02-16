@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/ai/', include('ai_chatbot.urls')),
     path('api/social/', include('social.urls')),
     path('api/accounts/', include('accounts.urls')),
+    path('api/recommendations', include('recommendations.urls')),
 ]
