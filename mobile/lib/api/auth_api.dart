@@ -4,7 +4,7 @@ import 'package:mobile/models/user/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthApi {
-  final String _baseUrl = 'http://192.168.0.110:8000';
+  final String _baseUrl = 'http://192.168.0.21:8000';
 
   Future<void> login(String username, String password) async {
     final url = Uri.parse('$_baseUrl/api/accounts/login/');

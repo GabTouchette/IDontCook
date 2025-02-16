@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 import 'auth_api.dart';
 
 class ApiHelper {
-  final String baseUrl = 'http://192.168.0.110:8000/api';
+  final String baseUrl = 'http://192.168.0.21:8000/api';
 
   Future<dynamic> getRequest(String endpoint,
       {bool requiresAuth = true}) async {
@@ -119,6 +121,42 @@ class ApiHelper {
     } catch (e) {
       print('File upload error: $e');
       return null;
+    }
+  }
+
+  Future<bool> imageRequest(String endpoint, File imageFile,
+      {bool requiresAuth = true}) async {
+    try {
+      Uri url = Uri.parse('$baseUrl/$endpoint');
+      final Map<String, String> headers = requiresAuth
+          ? (await AuthApi.getAuthHeader()).cast<String, String>()
+          : {};
+
+      var request = http.MultipartRequest('POST', url);
+      request.headers.addAll(headers);
+
+      var mimeType = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+      var contentType = MediaType.parse(mimeType);
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+        contentType: contentType,
+      ));
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        print('Image uploaded successfully');
+        return true;
+      } else {
+        print('Image upload failed: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+      return false;
     }
   }
 

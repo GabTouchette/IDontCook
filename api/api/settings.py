@@ -13,9 +13,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import json
+from dotenv import load_dotenv
+from google.cloud import storage
+from google.auth import load_credentials_from_file
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv()
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,14 +33,20 @@ SECRET_KEY = 'django-insecure-y&==^9$@y4e-aadc36t%b-50jbrbluuv$2tsr$15!2ou#%f&rs
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '192.168.0.110',
-    '0.0.0.0',
+    '*'
 ]
 
-GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, 'gcp.json')
+
+credentials, project = load_credentials_from_file('gcp.json')
+
+storage_client = storage.Client(credentials=credentials, project=project)
+
+GS_BUCKET_NAME = "i-cant-cook"
+DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+GS_CREDENTIALS = credentials
+MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,6 +61,7 @@ INSTALLED_APPS = [
     'ai_chatbot',
     'social',
     'accounts',
+    'storages',
 ]
 
 AUTHENTICATION_BACKENDS = (

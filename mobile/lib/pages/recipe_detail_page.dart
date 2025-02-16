@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe/recipe.dart';
@@ -31,6 +33,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   List<bool> completedInstructions = [];
   bool isSaved = false;
   late Recipe currentRecipe;
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -125,45 +129,82 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     }
   }
 
+  void _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
+
+      bool success = await _uploadImageToServer(_imageFile!, currentRecipe.id);
+      if (success) {
+        InformationToast.show(
+            context: context,
+            message: success
+                ? "Image uploaded successfully!"
+                : "Failed to upload image.",
+            textColor: success ? ColorPalette.green : ColorPalette.red);
+      }
+    }
+  }
+
+  Future<bool> _uploadImageToServer(File imageFile, int recipeId) async {
+    try {
+      return await RecipeApi().uploadRecipeImage(recipeId, imageFile);
+    } catch (e) {
+      InformationToast.show(
+        context: context,
+        message: "An error occurred while uploading the image.",
+        textColor: ColorPalette.red,
+      );
+      return false;
+    }
+  }
+
   Widget getRecipeImage(String? imageUrl) {
     final random = Random();
     int imageNumber = random.nextInt(11) + 1;
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-      child: imageUrl != null && imageUrl.isNotEmpty
-          ? Image.network(
-              imageUrl,
-              height: 250,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            )
-          : Container(
-              height: 250,
-              child: Stack(
-                children: [
-                  Image.asset(
-                    'assets/images/stock_food_$imageNumber.jpg',
-                    fit: BoxFit.cover,
-                    height: 250,
-                    width: double.infinity,
-                  ),
-                  Positioned.fill(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                      child: Container(),
+    return GestureDetector(
+      onTap: () {
+        _pickImage();
+      },
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+        child: imageUrl != null && imageUrl.isNotEmpty
+            ? Image.network(
+                imageUrl,
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              )
+            : Container(
+                height: 250,
+                child: Stack(
+                  children: [
+                    Image.asset(
+                      'assets/images/stock_food_$imageNumber.jpg',
+                      fit: BoxFit.cover,
+                      height: 250,
+                      width: double.infinity,
                     ),
-                  ),
-                  Center(
-                    child: Icon(
-                      Icons.image,
-                      color: ColorPalette.lightgray,
-                      size: 80,
+                    Positioned.fill(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        child: Container(),
+                      ),
                     ),
-                  ),
-                ],
+                    Center(
+                      child: Icon(
+                        Icons.image,
+                        color: ColorPalette.lightgray,
+                        size: 80,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 
