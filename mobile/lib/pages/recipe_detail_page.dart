@@ -96,13 +96,12 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     bool success = await RecipeApi().createRecipe(recipeData);
 
-    if (success) {
-      InformationToast.show(
-        context: context,
-        message: "Recipe saved successfully!",
-        textColor: ColorPalette.green,
-      );
-    }
+    InformationToast.show(
+      context: context,
+      message:
+          success ? "Recipe saved successfully!" : "Failed to save recipe.",
+      textColor: success ? ColorPalette.green : ColorPalette.red,
+    );
   }
 
   void _toggleFavorite() async {
