@@ -9,4 +9,7 @@ __pycache__/
 /api/.env
 .env
 
-/api/db.sqlite3
+# Ignore SQLite database
+db.sqlite3
+recipes_data_truncated.csv
+populate_mock_data.py
