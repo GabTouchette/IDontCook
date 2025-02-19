@@ -6,8 +6,10 @@ import 'package:mobile/utils/functions.dart';
 class RecipeInfo extends StatelessWidget {
   final Recipe recipe;
   final int servings;
+  final List<bool> completedInstructions;
   final Function incrementServings;
   final Function decrementServings;
+  final Function onCompletedInstructions;
 
   const RecipeInfo({
     Key? key,
@@ -15,6 +17,8 @@ class RecipeInfo extends StatelessWidget {
     required this.servings,
     required this.incrementServings,
     required this.decrementServings,
+    required this.completedInstructions,
+    required this.onCompletedInstructions,
   }) : super(key: key);
 
   @override
@@ -114,7 +118,7 @@ class RecipeInfo extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.only(left: 16.0, top: 16.0),
           child: Text(
             "Instructions",
             style: const TextStyle(
@@ -126,10 +130,53 @@ class RecipeInfo extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(recipe.instructions.length, (index) {
-              return Text('${index + 1}. ${recipe.instructions[index]}',
-                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16));
-            }),
+            children: List.generate(
+              recipe.instructions.length,
+              (index) {
+                final isCompleted = (index < completedInstructions.length)
+                    ? completedInstructions[index]
+                    : false;
+                return GestureDetector(
+                  onTap: () => onCompletedInstructions(index),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor:
+                                isCompleted ? Colors.green : Colors.grey,
+                            child: isCompleted
+                                ? const Icon(Icons.check,
+                                    color: Colors.white, size: 16)
+                                : Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              recipe.instructions[index],
+                              style: TextStyle(
+                                color: isCompleted
+                                    ? Colors.green
+                                    : ColorPalette.offWhite,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(color: Colors.grey),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],

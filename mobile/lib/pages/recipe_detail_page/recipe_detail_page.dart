@@ -8,14 +8,17 @@ import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe/recipe.dart';
 import 'package:mobile/models/user/user.dart';
 import 'package:mobile/pages/recipe_detail_page/additional_section_widget.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_detail_skeleton.dart';
 import 'package:mobile/pages/recipe_detail_page/recipe_image_widget.dart';
 import 'package:mobile/pages/recipe_detail_page/recipe_info_widget.dart';
+import 'package:mobile/providers/recipe_detail_provider.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/widgets/toasts/information_toast.dart';
 import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
+import 'package:provider/provider.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Recipe? recipe;
@@ -42,7 +45,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   void initState() {
     super.initState();
-    _initializePage();
+    final recipeDetailProvider =
+        Provider.of<RecipeDetailProvider>(context, listen: false);
+    recipeDetailProvider.fetchRecipe().then((_) {
+      _initializePage();
+    });
   }
 
   void _initializePage() async {
@@ -218,6 +225,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final recipeDetailProvider = Provider.of<RecipeDetailProvider>(context);
+
     return Scaffold(
       backgroundColor: ColorPalette.darkergray,
       appBar: AppBar(
@@ -304,12 +313,13 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                           await RecipeApi().deleteRecipe(_currentRecipe.id);
                       if (success) Navigator.pop(context);
                       InformationToast.show(
-                          context: context,
-                          message: success
-                              ? "Recipe deleted successfully!"
-                              : "There was an error deleting the recipe.",
-                          textColor:
-                              success ? ColorPalette.green : ColorPalette.red);
+                        context: context,
+                        message: success
+                            ? "Recipe deleted successfully!"
+                            : "There was an error deleting the recipe.",
+                        textColor:
+                            success ? ColorPalette.green : ColorPalette.red,
+                      );
                     },
                     onCancel: () {
                       Navigator.pop(context);
@@ -335,30 +345,42 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           ],
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            RecipeImage(
-                imageUrl: _currentRecipe.image_url ?? "",
-                onImagePick: _pickImage),
-            const SizedBox(height: 16),
-            RecipeInfo(
-              recipe: _currentRecipe,
-              servings: _servings,
-              incrementServings: () => setState(() => _servings++),
-              decrementServings: () =>
-                  setState(() => _servings > 1 ? _servings-- : _servings),
+      body: recipeDetailProvider.isLoading
+          ? RecipeDetailSkeleton()
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RecipeImage(
+                    imageUrl: _currentRecipe.image_url ?? "",
+                    onImagePick: _pickImage,
+                  ),
+                  const SizedBox(height: 16),
+                  RecipeInfo(
+                    recipe: _currentRecipe,
+                    servings: _servings,
+                    incrementServings: () => setState(() => _servings++),
+                    decrementServings: () =>
+                        setState(() => _servings > 1 ? _servings-- : _servings),
+                    completedInstructions: completedInstructions,
+                    onCompletedInstructions: (index) => {
+                      setState(
+                        () {
+                          completedInstructions[index] =
+                              !completedInstructions[index];
+                        },
+                      ),
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  AdditionalSections(
+                    tags: _currentRecipe.tags,
+                    description: _currentRecipe.description,
+                    notes: _currentRecipe.notes,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            AdditionalSections(
-              tags: _currentRecipe.tags,
-              description: _currentRecipe.description,
-              notes: _currentRecipe.notes,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
