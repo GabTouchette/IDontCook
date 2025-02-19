@@ -1,0 +1,138 @@
+import 'package:flutter/material.dart';
+import 'package:mobile/models/recipe/recipe.dart';
+import 'package:mobile/theme/colors.dart';
+import 'package:mobile/utils/functions.dart';
+
+class RecipeInfo extends StatelessWidget {
+  final Recipe recipe;
+  final int servings;
+  final Function incrementServings;
+  final Function decrementServings;
+
+  const RecipeInfo({
+    Key? key,
+    required this.recipe,
+    required this.servings,
+    required this.incrementServings,
+    required this.decrementServings,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16),
+          child: Text(
+            recipe.title,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              fontSize: 36,
+              color: ColorPalette.offWhite,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              if (recipe.preparation_time != null) ...[
+                const Icon(Icons.timer, size: 20, color: ColorPalette.yellow),
+                const SizedBox(width: 6),
+                Text(
+                  'Prep: ${recipe.preparation_time} min',
+                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+                ),
+              ],
+              if (recipe.cooking_time != null) ...[
+                const SizedBox(width: 16),
+                const Icon(Icons.local_fire_department,
+                    size: 20, color: ColorPalette.orange),
+                const SizedBox(width: 6),
+                Text(
+                  'Cook: ${recipe.cooking_time} min',
+                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                'Serves: ',
+                style: TextStyle(
+                    color: ColorPalette.offWhite,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600),
+              ),
+              IconButton(
+                  icon: const Icon(Icons.remove, color: ColorPalette.offWhite),
+                  onPressed: () => decrementServings()),
+              Text('$servings',
+                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 18)),
+              IconButton(
+                  icon: const Icon(Icons.add, color: ColorPalette.offWhite),
+                  onPressed: () => incrementServings()),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            "Ingredients",
+            style: const TextStyle(
+                color: Colors.white, fontSize: 28, fontWeight: FontWeight.w300),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: recipe.ingredients.map((ingredient) {
+              double adjustedQuantity = adjustQuantityForServings(
+                  ingredient.quantity ?? 0, recipe.servings ?? 1, servings);
+              String formattedIngredient =
+                  "${formatQuantity(adjustedQuantity)} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
+                      .trim();
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Text("- $formattedIngredient",
+                    style:
+                        TextStyle(color: ColorPalette.offWhite, fontSize: 16)),
+              );
+            }).toList(),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            "Instructions",
+            style: const TextStyle(
+                color: Colors.white, fontSize: 28, fontWeight: FontWeight.w300),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(recipe.instructions.length, (index) {
+              return Text('${index + 1}. ${recipe.instructions[index]}',
+                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16));
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+}

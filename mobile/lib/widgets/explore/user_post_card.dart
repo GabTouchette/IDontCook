@@ -4,7 +4,7 @@ import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/social_api.dart';
 import 'package:mobile/models/post/post.dart';
 import 'package:mobile/models/user/user.dart';
-import 'package:mobile/pages/recipe_detail_page.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:mobile/pages/user_profile_page.dart';
 import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';

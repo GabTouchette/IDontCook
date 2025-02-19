@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/pages/recipe_detail_page.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/recipes/camera_preview_screen.dart';
 import 'package:mobile/api/ai_chatbot_api.dart';

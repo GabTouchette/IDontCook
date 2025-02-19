@@ -55,12 +55,10 @@ class AiChatBotPageState extends State<AiChatBotPage> {
         final stream = AiChatbotApi().chatWithBotStream(query, chatHistory);
 
         await for (String token in stream) {
-          print(token);
           setState(() {
             _messages[_messages.length - 1]["text"] =
                 (_messages[_messages.length - 1]["text"] ?? "") + token;
           });
-          _scrollToBottom();
         }
       } catch (e) {
         setState(() {

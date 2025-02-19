@@ -7,7 +7,9 @@ import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe/recipe.dart';
 import 'package:mobile/models/user/user.dart';
-import 'package:mobile/utils/functions.dart';
+import 'package:mobile/pages/recipe_detail_page/additional_section_widget.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_image_widget.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_info_widget.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/pages/update_recipe_page.dart';
 import 'package:mobile/theme/colors.dart';
@@ -214,20 +216,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     );
   }
 
-  void _incrementServings() {
-    setState(() {
-      _servings++;
-    });
-  }
-
-  void _decrementServings() {
-    setState(() {
-      if (_servings > 1) {
-        _servings--;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -351,279 +339,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            getRecipeImage(_currentRecipe.image_url),
+            RecipeImage(
+                imageUrl: _currentRecipe.image_url ?? "",
+                onImagePick: _pickImage),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16),
-              child: Text(
-                _currentRecipe.title,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 36,
-                  color: ColorPalette.offWhite,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      if (_currentRecipe.preparation_time != null) ...[
-                        const Icon(Icons.timer,
-                            size: 20, color: ColorPalette.yellow),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Prep: ${_currentRecipe.preparation_time} min',
-                          style: TextStyle(
-                              color: ColorPalette.offWhite, fontSize: 16),
-                        ),
-                      ],
-                      if (_currentRecipe.preparation_time != null &&
-                          _currentRecipe.cooking_time != null)
-                        const SizedBox(width: 16),
-                      if (_currentRecipe.cooking_time != null) ...[
-                        const Icon(Icons.local_fire_department,
-                            size: 20, color: ColorPalette.orange),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Cook: ${_currentRecipe.cooking_time} min',
-                          style: TextStyle(
-                              color: ColorPalette.offWhite, fontSize: 16),
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  // Servings control buttons
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Serves: ',
-                          style: TextStyle(
-                              color: ColorPalette.offWhite,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.remove,
-                              color: ColorPalette.offWhite),
-                          onPressed: _decrementServings,
-                        ),
-                        Text(
-                          '$_servings',
-                          style: TextStyle(
-                              color: ColorPalette.offWhite, fontSize: 18),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add,
-                              color: ColorPalette.offWhite),
-                          onPressed: _incrementServings,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            RecipeInfo(
+              recipe: _currentRecipe,
+              servings: _servings,
+              incrementServings: () => setState(() => _servings++),
+              decrementServings: () =>
+                  setState(() => _servings > 1 ? _servings-- : _servings),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "Ingredients",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
+            AdditionalSections(
+              tags: _currentRecipe.tags,
+              description: _currentRecipe.description,
+              notes: _currentRecipe.notes,
             ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: _currentRecipe.ingredients.map((ingredient) {
-                  double adjustedQuantity = adjustQuantityForServings(
-                      ingredient.quantity ?? 0,
-                      _currentRecipe.servings ?? 1,
-                      _servings);
-
-                  String formattedIngredient =
-                      "${formatQuantity(adjustedQuantity)} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
-                          .trim();
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Text(
-                      "- $formattedIngredient",
-                      style:
-                          TextStyle(color: ColorPalette.offWhite, fontSize: 16),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "Instructions",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    List.generate(_currentRecipe.instructions.length, (index) {
-                  final isCompleted = (index < completedInstructions.length)
-                      ? completedInstructions[index]
-                      : false;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        completedInstructions[index] = !isCompleted;
-                      });
-                    },
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              completedInstructions[index] = !isCompleted;
-                            });
-                          },
-                          child: const SizedBox(height: 12),
-                        ),
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 12,
-                              backgroundColor:
-                                  isCompleted ? Colors.green : Colors.grey,
-                              child: isCompleted
-                                  ? const Icon(Icons.check,
-                                      color: Colors.white, size: 16)
-                                  : Text(
-                                      '${index + 1}',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 16),
-                                    ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _currentRecipe.instructions[index],
-                                style: TextStyle(
-                                  color: isCompleted
-                                      ? Colors.green
-                                      : ColorPalette.offWhite,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        const Divider(color: Colors.grey),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_currentRecipe.tags != null && _currentRecipe.tags!.isNotEmpty)
-              _buildTagSection(_currentRecipe.tags!),
-            if (_currentRecipe.description != null &&
-                _currentRecipe.description!.isNotEmpty)
-              _buildSection("Description", _currentRecipe.description!),
-            if (_currentRecipe.notes != null &&
-                _currentRecipe.notes!.isNotEmpty)
-              _buildSection("Notes", _currentRecipe.notes!),
-            const SizedBox(height: 64),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSection(String title, String content) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w300,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTagSection(List<String> tags) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Tags",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w300,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: tags.map((tag) {
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                decoration: BoxDecoration(
-                  color: ColorPalette.darkgray,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  tag,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
       ),
     );
   }
