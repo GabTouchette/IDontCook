@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:mobile/models/recipe_form_fields/recipe_form_fields.dart';
 import 'package:mobile/theme/colors.dart';
@@ -43,13 +42,15 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
+                    keyboardType: TextInputType.number,
                     controller: widget.ingredients[i].controller,
                     focusNode: widget.ingredients[i].focusNode,
                     style: TextStyle(
                       color: ColorPalette.offBlack,
                     ),
                     onChanged: (text) {
-                      if (i == widget.ingredients.length - 1 && text.isNotEmpty) {
+                      if (i == widget.ingredients.length - 1 &&
+                          text.isNotEmpty) {
                         setState(() {
                           widget.ingredients.add(IngredientField(
                               controller: TextEditingController(),

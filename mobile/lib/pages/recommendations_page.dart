@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/api/recommendation_api.dart';
 import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/recipes/recipe_tile.dart';
+import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
 import 'package:mobile/widgets/recommendations/big_recipe_tile.dart';
 
 class RecommendationsPage extends StatefulWidget {
@@ -36,7 +36,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
+        centerTitle: true,
         elevation: 0,
         title: Text(
           'Recommendations',
@@ -47,6 +49,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
             color: ColorPalette.offWhite,
           ),
         ),
+        actions: [
+          UserMenuWidget(),
+        ],
       ),
       body: Stack(
         children: [

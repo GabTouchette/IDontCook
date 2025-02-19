@@ -110,8 +110,6 @@ class RecipeImageUploadAPIView(APIView):
             recipe = Recipe.objects.get(id=recipe_id)
             image = request.FILES.get('image')
             
-            print(request.FILES)
-            
             if image:
                 recipe.image_url = image
                 recipe.save()

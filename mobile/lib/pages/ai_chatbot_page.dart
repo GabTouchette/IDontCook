@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/ai_chatbot_api.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
 import 'package:mobile/widgets/chatbot/ai_response_bubble.dart';
 import 'package:mobile/widgets/chatbot/chat_message.dart';
 
@@ -17,7 +18,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
-  List<Map<String, String>> _messages = [];
+  List<Map<String, dynamic>> _messages = [];
 
   @override
   void initState() {
@@ -36,7 +37,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
     if (query.isNotEmpty) {
       setState(() {
         _messages.add({"sender": "user", "text": query});
-        _messages.add({"sender": "ai", "text": "loading"});
+        _messages.add({"sender": "ai", "text": ""});
       });
 
       _searchController.clear();
@@ -50,12 +51,17 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             "sender": _messages[i]['sender'] ?? ''
           });
         }
-        final response = await AiChatbotApi().chatWithBot(query, chatHistory);
 
-        setState(() {
-          _messages.removeLast();
-          _messages.add({"sender": "ai", "text": response});
-        });
+        final stream = AiChatbotApi().chatWithBotStream(query, chatHistory);
+
+        await for (String token in stream) {
+          print(token);
+          setState(() {
+            _messages[_messages.length - 1]["text"] =
+                (_messages[_messages.length - 1]["text"] ?? "") + token;
+          });
+          _scrollToBottom();
+        }
       } catch (e) {
         setState(() {
           _messages.removeLast();
@@ -86,6 +92,8 @@ class AiChatBotPageState extends State<AiChatBotPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         title: Text(
           'CookBot',
           style: TextStyle(
@@ -95,6 +103,9 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             color: ColorPalette.offWhite,
           ),
         ),
+        actions: [
+          UserMenuWidget(),
+        ],
       ),
       body: Stack(
         children: [

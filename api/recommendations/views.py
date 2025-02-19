@@ -12,7 +12,6 @@ class RecommendRecipesAPIView(APIView):
         user = request.user
 
         recommended_recipe_ids = get_hybrid_recommendations(user.id)
-        print(recommended_recipe_ids)
         recipes = Recipe.objects.filter(id__in=recommended_recipe_ids)
         sorted_recipes = sorted(recipes, key=lambda recipe: recommended_recipe_ids.index(recipe.id))
 

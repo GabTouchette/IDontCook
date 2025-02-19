@@ -8,8 +8,9 @@ import 'package:mobile/widgets/chatbot/user_recipe_card.dart';
 
 class AiResponseBubble extends StatelessWidget {
   final String? message;
+  final bool isLoading;
 
-  const AiResponseBubble({super.key, this.message});
+  const AiResponseBubble({super.key, this.message, this.isLoading = false});
 
   List<String> splitRecipes(String message) {
     final regex = RegExp(
@@ -37,7 +38,7 @@ class AiResponseBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (message == null || message!.trim().isEmpty || message == "loading") {
+    if (isLoading || message == null || message!.trim().isEmpty || message == "loading") {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
         child: Container(

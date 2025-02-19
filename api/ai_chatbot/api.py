@@ -17,17 +17,45 @@ class OpenAIService:
         """Initialize the OpenAI client with the API key."""
         self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
-    def ask_openai(self, prompt=None, chat_history=None, image_path=None):
+    def ask_openai_ocr(self, image_path):
         """
-        Send a prompt or an image to OpenAI and return a structured response.
-        
-        Args:
-            prompt (str): The text prompt to send to OpenAI.
-            chat_history (list): A list of previous chat messages for context.
-            image_path (str): The path to the image file to process.
-        
-        Returns:
-            str: The response content from OpenAI.
+        Processes an image for OCR using OpenAI and returns a JSON response.
+        """
+        try:
+            messages = []
+            base64_image = encode_image(image_path)
+            ocr_prompt = PromptTemplates.ocr_prompt()
+
+            messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": ocr_prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                ]
+            })
+
+            completion = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages
+            )
+
+            response_content = completion.choices[0].message.content
+            response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+
+            try:
+                recipe_json = json.loads(response_content)
+                return json.dumps(recipe_json)
+            except json.JSONDecodeError:
+                return "Error: The response was not valid JSON."
+
+        except OpenAIError as e:
+            return f"Error communicating with OpenAI: {e}"
+        except Exception as e:
+            return f"An unexpected error occurred: {e}"
+
+    def ask_openai_stream(self, prompt, chat_history=None):
+        """
+        Handles chatbot conversation with streaming response.
         """
         try:
             messages = []
@@ -37,47 +65,23 @@ class OpenAIService:
                     role = "user" if entry["sender"] == "user" else "assistant"
                     messages.append({"role": role, "content": entry["message"]})
 
-            if image_path:
-                base64_image = encode_image(image_path)
+            messages.append({"role": "user", "content": prompt})
 
-                ocr_prompt = PromptTemplates.ocr_prompt()
-                messages.append({
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": ocr_prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                    ]
-                })
+            completion = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                stream=True
+            )
 
-                completion = self.client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages
-                )
+            for chunk in completion:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
 
-                response_content = completion.choices[0].message.content
-                response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
-
-                recipe_json = json.loads(response_content)
-                return recipe_json
-
-            else:
-                chatbot_prompt = PromptTemplates.chatbot_prompt([], prompt)
-                messages.append({"role": "user", "content": chatbot_prompt})
-
-                completion = self.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages
-                )
-
-                response_content = completion.choices[0].message.content
-                return response_content
-
-        except json.JSONDecodeError:
-            return "Error: The response was not valid JSON."
         except OpenAIError as e:
-            return f"Error communicating with OpenAI: {e}"
+            yield f"Error communicating with OpenAI: {e}"
         except Exception as e:
-            return f"An unexpected error occurred: {e}"
+            yield f"An unexpected error occurred: {e}"
+
 
 class PromptTemplates:
     @staticmethod

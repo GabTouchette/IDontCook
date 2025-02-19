@@ -6,10 +6,11 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from .api import OpenAIService, PromptTemplates
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
+import json
 
 load_dotenv()
 
@@ -17,17 +18,33 @@ class ChatbotView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Handles incoming chatbot queries and routes them to OCR or chat response.
+        """
         query = request.data.get("query")
         chat_history = request.data.get("chat_history", None)
+        image_path = request.data.get("image_path", None)
 
         if not query:
             return JsonResponse({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return self.chat_response(request.user, query, chat_history)
+        if image_path:
+            return self.process_ocr_response(request.user, image_path)
+        else:
+            return self.process_chat_response(request.user, query, chat_history)
 
-    def chat_response(self, user, query, chat_history=None):
-        """Handles chatbot queries with structured AI responses."""
+    def process_ocr_response(self, user, image_path):
+        """
+        Processes an image for OCR and returns a JSON response.
+        """
+        openai_service = OpenAIService()
+        response = openai_service.ask_openai_ocr(image_path)
+        return JsonResponse({"response": response}, status=status.HTTP_200_OK)
 
+    def process_chat_response(self, user, query, chat_history=None):
+        """
+        Handles chatbot queries and streams the AI response.
+        """
         conversation = Conversation.objects.create(user=user, user_query=query, ai_response="loading")
 
         saved_recipes = Recipe.objects.filter(created_by=user)
@@ -35,22 +52,29 @@ class ChatbotView(APIView):
             {
                 "id": recipe.id,
                 "title": recipe.title,
-                "ingredients": [{"name": ing.name, "quantity": ing.quantity, "unit_of_measure": ing.unit_of_measure} for ing in recipe.ingredients.all()],
+                "ingredients": [
+                    {"name": ing.name, "quantity": ing.quantity, "unit_of_measure": ing.unit_of_measure}
+                    for ing in recipe.ingredients.all()
+                ],
             }
             for recipe in saved_recipes
         ]
 
         prompt = PromptTemplates.chatbot_prompt(recipes_list, query)
-        openai_response = OpenAIService().ask_openai(prompt, chat_history)
 
-        conversation.ai_response = openai_response
-        conversation.save()
+        def event_stream():
+            openai_service = OpenAIService()
+            full_response = ""
+            for chunk in openai_service.ask_openai_stream(prompt, chat_history):
+                full_response += chunk
+                yield f"data: {json.dumps({'token': chunk})}\n\n"
 
-        ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
+            conversation.ai_response = full_response
+            conversation.save()
 
-        return JsonResponse(openai_response, status=status.HTTP_200_OK, safe=False)
+            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=conversation.ai_response)
 
-
+        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 class RecipeOCRView(APIView):
     parser_classes = [MultiPartParser]
