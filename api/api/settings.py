@@ -97,6 +97,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+SECURE_CONTENT_TYPE_NOSNIFF = False # Disable this setting for the chatbot stream to work
+
 # Rest Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [

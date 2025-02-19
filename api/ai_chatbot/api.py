@@ -17,9 +17,45 @@ class OpenAIService:
         """Initialize the OpenAI client with the API key."""
         self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
-    def ask_openai_stream(self, prompt=None, chat_history=None, image_path=None):
+    def ask_openai_ocr(self, image_path):
         """
-        Sends a prompt or an image to OpenAI and streams the response token by token.
+        Processes an image for OCR using OpenAI and returns a JSON response.
+        """
+        try:
+            messages = []
+            base64_image = encode_image(image_path)
+            ocr_prompt = PromptTemplates.ocr_prompt()
+
+            messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": ocr_prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                ]
+            })
+
+            completion = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages
+            )
+
+            response_content = completion.choices[0].message.content
+            response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+
+            try:
+                recipe_json = json.loads(response_content)
+                return json.dumps(recipe_json)
+            except json.JSONDecodeError:
+                return "Error: The response was not valid JSON."
+
+        except OpenAIError as e:
+            return f"Error communicating with OpenAI: {e}"
+        except Exception as e:
+            return f"An unexpected error occurred: {e}"
+
+    def ask_openai_stream(self, prompt, chat_history=None):
+        """
+        Handles chatbot conversation with streaming response.
         """
         try:
             messages = []
@@ -29,34 +65,7 @@ class OpenAIService:
                     role = "user" if entry["sender"] == "user" else "assistant"
                     messages.append({"role": role, "content": entry["message"]})
 
-            if image_path:
-                base64_image = encode_image(image_path)
-                ocr_prompt = PromptTemplates.ocr_prompt()
-                messages.append({
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": ocr_prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                    ]
-                })
-
-                completion = self.client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages
-                )
-
-                response_content = completion.choices[0].message.content
-                response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
-
-                try:
-                    recipe_json = json.loads(response_content)
-                    yield json.dumps(recipe_json)
-                except json.JSONDecodeError:
-                    yield "Error: The response was not valid JSON."
-                return
-
-            chatbot_prompt = PromptTemplates.chatbot_prompt([], prompt)
-            messages.append({"role": "user", "content": chatbot_prompt})
+            messages.append({"role": "user", "content": prompt})
 
             completion = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -65,8 +74,8 @@ class OpenAIService:
             )
 
             for chunk in completion:
-                if chunk.choices and chunk.choices[0].delta.get("content"):
-                    yield chunk.choices[0].delta["content"]
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
 
         except OpenAIError as e:
             yield f"Error communicating with OpenAI: {e}"

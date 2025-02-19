@@ -149,15 +149,56 @@ class ApiHelper {
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        print('Image uploaded successfully');
         return true;
       } else {
-        print('Image upload failed: ${response.body}');
         return false;
       }
     } catch (e) {
       print('Error uploading image: $e');
       return false;
+    }
+  }
+
+  Stream<String> streamResponse(
+      String endpoint, String data, Map<String, String> headers) async* {
+    Uri url = Uri.parse('$baseUrl/$endpoint');
+
+    var request = http.Request("POST", url)
+      ..headers.addAll(headers)
+      ..body = data;
+
+    var client = http.Client();
+
+    try {
+      var streamedResponse = await client.send(request);
+
+      if (streamedResponse.statusCode != 200) {
+        throw Exception(
+            'Failed to connect to chatbot: ${streamedResponse.statusCode}');
+      }
+
+      var stream = streamedResponse.stream.transform(utf8.decoder);
+
+      await for (var chunk in stream) {
+        for (var line in chunk.split("\n")) {
+          if (line.startsWith("data:")) {
+            var jsonData = line.substring(5).trim();
+            if (jsonData.isNotEmpty) {
+              try {
+                var decoded = jsonDecode(jsonData);
+                if (decoded is Map<String, dynamic> &&
+                    decoded.containsKey("token")) {
+                  yield decoded["token"];
+                }
+              } catch (e) {
+                print("JSON parse error: $e");
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      client.close();
     }
   }
 

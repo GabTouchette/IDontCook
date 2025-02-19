@@ -7,8 +7,6 @@ import 'package:mobile/api/auth_api.dart';
 class AiChatbotApi {
   final ApiHelper _apiHelper = ApiHelper();
 
-  get http => null;
-
   Stream<String> chatWithBotStream(
       String query, List<Map<String, String>>? chatHistory) async* {
     var data = jsonEncode({
@@ -17,26 +15,7 @@ class AiChatbotApi {
     });
 
     final headers = await AuthApi.getAuthHeader();
-
-    var url = Uri.parse('${_apiHelper.baseUrl}/ai/chat/');
-    var request = http.Request("POST", url)
-      ..headers.addAll(headers, {
-        'Accept': 'text/event-stream',
-      })
-      ..body = data;
-
-    var streamedResponse = await http.Client().send(request);
-
-    if (streamedResponse.statusCode == 200) {
-      var stream = streamedResponse.stream.transform(utf8.decoder);
-
-      await for (var chunk in stream) {
-        yield chunk;
-      }
-    } else {
-      throw Exception(
-          'Failed to connect to chatbot: ${streamedResponse.statusCode}');
-    }
+    yield* _apiHelper.streamResponse('ai/chat/', data, headers);
   }
 
   Future<Map<String, dynamic>> uploadRecipeImage(File image) async {

@@ -8,3 +8,5 @@ __pycache__/
 
 /api/.env
 .env
+
+/api/db.sqlite3

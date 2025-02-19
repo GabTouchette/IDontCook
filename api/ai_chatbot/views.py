@@ -18,29 +18,33 @@ class ChatbotView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Handles incoming chatbot queries and routes them to OCR or chat response.
+        """
         query = request.data.get("query")
         chat_history = request.data.get("chat_history", None)
-        image_path = request.data.get("image_path", None)  # Detect OCR request
+        image_path = request.data.get("image_path", None)
 
         if not query:
             return JsonResponse({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         if image_path:
-            return self.chat_response_json(request.user, query, chat_history, image_path)
+            return self.process_ocr_response(request.user, image_path)
         else:
-            return self.chat_response_stream(request.user, query, chat_history)
+            return self.process_chat_response(request.user, query, chat_history)
 
-    def chat_response_json(self, user, query, chat_history, image_path):
-        """Handles chatbot queries when processing an image (OCR)."""
+    def process_ocr_response(self, user, image_path):
+        """
+        Processes an image for OCR and returns a JSON response.
+        """
         openai_service = OpenAIService()
-        response = openai_service.ask_openai_stream(query, chat_history, image_path)  
+        response = openai_service.ask_openai_ocr(image_path)
+        return JsonResponse({"response": response}, status=status.HTTP_200_OK)
 
-        full_response = "".join(response)  # Collect streamed response into full text
-        return JsonResponse({"response": full_response}, status=status.HTTP_200_OK)
-
-    def chat_response_stream(self, user, query, chat_history=None):
-        """Handles chatbot queries with a streaming AI response."""
-
+    def process_chat_response(self, user, query, chat_history=None):
+        """
+        Handles chatbot queries and streams the AI response.
+        """
         conversation = Conversation.objects.create(user=user, user_query=query, ai_response="loading")
 
         saved_recipes = Recipe.objects.filter(created_by=user)
@@ -48,7 +52,10 @@ class ChatbotView(APIView):
             {
                 "id": recipe.id,
                 "title": recipe.title,
-                "ingredients": [{"name": ing.name, "quantity": ing.quantity, "unit_of_measure": ing.unit_of_measure} for ing in recipe.ingredients.all()],
+                "ingredients": [
+                    {"name": ing.name, "quantity": ing.quantity, "unit_of_measure": ing.unit_of_measure}
+                    for ing in recipe.ingredients.all()
+                ],
             }
             for recipe in saved_recipes
         ]
@@ -68,7 +75,6 @@ class ChatbotView(APIView):
             ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=conversation.ai_response)
 
         return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-
 
 class RecipeOCRView(APIView):
     parser_classes = [MultiPartParser]
