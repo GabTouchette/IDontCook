@@ -45,7 +45,7 @@ class AdditionalSections extends StatelessWidget {
 
   Widget _buildTagSection(List<String> tags) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

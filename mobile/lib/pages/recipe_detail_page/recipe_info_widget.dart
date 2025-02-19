@@ -66,7 +66,7 @@ class RecipeInfo extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(top: 16),
+          padding: const EdgeInsets.only(top: 16, left: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -89,7 +89,7 @@ class RecipeInfo extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.only(left: 16.0, top: 20, bottom: 12),
           child: Text(
             "Ingredients",
             style: const TextStyle(
@@ -118,7 +118,7 @@ class RecipeInfo extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+          padding: const EdgeInsets.only(left: 16.0, top: 24.0),
           child: Text(
             "Instructions",
             style: const TextStyle(
