@@ -18,7 +18,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
-  List<Map<String, String>> _messages = [];
+  List<Map<String, dynamic>> _messages = [];
 
   @override
   void initState() {
