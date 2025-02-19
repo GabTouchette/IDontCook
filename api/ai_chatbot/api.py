@@ -17,17 +17,9 @@ class OpenAIService:
         """Initialize the OpenAI client with the API key."""
         self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
-    def ask_openai(self, prompt=None, chat_history=None, image_path=None):
+    def ask_openai_stream(self, prompt=None, chat_history=None, image_path=None):
         """
-        Send a prompt or an image to OpenAI and return a structured response.
-        
-        Args:
-            prompt (str): The text prompt to send to OpenAI.
-            chat_history (list): A list of previous chat messages for context.
-            image_path (str): The path to the image file to process.
-        
-        Returns:
-            str: The response content from OpenAI.
+        Sends a prompt or an image to OpenAI and streams the response token by token.
         """
         try:
             messages = []
@@ -39,7 +31,6 @@ class OpenAIService:
 
             if image_path:
                 base64_image = encode_image(image_path)
-
                 ocr_prompt = PromptTemplates.ocr_prompt()
                 messages.append({
                     "role": "user",
@@ -57,27 +48,31 @@ class OpenAIService:
                 response_content = completion.choices[0].message.content
                 response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
 
-                recipe_json = json.loads(response_content)
-                return recipe_json
+                try:
+                    recipe_json = json.loads(response_content)
+                    yield json.dumps(recipe_json)
+                except json.JSONDecodeError:
+                    yield "Error: The response was not valid JSON."
+                return
 
-            else:
-                chatbot_prompt = PromptTemplates.chatbot_prompt([], prompt)
-                messages.append({"role": "user", "content": chatbot_prompt})
+            chatbot_prompt = PromptTemplates.chatbot_prompt([], prompt)
+            messages.append({"role": "user", "content": chatbot_prompt})
 
-                completion = self.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages
-                )
+            completion = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                stream=True
+            )
 
-                response_content = completion.choices[0].message.content
-                return response_content
+            for chunk in completion:
+                if chunk.choices and chunk.choices[0].delta.get("content"):
+                    yield chunk.choices[0].delta["content"]
 
-        except json.JSONDecodeError:
-            return "Error: The response was not valid JSON."
         except OpenAIError as e:
-            return f"Error communicating with OpenAI: {e}"
+            yield f"Error communicating with OpenAI: {e}"
         except Exception as e:
-            return f"An unexpected error occurred: {e}"
+            yield f"An unexpected error occurred: {e}"
+
 
 class PromptTemplates:
     @staticmethod

@@ -2,14 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/api/auth_api.dart';
 import 'package:mobile/api/recipe_api.dart';
 import 'package:mobile/models/recipe_preview/recipe_preview.dart';
-import 'package:mobile/models/user/user.dart';
 import 'package:mobile/pages/create_recipe_page.dart';
-import 'package:mobile/pages/user_profile_page.dart';
-import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
 import 'package:mobile/widgets/recipes/recipe_tile.dart';
 
 class RecipesPage extends StatefulWidget {
@@ -20,20 +17,16 @@ class RecipesPage extends StatefulWidget {
 }
 
 class _RecipesPageState extends State<RecipesPage> {
-  final AuthApi _authApi = AuthApi();
-
   int _tabIndex = 0;
   List<RecipePreview> _allRecipes = [];
   List<RecipePreview> _filteredRecipes = [];
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
-  late Future<User?> _currentUser;
 
   @override
   void initState() {
     super.initState();
     _fetchRecipes();
-    _currentUser = _fetchUser();
   }
 
   @override
@@ -41,10 +34,6 @@ class _RecipesPageState extends State<RecipesPage> {
     _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<User?> _fetchUser() async {
-    return await AuthApi.getUser();
   }
 
   void _onTabTapped(int index) {
@@ -117,7 +106,25 @@ class _RecipesPageState extends State<RecipesPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         elevation: 0,
+        leading: IconButton(
+          padding: const EdgeInsets.only(left: 16.0),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreateRecipePage(),
+              ),
+            );
+          },
+          icon: const FaIcon(
+            FontAwesomeIcons.plus,
+            color: ColorPalette.offWhite,
+            size: 28,
+          ),
+        ),
         title: Text(
           'Recipes',
           style: TextStyle(
@@ -128,87 +135,7 @@ class _RecipesPageState extends State<RecipesPage> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CreateRecipePage(),
-                ),
-              );
-            },
-            icon: const FaIcon(
-              FontAwesomeIcons.plus,
-              color: ColorPalette.offWhite,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-          ),
-          FutureBuilder<User?>(
-              future: _currentUser,
-              builder: (context, snapshot) {
-                final currentUser = snapshot.data;
-                if (currentUser == null) {
-                  return const SizedBox.shrink();
-                }
-                return PopupMenuButton<int>(
-                  onSelected: (value) async {
-                    if (value == 0) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              UserProfilePage(user: currentUser),
-                        ),
-                      );
-                    } else if (value == 1) {
-                      await _authApi.logout();
-                      Navigator.pop(context);
-                    }
-                  },
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  color: ColorPalette.offBlack,
-                  position: PopupMenuPosition.under,
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 0,
-                      child: Row(
-                        children: [
-                          Icon(Icons.person, color: ColorPalette.offWhite),
-                          SizedBox(width: 8),
-                          Text("Profile",
-                              style: TextStyle(color: ColorPalette.offWhite)),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(), // Divider
-                    PopupMenuItem(
-                      value: 1,
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout, color: ColorPalette.offWhite),
-                          SizedBox(width: 8),
-                          Text("Logout",
-                              style: TextStyle(color: ColorPalette.offWhite)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: CircleAvatar(
-                      backgroundColor: ColorPalette.lightgray,
-                      child: Avatars.getAvatarIcon(currentUser.avatar_icon),
-                    ),
-                  ),
-                );
-              }),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-          ),
+          UserMenuWidget(),
         ],
       ),
       body: Stack(

@@ -6,10 +6,11 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from .api import OpenAIService, PromptTemplates
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
+import json
 
 load_dotenv()
 
@@ -19,14 +20,26 @@ class ChatbotView(APIView):
     def post(self, request):
         query = request.data.get("query")
         chat_history = request.data.get("chat_history", None)
+        image_path = request.data.get("image_path", None)  # Detect OCR request
 
         if not query:
             return JsonResponse({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return self.chat_response(request.user, query, chat_history)
+        if image_path:
+            return self.chat_response_json(request.user, query, chat_history, image_path)
+        else:
+            return self.chat_response_stream(request.user, query, chat_history)
 
-    def chat_response(self, user, query, chat_history=None):
-        """Handles chatbot queries with structured AI responses."""
+    def chat_response_json(self, user, query, chat_history, image_path):
+        """Handles chatbot queries when processing an image (OCR)."""
+        openai_service = OpenAIService()
+        response = openai_service.ask_openai_stream(query, chat_history, image_path)  
+
+        full_response = "".join(response)  # Collect streamed response into full text
+        return JsonResponse({"response": full_response}, status=status.HTTP_200_OK)
+
+    def chat_response_stream(self, user, query, chat_history=None):
+        """Handles chatbot queries with a streaming AI response."""
 
         conversation = Conversation.objects.create(user=user, user_query=query, ai_response="loading")
 
@@ -41,15 +54,20 @@ class ChatbotView(APIView):
         ]
 
         prompt = PromptTemplates.chatbot_prompt(recipes_list, query)
-        openai_response = OpenAIService().ask_openai(prompt, chat_history)
 
-        conversation.ai_response = openai_response
-        conversation.save()
+        def event_stream():
+            openai_service = OpenAIService()
+            full_response = ""
+            for chunk in openai_service.ask_openai_stream(prompt, chat_history):
+                full_response += chunk
+                yield f"data: {json.dumps({'token': chunk})}\n\n"
 
-        ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=openai_response)
+            conversation.ai_response = full_response
+            conversation.save()
 
-        return JsonResponse(openai_response, status=status.HTTP_200_OK, safe=False)
+            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=conversation.ai_response)
 
+        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 
 class RecipeOCRView(APIView):

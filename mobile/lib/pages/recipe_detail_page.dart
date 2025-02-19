@@ -77,13 +77,18 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   void _saveRecipe() async {
+    String capitalize(String? text) {
+      if (text == null) return "";
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+
     if (isSaved) return;
 
     Map<String, dynamic> recipeData = {
-      "title": _currentRecipe.title,
+      "title": capitalize(_currentRecipe.title),
       "ingredients": _currentRecipe.ingredients
           .map((ingredient) => {
-                "name": ingredient.name,
+                "name": capitalize(ingredient.name),
                 "quantity": ingredient.quantity,
                 "unit_of_measure": ingredient.unit_of_measure,
               })
@@ -91,8 +96,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       "instructions": _currentRecipe.instructions,
       "preparation_time": _currentRecipe.preparation_time,
       "cooking_time": _currentRecipe.cooking_time,
-      "description": _currentRecipe.description,
-      "notes": _currentRecipe.notes,
+      "description": capitalize(_currentRecipe.description),
+      "notes": capitalize(_currentRecipe.notes),
       "tags": _currentRecipe.tags,
       "parent": _currentRecipe.id,
     };

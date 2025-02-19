@@ -8,6 +8,7 @@ import 'package:mobile/models/user/user.dart';
 import 'package:mobile/pages/user_profile_page.dart';
 import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
+import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
 import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
 import 'package:mobile/widgets/explore/user_post_card.dart';
 
@@ -144,8 +145,28 @@ class _ExplorePageState extends State<ExplorePage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
+        centerTitle: true,
         elevation: 0,
+        leading: IconButton(
+          padding: const EdgeInsets.only(left: 16),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return PostDialog(
+                  recipe: null,
+                );
+              },
+            );
+          },
+          icon: const FaIcon(
+            FontAwesomeIcons.squarePlus,
+            color: ColorPalette.offWhite,
+            size: 28,
+          ),
+        ),
         title: Text(
           'Explore',
           style: TextStyle(
@@ -155,34 +176,8 @@ class _ExplorePageState extends State<ExplorePage> {
             color: ColorPalette.offWhite,
           ),
         ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.chevron_left,
-            size: 32,
-            color: ColorPalette.offWhite,
-          ),
-        ),
         actions: [
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return PostDialog(
-                    recipe: null,
-                  );
-                },
-              );
-            },
-            icon: const FaIcon(
-              FontAwesomeIcons.squarePlus,
-              color: ColorPalette.offWhite,
-            ),
-          ),
-          const Padding(padding: EdgeInsets.only(right: 16.0)),
+          UserMenuWidget(),
         ],
       ),
       body: Stack(
