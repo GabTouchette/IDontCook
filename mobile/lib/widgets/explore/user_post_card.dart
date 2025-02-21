@@ -12,6 +12,8 @@ import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/widgets/dialogs/post_comments_dialog.dart';
 import 'package:mobile/widgets/recipes/placeholder_image.dart';
 import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:provider/provider.dart';
+import 'package:mobile/providers/explore_provider.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
@@ -22,22 +24,16 @@ class UserPostCard extends StatefulWidget {
   _UserPostCardState createState() => _UserPostCardState();
 }
 
-class _UserPostCardState extends State<UserPostCard> {
-  late int _currentVoteCount;
-  late int _currentCommentCount;
-  late int _currentLikeCount;
-  late int _userVote;
-  late bool _userLiked;
+class _UserPostCardState extends State<UserPostCard>
+    with AutomaticKeepAliveClientMixin {
   late Future<User?> _currentUser;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _currentVoteCount = widget.post.upvote_count - widget.post.downvote_count;
-    _userVote = widget.post.user_vote;
-    _userLiked = widget.post.user_liked;
-    _currentCommentCount = widget.post.comment_count;
-    _currentLikeCount = widget.post.like_count;
     _currentUser = _fetchUser();
   }
 
@@ -45,78 +41,11 @@ class _UserPostCardState extends State<UserPostCard> {
     return await AuthApi.getUser();
   }
 
-  Future<void> _handleVote(int voteValue) async {
-    if (_userVote == voteValue) {
-      bool success = await SocialApi().deleteVote(widget.post.id);
-      if (success) {
-        setState(() {
-          _currentVoteCount -= voteValue;
-          _userVote = 0;
-        });
-      }
-    } else {
-      Map<String, dynamic> voteData = {"value": voteValue};
-      bool success = await SocialApi().createVote(widget.post.id, voteData);
-      if (success) {
-        setState(() {
-          _currentVoteCount += (voteValue - _userVote);
-          _userVote = voteValue;
-        });
-      }
-    }
-  }
-
-  Future<void> _toggleLike() async {
-    Map<String, dynamic> likeData = {
-      "user": widget.post.user.id,
-      "post": widget.post.id,
-      "comment": null,
-    };
-
-    bool success;
-    if (_userLiked) {
-      success = await SocialApi().deleteLike(widget.post.id);
-    } else {
-      success = await SocialApi().createLike(likeData, widget.post.id);
-    }
-
-    if (success) {
-      setState(() {
-        _userLiked = !_userLiked;
-        _currentLikeCount += _userLiked ? 1 : -1;
-      });
-    }
-  }
-
-  Future<void> _deletePost() async {
-    final result = await SocialApi().deletePost(widget.post.id);
-
-    InformationToast.show(
-      context: context,
-      message: result ? "Post deleted successfully!" : "Failed to delete post.",
-      textColor: result ? ColorPalette.green : ColorPalette.red,
-    );
-  }
-
-  void _showDeleteDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return ConfirmationDialog(
-          message: 'Are you sure you want to delete this post?',
-          onConfirm: () {
-            _deletePost();
-          },
-          onCancel: () {
-            Navigator.pop(context);
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    final provider = Provider.of<ExploreProvider>(context, listen: false);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -126,17 +55,17 @@ class _UserPostCardState extends State<UserPostCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
+            _buildHeader(provider),
             if (widget.post.content != null) _buildContent(),
-            _buildPostDetails(),
-            _buildActionButtons(),
+            _buildPostDetails(provider),
+            _buildActionButtons(provider),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ExploreProvider provider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
@@ -217,7 +146,7 @@ class _UserPostCardState extends State<UserPostCard> {
     );
   }
 
-  Widget _buildPostDetails() {
+  Widget _buildPostDetails(ExploreProvider provider) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -232,7 +161,7 @@ class _UserPostCardState extends State<UserPostCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildVoteButtons(),
+          _buildVoteButtons(provider),
           _buildRecipeImage(),
           const SizedBox(width: 16),
           Expanded(
@@ -265,17 +194,22 @@ class _UserPostCardState extends State<UserPostCard> {
     );
   }
 
-  Widget _buildVoteButtons() {
+  Widget _buildVoteButtons(ExploreProvider provider) {
+    final post = widget.post;
+    final isUpvoted = post.user_vote == 1;
+    final isDownvoted = post.user_vote == -1;
+    final voteCount = post.upvote_count - post.downvote_count;
+
     return Column(
       children: [
         IconButton(
           icon: Icon(Icons.keyboard_arrow_up,
-              color: _userVote == 1 ? Colors.green : ColorPalette.gray),
+              color: isUpvoted ? Colors.green : ColorPalette.gray),
           iconSize: 50,
-          onPressed: () => _handleVote(1),
+          onPressed: () => provider.handleVote(post.id, 1),
         ),
         Text(
-          "$_currentVoteCount",
+          "$voteCount",
           style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -283,15 +217,20 @@ class _UserPostCardState extends State<UserPostCard> {
         ),
         IconButton(
           icon: Icon(Icons.keyboard_arrow_down,
-              color: _userVote == -1 ? Colors.red : ColorPalette.gray),
+              color: isDownvoted ? Colors.red : ColorPalette.gray),
           iconSize: 50,
-          onPressed: () => _handleVote(-1),
+          onPressed: () => provider.handleVote(post.id, -1),
         ),
       ],
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(ExploreProvider provider) {
+    final post = widget.post;
+    final isLiked = post.user_liked;
+    final likeCount = post.like_count;
+    final commentCount = post.comment_count;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -299,17 +238,15 @@ class _UserPostCardState extends State<UserPostCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              onPressed: _toggleLike,
+              onPressed: () => provider.toggleLike(post.user.id, post.id),
               icon: FaIcon(
-                _userLiked
-                    ? FontAwesomeIcons.solidHeart
-                    : FontAwesomeIcons.heart,
-                color: _userLiked ? Colors.red : ColorPalette.offWhite,
+                isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
+                color: isLiked ? Colors.red : ColorPalette.offWhite,
                 size: 28,
               ),
             ),
             Text(
-              _currentLikeCount.toString(),
+              "$likeCount",
               style: const TextStyle(
                 color: ColorPalette.offWhite,
                 fontSize: 12,
@@ -327,11 +264,9 @@ class _UserPostCardState extends State<UserPostCard> {
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
                   builder: (context) => CommentDrawer(
-                      post: widget.post,
+                      post: post,
                       onCommentAdded: () {
-                        setState(() {
-                          _currentCommentCount++;
-                        });
+                        provider.incrementCommentCount(post.id);
                       }),
                 );
               },
@@ -342,7 +277,7 @@ class _UserPostCardState extends State<UserPostCard> {
               ),
             ),
             Text(
-              _currentCommentCount.toString(),
+              "$commentCount",
               style: const TextStyle(
                 color: ColorPalette.offWhite,
                 fontSize: 12,
@@ -366,6 +301,33 @@ class _UserPostCardState extends State<UserPostCard> {
               fit: BoxFit.cover,
             )
           : PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
+    );
+  }
+
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ConfirmationDialog(
+          message: 'Are you sure you want to delete this post?',
+          onConfirm: () {
+            _deletePost();
+          },
+          onCancel: () {
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _deletePost() async {
+    final result = await SocialApi().deletePost(widget.post.id);
+
+    InformationToast.show(
+      context: context,
+      message: result ? "Post deleted successfully!" : "Failed to delete post.",
+      textColor: result ? ColorPalette.green : ColorPalette.red,
     );
   }
 }

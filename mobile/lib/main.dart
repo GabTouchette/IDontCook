@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/providers/explore_provider.dart';
 import 'package:mobile/providers/recipe_detail_provider.dart';
 import 'package:mobile/providers/recipes_provider.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (context) => RecipeDetailProvider()),
         ChangeNotifierProvider(create: (context) => RecipesProvider()),
+        ChangeNotifierProvider(create: (context) => ExploreProvider()),
       ],
       child: ICantCook(),
     ),
