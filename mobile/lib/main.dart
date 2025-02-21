@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/providers/recipe_detail_provider.dart';
+import 'package:mobile/providers/recipes_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/routes.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => RecipeDetailProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => RecipeDetailProvider()),
+        ChangeNotifierProvider(create: (context) => RecipesProvider()),
+      ],
       child: ICantCook(),
     ),
   );

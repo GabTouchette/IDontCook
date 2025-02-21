@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/recipe_preview/recipe_preview.dart';
 import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:mobile/providers/recipes_provider.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/recipes/placeholder_image.dart';
+import 'package:provider/provider.dart';
 
 class RecipeTile extends StatelessWidget {
   final RecipePreview recipe;
@@ -35,7 +37,12 @@ class RecipeTile extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => RecipeDetailPage(recipeId: recipe.id),
           ),
-        );
+        ).then((_) {
+          final recipesProvider =
+              Provider.of<RecipesProvider>(context, listen: false);
+          recipesProvider.fetchRecipes();
+          recipesProvider.setTabIndex(0);
+        });
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
