@@ -18,7 +18,7 @@ _$PostImpl _$$PostImplFromJson(Map<String, dynamic> json) => _$PostImpl(
       recipe_id: (json['recipe_id'] as num?)?.toInt(),
       recipe_title: json['recipe_title'] as String?,
       recipe_description: json['recipe_description'] as String?,
-      recipe_image_url: json['recipe_image_url'] as String?,
+      recipe_thumbnail_url: json['recipe_thumbnail_url'] as String?,
       content: json['content'] as String?,
       created_at: json['created_at'] == null
           ? null
@@ -41,7 +41,7 @@ Map<String, dynamic> _$$PostImplToJson(_$PostImpl instance) =>
       'recipe_id': instance.recipe_id,
       'recipe_title': instance.recipe_title,
       'recipe_description': instance.recipe_description,
-      'recipe_image_url': instance.recipe_image_url,
+      'recipe_thumbnail_url': instance.recipe_thumbnail_url,
       'content': instance.content,
       'created_at': instance.created_at?.toIso8601String(),
       'updated_at': instance.updated_at?.toIso8601String(),

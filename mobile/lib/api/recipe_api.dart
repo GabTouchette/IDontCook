@@ -39,7 +39,7 @@ class RecipeApi {
     return response != null;
   }
 
-  Future<bool> uploadRecipeImage(int recipeId, File imageFile) async {
+  Future<String> uploadRecipeImage(int recipeId, File imageFile) async {
     return await _apiHelper.imageRequest('recipes/$recipeId/image', imageFile);
   }
 

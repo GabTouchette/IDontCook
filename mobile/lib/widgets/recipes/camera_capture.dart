@@ -81,7 +81,7 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
       backgroundColor: ColorPalette.offBlack,
       contentPadding: const EdgeInsets.all(16),
       title: Text(
-        "Capture Recipe Image",
+        "Digitize a Recipe",
         style: TextStyle(
           color: ColorPalette.offWhite,
           fontSize: 20,
@@ -93,7 +93,7 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "Please take a picture of the recipe so that we can translate it into the site. The clearer the image, the better the result!",
+            "Please take a picture of the recipe so that we can digitize it. The clearer the image, the better the result!",
             style: TextStyle(
               color: ColorPalette.offWhite,
               fontSize: 16,

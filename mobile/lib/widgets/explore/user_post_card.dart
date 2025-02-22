@@ -292,10 +292,10 @@ class _UserPostCardState extends State<UserPostCard>
   Widget _buildRecipeImage() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: widget.post.recipe_image_url != null &&
-              widget.post.recipe_image_url!.isNotEmpty
+      child: widget.post.recipe_thumbnail_url != null &&
+              widget.post.recipe_thumbnail_url!.isNotEmpty
           ? Image.network(
-              widget.post.recipe_image_url!,
+              widget.post.recipe_thumbnail_url!,
               height: 120,
               width: 120,
               fit: BoxFit.cover,

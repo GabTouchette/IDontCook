@@ -18,7 +18,7 @@ class Post with _$Post {
     int? recipe_id,
     String? recipe_title,
     String? recipe_description,
-    String? recipe_image_url,
+    String? recipe_thumbnail_url,
     String? content,
     DateTime? created_at,
     DateTime? updated_at,

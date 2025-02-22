@@ -30,6 +30,7 @@ mixin _$Recipe {
   List<String>? get tags => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String? get image_url => throw _privateConstructorUsedError;
+  String? get thumbnail_url => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   bool? get is_favorite => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
@@ -61,6 +62,7 @@ abstract class $RecipeCopyWith<$Res> {
       List<String>? tags,
       String? description,
       String? image_url,
+      String? thumbnail_url,
       String? notes,
       bool? is_favorite,
       DateTime? created_at,
@@ -95,6 +97,7 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? tags = freezed,
     Object? description = freezed,
     Object? image_url = freezed,
+    Object? thumbnail_url = freezed,
     Object? notes = freezed,
     Object? is_favorite = freezed,
     Object? created_at = freezed,
@@ -141,6 +144,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
       image_url: freezed == image_url
           ? _value.image_url
           : image_url // ignore: cast_nullable_to_non_nullable
+              as String?,
+      thumbnail_url: freezed == thumbnail_url
+          ? _value.thumbnail_url
+          : thumbnail_url // ignore: cast_nullable_to_non_nullable
               as String?,
       notes: freezed == notes
           ? _value.notes
@@ -198,6 +205,7 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       List<String>? tags,
       String? description,
       String? image_url,
+      String? thumbnail_url,
       String? notes,
       bool? is_favorite,
       DateTime? created_at,
@@ -231,6 +239,7 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? tags = freezed,
     Object? description = freezed,
     Object? image_url = freezed,
+    Object? thumbnail_url = freezed,
     Object? notes = freezed,
     Object? is_favorite = freezed,
     Object? created_at = freezed,
@@ -278,6 +287,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value.image_url
           : image_url // ignore: cast_nullable_to_non_nullable
               as String?,
+      thumbnail_url: freezed == thumbnail_url
+          ? _value.thumbnail_url
+          : thumbnail_url // ignore: cast_nullable_to_non_nullable
+              as String?,
       notes: freezed == notes
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
@@ -316,6 +329,7 @@ class _$RecipeImpl implements _Recipe {
       final List<String>? tags,
       this.description,
       this.image_url,
+      this.thumbnail_url,
       this.notes,
       this.is_favorite,
       this.created_at,
@@ -373,6 +387,8 @@ class _$RecipeImpl implements _Recipe {
   @override
   final String? image_url;
   @override
+  final String? thumbnail_url;
+  @override
   final String? notes;
   @override
   final bool? is_favorite;
@@ -385,7 +401,7 @@ class _$RecipeImpl implements _Recipe {
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
+    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, thumbnail_url: $thumbnail_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -410,6 +426,8 @@ class _$RecipeImpl implements _Recipe {
                 other.description == description) &&
             (identical(other.image_url, image_url) ||
                 other.image_url == image_url) &&
+            (identical(other.thumbnail_url, thumbnail_url) ||
+                other.thumbnail_url == thumbnail_url) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.is_favorite, is_favorite) ||
                 other.is_favorite == is_favorite) &&
@@ -435,6 +453,7 @@ class _$RecipeImpl implements _Recipe {
       const DeepCollectionEquality().hash(_tags),
       description,
       image_url,
+      thumbnail_url,
       notes,
       is_favorite,
       created_at,
@@ -469,6 +488,7 @@ abstract class _Recipe implements Recipe {
       final List<String>? tags,
       final String? description,
       final String? image_url,
+      final String? thumbnail_url,
       final String? notes,
       final bool? is_favorite,
       final DateTime? created_at,
@@ -497,6 +517,8 @@ abstract class _Recipe implements Recipe {
   String? get description;
   @override
   String? get image_url;
+  @override
+  String? get thumbnail_url;
   @override
   String? get notes;
   @override

@@ -38,6 +38,7 @@ class TimeSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
+                    keyboardType: TextInputType.number,
                     controller: prepTimeController,
                     style: TextStyle(
                       color: ColorPalette.offBlack,
@@ -63,6 +64,7 @@ class TimeSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
+                    keyboardType: TextInputType.number,
                     controller: cookTimeController,
                     style: TextStyle(
                       color: ColorPalette.offBlack,

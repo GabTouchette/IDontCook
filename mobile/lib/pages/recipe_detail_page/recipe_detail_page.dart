@@ -53,7 +53,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   void _pickImage() async {
     final provider = context.read<RecipeDetailProvider>();
     final recipe = provider.recipe;
-    if (recipe == null) return;
+    if (recipe == null || !provider.isSaved) return;
 
     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
     if (image != null) {
@@ -61,8 +61,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         _imageFile = File(image.path);
       });
 
-      bool success = await _uploadImageToServer(_imageFile!, recipe.id);
+      String newImageUrl = await _uploadImageToServer(_imageFile!, recipe.id);
+      bool success = newImageUrl.isNotEmpty;
       if (success) {
+        provider.image_url = newImageUrl;
         InformationToast.show(
             context: context,
             message: success
@@ -73,7 +75,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     }
   }
 
-  Future<bool> _uploadImageToServer(File imageFile, int recipeId) async {
+  Future<String> _uploadImageToServer(File imageFile, int recipeId) async {
     try {
       return await RecipeApi().uploadRecipeImage(recipeId, imageFile);
     } catch (e) {
@@ -82,7 +84,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         message: "An error occurred while uploading the image.",
         textColor: ColorPalette.red,
       );
-      return false;
+      return "";
     }
   }
 

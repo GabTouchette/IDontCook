@@ -18,6 +18,13 @@ class RecipeDetailProvider with ChangeNotifier {
   int get servings => _servings;
   List<bool> get completedInstructions => _completedInstructions;
 
+  set image_url(String? newImageUrl) {
+    if (_recipe != null) {
+      _recipe = _recipe!.copyWith(image_url: newImageUrl);
+      notifyListeners();
+    }
+  }
+
   Future<void> initializeRecipe({Recipe? recipe, int? recipeId}) async {
     if (recipe != null) {
       _recipe = recipe;

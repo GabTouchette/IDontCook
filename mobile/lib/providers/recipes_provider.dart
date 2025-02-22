@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/api/recipe_api.dart';
@@ -26,7 +27,7 @@ class RecipesProvider with ChangeNotifier {
     _lastRequestTime = now;
 
     final recipes = await RecipeApi().fetchRecipes();
-    recipes.sort((a, b) => a.title.compareTo(b.title));
+    recipes.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
 
     _allRecipes = recipes;
     _filteredRecipes = recipes;
@@ -55,7 +56,6 @@ class RecipesProvider with ChangeNotifier {
             _allRecipes.where((recipe) => recipe.is_favorite == true).toList();
         break;
     }
-    _filteredRecipes.sort((a, b) => a.title.compareTo(b.title));
     notifyListeners();
   }
 

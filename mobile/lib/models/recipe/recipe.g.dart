@@ -23,6 +23,7 @@ _$RecipeImpl _$$RecipeImplFromJson(Map<String, dynamic> json) => _$RecipeImpl(
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       description: json['description'] as String?,
       image_url: json['image_url'] as String?,
+      thumbnail_url: json['thumbnail_url'] as String?,
       notes: json['notes'] as String?,
       is_favorite: json['is_favorite'] as bool?,
       created_at: json['created_at'] == null
@@ -48,6 +49,7 @@ Map<String, dynamic> _$$RecipeImplToJson(_$RecipeImpl instance) =>
       'tags': instance.tags,
       'description': instance.description,
       'image_url': instance.image_url,
+      'thumbnail_url': instance.thumbnail_url,
       'notes': instance.notes,
       'is_favorite': instance.is_favorite,
       'created_at': instance.created_at?.toIso8601String(),

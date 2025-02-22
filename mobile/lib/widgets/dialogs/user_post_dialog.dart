@@ -33,7 +33,7 @@ class _PostDialogState extends State<PostDialog> {
         id: widget.recipe!.id,
         title: widget.recipe!.title,
         description: widget.recipe!.description,
-        image_url: widget.recipe!.image_url,
+        thumbnail_url: widget.recipe!.thumbnail_url,
       );
     }
     _fetchRecipes();
@@ -152,7 +152,7 @@ class _PostDialogState extends State<PostDialog> {
                       ),
                 if (_selectedRecipe != null) ...[
                   const SizedBox(height: 16),
-                  getRecipeImage(_selectedRecipe!.image_url),
+                  getRecipeImage(_selectedRecipe!.thumbnail_url),
                   const SizedBox(height: 8),
                   Text(
                     _selectedRecipe!.title,

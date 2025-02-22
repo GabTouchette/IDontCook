@@ -57,7 +57,7 @@ class RecipeTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  getSmallRecipeImage(recipe.image_url),
+                  getSmallRecipeImage(recipe.thumbnail_url),
                   const SizedBox(width: 12.0),
                   Expanded(
                     child: Column(

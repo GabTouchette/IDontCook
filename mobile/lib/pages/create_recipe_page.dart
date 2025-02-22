@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/api/recipe_api.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:mobile/widgets/toasts/information_toast.dart';
 import 'package:mobile/widgets/recipes/camera_capture.dart';
 import 'package:mobile/widgets/recipes/recipe_form_extra_section.dart';
@@ -122,8 +123,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       "tags": _selectedTags,
     };
 
-    int? newId = await RecipeApi().createRecipe(recipeData);
-    bool success = newId != null;
+    int? recipeId = await RecipeApi().createRecipe(recipeData);
+    bool success = recipeId != null;
 
     InformationToast.show(
       context: context,
@@ -132,7 +133,15 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
           : 'There was an error submitting your recipe.',
       textColor: success ? ColorPalette.green : ColorPalette.red,
     );
-    if (success) Navigator.pop(context);
+    if (success) {
+      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecipeDetailPage(recipeId: recipeId),
+        ),
+      );
+    }
   }
 
   void _onIngredientsChanged(List<IngredientField> ingredients) {

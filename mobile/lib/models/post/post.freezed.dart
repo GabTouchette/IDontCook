@@ -31,7 +31,7 @@ mixin _$Post {
   int? get recipe_id => throw _privateConstructorUsedError;
   String? get recipe_title => throw _privateConstructorUsedError;
   String? get recipe_description => throw _privateConstructorUsedError;
-  String? get recipe_image_url => throw _privateConstructorUsedError;
+  String? get recipe_thumbnail_url => throw _privateConstructorUsedError;
   String? get content => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
   DateTime? get updated_at => throw _privateConstructorUsedError;
@@ -62,7 +62,7 @@ abstract class $PostCopyWith<$Res> {
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
-      String? recipe_image_url,
+      String? recipe_thumbnail_url,
       String? content,
       DateTime? created_at,
       DateTime? updated_at});
@@ -96,7 +96,7 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
-    Object? recipe_image_url = freezed,
+    Object? recipe_thumbnail_url = freezed,
     Object? content = freezed,
     Object? created_at = freezed,
     Object? updated_at = freezed,
@@ -146,9 +146,9 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
           ? _value.recipe_description
           : recipe_description // ignore: cast_nullable_to_non_nullable
               as String?,
-      recipe_image_url: freezed == recipe_image_url
-          ? _value.recipe_image_url
-          : recipe_image_url // ignore: cast_nullable_to_non_nullable
+      recipe_thumbnail_url: freezed == recipe_thumbnail_url
+          ? _value.recipe_thumbnail_url
+          : recipe_thumbnail_url // ignore: cast_nullable_to_non_nullable
               as String?,
       content: freezed == content
           ? _value.content
@@ -195,7 +195,7 @@ abstract class _$$PostImplCopyWith<$Res> implements $PostCopyWith<$Res> {
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
-      String? recipe_image_url,
+      String? recipe_thumbnail_url,
       String? content,
       DateTime? created_at,
       DateTime? updated_at});
@@ -227,7 +227,7 @@ class __$$PostImplCopyWithImpl<$Res>
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
-    Object? recipe_image_url = freezed,
+    Object? recipe_thumbnail_url = freezed,
     Object? content = freezed,
     Object? created_at = freezed,
     Object? updated_at = freezed,
@@ -277,9 +277,9 @@ class __$$PostImplCopyWithImpl<$Res>
           ? _value.recipe_description
           : recipe_description // ignore: cast_nullable_to_non_nullable
               as String?,
-      recipe_image_url: freezed == recipe_image_url
-          ? _value.recipe_image_url
-          : recipe_image_url // ignore: cast_nullable_to_non_nullable
+      recipe_thumbnail_url: freezed == recipe_thumbnail_url
+          ? _value.recipe_thumbnail_url
+          : recipe_thumbnail_url // ignore: cast_nullable_to_non_nullable
               as String?,
       content: freezed == content
           ? _value.content
@@ -312,7 +312,7 @@ class _$PostImpl implements _Post {
       this.recipe_id,
       this.recipe_title,
       this.recipe_description,
-      this.recipe_image_url,
+      this.recipe_thumbnail_url,
       this.content,
       this.created_at,
       this.updated_at});
@@ -343,7 +343,7 @@ class _$PostImpl implements _Post {
   @override
   final String? recipe_description;
   @override
-  final String? recipe_image_url;
+  final String? recipe_thumbnail_url;
   @override
   final String? content;
   @override
@@ -353,7 +353,7 @@ class _$PostImpl implements _Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, comment_count: $comment_count, like_count: $like_count, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_image_url: $recipe_image_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
+    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, comment_count: $comment_count, like_count: $like_count, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_thumbnail_url: $recipe_thumbnail_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
   }
 
   @override
@@ -381,8 +381,8 @@ class _$PostImpl implements _Post {
                 other.recipe_title == recipe_title) &&
             (identical(other.recipe_description, recipe_description) ||
                 other.recipe_description == recipe_description) &&
-            (identical(other.recipe_image_url, recipe_image_url) ||
-                other.recipe_image_url == recipe_image_url) &&
+            (identical(other.recipe_thumbnail_url, recipe_thumbnail_url) ||
+                other.recipe_thumbnail_url == recipe_thumbnail_url) &&
             (identical(other.content, content) || other.content == content) &&
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at) &&
@@ -405,7 +405,7 @@ class _$PostImpl implements _Post {
       recipe_id,
       recipe_title,
       recipe_description,
-      recipe_image_url,
+      recipe_thumbnail_url,
       content,
       created_at,
       updated_at);
@@ -439,7 +439,7 @@ abstract class _Post implements Post {
       final int? recipe_id,
       final String? recipe_title,
       final String? recipe_description,
-      final String? recipe_image_url,
+      final String? recipe_thumbnail_url,
       final String? content,
       final DateTime? created_at,
       final DateTime? updated_at}) = _$PostImpl;
@@ -469,7 +469,7 @@ abstract class _Post implements Post {
   @override
   String? get recipe_description;
   @override
-  String? get recipe_image_url;
+  String? get recipe_thumbnail_url;
   @override
   String? get content;
   @override
