@@ -126,7 +126,7 @@ class RecipesPage extends StatelessWidget {
                                 : ListView.builder(
                                     padding: EdgeInsets.zero,
                                     itemCount:
-                                        provider.filteredRecipes.length + 2,
+                                        provider.filteredRecipes.length + 1,
                                     itemBuilder: (context, index) {
                                       if (index == 0) {
                                         return Padding(
@@ -137,21 +137,6 @@ class RecipesPage extends StatelessWidget {
                                             style: TextStyle(
                                               color: ColorPalette.offWhite,
                                               fontSize: 18,
-                                            ),
-                                          ),
-                                        );
-                                      } else if (index ==
-                                          provider.filteredRecipes.length + 1) {
-                                        return Center(
-                                          heightFactor: 2,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              provider.fetchRecipes();
-                                            },
-                                            icon: const FaIcon(
-                                              FontAwesomeIcons.arrowsRotate,
-                                              color: ColorPalette.offWhite,
-                                              size: 28,
                                             ),
                                           ),
                                         );

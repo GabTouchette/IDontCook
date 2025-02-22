@@ -76,7 +76,7 @@ class RecipeDetailProvider with ChangeNotifier {
       "description": _capitalize(_recipe!.description),
       "notes": _capitalize(_recipe!.notes),
       "tags": _recipe!.tags,
-      "parent": _recipe!.id,
+      "parent_id": _recipe!.id,
     };
 
     int? newId = await RecipeApi().createRecipe(recipeData);

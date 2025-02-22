@@ -51,7 +51,7 @@ class RecipeListAPIView(APIView):
             # Create the new recipe with the parent reference
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
-                serializer.save(created_by=user, parent=parent_id)
+                serializer.save(created_by=user, parent=parent)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
