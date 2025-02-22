@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/recipe_preview/recipe_preview.dart';
-import 'package:mobile/pages/recipe_detail_page.dart';
+import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/recipes/placeholder_image.dart';
 
@@ -12,12 +12,12 @@ class BigRecipeTile extends StatelessWidget {
     required this.recipe,
   }) : super(key: key);
 
-  Widget getBigRecipeImage(String? imageUrl) {
+  Widget getBigRecipeImage(String? thumbanilUrl) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: imageUrl != null && imageUrl.isNotEmpty
+      child: thumbanilUrl != null && thumbanilUrl.isNotEmpty
           ? Image.network(
-              imageUrl,
+              thumbanilUrl,
               height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -65,7 +65,7 @@ class BigRecipeTile extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: getBigRecipeImage(recipe.image_url),
+                    child: getBigRecipeImage(recipe.thumbnail_url),
                   ),
                   const SizedBox(width: 12.0),
                   Expanded(

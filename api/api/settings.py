@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken', 
+    'imagekit',
     'corsheaders',
     'recipes',
     'ai_chatbot',

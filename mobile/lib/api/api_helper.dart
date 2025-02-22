@@ -125,7 +125,7 @@ class ApiHelper {
     }
   }
 
-  Future<bool> imageRequest(String endpoint, File imageFile,
+  Future<String> imageRequest(String endpoint, File imageFile,
       {bool requiresAuth = true}) async {
     try {
       Uri url = Uri.parse('$baseUrl/$endpoint');
@@ -146,16 +146,17 @@ class ApiHelper {
       ));
 
       var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
+      dynamic response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
-        return true;
+        var data =
+            jsonDecode(response.body);
+        return data["image_url"];
       } else {
-        return false;
+        return "";
       }
     } catch (e) {
       print('Error uploading image: $e');
-      return false;
+      return "";
     }
   }
 

@@ -38,18 +38,25 @@ class AiResponseBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || message == null || message!.trim().isEmpty || message == "loading") {
+    if (isLoading ||
+        message == null ||
+        message!.trim().isEmpty ||
+        message == "loading") {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
           decoration: BoxDecoration(
             color: ColorPalette.darkgray,
             borderRadius: BorderRadius.circular(30),
           ),
-          child: const Icon(
-            Icons.more_horiz,
-            color: ColorPalette.offWhite,
+          child: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              color: ColorPalette.offWhite,
+              strokeWidth: 2.5,
+            ),
           ),
         ),
       );

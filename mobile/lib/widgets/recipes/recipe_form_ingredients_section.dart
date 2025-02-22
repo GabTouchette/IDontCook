@@ -42,7 +42,6 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
-                    keyboardType: TextInputType.number,
                     controller: widget.ingredients[i].controller,
                     focusNode: widget.ingredients[i].focusNode,
                     style: TextStyle(

@@ -11,10 +11,22 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True)
     created_by = UserSerializer(read_only=True)
+    image_url = serializers.SerializerMethodField()
+    thumnbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = '__all__'
+
+    def get_image_url(self, obj):
+        if obj.image and hasattr(obj.image, 'url'):
+            return obj.image.url
+        return None
+    
+    def get_thumnbnail_url(self, obj):
+        if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
+            return obj.thumbnail.url
+        return None
 
     def to_representation(self, instance):
         """ Customize the GET response to properly format instructions as a list """
@@ -63,7 +75,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.preparation_time = validated_data.get("preparation_time", instance.preparation_time)  
         instance.tags = validated_data.get("tags", instance.tags)
         instance.description = validated_data.get("description", instance.description)  
-        instance.image_url = validated_data.get("image_url", instance.image_url)  
         instance.notes = validated_data.get("notes", instance.notes)  
         instance.save()
 
@@ -91,6 +102,23 @@ class RecipeSerializer(serializers.ModelSerializer):
     
 
 class RecipePreviewSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'description', 'preparation_time', 'cooking_time', 'image_url', 'tags', 'is_favorite', 'last_visited_at']
+        fields = [
+            'id', 
+            'title', 
+            'description', 
+            'preparation_time', 
+            'cooking_time', 
+            'thumbnail_url',
+            'tags', 
+            'is_favorite', 
+            'last_visited_at'
+        ]
+
+    def get_thumbnail_url(self, obj):
+        if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
+            return obj.thumbnail.url
+        return None

@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/providers/explore_provider.dart';
+import 'package:mobile/providers/recipe_detail_provider.dart';
+import 'package:mobile/providers/recipes_provider.dart';
+import 'package:mobile/providers/user_profile_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile/routes.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => RecipeDetailProvider()),
+        ChangeNotifierProvider(create: (context) => RecipesProvider()),
+        ChangeNotifierProvider(create: (context) => ExploreProvider()),
+        ChangeNotifierProvider(create: (context) => UserProfileProvider()),
+      ],
+      child: ICantCook(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ICantCook extends StatelessWidget {
+  const ICantCook({super.key});
 
   @override
   Widget build(BuildContext context) {

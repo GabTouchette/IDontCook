@@ -4,12 +4,16 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import models
-from .models import Recipe, Save
+from .models import Recipe
 from .serializers import RecipeSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
 from django.http import JsonResponse
 from rest_framework.parsers import MultiPartParser, FormParser
+from PIL import ExifTags, Image
+from io import BytesIO
+from django.core.files.base import ContentFile
+
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -24,11 +28,11 @@ class RecipeListAPIView(APIView):
         user = request.user
         data = request.data
 
-        parent_id = data.get('parent')
+        parent_id = data.get('parent_id', None)
         
         if parent_id is not None and parent_id != -1:
             try:
-                parent_recipe = Recipe.objects.get(id=parent_id)
+                parent = Recipe.objects.get(id=parent_id)
             except Recipe.DoesNotExist:
                 return Response(
                     {"error": "Parent recipe not found"},
@@ -36,19 +40,22 @@ class RecipeListAPIView(APIView):
                 )
 
             # Check if the user has already saved this parent recipe
-            if Save.objects.filter(user=user, recipe=parent_recipe).exists():
+            if Recipe.objects.filter(
+                    created_by=user
+                ).filter(
+                    models.Q(id=parent.id) | models.Q(parent_id=parent.id)
+                ).exists():
+
                 return Response(
                     {"error": "You have already saved this recipe"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
-            # Save the parent recipe
-            Save.objects.create(user=user, recipe=parent_recipe)
+            
 
             # Create the new recipe with the parent reference
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
-                serializer.save(created_by=user, parent=parent_id)
+                serializer.save(created_by=user, parent=parent)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -109,20 +116,55 @@ class RecipeImageUploadAPIView(APIView):
         try:
             recipe = Recipe.objects.get(id=recipe_id)
             image = request.FILES.get('image')
-            
+
             if image:
-                recipe.image_url = image
+                # Open image with Pillow
+                img = Image.open(image)
+
+                # Fix rotation using EXIF metadata
+                img = self.correct_image_orientation(img)
+
+                # Convert image back to Django File
+                img_io = BytesIO()
+                img.save(img_io, format='JPEG', quality=90)  # Convert to JPEG with quality
+                img_file = ContentFile(img_io.getvalue(), name=image.name)
+
+                # Assign corrected image
+                recipe.image = img_file
+                recipe.thumbnail = img_file
                 recipe.save()
 
-                if recipe.image_url:
-                    return Response({"image_url": recipe.image_url.url}, status=status.HTTP_200_OK)
-                else:
-                    return Response({"error": "Image upload failed."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {
+                        "image_url": recipe.image.url,
+                        "thumbnail_url": recipe.thumbnail.url
+                    },
+                    status=status.HTTP_200_OK
+                )
             
             return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
+
         except Recipe.DoesNotExist:
             return Response({"error": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
         
+    def correct_image_orientation(self, img):
+        """Auto-rotate image based on EXIF data."""
+        try:
+            exif = img._getexif()
+            if exif is not None:
+                for tag, value in exif.items():
+                    if tag in ExifTags.TAGS and ExifTags.TAGS[tag] == 'Orientation':
+                        if value == 3:
+                            img = img.rotate(180, expand=True)
+                        elif value == 6:
+                            img = img.rotate(270, expand=True)
+                        elif value == 8:
+                            img = img.rotate(90, expand=True)
+                        break
+        except (AttributeError, KeyError, IndexError):
+            pass  # No EXIF data or orientation tag found
+
+        return img
 
 class HasSavedRecipeAPIView(APIView):
     permission_classes = [IsAuthenticated]

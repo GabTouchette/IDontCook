@@ -18,6 +18,7 @@ class Recipe with _$Recipe {
     List<String>? tags,
     String? description,
     String? image_url,
+    String? thumbnail_url,
     String? notes,
     bool? is_favorite,
     DateTime? created_at,

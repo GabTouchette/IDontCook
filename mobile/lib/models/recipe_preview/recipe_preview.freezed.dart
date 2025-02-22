@@ -25,7 +25,7 @@ mixin _$RecipePreview {
   String? get description => throw _privateConstructorUsedError;
   int? get preparation_time => throw _privateConstructorUsedError;
   int? get cooking_time => throw _privateConstructorUsedError;
-  String? get image_url => throw _privateConstructorUsedError;
+  String? get thumbnail_url => throw _privateConstructorUsedError;
   List<String>? get tags => throw _privateConstructorUsedError;
   bool? get is_favorite => throw _privateConstructorUsedError;
   DateTime? get last_visited_at => throw _privateConstructorUsedError;
@@ -52,7 +52,7 @@ abstract class $RecipePreviewCopyWith<$Res> {
       String? description,
       int? preparation_time,
       int? cooking_time,
-      String? image_url,
+      String? thumbnail_url,
       List<String>? tags,
       bool? is_favorite,
       DateTime? last_visited_at});
@@ -78,7 +78,7 @@ class _$RecipePreviewCopyWithImpl<$Res, $Val extends RecipePreview>
     Object? description = freezed,
     Object? preparation_time = freezed,
     Object? cooking_time = freezed,
-    Object? image_url = freezed,
+    Object? thumbnail_url = freezed,
     Object? tags = freezed,
     Object? is_favorite = freezed,
     Object? last_visited_at = freezed,
@@ -104,9 +104,9 @@ class _$RecipePreviewCopyWithImpl<$Res, $Val extends RecipePreview>
           ? _value.cooking_time
           : cooking_time // ignore: cast_nullable_to_non_nullable
               as int?,
-      image_url: freezed == image_url
-          ? _value.image_url
-          : image_url // ignore: cast_nullable_to_non_nullable
+      thumbnail_url: freezed == thumbnail_url
+          ? _value.thumbnail_url
+          : thumbnail_url // ignore: cast_nullable_to_non_nullable
               as String?,
       tags: freezed == tags
           ? _value.tags
@@ -138,7 +138,7 @@ abstract class _$$RecipePreviewImplCopyWith<$Res>
       String? description,
       int? preparation_time,
       int? cooking_time,
-      String? image_url,
+      String? thumbnail_url,
       List<String>? tags,
       bool? is_favorite,
       DateTime? last_visited_at});
@@ -162,7 +162,7 @@ class __$$RecipePreviewImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? preparation_time = freezed,
     Object? cooking_time = freezed,
-    Object? image_url = freezed,
+    Object? thumbnail_url = freezed,
     Object? tags = freezed,
     Object? is_favorite = freezed,
     Object? last_visited_at = freezed,
@@ -188,9 +188,9 @@ class __$$RecipePreviewImplCopyWithImpl<$Res>
           ? _value.cooking_time
           : cooking_time // ignore: cast_nullable_to_non_nullable
               as int?,
-      image_url: freezed == image_url
-          ? _value.image_url
-          : image_url // ignore: cast_nullable_to_non_nullable
+      thumbnail_url: freezed == thumbnail_url
+          ? _value.thumbnail_url
+          : thumbnail_url // ignore: cast_nullable_to_non_nullable
               as String?,
       tags: freezed == tags
           ? _value._tags
@@ -217,7 +217,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
       this.description,
       this.preparation_time,
       this.cooking_time,
-      this.image_url,
+      this.thumbnail_url,
       final List<String>? tags,
       this.is_favorite,
       this.last_visited_at})
@@ -237,7 +237,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
   @override
   final int? cooking_time;
   @override
-  final String? image_url;
+  final String? thumbnail_url;
   final List<String>? _tags;
   @override
   List<String>? get tags {
@@ -255,7 +255,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
 
   @override
   String toString() {
-    return 'RecipePreview(id: $id, title: $title, description: $description, preparation_time: $preparation_time, cooking_time: $cooking_time, image_url: $image_url, tags: $tags, is_favorite: $is_favorite, last_visited_at: $last_visited_at)';
+    return 'RecipePreview(id: $id, title: $title, description: $description, preparation_time: $preparation_time, cooking_time: $cooking_time, thumbnail_url: $thumbnail_url, tags: $tags, is_favorite: $is_favorite, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -271,8 +271,8 @@ class _$RecipePreviewImpl implements _RecipePreview {
                 other.preparation_time == preparation_time) &&
             (identical(other.cooking_time, cooking_time) ||
                 other.cooking_time == cooking_time) &&
-            (identical(other.image_url, image_url) ||
-                other.image_url == image_url) &&
+            (identical(other.thumbnail_url, thumbnail_url) ||
+                other.thumbnail_url == thumbnail_url) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             (identical(other.is_favorite, is_favorite) ||
                 other.is_favorite == is_favorite) &&
@@ -289,7 +289,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
       description,
       preparation_time,
       cooking_time,
-      image_url,
+      thumbnail_url,
       const DeepCollectionEquality().hash(_tags),
       is_favorite,
       last_visited_at);
@@ -317,7 +317,7 @@ abstract class _RecipePreview implements RecipePreview {
       final String? description,
       final int? preparation_time,
       final int? cooking_time,
-      final String? image_url,
+      final String? thumbnail_url,
       final List<String>? tags,
       final bool? is_favorite,
       final DateTime? last_visited_at}) = _$RecipePreviewImpl;
@@ -336,7 +336,7 @@ abstract class _RecipePreview implements RecipePreview {
   @override
   int? get cooking_time;
   @override
-  String? get image_url;
+  String? get thumbnail_url;
   @override
   List<String>? get tags;
   @override
