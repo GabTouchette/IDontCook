@@ -137,6 +137,7 @@ class ExplorePage extends StatelessWidget {
                                   }
                                   return UserPostCard(
                                     post: provider.posts[index],
+                                    provider: provider,
                                   );
                                 },
                               ),

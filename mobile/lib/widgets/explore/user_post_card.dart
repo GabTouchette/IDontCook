@@ -6,19 +6,19 @@ import 'package:mobile/models/post/post.dart';
 import 'package:mobile/models/user/user.dart';
 import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:mobile/pages/user_profile_page.dart';
+import 'package:mobile/providers/post_mixin.dart';
 import 'package:mobile/theme/avatars.dart';
 import 'package:mobile/theme/colors.dart';
 import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
 import 'package:mobile/widgets/dialogs/post_comments_dialog.dart';
 import 'package:mobile/widgets/recipes/placeholder_image.dart';
 import 'package:mobile/widgets/toasts/information_toast.dart';
-import 'package:provider/provider.dart';
-import 'package:mobile/providers/explore_provider.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
+  final PostMixin provider;
 
-  const UserPostCard({super.key, required this.post});
+  const UserPostCard({super.key, required this.post, required this.provider});
 
   @override
   _UserPostCardState createState() => _UserPostCardState();
@@ -44,7 +44,7 @@ class _UserPostCardState extends State<UserPostCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final provider = Provider.of<ExploreProvider>(context, listen: false);
+    final provider = widget.provider;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -65,7 +65,7 @@ class _UserPostCardState extends State<UserPostCard>
     );
   }
 
-  Widget _buildHeader(ExploreProvider provider) {
+  Widget _buildHeader(PostMixin provider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
@@ -146,7 +146,7 @@ class _UserPostCardState extends State<UserPostCard>
     );
   }
 
-  Widget _buildPostDetails(ExploreProvider provider) {
+  Widget _buildPostDetails(PostMixin provider) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -194,7 +194,7 @@ class _UserPostCardState extends State<UserPostCard>
     );
   }
 
-  Widget _buildVoteButtons(ExploreProvider provider) {
+  Widget _buildVoteButtons(PostMixin provider) {
     final post = widget.post;
     final isUpvoted = post.user_vote == 1;
     final isDownvoted = post.user_vote == -1;
@@ -225,7 +225,7 @@ class _UserPostCardState extends State<UserPostCard>
     );
   }
 
-  Widget _buildActionButtons(ExploreProvider provider) {
+  Widget _buildActionButtons(PostMixin provider) {
     final post = widget.post;
     final isLiked = post.user_liked;
     final likeCount = post.like_count;

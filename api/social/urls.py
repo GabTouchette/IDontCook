@@ -2,11 +2,11 @@ from django.urls import path
 from .views import (
     PostListCreateAPIView, PostDetailAPIView, 
     CommentListCreateAPIView,
-    LikeCreateAPIView, LikeListAPIView, LikeDeleteAPIView,
+    LikeCreateAPIView, LikeDeleteAPIView,
     VoteCreateAPIView, VoteDeleteAPIView,
     UserSearchAPIView,
     UserPostsAPIView, UserRecipesAPIView, IsUserFollowingAPIView,
-    CreateFollowAPIView, DeleteFollowAPIView
+    CreateFollowAPIView, DeleteFollowAPIView, UserInfoApiView
 )
 
 urlpatterns = [
@@ -27,6 +27,7 @@ urlpatterns = [
 
     # User URL
     path('users/search/', UserSearchAPIView.as_view(), name='user-search'),
+    path('users/<int:user_id>/', UserInfoApiView.as_view(), name='user-posts'),
     path('users/<int:user_id>/posts/', UserPostsAPIView.as_view(), name='user-posts'),
     path('users/<int:user_id>/recipes/', UserRecipesAPIView.as_view(), name='user-recipes'),
     path('users/<int:user_id>/is_following/', IsUserFollowingAPIView.as_view(), name='is-following'),

@@ -114,6 +114,14 @@ class SocialApi {
         : [];
   }
 
+  Future<User?> fetchUserInfo(int userId) async {
+    var data = await _apiHelper.getRequest('social/users/$userId/');
+    if (data != null) {
+      return User.fromJson(data);
+    }
+    return null;
+  }
+
   Future<List<Recipe>> fetchUserRecipes(int userId) async {
     var data = await _apiHelper.getRequest('social/users/$userId/recipes/');
     if (data != null) {

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from accounts.models import CustomUser
-from social.models import Follow
 
 class UserSerializer(serializers.ModelSerializer):
     follower_count = serializers.SerializerMethodField(allow_null=True, read_only=True)

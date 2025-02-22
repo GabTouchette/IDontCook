@@ -151,6 +151,17 @@ class VoteCreateAPIView(APIView):
         return JsonResponse({"message": "No action needed"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserInfoApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('user_id')
+        user = get_object_or_404(CustomUser, id=user_id)
+        serializer = UserSerializer(user)
+
+        return JsonResponse(serializer.data, safe=False)
+    
+    
 class UserSearchAPIView(APIView):
     permission_classes = [IsAuthenticated]  
 
@@ -222,7 +233,6 @@ class DeleteFollowAPIView(APIView):
     def delete(self, request, user_id):
         current_user = request.user
         user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
-
         follow = Follow.objects.filter(follower=current_user, followed=user_to_unfollow).first()
 
         if follow:
