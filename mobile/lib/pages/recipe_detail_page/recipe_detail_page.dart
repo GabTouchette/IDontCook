@@ -135,131 +135,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<RecipeDetailProvider>();
-    final recipe = provider.recipe;
-    if (recipe == null) return SizedBox();
-
-    return Scaffold(
-      backgroundColor: ColorPalette.darkergray,
-      appBar: AppBar(
-        backgroundColor: ColorPalette.darkergray,
-        title: Text(
-          "Details",
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            fontSize: 32,
-            color: ColorPalette.offWhite,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.chevron_left,
-            size: 32,
-            color: ColorPalette.offWhite,
-          ),
-        ),
-        actions: [
-          if (context.watch<RecipeDetailProvider>().isSaved) ...[
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return PostDialog(
-                      recipe: recipe,
-                    );
-                  },
-                );
-              },
-              icon: const FaIcon(
-                FontAwesomeIcons.share,
-                color: ColorPalette.offWhite,
-              ),
-            ),
-            IconButton(
-              onPressed: () => provider.toggleFavorite(context),
-              icon: FaIcon(
-                (recipe.is_favorite ?? false)
-                    ? FontAwesomeIcons.solidHeart
-                    : FontAwesomeIcons.heart,
-                color: (recipe.is_favorite ?? false)
-                    ? Colors.red
-                    : ColorPalette.offWhite,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UpdateRecipePage(recipeId: recipe.id),
-                  ),
-                ).then(
-                  (_) {
-                    provider.initializeRecipe(
-                      recipe: widget.recipe,
-                      recipeId: widget.recipeId,
-                    );
-                  },
-                );
-              },
-              icon: const FaIcon(
-                FontAwesomeIcons.pen,
-                color: ColorPalette.offWhite,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => ConfirmationDialog(
-                    message: "Are you sure you want to delete this recipe?",
-                    onConfirm: () async {
-                      Navigator.pop(context);
-                      bool success = await RecipeApi().deleteRecipe(recipe.id);
-                      if (success) Navigator.pop(context);
-                      InformationToast.show(
-                        context: context,
-                        message: success
-                            ? "Recipe deleted successfully!"
-                            : "There was an error deleting the recipe.",
-                        textColor:
-                            success ? ColorPalette.green : ColorPalette.red,
-                      );
-                    },
-                    onCancel: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                );
-              },
-              icon: const FaIcon(
-                FontAwesomeIcons.trash,
-                color: ColorPalette.red,
-              ),
-            ),
-          ] else ...[
-            IconButton(
-              onPressed: () =>
-                  context.read<RecipeDetailProvider>().saveRecipe(context),
-              icon: FaIcon(
-                context.watch<RecipeDetailProvider>().isSaved
-                    ? FontAwesomeIcons.solidBookmark
-                    : FontAwesomeIcons.bookmark,
-                color: ColorPalette.offWhite,
-              ),
-            ),
-          ],
-        ],
-      ),
-      body: Consumer<RecipeDetailProvider>(
+    return Consumer<RecipeDetailProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
             return RecipeDetailSkeleton();
@@ -271,7 +147,127 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
           final recipe = provider.recipe!;
 
-          return SingleChildScrollView(
+        return Scaffold(
+          backgroundColor: ColorPalette.darkergray,
+          appBar: AppBar(
+            backgroundColor: ColorPalette.darkergray,
+            title: Text(
+              "Details",
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 32,
+                color: ColorPalette.offWhite,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            elevation: 0,
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.chevron_left,
+                size: 32,
+                color: ColorPalette.offWhite,
+              ),
+            ),
+            actions: [
+              if (provider.isSaved) ...[
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return PostDialog(
+                          recipe: recipe,
+                        );
+                      },
+                    );
+                  },
+                  icon: const FaIcon(
+                    FontAwesomeIcons.share,
+                    color: ColorPalette.offWhite,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => provider.toggleFavorite(context),
+                  icon: FaIcon(
+                    (recipe.is_favorite ?? false)
+                        ? FontAwesomeIcons.solidHeart
+                        : FontAwesomeIcons.heart,
+                    color: (recipe.is_favorite ?? false)
+                        ? Colors.red
+                        : ColorPalette.offWhite,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UpdateRecipePage(recipeId: recipe.id),
+                      ),
+                    ).then(
+                      (_) {
+                        provider.initializeRecipe(
+                          recipe: widget.recipe,
+                          recipeId: widget.recipeId,
+                        );
+                      },
+                    );
+                  },
+                  icon: const FaIcon(
+                    FontAwesomeIcons.pen,
+                    color: ColorPalette.offWhite,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                        message: "Are you sure you want to delete this recipe?",
+                        onConfirm: () async {
+                          Navigator.pop(context);
+                          bool success = await RecipeApi().deleteRecipe(recipe.id);
+                          if (success) Navigator.pop(context);
+                          InformationToast.show(
+                            context: context,
+                            message: success
+                                ? "Recipe deleted successfully!"
+                                : "There was an error deleting the recipe.",
+                            textColor:
+                                success ? ColorPalette.green : ColorPalette.red,
+                          );
+                        },
+                        onCancel: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    );
+                  },
+                  icon: const FaIcon(
+                    FontAwesomeIcons.trash,
+                    color: ColorPalette.red,
+                  ),
+                ),
+              ] else ...[
+                IconButton(
+                  onPressed: () =>
+                      context.read<RecipeDetailProvider>().saveRecipe(context),
+                  icon: FaIcon(
+                    provider.isSaved
+                        ? FontAwesomeIcons.solidBookmark
+                        : FontAwesomeIcons.bookmark,
+                    color: ColorPalette.offWhite,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -296,9 +292,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }
     );
   }
 }

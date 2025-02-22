@@ -96,6 +96,7 @@ class RecipeDetailProvider with ChangeNotifier {
 
   Future<void> _checkIfSaved() async {
     var user = await AuthApi.getUser();
+    _isSaved = false;
     if (user != null && _recipe?.created_by?.id == user.id) {
       _isSaved = true;
       notifyListeners();

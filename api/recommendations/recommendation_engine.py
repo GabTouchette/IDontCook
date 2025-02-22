@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.decomposition import NMF  # Replace Surprise with NMF
+from sklearn.decomposition import NMF
 from recipes.models import Recipe
 from recommendations.models import UserRecipeInteraction
 
@@ -99,10 +99,10 @@ def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_wei
     interaction_matrix = preprocess_interactions(interactions)
     reconstructed_matrix = train_collaborative_filtering(interaction_matrix)
 
-    # Get the list of recipes the user has saved
-    user_saved_recipes = set(
+    # Get the list of recipes the user has interacted with (e.g., saved, liked, etc.)
+    user_interacted_recipes = set(
         UserRecipeInteraction.objects
-        .filter(user_id=user_id, interaction_type='save')  # Only exclude saved recipes
+        .filter(user_id=user_id)  # Fetch all interactions
         .values_list('recipe_id', flat=True)
     )
 
@@ -111,7 +111,7 @@ def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_wei
         top_upvoted_recipes = (
             UserRecipeInteraction.objects
             .filter(interaction_type='upvote')
-            .exclude(recipe_id__in=user_saved_recipes)  # Exclude saved recipes
+            .exclude(recipe_id__in=user_interacted_recipes)  # Exclude interacted recipes
             .values('recipe_id')
             .annotate(upvote_count=pd.Count('recipe_id'))
             .order_by('-upvote_count')[:top_n]
@@ -120,19 +120,27 @@ def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_wei
 
     # Get collaborative filtering recommendations
     user_interactions = reconstructed_matrix.loc[user_id]
-    collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in user_saved_recipes][:top_n]
+    collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in user_interacted_recipes][:top_n]
 
     # Get content-based recommendations
-    content_recs = [recipe_id for recipe_id in get_content_based_recommendations(user_id, top_n) if recipe_id not in user_saved_recipes]
+    content_recs = [recipe_id for recipe_id in get_content_based_recommendations(user_id, top_n) if recipe_id not in user_interacted_recipes]
 
-    # Combine recommendations
+    # Combine recommendations without duplicates
     combined_recs = {}
     for i, recipe_id in enumerate(collab_recs):
         combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * collab_weight
     for i, recipe_id in enumerate(content_recs):
         combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * content_weight
 
-    # Sort by combined score and exclude saved recipes
+    # Sort by combined score and exclude interacted recipes
     sorted_recs = sorted(combined_recs.items(), key=lambda x: x[1], reverse=True)
     
-    return [recipe_id for recipe_id, score in sorted_recs if recipe_id not in user_saved_recipes][:top_n]
+    # Ensure no duplicates and exclude interacted recipes
+    unique_recs = []
+    for recipe_id, score in sorted_recs:
+        if recipe_id not in user_interacted_recipes and recipe_id not in unique_recs:
+            unique_recs.append(recipe_id)
+        if len(unique_recs) >= top_n:
+            break
+
+    return unique_recs
