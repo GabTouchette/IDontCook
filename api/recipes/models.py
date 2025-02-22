@@ -1,6 +1,8 @@
 from django.db import models
 from accounts.models import CustomUser
 from storages.backends.gcloud import GoogleCloudStorage
+from imagekit.models import ProcessedImageField
+from imagekit.processors import ResizeToFill
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -21,7 +23,16 @@ class Recipe(models.Model):
     servings = models.IntegerField(blank=True, null=True)
     tags = models.JSONField(default=list, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    image_url = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)
+    image = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)
+    thumbnail = ProcessedImageField(
+        storage=GoogleCloudStorage(),
+        upload_to='recipe_images/thumbnails/',
+        processors=[ResizeToFill(200, 200)],
+        format='JPEG',
+        options={'quality': 60},
+        null=True,
+        blank=True
+    )
     notes = models.TextField(blank=True, null=True)
     is_favorite = models.BooleanField(default=False)
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="clones")

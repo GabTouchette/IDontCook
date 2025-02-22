@@ -10,6 +10,10 @@ from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
 from django.http import JsonResponse
 from rest_framework.parsers import MultiPartParser, FormParser
+from PIL import ExifTags, Image
+from io import BytesIO
+from django.core.files.base import ContentFile
+
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -112,20 +116,55 @@ class RecipeImageUploadAPIView(APIView):
         try:
             recipe = Recipe.objects.get(id=recipe_id)
             image = request.FILES.get('image')
-            
+
             if image:
-                recipe.image_url = image
+                # Open image with Pillow
+                img = Image.open(image)
+
+                # Fix rotation using EXIF metadata
+                img = self.correct_image_orientation(img)
+
+                # Convert image back to Django File
+                img_io = BytesIO()
+                img.save(img_io, format='JPEG', quality=90)  # Convert to JPEG with quality
+                img_file = ContentFile(img_io.getvalue(), name=image.name)
+
+                # Assign corrected image
+                recipe.image = img_file
+                recipe.thumbnail = img_file
                 recipe.save()
 
-                if recipe.image_url:
-                    return Response({"image_url": recipe.image_url.url}, status=status.HTTP_200_OK)
-                else:
-                    return Response({"error": "Image upload failed."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {
+                        "image_url": recipe.image.url,
+                        "thumbnail_url": recipe.thumbnail.url
+                    },
+                    status=status.HTTP_200_OK
+                )
             
             return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
+
         except Recipe.DoesNotExist:
             return Response({"error": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
         
+    def correct_image_orientation(self, img):
+        """Auto-rotate image based on EXIF data."""
+        try:
+            exif = img._getexif()
+            if exif is not None:
+                for tag, value in exif.items():
+                    if tag in ExifTags.TAGS and ExifTags.TAGS[tag] == 'Orientation':
+                        if value == 3:
+                            img = img.rotate(180, expand=True)
+                        elif value == 6:
+                            img = img.rotate(270, expand=True)
+                        elif value == 8:
+                            img = img.rotate(90, expand=True)
+                        break
+        except (AttributeError, KeyError, IndexError):
+            pass  # No EXIF data or orientation tag found
+
+        return img
 
 class HasSavedRecipeAPIView(APIView):
     permission_classes = [IsAuthenticated]

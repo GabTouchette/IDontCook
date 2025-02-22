@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,10 +14,13 @@ from recipes.serializers import RecipeSerializer
 from .pagination import PostPagination
 from django.db.models import Sum
 
-class PostListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = PostSerializer
+
+class PostPagination(PageNumberPagination):
+    page_size = 10
+
+class PostListApiView(APIView):
     permission_classes = [IsAuthenticated]
-    pagination_class = PostPagination  
+    pagination_class = PostPagination()
 
     def get_queryset(self):
         category = self.request.query_params.get('category', 'all')
@@ -31,22 +35,24 @@ class PostListCreateAPIView(generics.ListCreateAPIView):
         
         return queryset
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
     def get(self, request, *args, **kwargs):
         posts = self.get_queryset()
-        page = self.paginate_queryset(posts)  
-        
+        page = self.pagination_class.paginate_queryset(posts, request, view=self)
+
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data) 
-        
-        serializer = self.get_serializer(posts, many=True)
-        return Response(serializer.data)
+            serializer = PostSerializer(page, many=True)
+            paginated_response = self.pagination_class.get_paginated_response(serializer.data)
+            return JsonResponse(paginated_response.data)
+
+        serializer = PostSerializer(posts, many=True)
+        return JsonResponse(serializer.data)
 
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+        serializer = PostSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
 class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

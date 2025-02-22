@@ -10,7 +10,7 @@ class PostSerializer(serializers.ModelSerializer):
     recipe_id = serializers.IntegerField(source='recipe.id', read_only=True, required=False)
     recipe_title = serializers.CharField(source='recipe.title', read_only=True, required=False, allow_blank=True)
     recipe_description = serializers.CharField(source='recipe.description', required=False, allow_blank=True)
-    recipe_image_url = serializers.SerializerMethodField()
+    recipe_thumbnail_url = serializers.SerializerMethodField()
     upvote_count = serializers.ReadOnlyField()
     downvote_count = serializers.ReadOnlyField()
     user_vote = serializers.SerializerMethodField()
@@ -23,7 +23,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'user_vote', 'user_liked',
             'upvote_count', 'downvote_count', 'recipe_id', 'recipe_title',
-            'recipe_description', 'recipe_image_url', 'content', 'created_at', 
+            'recipe_description', 'recipe_thumbnail_url', 'content', 'created_at', 
             'updated_at', 'comment_count', 'like_count'
         ]
 
@@ -59,8 +59,10 @@ class PostSerializer(serializers.ModelSerializer):
     def get_like_count(self, obj):
         return obj.likes.count()
     
-    def get_recipe_image_url(self, obj):
-        return obj.recipe.image_url.url if obj.recipe.image_url else None
+    def get_recipe_thumbnail_url(self, obj):
+        if obj.recipe.thumbnail and hasattr(obj.recipe.thumbnail, 'url'):
+            return obj.recipe.thumbnail.url
+        return None
 
 
 class CommentSerializer(serializers.ModelSerializer):
