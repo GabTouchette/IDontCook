@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mobile/api/api_helper.dart';
-import 'package:mobile/api/auth_api.dart';
+import 'package:i_cant_cook/api/api_helper.dart';
+import 'package:i_cant_cook/api/auth_api.dart';
 
 class AiChatbotApi {
   final ApiHelper _apiHelper = ApiHelper();

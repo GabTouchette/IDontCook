@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/widgets/toasts/information_toast.dart';
-import 'package:mobile/widgets/recipes/recipe_form_extra_section.dart';
-import 'package:mobile/widgets/recipes/recipe_form_ingredients_section.dart';
-import 'package:mobile/widgets/recipes/recipe_form_instructions_section.dart';
-import 'package:mobile/widgets/recipes/recipe_form_tags_section.dart';
-import 'package:mobile/widgets/recipes/recipe_form_time_section.dart';
-import 'package:mobile/widgets/recipes/recipe_form_title_section.dart';
-import 'package:mobile/models/recipe_form_fields/recipe_form_fields.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_form_extra_section.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_form_ingredients_section.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_form_instructions_section.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_form_tags_section.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_form_title_section.dart';
+import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 
 class UpdateRecipePage extends StatefulWidget {
   final int recipeId;

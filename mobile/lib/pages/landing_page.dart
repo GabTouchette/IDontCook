@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/auth_api.dart';
-import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import '../theme/colors.dart';
 
 class LandingPage extends StatefulWidget {

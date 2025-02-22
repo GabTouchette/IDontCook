@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/auth_api.dart';
-import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class RecipeDetailProvider with ChangeNotifier {
   bool _isLoading = false;

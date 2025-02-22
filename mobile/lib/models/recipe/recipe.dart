@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mobile/models/user/user.dart';
+import 'package:i_cant_cook/models/user/user.dart';
 import '../ingredient/ingredient.dart';
 
 part 'recipe.freezed.dart';

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/models/recipe_preview/recipe_preview.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class PostDialog extends StatefulWidget {
   final Recipe? recipe;
+  final VoidCallback onPostSuccess;
 
   const PostDialog({
     super.key,
     this.recipe,
+    required this.onPostSuccess,
   });
 
   @override
@@ -76,14 +78,18 @@ class _PostDialogState extends State<PostDialog> {
       'recipe_id': _selectedRecipe?.id,
     };
 
-    final result = await SocialApi().createPost(postData);
+    final success = await SocialApi().createPost(postData);
 
-    if (result) Navigator.pop(context);
+    if (success) {
+      Navigator.pop(context);
+      widget.onPostSuccess();
+    }
 
     InformationToast.show(
       context: context,
-      message: result ? "Post created successfully!" : "Failed to create post.",
-      textColor: result ? ColorPalette.green : ColorPalette.red,
+      message:
+          success ? "Post created successfully!" : "Failed to create post.",
+      textColor: success ? ColorPalette.green : ColorPalette.red,
     );
   }
 
@@ -122,33 +128,38 @@ class _PostDialogState extends State<PostDialog> {
               ] else ...[
                 _isLoading
                     ? const CircularProgressIndicator()
-                    : DropdownButtonFormField<RecipePreview>(
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.transparent,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12.0, horizontal: 16.0),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    : Container(
+                        child: DropdownButtonFormField<RecipePreview>(
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.transparent,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
+                          hint: const Text('Select a recipe'),
+                          value: _selectedRecipe,
+                          onChanged: (RecipePreview? newValue) {
+                            setState(() {
+                              _selectedRecipe = newValue;
+                            });
+                          },
+                          items: [
+                            ..._recipes.map<DropdownMenuItem<RecipePreview>>(
+                              (RecipePreview recipe) {
+                                return DropdownMenuItem<RecipePreview>(
+                                  value: recipe,
+                                  child: Text(
+                                    recipe.title.length > 28
+                                        ? '${recipe.title.substring(0, 28)}...'
+                                        : recipe.title,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              },
+                            ).toList(),
+                          ],
                         ),
-                        hint: const Text('Select a recipe'),
-                        value: _selectedRecipe,
-                        onChanged: (RecipePreview? newValue) {
-                          setState(() {
-                            _selectedRecipe = newValue;
-                          });
-                        },
-                        items: [
-                          ..._recipes.map<DropdownMenuItem<RecipePreview>>(
-                            (RecipePreview recipe) {
-                              return DropdownMenuItem<RecipePreview>(
-                                value: recipe,
-                                child: Text(recipe.title),
-                              );
-                            },
-                          ).toList(),
-                        ],
                       ),
                 if (_selectedRecipe != null) ...[
                   const SizedBox(height: 16),

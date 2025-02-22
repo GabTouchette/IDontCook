@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/utils/functions.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/utils/functions.dart';
 
 class RecipeInfo extends StatelessWidget {
   final Recipe recipe;

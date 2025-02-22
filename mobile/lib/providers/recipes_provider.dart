@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/api/recipe_api.dart';
-import 'package:mobile/models/recipe_preview/recipe_preview.dart';
+import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 
 class RecipesProvider with ChangeNotifier {
   List<RecipePreview> _allRecipes = [];

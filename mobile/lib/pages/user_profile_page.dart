@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe_preview/recipe_preview.dart';
-import 'package:mobile/models/user/user.dart';
-import 'package:mobile/theme/avatars.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
+import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/theme/avatars.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/providers/user_profile_provider.dart';
-import 'package:mobile/widgets/explore/user_post_card.dart';
-import 'package:mobile/widgets/recipes/recipe_tile.dart';
+import 'package:i_cant_cook/providers/user_profile_provider.dart';
+import 'package:i_cant_cook/widgets/explore/user_post_card.dart';
+import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
 
 class UserProfilePage extends StatelessWidget {
   final User user;

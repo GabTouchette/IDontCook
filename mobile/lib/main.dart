@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/providers/explore_provider.dart';
-import 'package:mobile/providers/recipe_detail_provider.dart';
-import 'package:mobile/providers/recipes_provider.dart';
-import 'package:mobile/providers/user_profile_provider.dart';
+import 'package:i_cant_cook/providers/explore_provider.dart';
+import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
+import 'package:i_cant_cook/providers/recipes_provider.dart';
+import 'package:i_cant_cook/providers/user_profile_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/routes.dart';
+import 'package:i_cant_cook/routes.dart';
 
 void main() {
   runApp(

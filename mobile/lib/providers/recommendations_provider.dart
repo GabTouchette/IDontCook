@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/recommendation_api.dart';
-import 'package:mobile/models/recipe_preview/recipe_preview.dart';
+import 'package:i_cant_cook/api/recommendation_api.dart';
+import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 
 class RecommendationsProvider with ChangeNotifier {
   List<RecipePreview> _recommendedRecipes = [];

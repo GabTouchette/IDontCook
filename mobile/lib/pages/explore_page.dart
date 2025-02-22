@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/models/user/user.dart';
-import 'package:mobile/theme/avatars.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
+import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/theme/avatars.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/providers/explore_provider.dart';
-import 'package:mobile/pages/user_profile_page.dart';
-import 'package:mobile/widgets/explore/user_post_card.dart';
-import 'package:mobile/widgets/dialogs/user_post_dialog.dart';
+import 'package:i_cant_cook/providers/explore_provider.dart';
+import 'package:i_cant_cook/pages/user_profile_page.dart';
+import 'package:i_cant_cook/widgets/explore/user_post_card.dart';
+import 'package:i_cant_cook/widgets/dialogs/user_post_dialog.dart';
 
 class ExplorePage extends StatelessWidget {
   const ExplorePage({super.key});
@@ -32,6 +32,10 @@ class ExplorePage extends StatelessWidget {
                 builder: (BuildContext context) {
                   return PostDialog(
                     recipe: null,
+                    onPostSuccess: () {
+                      Provider.of<ExploreProvider>(context, listen: false)
+                          .refresh();
+                    },
                   );
                 },
               );

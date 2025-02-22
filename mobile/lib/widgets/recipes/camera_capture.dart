@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/recipes/camera_preview_screen.dart';
-import 'package:mobile/api/ai_chatbot_api.dart';
-import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/recipes/camera_preview_screen.dart';
+import 'package:i_cant_cook/api/ai_chatbot_api.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class CameraCaptureWidget extends StatefulWidget {
   const CameraCaptureWidget({Key? key}) : super(key: key);

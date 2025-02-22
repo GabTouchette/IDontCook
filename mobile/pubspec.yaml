@@ -1,17 +1,15 @@
-name: mobile
-description: A Flutter project for your Recipe App
-
-publish_to: 'none' # Remove this line if you want to publish the package
+name: i_cant_cook
+description: A Recipe app that helps you create, find and share recipes.
 
 version: 1.0.0+1
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.27.4"
 
 dependencies:
   flutter:
     sdk: flutter
-
   http: ^1.3.0
   provider: ^6.0.3
   font_awesome_flutter: ^10.1.0

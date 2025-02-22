@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 
 class PlaceholderImageWidget extends StatelessWidget {
   final int recipeId;

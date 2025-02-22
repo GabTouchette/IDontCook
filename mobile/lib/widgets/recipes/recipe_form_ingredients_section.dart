@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe_form_fields/recipe_form_fields.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 
 class IngredientsSection extends StatefulWidget {
   final List<IngredientField> ingredients;

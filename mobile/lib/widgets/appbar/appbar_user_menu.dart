@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/auth_api.dart';
-import 'package:mobile/models/user/user.dart';
-import 'package:mobile/pages/user_profile_page.dart';
-import 'package:mobile/theme/avatars.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/pages/user_profile_page.dart';
+import 'package:i_cant_cook/theme/avatars.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 
 class UserMenuWidget extends StatefulWidget {
   const UserMenuWidget({Key? key}) : super(key: key);

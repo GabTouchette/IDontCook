@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    PostListApiView, PostDetailAPIView, 
+    PostListCreateAPIView, PostDetailAPIView, 
     CommentListCreateAPIView,
     LikeCreateAPIView, LikeDeleteAPIView,
     VoteCreateAPIView, VoteDeleteAPIView,
@@ -11,7 +11,7 @@ from .views import (
 
 urlpatterns = [
     # Post URLs
-    path('posts/', PostListApiView.as_view(), name='post-list-create'),
+    path('posts/', PostListCreateAPIView.as_view(), name='post-list-create'),
     path('posts/<int:pk>/', PostDetailAPIView.as_view(), name='post-detail'),
 
     # Comment URLs

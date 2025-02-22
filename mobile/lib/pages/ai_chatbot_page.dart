@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/api/ai_chatbot_api.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
-import 'package:mobile/widgets/chatbot/ai_response_bubble.dart';
-import 'package:mobile/widgets/chatbot/chat_message.dart';
+import 'package:i_cant_cook/api/ai_chatbot_api.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
+import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
+import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
 
 class AiChatBotPage extends StatefulWidget {
   const AiChatBotPage({super.key});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe_preview/recipe_preview.dart';
-import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/recipes/placeholder_image.dart';
+import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 
 class BigRecipeTile extends StatelessWidget {
   final RecipePreview recipe;

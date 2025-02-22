@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:mobile/models/recipe/recipe.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/chatbot/chat_message.dart';
-import 'package:mobile/widgets/chatbot/recipe_card.dart';
-import 'package:mobile/widgets/chatbot/user_recipe_card.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
+import 'package:i_cant_cook/widgets/chatbot/recipe_card.dart';
+import 'package:i_cant_cook/widgets/chatbot/user_recipe_card.dart';
 
 class AiResponseBubble extends StatelessWidget {
   final String? message;

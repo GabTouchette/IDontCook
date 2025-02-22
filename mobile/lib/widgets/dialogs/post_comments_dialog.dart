@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/comment/comment.dart';
-import 'package:mobile/models/post/post.dart';
-import 'package:mobile/pages/user_profile_page.dart';
-import 'package:mobile/theme/avatars.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/models/comment/comment.dart';
+import 'package:i_cant_cook/models/post/post.dart';
+import 'package:i_cant_cook/pages/user_profile_page.dart';
+import 'package:i_cant_cook/theme/avatars.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 
 class CommentDrawer extends StatefulWidget {
   final Post post;

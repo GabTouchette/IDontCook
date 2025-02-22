@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/paginated_posts/paginated_posts.dart';
-import 'package:mobile/models/user/user.dart';
-import 'package:mobile/providers/post_mixin.dart';
+import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/models/paginated_posts/paginated_posts.dart';
+import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/providers/post_mixin.dart';
 
 class ExploreProvider with ChangeNotifier, PostMixin {
   final TextEditingController _searchController = TextEditingController();
@@ -37,11 +37,12 @@ class ExploreProvider with ChangeNotifier, PostMixin {
 
   void onTabTapped(int index) {
     _tabIndex = index;
-    _refresh();
+    refresh();
     notifyListeners();
   }
 
-  Future<void> _refresh() async {
+  @override
+  Future<void> refresh() async {
     _currentPage = 1;
     clearPosts();
     await _fetchPosts();
@@ -57,7 +58,6 @@ class ExploreProvider with ChangeNotifier, PostMixin {
           .fetchPosts(page: _currentPage, category: _getCategoryFilter());
       _nextPageUrl = paginatedPosts.next;
 
-      // Add new posts using the mixin
       addPosts(paginatedPosts.results);
     } catch (e) {
       print('Error fetching posts: $e');

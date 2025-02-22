@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CameraPreviewScreen extends StatefulWidget {

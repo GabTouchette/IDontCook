@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/providers/recommendations_provider.dart';
-import 'package:mobile/widgets/recommendations/big_recipe_tile.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/appbar/appbar_user_menu.dart';
+import 'package:i_cant_cook/providers/recommendations_provider.dart';
+import 'package:i_cant_cook/widgets/recommendations/big_recipe_tile.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 
 class RecommendationsPage extends StatelessWidget {
   const RecommendationsPage({super.key});

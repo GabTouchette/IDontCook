@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mobile/api/auth_api.dart';
-import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/post/post.dart';
-import 'package:mobile/models/user/user.dart';
-import 'package:mobile/pages/recipe_detail_page/recipe_detail_page.dart';
-import 'package:mobile/pages/user_profile_page.dart';
-import 'package:mobile/providers/post_mixin.dart';
-import 'package:mobile/theme/avatars.dart';
-import 'package:mobile/theme/colors.dart';
-import 'package:mobile/widgets/dialogs/confirmation_dialog.dart';
-import 'package:mobile/widgets/dialogs/post_comments_dialog.dart';
-import 'package:mobile/widgets/recipes/placeholder_image.dart';
-import 'package:mobile/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/models/post/post.dart';
+import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:i_cant_cook/pages/user_profile_page.dart';
+import 'package:i_cant_cook/providers/post_mixin.dart';
+import 'package:i_cant_cook/theme/avatars.dart';
+import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
+import 'package:i_cant_cook/widgets/dialogs/post_comments_dialog.dart';
+import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
@@ -323,6 +323,9 @@ class _UserPostCardState extends State<UserPostCard>
 
   Future<void> _deletePost() async {
     final result = await SocialApi().deletePost(widget.post.id);
+    
+    Navigator.pop(context);
+    widget.provider.refresh();
 
     InformationToast.show(
       context: context,

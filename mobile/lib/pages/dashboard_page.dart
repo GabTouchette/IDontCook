@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/pages/explore_page.dart';
-import 'package:mobile/pages/recommendations_page.dart';
-import 'package:mobile/widgets/navbar.dart';
-import 'package:mobile/pages/ai_chatbot_page.dart';
-import 'package:mobile/pages/recipes_page.dart';
+import 'package:i_cant_cook/pages/explore_page.dart';
+import 'package:i_cant_cook/pages/recommendations_page.dart';
+import 'package:i_cant_cook/widgets/navbar.dart';
+import 'package:i_cant_cook/pages/ai_chatbot_page.dart';
+import 'package:i_cant_cook/pages/recipes_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});

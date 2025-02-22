@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/theme/colors.dart';
+import 'package:i_cant_cook/theme/colors.dart';
 
 class AdditionalSections extends StatelessWidget {
   final List<String>? tags;

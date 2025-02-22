@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api/social_api.dart';
-import 'package:mobile/models/post/post.dart';
+import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/models/post/post.dart';
 
 mixin PostMixin on ChangeNotifier {
   List<Post> _posts = [];
@@ -71,4 +71,6 @@ mixin PostMixin on ChangeNotifier {
     _posts.clear();
     notifyListeners();
   }
+
+  void refresh() {}
 }
