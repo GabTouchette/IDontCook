@@ -28,8 +28,7 @@ def preprocess_interactions(interactions):
         return pd.DataFrame()
 
     interaction_weights = {
-        'like': 1,
-        'save': 3,
+        'like': 3,
         'comment': 1,
         'upvote': 2,
         'downvote': 0,
