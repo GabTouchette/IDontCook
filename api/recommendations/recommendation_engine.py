@@ -4,12 +4,17 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import NMF
 from recipes.models import Recipe
 from recommendations.models import UserRecipeInteraction
+from django.db.models import Count
 
 def get_interaction_data():
     """
     Fetch user-recipe interactions from the database and return a DataFrame.
+    If no interactions exist, return an empty DataFrame with the required columns.
     """
     interactions = UserRecipeInteraction.objects.all().values('user_id', 'recipe_id', 'interaction_type')
+    if not interactions:
+        # Return an empty DataFrame with the required columns
+        return pd.DataFrame(columns=['user_id', 'recipe_id', 'interaction_type'])
     return pd.DataFrame(list(interactions))
 
 def preprocess_interactions(interactions):
@@ -17,7 +22,11 @@ def preprocess_interactions(interactions):
     Preprocess interaction data:
     - Assign weights to interaction types.
     - Create a user-recipe interaction matrix.
+    If no interactions exist, return an empty DataFrame.
     """
+    if interactions.empty:
+        return pd.DataFrame()
+
     interaction_weights = {
         'like': 1,
         'save': 3,
@@ -30,19 +39,15 @@ def preprocess_interactions(interactions):
         index='user_id', columns='recipe_id', values='weight', fill_value=0
     )
     
-    all_users = interactions['user_id'].unique()
-    for user in all_users:
-        if user not in interaction_matrix.index:
-            interaction_matrix.loc[user] = 0
-
     return interaction_matrix
 
 def train_collaborative_filtering(interaction_matrix):
     """
     Train a collaborative filtering model using Non-Negative Matrix Factorization (NMF).
+    If the interaction matrix is empty, return an empty DataFrame.
     """
-    # Fill missing values with 0 (no interaction)
-    interaction_matrix = interaction_matrix.fillna(0)
+    if interaction_matrix.empty:
+        return pd.DataFrame()
 
     # Apply NMF
     model = NMF(n_components=10, init='random', random_state=42, max_iter=500)  # Adjust n_components as needed
@@ -93,7 +98,8 @@ def get_content_based_recommendations(user_id, top_n=10):
 def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_weight=0.4):
     """
     Generate hybrid recommendations by combining collaborative and content-based filtering.
-    If the user is new, recommend recipes with the highest upvotes, excluding recipes they have saved.
+    If the user is new or has no interactions, recommend recipes with the highest upvotes.
+    Exclude recipes the user has saved or created, including those with parent = X.
     """
     interactions = get_interaction_data()
     interaction_matrix = preprocess_interactions(interactions)
@@ -106,24 +112,41 @@ def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_wei
         .values_list('recipe_id', flat=True)
     )
 
-    if user_id not in reconstructed_matrix.index:
-        # If user is new, recommend recipes sorted by highest upvotes
+    # Get the list of recipes the user has created
+    user_created_recipes = set(
+        Recipe.objects
+        .filter(created_by=user_id)  # Recipes created by the user
+        .values_list('id', flat=True)
+    )
+
+    # Get the list of recipes where the user has created a recipe with parent = X
+    user_saved_versions = set(
+        Recipe.objects
+        .filter(created_by=user_id)  # Recipes created by the user
+        .values_list('parent', flat=True)  # Get the parent IDs of these recipes
+    )
+
+    # Combine the lists of interacted, created, and saved versions
+    excluded_recipes = user_interacted_recipes.union(user_created_recipes).union(user_saved_versions)
+
+    # If the user is new or has no interactions, recommend top upvoted recipes
+    if user_id not in reconstructed_matrix.index or reconstructed_matrix.empty:
         top_upvoted_recipes = (
             UserRecipeInteraction.objects
             .filter(interaction_type='upvote')
-            .exclude(recipe_id__in=user_interacted_recipes)  # Exclude interacted recipes
+            .exclude(recipe_id__in=excluded_recipes)  # Exclude interacted, created, and saved versions
             .values('recipe_id')
-            .annotate(upvote_count=pd.Count('recipe_id'))
+            .annotate(upvote_count=Count('recipe_id'))  # Use Django's Count
             .order_by('-upvote_count')[:top_n]
         )
         return [recipe['recipe_id'] for recipe in top_upvoted_recipes]
 
     # Get collaborative filtering recommendations
     user_interactions = reconstructed_matrix.loc[user_id]
-    collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in user_interacted_recipes][:top_n]
+    collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in excluded_recipes][:top_n]
 
     # Get content-based recommendations
-    content_recs = [recipe_id for recipe_id in get_content_based_recommendations(user_id, top_n) if recipe_id not in user_interacted_recipes]
+    content_recs = [recipe_id for recipe_id in get_content_based_recommendations(user_id, top_n) if recipe_id not in excluded_recipes]
 
     # Combine recommendations without duplicates
     combined_recs = {}
@@ -132,13 +155,13 @@ def get_hybrid_recommendations(user_id, top_n=10, collab_weight=0.6, content_wei
     for i, recipe_id in enumerate(content_recs):
         combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * content_weight
 
-    # Sort by combined score and exclude interacted recipes
+    # Sort by combined score and exclude interacted, created, and saved versions
     sorted_recs = sorted(combined_recs.items(), key=lambda x: x[1], reverse=True)
     
-    # Ensure no duplicates and exclude interacted recipes
+    # Ensure no duplicates and exclude interacted, created, and saved versions
     unique_recs = []
     for recipe_id, score in sorted_recs:
-        if recipe_id not in user_interacted_recipes and recipe_id not in unique_recs:
+        if recipe_id not in excluded_recipes and recipe_id not in unique_recs:
             unique_recs.append(recipe_id)
         if len(unique_recs) >= top_n:
             break

@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import models
-from .models import Recipe, Save
+from .models import Recipe
 from .serializers import RecipeSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
@@ -24,11 +24,11 @@ class RecipeListAPIView(APIView):
         user = request.user
         data = request.data
 
-        parent_id = data.get('parent')
+        parent_id = data.get('parent_id', None)
         
         if parent_id is not None and parent_id != -1:
             try:
-                parent_recipe = Recipe.objects.get(id=parent_id)
+                parent = Recipe.objects.get(id=parent_id)
             except Recipe.DoesNotExist:
                 return Response(
                     {"error": "Parent recipe not found"},
@@ -36,14 +36,17 @@ class RecipeListAPIView(APIView):
                 )
 
             # Check if the user has already saved this parent recipe
-            if Save.objects.filter(user=user, recipe=parent_recipe).exists():
+            if Recipe.objects.filter(
+                    created_by=user
+                ).filter(
+                    models.Q(id=parent.id) | models.Q(parent_id=parent.id)
+                ).exists():
+
                 return Response(
                     {"error": "You have already saved this recipe"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
-            # Save the parent recipe
-            Save.objects.create(user=user, recipe=parent_recipe)
+            
 
             # Create the new recipe with the parent reference
             serializer = RecipeSerializer(data=data, context={'request': request})

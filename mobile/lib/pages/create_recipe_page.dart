@@ -122,7 +122,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       "tags": _selectedTags,
     };
 
-    bool success = await RecipeApi().createRecipe(recipeData);
+    int? newId = await RecipeApi().createRecipe(recipeData);
+    bool success = newId != null;
 
     InformationToast.show(
       context: context,

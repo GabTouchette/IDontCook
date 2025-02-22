@@ -16,9 +16,9 @@ class RecipeApi {
     return [];
   }
 
-  Future<bool> createRecipe(Map<String, dynamic> recipeData) async {
+  Future<int?> createRecipe(Map<String, dynamic> recipeData) async {
     var response = await _apiHelper.postRequest('recipes/', recipeData);
-    return response != null;
+    return response["id"];
   }
 
   Future<Map<String, dynamic>> getRecipeById(int recipeId) async {

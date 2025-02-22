@@ -79,10 +79,12 @@ class RecipeDetailProvider with ChangeNotifier {
       "parent": _recipe!.id,
     };
 
-    bool success = await RecipeApi().createRecipe(recipeData);
+    int? newId = await RecipeApi().createRecipe(recipeData);
+    bool success = newId != null;
 
     if (success) {
       _isSaved = true;
+      _recipe = recipe?.copyWith(id: newId);
       notifyListeners();
     }
 

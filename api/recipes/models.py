@@ -24,22 +24,10 @@ class Recipe(models.Model):
     image_url = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     is_favorite = models.BooleanField(default=False)
-    parent = models.IntegerField(blank=True, null=True)
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="clones")
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     last_visited_at = models.DateTimeField(blank=True, null=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     
     def __str__(self):
         return self.title
-
-
-class Save(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='saves')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'recipe')
-
-    def __str__(self):
-        return f"{self.user.username} saved {self.recipe.title}"

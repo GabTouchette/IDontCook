@@ -7,10 +7,10 @@ class UserRecipeInteraction(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     interaction_type = models.CharField(max_length=20, choices=[
         ('like', 'Like'),
-        ('save', 'Save'),
         ('comment', 'Comment'),
         ('upvote', 'Upvote'),
         ('downvote', 'Downvote'),
+        ('save', 'Save'),
     ])
     created_at = models.DateTimeField(auto_now_add=True)
 
