@@ -68,10 +68,23 @@ def clean_r_vector_format(r_vector):
     """Convert R-style c(...) format to Python list format."""
     if r_vector == 'character(0)':
         return []
+
     # Replace R-style 'c(...)' with Python-style '[...]' and handle NA values
     r_vector = r_vector.replace('c(', '[').replace(')', ']')
     r_vector = r_vector.replace('NA', 'None')
-    return ast.literal_eval(r_vector)
+
+    try:
+        parsed_value = ast.literal_eval(r_vector)
+
+        # Ensure it's a list of strings
+        if isinstance(parsed_value, list) and all(isinstance(item, str) for item in parsed_value):
+            return parsed_value
+        else:
+            return None  # Return None if it's not a list of strings
+
+    except (SyntaxError, ValueError):
+        return None  # Return None if parsing fails
+
 
 
 def parse_time_to_minutes(time_str):
@@ -99,17 +112,15 @@ def load_recipes_from_csv(csv_file, users):
         recipe_count = 0
         for row in reader:  # Iterate through all rows in the CSV
             try:
-                if recipe_count >= 10000:  # Check if max recipes limit reached
-                    print("Reached maximum limit of 10,000 recipes.")
+                if recipe_count >= 1000:  # Check if max recipes limit reached
+                    print("Reached maximum limit of recipes.")
                     break 
-                recipe_count += 1
 
                 raw_quantities = clean_r_vector_format(row['RecipeIngredientQuantities'])
                 raw_parts = clean_r_vector_format(row['RecipeIngredientParts'])
 
                 if raw_quantities is None or raw_parts is None:
-                        print(f"Skipping recipe due to missing ingredients for row: {row}")
-                        continue  # Skip this recipe
+                    continue
                 
                 ingredients = []
                 
@@ -132,7 +143,7 @@ def load_recipes_from_csv(csv_file, users):
                     cooking_time=parse_time_to_minutes(row['CookTime']),
                     preparation_time=parse_time_to_minutes(row['PrepTime']),                
                     servings=int(row['RecipeServings']) if row['RecipeServings'] and row['RecipeServings'] != 'NA' else None,
-                    tags=clean_r_vector_format(row['Keywords']),
+                    tags=clean_r_vector_format(row['Keywords']) if row['Keywords'] else [],
                     description=row['Description'],
                     calories=float(row['Calories']) if row['Calories'] else None,
                     fat_content=float(row['FatContent']) if row['FatContent'] else None,
@@ -153,7 +164,8 @@ def load_recipes_from_csv(csv_file, users):
 
             except Exception:
                 continue
-
+            
+            recipe_count += 1
 
 
 def create_mock_posts(num_posts=200, users=None, recipes=None):

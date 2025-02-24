@@ -49,7 +49,7 @@ def train_collaborative_filtering(interaction_matrix):
         return pd.DataFrame()
 
     # Apply NMF
-    model = NMF(n_components=50, init='random', random_state=42, max_iter=500)  # Adjust n_components as needed
+    model = NMF(n_components=10, init='random', random_state=42, max_iter=100)  # Adjust n_components as needed
     W = model.fit_transform(interaction_matrix)  # User features
     H = model.components_  # Recipe features
 
@@ -58,7 +58,7 @@ def train_collaborative_filtering(interaction_matrix):
 
     return reconstructed_matrix
 
-def get_content_based_recommendations(user_id, top_n=50):
+def get_content_based_recommendations(user_id, top_n=30):
     """
     Generate content-based recommendations using recipe title, ingredients, description, and tags.
     """
@@ -82,10 +82,9 @@ def get_content_based_recommendations(user_id, top_n=50):
     recipe_similarity = cosine_similarity(recipe_features)
 
     # Get the user’s previously interacted recipes
-    user_interactions = UserRecipeInteraction.objects.filter(user_id=user_id).values('recipe_id')
-    user_recipe_ids = [interaction['recipe_id'] for interaction in user_interactions]
+    user_recipe_ids = recipes.filter(created_by__id=user_id).values_list('id', flat=True)
     similar_recipes = set()
-
+    
     # Find similar recipes based on user interactions
     for recipe_id in user_recipe_ids:
         recipe_index = recipe_df.index[recipe_df['id'] == recipe_id].tolist()[0]
@@ -94,7 +93,7 @@ def get_content_based_recommendations(user_id, top_n=50):
 
     return list(similar_recipes)[:top_n]
 
-def get_hybrid_recommendations(user_id, top_n=50, collab_weight=0.6, content_weight=0.4):
+def get_hybrid_recommendations(user_id, top_n=30, collab_weight=0.6, content_weight=0.4):
     """
     Generate hybrid recommendations by combining collaborative and content-based filtering.
     If no recommendations are found, recommend the most upvoted recipes.
@@ -102,13 +101,6 @@ def get_hybrid_recommendations(user_id, top_n=50, collab_weight=0.6, content_wei
     interactions = get_interaction_data()
     interaction_matrix = preprocess_interactions(interactions)
     reconstructed_matrix = train_collaborative_filtering(interaction_matrix)
-
-    # Get the list of recipes the user has interacted with (e.g., saved, liked, etc.)
-    user_interacted_recipes = set(
-        UserRecipeInteraction.objects
-        .filter(user_id=user_id)
-        .values_list('recipe_id', flat=True)
-    )
 
     # Get the list of recipes the user has created
     user_created_recipes = set(
@@ -125,7 +117,7 @@ def get_hybrid_recommendations(user_id, top_n=50, collab_weight=0.6, content_wei
     )
 
     # Combine the lists of interacted, created, and saved versions
-    excluded_recipes = user_interacted_recipes.union(user_created_recipes).union(user_saved_versions)
+    excluded_recipes = user_created_recipes.union(user_saved_versions)
 
     # Get collaborative filtering recommendations if user is in the interaction matrix
     collab_recs = []
@@ -143,30 +135,28 @@ def get_hybrid_recommendations(user_id, top_n=50, collab_weight=0.6, content_wei
     for i, recipe_id in enumerate(content_recs):
         combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * content_weight
 
-    print(collab_recs)
-    print(content_recs)
-    print(combined_recs)
     # Sort by combined score
     sorted_recs = sorted(combined_recs.items(), key=lambda x: x[1], reverse=True)
 
-    # Ensure no duplicates and exclude interacted, created, and saved versions
+    # Ensure no duplicates and return top N recommendations
     unique_recs = []
-    for recipe_id, score in sorted_recs:
+    for recipe_id, _ in sorted_recs:
         if recipe_id not in excluded_recipes and recipe_id not in unique_recs:
             unique_recs.append(recipe_id)
         if len(unique_recs) >= top_n:
             break
     
-    # If no recommendations were found, return top upvoted recipes
-    if not unique_recs:
-        unique_recs = list(
-            UserRecipeInteraction.objects
-            .filter(interaction_type='upvote')
-            .exclude(recipe_id__in=excluded_recipes)
-            .values('recipe_id')
-            .annotate(upvote_count=Count('recipe_id'))
-            .order_by('-upvote_count')[:top_n]
-            .values_list('recipe_id', flat=True)
+    print(unique_recs)
+    # If no recommendations were found, or fewer than top_n, fill with random recipes
+    if len(unique_recs) < top_n:
+        remaining_slots = top_n - len(unique_recs)
+        random_recipes = list(
+            Recipe.objects
+            .exclude(id__in=excluded_recipes)
+            .order_by('?')[:remaining_slots]
+            .values_list('id', flat=True)
         )
+        print(random_recipes)
+        unique_recs.extend(random_recipes)
 
-    return unique_recs
+    return unique_recs[:top_n]
