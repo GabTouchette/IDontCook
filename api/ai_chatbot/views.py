@@ -93,6 +93,5 @@ class RecipeOCRView(APIView):
         Processes an image for OCR and returns a JSON response.
         """
         openai_service = OpenAIService()
-        # response = openai_service.ask_openai_ocr(image_path)
-        response = {"title": "Mathematical Formulas", "ingredients": [], "instructions": ["Calculate C[ES], using the formula: C[ES] = k[ES] + [ES] + [ES]^2 / k[S]", "Calculate the value of Vmax[ES] as Vmax[ES] = Vi * (k[m] + [S] + k[m]/k[S]^2)", "Calculate Vi using the formula: Vi = Vmax[ES] / (k[m] + [S]^2 + k[m]/k[S]^2)", "Determine V by using the formula: V = Vmax * (k[m]/[S] + 1 + k[m]/k[S])", "Define [I] = 1 \u03bcM", "Calculate points: (x1,y1)=(0,1,62) and (x2,y2)=(0.15,2.028)", "Solve for y as y = 10.16 * e^b", "Calculate b with the equation 1.52 = 10.16 * 0.1 + b"], "cooking_time": 0, "servings": 0, "preparation_time": 0, "tags": ["mathematics", "formulas"], "description": "Collection of mathematical derivations and calculations.", "notes": "All calculations require careful handling of variables."}
+        response = openai_service.ask_openai_ocr(image_path)
         return JsonResponse({"response": response}, status=status.HTTP_200_OK)
