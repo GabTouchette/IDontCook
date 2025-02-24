@@ -157,7 +157,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             style: const TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.bold,
-              fontSize: 32,
+              fontSize: 28,
               color: ColorPalette.offWhite,
             ),
             maxLines: 2,

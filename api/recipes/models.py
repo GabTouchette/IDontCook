@@ -38,7 +38,17 @@ class Recipe(models.Model):
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="clones")
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     last_visited_at = models.DateTimeField(blank=True, null=True)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)    
+    calories = models.FloatField(blank=True, null=True)
+    fat_content = models.FloatField(blank=True, null=True)
+    saturated_fat_content = models.FloatField(blank=True, null=True)
+    cholesterol_content = models.FloatField(blank=True, null=True)
+    sodium_content = models.FloatField(blank=True, null=True)
+    carbohydrate_content = models.FloatField(blank=True, null=True)
+    fiber_content = models.FloatField(blank=True, null=True)
+    sugar_content = models.FloatField(blank=True, null=True)
+    protein_content = models.FloatField(blank=True, null=True)
+    recipe_yield = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
         return self.title

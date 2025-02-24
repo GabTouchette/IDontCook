@@ -20,7 +20,7 @@ class RecommendationsPage extends StatelessWidget {
           centerTitle: true,
           elevation: 0,
           title: Text(
-            'Recommendations',
+            'Discover',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.bold,

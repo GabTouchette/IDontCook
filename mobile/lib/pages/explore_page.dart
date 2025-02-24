@@ -47,7 +47,7 @@ class ExplorePage extends StatelessWidget {
             ),
           ),
           title: Text(
-            'Explore',
+            'News',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.bold,

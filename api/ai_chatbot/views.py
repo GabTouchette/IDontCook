@@ -23,23 +23,11 @@ class ChatbotView(APIView):
         """
         query = request.data.get("query")
         chat_history = request.data.get("chat_history", None)
-        image_path = request.data.get("image_path", None)
 
         if not query:
             return JsonResponse({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if image_path:
-            return self.process_ocr_response(request.user, image_path)
-        else:
-            return self.process_chat_response(request.user, query, chat_history)
-
-    def process_ocr_response(self, user, image_path):
-        """
-        Processes an image for OCR and returns a JSON response.
-        """
-        openai_service = OpenAIService()
-        response = openai_service.ask_openai_ocr(image_path)
-        return JsonResponse({"response": response}, status=status.HTTP_200_OK)
+        return self.process_chat_response(request.user, query, chat_history)
 
     def process_chat_response(self, user, query, chat_history=None):
         """
@@ -91,12 +79,7 @@ class RecipeOCRView(APIView):
             temp_image_path = temp_image.name
 
         try:
-            openai_service = OpenAIService()
-            structured_recipe = openai_service.ask_openai(image_path=temp_image_path)
-            if structured_recipe:
-                return JsonResponse({"response": structured_recipe}, status=200, safe=False)
-            else:
-                return JsonResponse({"error": "Failed to generate structured recipe"}, status=500)
+            return self.process_ocr_response(request.user, temp_image_path)
 
         except Exception as e:
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
@@ -104,3 +87,12 @@ class RecipeOCRView(APIView):
         finally:
             if os.path.exists(temp_image_path):
                 os.remove(temp_image_path)
+                
+    def process_ocr_response(self, user, image_path):
+        """
+        Processes an image for OCR and returns a JSON response.
+        """
+        openai_service = OpenAIService()
+        # response = openai_service.ask_openai_ocr(image_path)
+        response = {"title": "Mathematical Formulas", "ingredients": [], "instructions": ["Calculate C[ES], using the formula: C[ES] = k[ES] + [ES] + [ES]^2 / k[S]", "Calculate the value of Vmax[ES] as Vmax[ES] = Vi * (k[m] + [S] + k[m]/k[S]^2)", "Calculate Vi using the formula: Vi = Vmax[ES] / (k[m] + [S]^2 + k[m]/k[S]^2)", "Determine V by using the formula: V = Vmax * (k[m]/[S] + 1 + k[m]/k[S])", "Define [I] = 1 \u03bcM", "Calculate points: (x1,y1)=(0,1,62) and (x2,y2)=(0.15,2.028)", "Solve for y as y = 10.16 * e^b", "Calculate b with the equation 1.52 = 10.16 * 0.1 + b"], "cooking_time": 0, "servings": 0, "preparation_time": 0, "tags": ["mathematics", "formulas"], "description": "Collection of mathematical derivations and calculations.", "notes": "All calculations require careful handling of variables."}
+        return JsonResponse({"response": response}, status=status.HTTP_200_OK)

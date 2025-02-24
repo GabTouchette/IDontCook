@@ -29,8 +29,8 @@ class RecipeListAPIView(APIView):
         data = request.data
 
         parent_id = data.get('parent_id', None)
-        
-        if parent_id is not None and parent_id != -1:
+
+        if parent_id is not None and parent_id > 0:
             try:
                 parent = Recipe.objects.get(id=parent_id)
             except Recipe.DoesNotExist:
