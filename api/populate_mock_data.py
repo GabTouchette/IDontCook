@@ -237,7 +237,7 @@ def main():
     
     # Load recipes from CSV
     load_recipes_from_csv('recipes.csv', [])
-    print("Created 10000 recipes.")
+    # print("Created 10000 recipes.")
 
     # # Create mock posts, comments, likes, and votes
     # recipes = Recipe.objects.all()
