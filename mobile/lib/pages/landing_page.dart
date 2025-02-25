@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:provider/provider.dart';
+import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import '../theme/colors.dart';
 
@@ -14,16 +15,17 @@ class _LandingPageState extends State<LandingPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
-  final AuthApi _authApi = AuthApi();
 
   bool _isLoggingIn = true;
 
-  void _handleLogin() async {
+  void _handleLogin(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     try {
       final username = _usernameController.text;
       final password = _passwordController.text;
 
-      await _authApi.login(username, password);
+      await authProvider.login(username, password);
 
       Navigator.pushNamed(context, '/recipes');
     } catch (e) {
@@ -35,13 +37,15 @@ class _LandingPageState extends State<LandingPage> {
     }
   }
 
-  void _handleRegister() async {
+  void _handleRegister(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     try {
       final username = _usernameController.text;
       final password = _passwordController.text;
       final email = _emailController.text;
 
-      await _authApi.register(username, email, password);
+      await authProvider.register(username, email, password);
 
       Navigator.pushNamed(context, '/recipes');
     } catch (e) {
@@ -172,26 +176,38 @@ class _LandingPageState extends State<LandingPage> {
                 ),
               ),
               const SizedBox(height: 40),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.6,
-                child: ElevatedButton(
-                  onPressed: _isLoggingIn ? _handleLogin : _handleRegister,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorPalette.yellow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  return SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: ElevatedButton(
+                      onPressed: authProvider.isLoading
+                          ? null
+                          : () => _isLoggingIn
+                              ? _handleLogin(context)
+                              : _handleRegister(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorPalette.yellow,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: authProvider.isLoading
+                          ? const CircularProgressIndicator(
+                              color: ColorPalette.offWhite,
+                            )
+                          : Text(
+                              _isLoggingIn ? 'Login' : 'Register',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: ColorPalette.offBlack,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    _isLoggingIn ? 'Login' : 'Register',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: ColorPalette.offBlack,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               TextButton(

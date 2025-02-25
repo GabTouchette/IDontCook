@@ -112,7 +112,7 @@ def load_recipes_from_csv(csv_file, users):
         recipe_count = 0
         for row in reader:  # Iterate through all rows in the CSV
             try:
-                if recipe_count >= 1000:  # Check if max recipes limit reached
+                if recipe_count >= 3000:  # Check if max recipes limit reached
                     print("Reached maximum limit of recipes.")
                     break 
 
@@ -244,25 +244,25 @@ def main():
     print("Creating mock data...")
 
     # Create mock users
-    # users = create_mock_users(num_users=100)
-    # print(f"Created {len(users)} users.")
+    users = create_mock_users(num_users=100)
+    print(f"Created {len(users)} users.")
     
     # Load recipes from CSV
     load_recipes_from_csv('recipes.csv', [])
-    # print("Created 10000 recipes.")
+    print("Created 10000 recipes.")
 
-    # # Create mock posts, comments, likes, and votes
-    # recipes = Recipe.objects.all()
-    # create_mock_posts(num_posts=200, users=users, recipes=recipes)
-    # print("Created posts, comments, likes, and votes.")
+    # Create mock posts, comments, likes, and votes
+    recipes = Recipe.objects.all()
+    create_mock_posts(num_posts=200, users=users, recipes=recipes)
+    print("Created posts, comments, likes, and votes.")
 
-    # # Create mock follows
-    # create_mock_follows(users=users)
-    # print("Created follows.")
+    # Create mock follows
+    create_mock_follows(users=users)
+    print("Created follows.")
 
-    # # Create mock saves
-    # create_mock_saves(users=users, recipes=recipes)
-    # print("Created saves.")
+    # Create mock saves
+    create_mock_saves(users=users, recipes=recipes)
+    print("Created saves.")
 
     print("Mock data creation complete!")
 

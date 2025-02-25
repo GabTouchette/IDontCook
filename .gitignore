@@ -11,5 +11,5 @@ __pycache__/
 
 # Ignore SQLite database
 db.sqlite3
-# recipes.csv
-# populate_mock_data.py
+recipes.csv
+populate_mock_data.py
