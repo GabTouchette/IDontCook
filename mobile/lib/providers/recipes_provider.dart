@@ -26,7 +26,8 @@ class RecipesProvider with ChangeNotifier {
     _lastRequestTime = now;
 
     final recipes = await RecipeApi().fetchRecipes();
-    recipes.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    recipes
+        .sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
 
     _allRecipes = recipes;
     _filteredRecipes = recipes;

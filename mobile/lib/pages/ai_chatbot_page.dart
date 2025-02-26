@@ -59,6 +59,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             _messages[_messages.length - 1]["text"] =
                 (_messages[_messages.length - 1]["text"] ?? "") + token;
           });
+          _scrollToBottom();
         }
       } catch (e) {
         setState(() {
@@ -87,6 +88,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -105,163 +107,176 @@ class AiChatBotPageState extends State<AiChatBotPage> {
           UserMenuWidget(),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/ai_chat_page_background.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 120.0),
-            child: Column(
-              children: [
-                if (_messages.isEmpty) ...[
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Container(
-                              width: double.infinity,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              decoration: BoxDecoration(
-                                color: ColorPalette.darkergray,
-                                borderRadius: BorderRadius.circular(30),
-                                border:
-                                    Border.all(color: ColorPalette.darkgray),
-                              ),
-                              child: TextField(
-                                controller: _searchController,
-                                style: TextStyle(
-                                  color: ColorPalette.offWhite,
-                                ),
-                                decoration: InputDecoration(
-                                  icon: const Icon(
-                                    Icons.search,
-                                    color: ColorPalette.placeholdergray,
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context)
+              .unfocus(); // Closes the keyboard when tapping outside
+        },
+        child: LayoutBuilder(builder: (context, constraints) {
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/ai_chat_page_background.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 120.0),
+                child: Column(
+                  children: [
+                    if (_messages.isEmpty) ...[
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  decoration: BoxDecoration(
+                                    color: ColorPalette.darkergray,
+                                    borderRadius: BorderRadius.circular(30),
+                                    border: Border.all(
+                                        color: ColorPalette.darkgray),
                                   ),
-                                  hintText: 'Ask a question...',
-                                  hintStyle: TextStyle(
-                                    color: ColorPalette.placeholdergray,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      vertical: 16.0, horizontal: 8.0),
-                                ),
-                                onSubmitted: _sendMessage,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Wrap(
-                                spacing: 16.0,
-                                runSpacing: 12.0,
-                                children: [
-                                  _buildBreadcrumb(
-                                      'New Idea',
-                                      FontAwesomeIcons.lightbulb,
-                                      ColorPalette.mustard, () {
-                                    _sendMessage(
-                                        'Can you suggest a new recipe idea?');
-                                  }),
-                                  _buildBreadcrumb('Something I have',
-                                      FontAwesomeIcons.file, Colors.green, () {
-                                    _sendMessage(
-                                        'Can you suggest a recipe that i have?');
-                                  }),
-                                  _buildBreadcrumb('A popular choice',
-                                      FontAwesomeIcons.fire, Colors.orange, () {
-                                    _sendMessage(
-                                        'Can you suggest a popular recipe at the moment?');
-                                  }),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                if (_messages.isNotEmpty) ...[
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: EdgeInsets.zero,
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final message = _messages[index];
-                        final bool isUser = message['sender'] == 'user';
-                        final bool isLoading = message['sender'] == 'ai' &&
-                            message['text'] == 'loading';
-
-                        return Align(
-                          alignment: isUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16.0),
-                            child: isLoading
-                                ? const AiResponseBubble()
-                                : message['sender'] == 'ai'
-                                    ? AiResponseBubble(
-                                        message: message['text']!)
-                                    : MessageWidget(
-                                        messageText: message['text']!,
-                                        isUser: isUser,
+                                  child: TextField(
+                                    controller: _searchController,
+                                    style: TextStyle(
+                                      color: ColorPalette.offWhite,
+                                    ),
+                                    decoration: InputDecoration(
+                                      icon: const Icon(
+                                        Icons.search,
+                                        color: ColorPalette.placeholdergray,
                                       ),
+                                      hintText: 'Ask a question...',
+                                      hintStyle: TextStyle(
+                                        color: ColorPalette.placeholdergray,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          vertical: 16.0, horizontal: 8.0),
+                                    ),
+                                    onSubmitted: _sendMessage,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Wrap(
+                                    spacing: 16.0,
+                                    runSpacing: 12.0,
+                                    children: [
+                                      _buildBreadcrumb(
+                                          'New Idea',
+                                          FontAwesomeIcons.lightbulb,
+                                          ColorPalette.mustard, () {
+                                        _sendMessage(
+                                            'Can you suggest a new recipe idea?');
+                                      }),
+                                      _buildBreadcrumb(
+                                          'Something I have',
+                                          FontAwesomeIcons.file,
+                                          Colors.green, () {
+                                        _sendMessage(
+                                            'Can you suggest a recipe that i have?');
+                                      }),
+                                      _buildBreadcrumb(
+                                          'A popular choice',
+                                          FontAwesomeIcons.fire,
+                                          Colors.orange, () {
+                                        _sendMessage(
+                                            'Can you suggest a popular recipe at the moment?');
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.darkgray,
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: ColorPalette.placeholdergray),
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        style: TextStyle(
-                          color: ColorPalette.offWhite,
                         ),
-                        decoration: InputDecoration(
-                          icon: const Icon(
-                            Icons.search,
-                            color: ColorPalette.placeholdergray,
-                          ),
-                          hintText: 'Ask a question...',
-                          hintStyle: TextStyle(
-                            color: ColorPalette.placeholdergray,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 16.0, horizontal: 8.0),
-                        ),
-                        onSubmitted: _sendMessage,
                       ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
+                    ],
+                    if (_messages.isNotEmpty) ...[
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.zero,
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            final message = _messages[index];
+                            final bool isUser = message['sender'] == 'user';
+                            final bool isLoading = message['sender'] == 'ai' &&
+                                message['text'] == 'loading';
+
+                            return Align(
+                              alignment: isUser
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 16.0),
+                                child: isLoading
+                                    ? const AiResponseBubble()
+                                    : message['sender'] == 'ai'
+                                        ? AiResponseBubble(
+                                            message: message['text']!)
+                                        : MessageWidget(
+                                            messageText: message['text']!,
+                                            isUser: isUser,
+                                          ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          decoration: BoxDecoration(
+                            color: ColorPalette.darkgray,
+                            borderRadius: BorderRadius.circular(30),
+                            border:
+                                Border.all(color: ColorPalette.placeholdergray),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            style: TextStyle(
+                              color: ColorPalette.offWhite,
+                            ),
+                            decoration: InputDecoration(
+                              icon: const Icon(
+                                Icons.search,
+                                color: ColorPalette.placeholdergray,
+                              ),
+                              hintText: 'Ask a question...',
+                              hintStyle: TextStyle(
+                                color: ColorPalette.placeholdergray,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 16.0, horizontal: 8.0),
+                            ),
+                            onSubmitted: _sendMessage,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
       ),
     );
   }

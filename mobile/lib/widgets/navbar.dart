@@ -39,7 +39,7 @@ class Navbar extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Padding(
             padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.magnifyingGlass),
+            child: FaIcon(FontAwesomeIcons.globe),
           ),
           label: '',
         ),
@@ -53,7 +53,7 @@ class Navbar extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Padding(
             padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.globe),
+            child: FaIcon(FontAwesomeIcons.users),
           ),
           label: '',
         ),

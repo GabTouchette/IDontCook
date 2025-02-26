@@ -18,6 +18,12 @@ class _GlobalRecipeSearchPageState extends State<GlobalRecipeSearchPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
+  void initState() {
+    super.initState();
+    Provider.of<RecipeSearchProvider>(context, listen: false).applyFilters();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<RecipeSearchProvider>(builder: (context, provider, child) {
       return Scaffold(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/pages/explore_page.dart';
 import 'package:i_cant_cook/pages/global_recipes_search_page.dart';
-import 'package:i_cant_cook/pages/recommendations_page.dart';
+import 'package:i_cant_cook/pages/discover_page.dart';
 import 'package:i_cant_cook/widgets/navbar.dart';
 import 'package:i_cant_cook/pages/ai_chatbot_page.dart';
 import 'package:i_cant_cook/pages/recipes_page.dart';
@@ -40,7 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
       case 2:
         return const GlobalRecipeSearchPage();
       case 3:
-        return const RecommendationsPage();
+        return const DiscoverPage();
       case 4:
         return const ExplorePage();
       default:

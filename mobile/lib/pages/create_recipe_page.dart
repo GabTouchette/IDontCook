@@ -166,6 +166,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -201,48 +202,52 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/create_recipe_page_background.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 120.0),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TitleSection(titleController: _titleController),
-                  IngredientsSection(
-                    ingredients: _ingredients,
-                    onIngredientsChanged: _onIngredientsChanged,
-                  ),
-                  InstructionsSection(
-                    instructions: _instructions,
-                    onInstructionsChanged: _onInstructionsChanged,
-                  ),
-                  TimeSection(
-                    prepTimeController: _preptimeController,
-                    cookTimeController: _cooktimeController,
-                  ),
-                  TagsSection(
-                    selectedTags: _selectedTags,
-                    onTagsChanged: _onTagsChanged,
-                  ),
-                  ExtraSection(
-                    descriptionController: _descriptionController,
-                    notesController: _notesController,
-                  ),
-                  _buildCreateButton(),
-                  SizedBox(height: 32.0),
-                ],
+      body: LayoutBuilder(builder: (context, constraints) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/create_recipe_page_background.png',
+                fit: BoxFit.cover,
               ),
             ),
-          )
-        ],
-      ),
+            Padding(
+              padding: const EdgeInsets.only(top: 120.0),
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
+                  children: [
+                    TitleSection(titleController: _titleController),
+                    IngredientsSection(
+                      ingredients: _ingredients,
+                      onIngredientsChanged: _onIngredientsChanged,
+                    ),
+                    InstructionsSection(
+                      instructions: _instructions,
+                      onInstructionsChanged: _onInstructionsChanged,
+                    ),
+                    TimeSection(
+                      prepTimeController: _preptimeController,
+                      cookTimeController: _cooktimeController,
+                    ),
+                    TagsSection(
+                      selectedTags: _selectedTags,
+                      onTagsChanged: _onTagsChanged,
+                    ),
+                    ExtraSection(
+                      descriptionController: _descriptionController,
+                      notesController: _notesController,
+                    ),
+                    _buildCreateButton(),
+                    SizedBox(height: 32.0),
+                  ],
+                ),
+              ),
+            )
+          ],
+        );
+      }),
     );
   }
 

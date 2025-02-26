@@ -102,7 +102,7 @@ class _PostDialogState extends State<PostDialog> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
-          // Make the content scrollable
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
