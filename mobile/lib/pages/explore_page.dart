@@ -118,7 +118,7 @@ class ExplorePage extends StatelessWidget {
                       Expanded(
                         child: provider.posts.isEmpty
                             ? const Center(
-                                child: Text('No posts available.',
+                                child: Text('No posts available at the moment.',
                                     style: TextStyle(
                                         color: ColorPalette.offWhite)))
                             : ListView.builder(

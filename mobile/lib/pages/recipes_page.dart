@@ -118,7 +118,7 @@ class RecipesPage extends StatelessWidget {
                             provider.filteredRecipes.isEmpty
                                 ? Center(
                                     child: Text(
-                                      'No recipes found.',
+                                      'Your recipe list is empty, try adding a recipe!',
                                       style: TextStyle(
                                           color: ColorPalette.offWhite),
                                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
+import 'package:i_cant_cook/providers/global_recipe_search_provider.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/providers/recipes_provider.dart';
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
@@ -15,6 +16,7 @@ void main() {
         ChangeNotifierProvider(create: (context) => RecipesProvider()),
         ChangeNotifierProvider(create: (context) => ExploreProvider()),
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
+        ChangeNotifierProvider(create: (_) => RecipeSearchProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: ICantCook(),

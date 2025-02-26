@@ -13,7 +13,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from PIL import ExifTags, Image
 from io import BytesIO
 from django.core.files.base import ContentFile
-
+from django.db import connection
+from django.db.models import Q
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -38,8 +39,7 @@ class RecipeListAPIView(APIView):
                     {"error": "Parent recipe not found"},
                     status=status.HTTP_404_NOT_FOUND
                 )
-
-            # Check if the user has already saved this parent recipe
+          
             if Recipe.objects.filter(
                     created_by=user
                 ).filter(
@@ -51,8 +51,6 @@ class RecipeListAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-
-            # Create the new recipe with the parent reference
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
                 serializer.save(created_by=user, parent=parent)
@@ -60,7 +58,6 @@ class RecipeListAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            # Recipe is created from scratch (no parent)
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
                 serializer.save(created_by=user)
@@ -118,18 +115,12 @@ class RecipeImageUploadAPIView(APIView):
             image = request.FILES.get('image')
 
             if image:
-                # Open image with Pillow
                 img = Image.open(image)
-
-                # Fix rotation using EXIF metadata
                 img = self.correct_image_orientation(img)
-
-                # Convert image back to Django File
                 img_io = BytesIO()
-                img.save(img_io, format='JPEG', quality=90)  # Convert to JPEG with quality
+                img.save(img_io, format='JPEG', quality=90)
                 img_file = ContentFile(img_io.getvalue(), name=image.name)
-
-                # Assign corrected image
+              
                 recipe.image = img_file
                 recipe.thumbnail = img_file
                 recipe.save()
@@ -162,7 +153,7 @@ class RecipeImageUploadAPIView(APIView):
                             img = img.rotate(90, expand=True)
                         break
         except (AttributeError, KeyError, IndexError):
-            pass  # No EXIF data or orientation tag found
+            pass
 
         return img
 
@@ -176,3 +167,62 @@ class HasSavedRecipeAPIView(APIView):
         ).exists()
 
         return JsonResponse({"is_saved": exists})
+
+
+class GlobalFilteredRecipesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        search_query = request.query_params.get('search', '')
+        tags = request.query_params.get('tags', '').split(',') if request.query_params.get('tags') else []
+        prep_time = float(request.query_params.get('prep_time', 60))
+        cook_time = float(request.query_params.get('cook_time', 120))
+        calories_min = float(request.query_params.get('calories_min', 0))
+        calories_max = float(request.query_params.get('calories_max', 1000))
+        exclude_ai_generated = request.query_params.get('exclude_ai_generated', 'false').lower() == 'true'
+        exclude_own_recipes = request.query_params.get('exclude_own_recipes', 'true').lower() == 'true'
+
+        recipes = Recipe.objects.all()
+        if search_query:
+            if connection.vendor == 'postgresql':
+                recipes = recipes.filter(
+                    Q(title__icontains=search_query) |
+                    Q(tags__contains=[search_query])
+                ).distinct()
+            else:
+                recipes = recipes.filter(
+                    Q(title__icontains=search_query) |
+                    Q(tags__icontains=f'"{search_query}"')
+                ).distinct()
+
+        if tags:
+            if connection.vendor == 'postgresql':
+                for tag in tags:
+                    recipes = recipes.filter(tags__contains=[tag])
+            else:
+                for tag in tags:
+                    recipes = recipes.filter(tags__icontains=f'"{tag}"')
+      
+        if prep_time < 60:
+            recipes = recipes.filter(preparation_time__lte=prep_time)
+
+        if cook_time < 120:
+            recipes = recipes.filter(cooking_time__lte=cook_time)
+
+        if calories_max != 1000 or calories_min != 0:
+            recipes = recipes.filter(
+                calories__gte=calories_min,
+                calories__lte=calories_max
+            )
+      
+        if exclude_ai_generated:
+            recipes = recipes.exclude(models.Q(id=-1) | models.Q(parent=-1))
+      
+        if exclude_own_recipes:
+            recipes = recipes.exclude(created_by=request.user)
+
+        recipes = recipes[:30]
+
+        serializer = RecipePreviewSerializer(recipes, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

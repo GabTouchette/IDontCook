@@ -9,15 +9,22 @@ class ApiHelper {
   final String baseUrl = 'http://192.168.0.12:8000/api';
   // final String baseUrl = 'https://i-cant-cook-1500fc1d933c.herokuapp.com/api';
 
-  Future<dynamic> getRequest(String endpoint,
-      {bool requiresAuth = true}) async {
+  Future<dynamic> getRequest(
+    String endpoint, {
+    bool requiresAuth = true,
+    Map<String, String>? queryParams,
+  }) async {
     try {
       final headers = requiresAuth
           ? await AuthApi.getAuthHeader()
           : {'Content-Type': 'application/json'};
 
+      final uri = Uri.parse('$baseUrl/$endpoint').replace(
+        queryParameters: queryParams,
+      );
+
       final response = await http.get(
-        Uri.parse('$baseUrl/$endpoint'),
+        uri,
         headers: headers,
       );
       return _handleResponse(response);

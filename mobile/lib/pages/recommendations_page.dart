@@ -46,20 +46,6 @@ class RecommendationsPage extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 100.0),
                   child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 32.0),
-                        child: Text(
-                          'Here are some recipes that we think you may like based on your preferences.',
-                          style: TextStyle(
-                            color: ColorPalette.offWhite,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w200,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 16.0),
                       Expanded(
                         child: provider.isLoading
                             ? const Center(
@@ -77,10 +63,26 @@ class RecommendationsPage extends StatelessWidget {
                                   )
                                 : ListView.builder(
                                     padding: EdgeInsets.zero,
-                                    itemCount: provider.recommendedRecipes.length,
+                                    itemCount:
+                                        provider.recommendedRecipes.length + 1,
                                     itemBuilder: (context, index) {
-                                      final recipe =
-                                          provider.recommendedRecipes[index];
+                                      if (index == 0) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0, vertical: 24.0),
+                                          child: Text(
+                                            'Explore recipes based on your interactions and preferences.',
+                                            style: TextStyle(
+                                              color: ColorPalette.offWhite,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w200,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        );
+                                      }
+                                      final recipe = provider
+                                          .recommendedRecipes[index - 1];
                                       return Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
