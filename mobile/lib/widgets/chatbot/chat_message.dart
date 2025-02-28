@@ -19,24 +19,18 @@ class MessageWidget extends StatelessWidget {
       fontSize: 16,
     );
 
-    if (finalMessageText.startsWith("**") && finalMessageText.endsWith("**")) {
-      finalMessageText =
-          finalMessageText.substring(2, finalMessageText.length - 2);
-      messageStyle = messageStyle.copyWith(
-        fontWeight: FontWeight.bold,
-        fontSize: 18,
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
-      decoration: BoxDecoration(
-        color: isUser ? ColorPalette.lightgray : ColorPalette.darkgray,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Text(
-        finalMessageText,
-        style: messageStyle,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isUser ? 24.0 : 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
+        decoration: BoxDecoration(
+          color: isUser ? ColorPalette.lightgray : ColorPalette.darkgray,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Text(
+          finalMessageText,
+          style: messageStyle,
+        ),
       ),
     );
   }
