@@ -1,11 +1,12 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
+import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
+import 'package:provider/provider.dart';
 
 class AiChatBotPage extends StatefulWidget {
   const AiChatBotPage({super.key});
@@ -17,55 +18,42 @@ class AiChatBotPage extends StatefulWidget {
 class AiChatBotPageState extends State<AiChatBotPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  Timer? _debounceTimer;
-  List<Map<String, dynamic>> _messages = [];
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _sendMessage(String query) async {
+  void _sendMessage(String query, ChatProvider chatProvider) async {
     if (query.isNotEmpty) {
-      setState(() {
-        _messages.add({"sender": "user", "text": query});
-        _messages.add({"sender": "ai", "text": ""});
-      });
+      chatProvider.addMessage({"sender": "user", "text": query});
+      chatProvider.addMessage({"sender": "ai", "text": ""});
 
       _searchController.clear();
       _scrollToBottom();
 
       try {
         List<Map<String, String>> chatHistory = [];
-        for (int i = _messages.length - 2; i >= 0; i--) {
+        for (int i = chatProvider.messages.length - 2; i >= 0; i--) {
           chatHistory.insert(0, {
-            "message": _messages[i]['text'] ?? '',
-            "sender": _messages[i]['sender'] ?? ''
+            "message": chatProvider.messages[i]['text'] ?? '',
+            "sender": chatProvider.messages[i]['sender'] ?? ''
           });
         }
 
         final stream = AiChatbotApi().chatWithBotStream(query, chatHistory);
 
         await for (String token in stream) {
-          setState(() {
-            _messages[_messages.length - 1]["text"] =
-                (_messages[_messages.length - 1]["text"] ?? "") + token;
-          });
+          chatProvider.updateLastMessage(
+              (chatProvider.messages.last["text"] ?? "") + token);
           _scrollToBottom();
         }
       } catch (e) {
-        setState(() {
-          _messages.removeLast();
-          _messages.add({"sender": "ai", "text": "Error: ${e.toString()}"});
-        });
+        chatProvider.removeLastMessage();
+        chatProvider
+            .addMessage({"sender": "ai", "text": "Error: ${e.toString()}"});
       }
 
       _scrollToBottom();
@@ -86,6 +74,8 @@ class AiChatBotPageState extends State<AiChatBotPage> {
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = Provider.of<ChatProvider>(context);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: false,
@@ -103,14 +93,26 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             color: ColorPalette.offWhite,
           ),
         ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: IconButton(
+            icon: Icon(
+              Icons.assignment_add,
+              color: ColorPalette.offWhite,
+              size: 32,
+            ),
+            onPressed: () {
+              chatProvider.clearMessages();
+            },
+          ),
+        ),
         actions: [
           UserMenuWidget(),
         ],
       ),
       body: GestureDetector(
         onTap: () {
-          FocusScope.of(context)
-              .unfocus(); // Closes the keyboard when tapping outside
+          FocusScope.of(context).unfocus();
         },
         child: LayoutBuilder(builder: (context, constraints) {
           return Stack(
@@ -125,7 +127,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                 padding: const EdgeInsets.only(top: 120.0),
                 child: Column(
                   children: [
-                    if (_messages.isEmpty) ...[
+                    if (chatProvider.messages.isEmpty) ...[
                       Expanded(
                         child: Center(
                           child: Column(
@@ -161,7 +163,8 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                       contentPadding: EdgeInsets.symmetric(
                                           vertical: 16.0, horizontal: 8.0),
                                     ),
-                                    onSubmitted: _sendMessage,
+                                    onSubmitted: (query) =>
+                                        _sendMessage(query, chatProvider),
                                   ),
                                 ),
                               ),
@@ -179,21 +182,24 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                           FontAwesomeIcons.lightbulb,
                                           ColorPalette.mustard, () {
                                         _sendMessage(
-                                            'Can you suggest a new recipe idea?');
+                                            'Can you suggest a new recipe idea?',
+                                            chatProvider);
                                       }),
                                       _buildBreadcrumb(
                                           'Something I have',
                                           FontAwesomeIcons.file,
                                           Colors.green, () {
                                         _sendMessage(
-                                            'Can you suggest a recipe that i have?');
+                                            'Can you suggest a recipe that I have?',
+                                            chatProvider);
                                       }),
                                       _buildBreadcrumb(
                                           'A popular choice',
                                           FontAwesomeIcons.fire,
                                           Colors.orange, () {
                                         _sendMessage(
-                                            'Can you suggest a popular recipe at the moment?');
+                                            'Can you suggest a popular recipe at the moment?',
+                                            chatProvider);
                                       }),
                                     ],
                                   ),
@@ -204,14 +210,14 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                         ),
                       ),
                     ],
-                    if (_messages.isNotEmpty) ...[
+                    if (chatProvider.messages.isNotEmpty) ...[
                       Expanded(
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: EdgeInsets.zero,
-                          itemCount: _messages.length,
+                          itemCount: chatProvider.messages.length,
                           itemBuilder: (context, index) {
-                            final message = _messages[index];
+                            final message = chatProvider.messages[index];
                             final bool isUser = message['sender'] == 'user';
                             final bool isLoading = message['sender'] == 'ai' &&
                                 message['text'] == 'loading';
@@ -266,7 +272,8 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                               contentPadding: EdgeInsets.symmetric(
                                   vertical: 16.0, horizontal: 8.0),
                             ),
-                            onSubmitted: _sendMessage,
+                            onSubmitted: (query) =>
+                                _sendMessage(query, chatProvider),
                           ),
                         ),
                       ),
