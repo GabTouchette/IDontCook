@@ -14,4 +14,4 @@ db.sqlite3
 recipes.csv
 recipe_urls.txt
 ricardo_scraper.py
-all_recipes.py
+all_recipes.csv
