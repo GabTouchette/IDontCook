@@ -74,7 +74,6 @@ class RecipeDetailProvider with ChangeNotifier {
           .map((ingredient) => {
                 "name": _capitalize(ingredient.name),
                 "quantity": ingredient.quantity,
-                "unit_of_measure": ingredient.unit_of_measure,
               })
           .toList(),
       "instructions": _recipe!.instructions,

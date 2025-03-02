@@ -117,29 +117,56 @@ class BigRecipeTile extends StatelessWidget {
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 4.0,
-                  children: recipe.tags!.map((tag) {
-                    return Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.darkgray,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            tag,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
+                  children: [
+                    // First, we calculate the maximum number of tags we want to display
+                    for (int i = 0;
+                        i < (recipe.tags!.length > 5 ? 5 : recipe.tags!.length);
+                        i++)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: ColorPalette.darkgray,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              recipe.tags![i],
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 6.0),
-                        ],
+                            SizedBox(width: 6.0),
+                          ],
+                        ),
                       ),
-                    );
-                  }).toList(),
+                    // If there are more than 5 tags, display the ellipsis
+                    if (recipe.tags!.length > 5)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: ColorPalette.darkgray,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '+ ${recipe.tags!.length - 5} others',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                            SizedBox(width: 6.0),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ],

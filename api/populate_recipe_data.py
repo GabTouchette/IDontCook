@@ -1,4 +1,5 @@
 import os
+import re
 import django
 import random
 import csv
@@ -47,21 +48,96 @@ def create_mock_users(num_users=100):
 
     return users
 
+import re
 
 def parse_ingredient(ingredient_str):
-    """Extracts quantity, unit, and name from an ingredient string."""
+    """Extracts quantity and name from an ingredient string."""
     ingredient_str = ingredient_str.strip()
-    
-    # Check for a numeric value at the beginning
-    parts = ingredient_str.split(" ", 2)  # Try to split into three parts: quantity, unit, name
-    if len(parts) == 3 and parts[0].replace(".", "", 1).isdigit():
-        quantity = float(parts[0])
-        unit = parts[1]
-        name = parts[2]
-    else:
-        quantity, unit, name = None, None, ingredient_str  # Default case: Just the name
-    
-    return name, quantity, unit
+
+    # Remove metric measurements in parentheses (e.g., "(90 ml)") without affecting the rest of the string
+    ingredient_str = re.sub(r'\([^)]*\)', '', ingredient_str).strip()
+
+    # Dictionary to map Unicode fraction symbols to their float values
+    fraction_to_float = {
+        '½': 0.5,
+        '⅓': 1/3,
+        '⅔': 2/3,
+        '¼': 0.25,
+        '¾': 0.75,
+        '⅕': 0.2,
+        '⅖': 0.4,
+        '⅗': 0.6,
+        '⅘': 0.8,
+        '⅙': 1/6,
+        '⅚': 5/6,
+        '⅐': 1/7,
+        '⅛': 0.125,
+        '⅜': 0.375,
+        '⅝': 0.625,
+        '⅞': 0.875,
+        '⅑': 1/9,
+        '⅒': 0.1,
+    }
+
+    # Replace Unicode fractions with their float equivalents
+    for symbol, value in fraction_to_float.items():
+        ingredient_str = ingredient_str.replace(symbol, f' {str(value)} ')
+
+    # Replace commas with periods for decimal numbers (e.g., "2,2" -> "2.2")
+    # Only replace commas in numeric parts
+    parts = ingredient_str.split()
+    for i, part in enumerate(parts):
+        if part.replace(',', '', 1).replace('.', '', 1).isdigit():
+            parts[i] = part.replace(',', '.')
+    ingredient_str = ' '.join(parts)
+
+    # Split into parts
+    parts = ingredient_str.split()
+
+    # Initialize quantity and name
+    quantity = None
+    name = None
+
+    # Extract quantity
+    if parts:
+        # Handle fractions (e.g., "1/2" or "1/3")
+        if '/' in parts[0]:
+            try:
+                numerator, denominator = parts[0].split('/')
+                quantity = float(numerator) / float(denominator)
+                parts = parts[1:]  # Remove the processed part
+            except (ValueError, IndexError):
+                pass
+        # Handle mixed numbers (e.g., "1 1/2" or "2 ½")
+        elif len(parts) >= 2 and '/' in parts[1]:
+            try:
+                whole = float(parts[0])
+                numerator, denominator = parts[1].split('/')
+                fraction = float(numerator) / float(denominator)
+                quantity = whole + fraction
+                parts = parts[2:]  # Remove the processed parts
+            except (ValueError, IndexError):
+                pass
+        elif len(parts) >= 2 and parts[1].replace('.', '', 1).isdigit():
+            # Handle cases like "2.2 lb" or "1.5 tbsp"
+            try:
+                quantity = float(parts[0])
+                parts = parts[1:]  # Remove the processed part
+            except ValueError:
+                pass
+        elif parts[0].replace('.', '', 1).replace(',', '', 1).isdigit():
+            # Handle simple numbers (e.g., "2", "1.5", "2,2")
+            try:
+                quantity = float(parts[0])
+                parts = parts[1:]  # Remove the processed part
+            except ValueError:
+                pass
+
+    # Extract name (everything else)
+    if parts:
+        name = ' '.join(parts)
+
+    return name, quantity
 
 
 def clean_r_vector_format(r_vector):
@@ -86,7 +162,6 @@ def clean_r_vector_format(r_vector):
         return None  # Return None if parsing fails
 
 
-
 def parse_time_to_minutes(time_str):
     """Convert a time string in PT format to minutes."""
     if not time_str or time_str == 'NA':
@@ -105,64 +180,57 @@ def parse_time_to_minutes(time_str):
     return hours * 60 + minutes  # Convert hours to minutes and add minutes
 
 
-def load_recipes_from_csv(csv_file, users):
+def load_recipes_from_csv(csv_file):
     """Load recipes from a CSV file and format data properly."""
+    
     with open(csv_file, newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         recipe_count = 0
         for row in reader:  # Iterate through all rows in the CSV
             try:
-                if recipe_count >= 3000:  # Check if max recipes limit reached
+                if recipe_count >= 100:  # Check if max recipes limit reached
                     print("Reached maximum limit of recipes.")
                     break 
 
-                raw_quantities = clean_r_vector_format(row['RecipeIngredientQuantities'])
-                raw_parts = clean_r_vector_format(row['RecipeIngredientParts'])
-
-                if raw_quantities is None or raw_parts is None:
-                    continue
-                
+                # Parse ingredients: Split the string and parse each one
+                ingredients_str = row['recipeIngredients'].split(";")
                 ingredients = []
                 
-                for quantity, part in zip(raw_quantities, raw_parts):
-                    ingredient, created = Ingredient.objects.get_or_create(name=part)
-                    unit_of_measure = "part(s)"
-                    ingredient.quantity = float(quantity) if quantity and quantity != 'NA' else 1
-                    ingredient.unit_of_measure = unit_of_measure
+                for ingredient_str in ingredients_str:
+                    name, quantity = parse_ingredient(ingredient_str)
+                    ingredient, created = Ingredient.objects.get_or_create(name=name)
+                    if quantity:
+                        ingredient.quantity = quantity
                     ingredient.save()
                     ingredients.append(ingredient)
 
-
-                # Extract instructions
-                instructions = clean_r_vector_format(row['RecipeInstructions'])
+                # Extract instructions and tags
+                instructions = row['recipeInstructions'].split(";")
+                tag_names = [tag for tag in row['tags'].split(";")] if row['tags'] else []
+                tags = []
+                for tag in tag_names:
+                    name = tag.split('_')[-1]
+                    formatted_name = ' '.join(word.capitalize() for word in name.split('-')).capitalize()
+                    tags.append(formatted_name)
 
                 # Create the recipe
                 recipe = Recipe.objects.create(
-                    title=row['Name'],
+                    title=row['title'],
                     instructions=instructions,
-                    cooking_time=parse_time_to_minutes(row['CookTime']),
-                    preparation_time=parse_time_to_minutes(row['PrepTime']),                
-                    servings=int(row['RecipeServings']) if row['RecipeServings'] and row['RecipeServings'] != 'NA' else None,
-                    tags=clean_r_vector_format(row['Keywords']) if row['Keywords'] else [],
-                    description=row['Description'],
-                    calories=float(row['Calories']) if row['Calories'] else None,
-                    fat_content=float(row['FatContent']) if row['FatContent'] else None,
-                    saturated_fat_content=float(row['SaturatedFatContent']) if row['SaturatedFatContent'] else None,
-                    cholesterol_content=float(row['CholesterolContent']) if row['CholesterolContent'] else None,
-                    sodium_content=float(row['SodiumContent']) if row['SodiumContent'] else None,
-                    carbohydrate_content=float(row['CarbohydrateContent']) if row['CarbohydrateContent'] else None,
-                    fiber_content=float(row['FiberContent']) if row['FiberContent'] else None,
-                    sugar_content=float(row['SugarContent']) if row['SugarContent'] else None,
-                    protein_content=float(row['ProteinContent']) if row['ProteinContent'] else None,
-                    recipe_yield=row['RecipeYield'],
-                    # created_by=random.choice(users),
-                    image=None
+                    tags=tags,
+                    cooking_time=parse_time_to_minutes(row['cookTime']),
+                    preparation_time=parse_time_to_minutes(row['prepTime']),                
+                    servings=int(row['recipeYield'].split()[0]) if row['recipeYield'] and row['recipeYield'] != 'NA' else None,
+                    description=row['description'],
+                    web_image_url=row['image'] if row['image'] else None,
                 )
+                
 
                 # Add ingredients to the recipe
                 recipe.ingredients.set(ingredients)
 
-            except Exception:
+            except Exception as e:
+                print(f"Error processing recipe {row['title']}: {e}")
                 continue
             
             recipe_count += 1
@@ -244,27 +312,27 @@ def main():
     print("Creating mock data...")
 
     # Create mock users
-    users = create_mock_users(num_users=100)
-    print(f"Created {len(users)} users.")
+    # users = create_mock_users(num_users=100)
+    # print(f"Created {len(users)} users.")
     
     # Load recipes from CSV
-    load_recipes_from_csv('recipes.csv', [])
-    print("Created 10000 recipes.")
+    load_recipes_from_csv('recipes.csv')
+    print("Created recipes.")
 
-    # Create mock posts, comments, likes, and votes
-    recipes = Recipe.objects.all()
-    create_mock_posts(num_posts=200, users=users, recipes=recipes)
-    print("Created posts, comments, likes, and votes.")
+    # # Create mock posts, comments, likes, and votes
+    # recipes = Recipe.objects.all()
+    # create_mock_posts(num_posts=200, users=users, recipes=recipes)
+    # print("Created posts, comments, likes, and votes.")
 
-    # Create mock follows
-    create_mock_follows(users=users)
-    print("Created follows.")
+    # # Create mock follows
+    # create_mock_follows(users=users)
+    # print("Created follows.")
 
-    # Create mock saves
-    create_mock_saves(users=users, recipes=recipes)
-    print("Created saves.")
+    # # Create mock saves
+    # create_mock_saves(users=users, recipes=recipes)
+    # print("Created saves.")
 
-    print("Mock data creation complete!")
+    # print("Mock data creation complete!")
 
 if __name__ == "__main__":
     main()

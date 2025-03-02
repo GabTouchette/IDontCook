@@ -24,7 +24,6 @@ mixin _$Ingredient {
   String? get name => throw _privateConstructorUsedError;
   List<String>? get substitutes => throw _privateConstructorUsedError;
   double? get quantity => throw _privateConstructorUsedError;
-  String? get unit_of_measure => throw _privateConstructorUsedError;
 
   /// Serializes this Ingredient to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -43,11 +42,7 @@ abstract class $IngredientCopyWith<$Res> {
       _$IngredientCopyWithImpl<$Res, Ingredient>;
   @useResult
   $Res call(
-      {int? id,
-      String? name,
-      List<String>? substitutes,
-      double? quantity,
-      String? unit_of_measure});
+      {int? id, String? name, List<String>? substitutes, double? quantity});
 }
 
 /// @nodoc
@@ -69,7 +64,6 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
     Object? name = freezed,
     Object? substitutes = freezed,
     Object? quantity = freezed,
-    Object? unit_of_measure = freezed,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -88,10 +82,6 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
           ? _value.quantity
           : quantity // ignore: cast_nullable_to_non_nullable
               as double?,
-      unit_of_measure: freezed == unit_of_measure
-          ? _value.unit_of_measure
-          : unit_of_measure // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
   }
 }
@@ -105,11 +95,7 @@ abstract class _$$IngredientImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int? id,
-      String? name,
-      List<String>? substitutes,
-      double? quantity,
-      String? unit_of_measure});
+      {int? id, String? name, List<String>? substitutes, double? quantity});
 }
 
 /// @nodoc
@@ -129,7 +115,6 @@ class __$$IngredientImplCopyWithImpl<$Res>
     Object? name = freezed,
     Object? substitutes = freezed,
     Object? quantity = freezed,
-    Object? unit_of_measure = freezed,
   }) {
     return _then(_$IngredientImpl(
       id: freezed == id
@@ -148,10 +133,6 @@ class __$$IngredientImplCopyWithImpl<$Res>
           ? _value.quantity
           : quantity // ignore: cast_nullable_to_non_nullable
               as double?,
-      unit_of_measure: freezed == unit_of_measure
-          ? _value.unit_of_measure
-          : unit_of_measure // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -160,11 +141,7 @@ class __$$IngredientImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$IngredientImpl implements _Ingredient {
   const _$IngredientImpl(
-      {this.id,
-      this.name,
-      final List<String>? substitutes,
-      this.quantity,
-      this.unit_of_measure})
+      {this.id, this.name, final List<String>? substitutes, this.quantity})
       : _substitutes = substitutes;
 
   factory _$IngredientImpl.fromJson(Map<String, dynamic> json) =>
@@ -186,12 +163,10 @@ class _$IngredientImpl implements _Ingredient {
 
   @override
   final double? quantity;
-  @override
-  final String? unit_of_measure;
 
   @override
   String toString() {
-    return 'Ingredient(id: $id, name: $name, substitutes: $substitutes, quantity: $quantity, unit_of_measure: $unit_of_measure)';
+    return 'Ingredient(id: $id, name: $name, substitutes: $substitutes, quantity: $quantity)';
   }
 
   @override
@@ -204,20 +179,13 @@ class _$IngredientImpl implements _Ingredient {
             const DeepCollectionEquality()
                 .equals(other._substitutes, _substitutes) &&
             (identical(other.quantity, quantity) ||
-                other.quantity == quantity) &&
-            (identical(other.unit_of_measure, unit_of_measure) ||
-                other.unit_of_measure == unit_of_measure));
+                other.quantity == quantity));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      name,
-      const DeepCollectionEquality().hash(_substitutes),
-      quantity,
-      unit_of_measure);
+  int get hashCode => Object.hash(runtimeType, id, name,
+      const DeepCollectionEquality().hash(_substitutes), quantity);
 
   /// Create a copy of Ingredient
   /// with the given fields replaced by the non-null parameter values.
@@ -240,8 +208,7 @@ abstract class _Ingredient implements Ingredient {
       {final int? id,
       final String? name,
       final List<String>? substitutes,
-      final double? quantity,
-      final String? unit_of_measure}) = _$IngredientImpl;
+      final double? quantity}) = _$IngredientImpl;
 
   factory _Ingredient.fromJson(Map<String, dynamic> json) =
       _$IngredientImpl.fromJson;
@@ -254,8 +221,6 @@ abstract class _Ingredient implements Ingredient {
   List<String>? get substitutes;
   @override
   double? get quantity;
-  @override
-  String? get unit_of_measure;
 
   /// Create a copy of Ingredient
   /// with the given fields replaced by the non-null parameter values.

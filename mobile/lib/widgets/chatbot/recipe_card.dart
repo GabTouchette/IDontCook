@@ -89,7 +89,7 @@ class RecipeCard extends StatelessWidget {
                     children: recipe.ingredients
                         .take(3)
                         .map((ingredient) => Text(
-                              "- ${ingredient.quantity} ${ingredient.unit_of_measure} ${ingredient.name}",
+                              "- ${ingredient.quantity} ${ingredient.name}",
                               style:
                                   const TextStyle(color: ColorPalette.offWhite),
                               overflow: TextOverflow.ellipsis,

@@ -106,8 +106,8 @@ class PromptTemplates:
             "  **{\n"
             '    "title": "Recipe Name",\n'
             '    "ingredients": [\n'
-            '      {"name": "Flour", "quantity": 0.75, "unit_of_measure": "cups"},\n'
-            '      {"name": "Sugar", "quantity": 0.5, "unit_of_measure": "cups"}\n'
+            '      {"name": "cups Flour", "quantity": 0.75},\n'
+            '      {"name": "tbps Sugar", "quantity": 0.5}\n'
             '      ...\n'
             '    ],\n'
             '    "instructions": ["Step 1", "Step 2"],\n'
@@ -133,7 +133,7 @@ class PromptTemplates:
             "The format should be a valid JSON object and not a JSON string, just like in this example:\n"
             '{\n'
             '  "title": "Recipe Name",\n'
-            '  "ingredients": [{"name": "Ingredient", "quantity": 1, "unit_of_measure": "Unit"}],\n'
+            '  "ingredients": [{"name": "Ingredient", "quantity": 1}],\n'
             '  "instructions": ["Step 1", "Step 2"],\n'
             '  "cooking_time": 30,\n'
             '  "servings": 2,\n'

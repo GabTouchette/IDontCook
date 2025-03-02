@@ -78,21 +78,18 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
           if (!_isNumber(parts[0])) {
             return {
               "quantity": "1",
-              "unit_of_measure": "",
               "name": parts.join(" "),
             };
           }
           if (parts.length == 2) {
             return {
               "quantity": parts[0],
-              "unit_of_measure": "",
               "name": parts[1],
             };
           }
           if (parts.length >= 3) {
             return {
               "quantity": parts[0],
-              "unit_of_measure": parts[1],
               "name": parts.sublist(2).join(" "),
             };
           }
