@@ -185,7 +185,7 @@ def parse_time_to_minutes(time_str):
     return hours * 60 + minutes  # Convert hours to minutes and add minutes
 
 
-def load_recipes_from_csv(csv_file):
+def load_recipes_from_csv(csv_file, max_recipe_count=1000):
     """Load recipes from a CSV file and format data properly."""
     
     with open(csv_file, newline='', encoding='utf-8') as file:
@@ -193,7 +193,7 @@ def load_recipes_from_csv(csv_file):
         recipe_count = 0
         for row in reader:  # Iterate through all rows in the CSV
             try:
-                if recipe_count >= 100:  # Check if max recipes limit reached
+                if recipe_count >= max_recipe_count:  # Check if max recipes limit reached
                     print("Reached maximum limit of recipes.")
                     break 
 
@@ -321,8 +321,17 @@ def main():
     # print(f"Created {len(users)} users.")
     
     # Load recipes from CSV
-    load_recipes_from_csv('recipes.csv')
+    # load_recipes_from_csv('api/recipes.csv')
     print("Created recipes.")
+    # Load the recipes CSV file
+    import pandas as pd
+    df = pd.read_csv('recipes.csv')
+
+    # Select 1000 random rows
+    random_sample = df.sample(n=1000, random_state=42)
+
+    # Save the random sample to a new CSV
+    random_sample.to_csv('random_recipes.csv', index=False)
 
     # # Create mock posts, comments, likes, and votes
     # recipes = Recipe.objects.all()
