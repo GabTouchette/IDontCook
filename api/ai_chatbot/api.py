@@ -65,9 +65,9 @@ class OpenAIService:
                     messages.append({"role": role, "content": entry["message"]})
 
             messages.append({"role": "user", "content": prompt})
-
+            print(messages)
             completion = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 messages=messages,
                 stream=True
             )
@@ -99,15 +99,15 @@ class PromptTemplates:
             "- Creating a new recipe\n"
             "- Answering general food and cooking-related questions\n\n"
             "Rules:\n"
-            "- If you provide an existing recipe, use the following format wrapped in <userRecipe> tags:\n"
-            "  <userRecipe>{ \"id\": <recipeId>, \"title\": \"<recipeTitle>\" }</userRecipe>\n"
+            "- If you provide an existing recipe, use the following format wrapped in && tags:\n"
+            "  &&{ \"id\": recipeId, \"title\": \"recipeTitle\" }&&\n"
             "- Do not provide an existing recipe that is not in the list above as this will give an error.\n"
-            "- If you create a new recipe, use the following format wrapped in <recipe> tags:\n"
-            "  <recipe>{\n"
+            "- If you create a new recipe, use the following format wrapped in ** tags:\n"
+            "  **{\n"
             '    "title": "Recipe Name",\n'
             '    "ingredients": [\n'
-            '      {"name": "Flour", "quantity": 0.75, "unit_of_measure": "cups"},\n'
-            '      {"name": "Sugar", "quantity": 0.5, "unit_of_measure": "cups"}\n'
+            '      {"name": "cups Flour", "quantity": 0.75},\n'
+            '      {"name": "tbps Sugar", "quantity": 0.5}\n'
             '      ...\n'
             '    ],\n'
             '    "instructions": ["Step 1", "Step 2"],\n'
@@ -117,7 +117,7 @@ class PromptTemplates:
             '    "tags": ["vegetarian", "easy"],\n'
             '    "description": "A brief description of the recipe",\n'
             '    "notes": "Any extra notes for the recipe"\n'
-            "  }</recipe>\n\n"
+            "  }**\n\n"
             "Important: Ensure that the quantity for each ingredient is a decimal (e.g., 0.75, 1.0, 0.25). "
             "Do not use fractions (e.g., 1/2, 3/4) or integers (e.g., 1). Always represent quantities as doubles.\n\n"
             "You are not limited to choosing only one option; you can provide both an existing and a new recipe in the same response.\n"
@@ -133,7 +133,7 @@ class PromptTemplates:
             "The format should be a valid JSON object and not a JSON string, just like in this example:\n"
             '{\n'
             '  "title": "Recipe Name",\n'
-            '  "ingredients": [{"name": "Ingredient", "quantity": 1, "unit_of_measure": "Unit"}],\n'
+            '  "ingredients": [{"name": "Ingredient", "quantity": 1}],\n'
             '  "instructions": ["Step 1", "Step 2"],\n'
             '  "cooking_time": 30,\n'
             '  "servings": 2,\n'

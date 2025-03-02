@@ -14,6 +14,9 @@ double adjustQuantityForServings(
 String formatQuantity(double quantity) {
   double roundedQuantity = (quantity / 0.125).round() * 0.125;
 
+  if (roundedQuantity == 0) {
+    return "";
+  }
   final fraction = (roundedQuantity - roundedQuantity.toInt()) * 1000;
   final intValue =
       roundedQuantity.toInt() > 0 ? roundedQuantity.toInt().toString() : "";

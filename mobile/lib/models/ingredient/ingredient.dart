@@ -10,7 +10,6 @@ class Ingredient with _$Ingredient {
     String? name,
     List<String>? substitutes,
     double? quantity,
-    String? unit_of_measure,
   }) = _Ingredient;
 
   factory Ingredient.fromJson(Map<String, dynamic> json) =>

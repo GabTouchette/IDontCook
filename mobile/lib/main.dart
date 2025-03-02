@@ -6,6 +6,7 @@ import 'package:i_cant_cook/providers/global_recipe_search_provider.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/providers/recipes_provider.dart';
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
+import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:i_cant_cook/routes.dart';
 
@@ -19,6 +20,7 @@ void main() {
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
         ChangeNotifierProvider(create: (context) => DiscoverProvider()),
         ChangeNotifierProvider(create: (_) => RecipeSearchProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: ICantCook(),
