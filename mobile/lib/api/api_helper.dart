@@ -6,8 +6,8 @@ import 'package:http_parser/http_parser.dart';
 import 'auth_api.dart';
 
 class ApiHelper {
-  // final String baseUrl = 'http://192.168.0.12:8000/api';
-  final String baseUrl = 'https://i-cant-cook-1500fc1d933c.herokuapp.com/api';
+  final String baseUrl = 'http://192.168.0.12:8000/api';
+  // final String baseUrl = 'https://i-cant-cook-1500fc1d933c.herokuapp.com/api';
 
   Future<dynamic> getRequest(
     String endpoint, {
