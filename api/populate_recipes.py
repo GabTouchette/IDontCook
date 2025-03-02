@@ -13,40 +13,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
 django.setup()
 
 from recipes.models import Recipe, Ingredient
-from social.models import Post, Comment, Like, Vote, Follow
-from accounts.models import CustomUser
-
-fake = Faker()
-
-def get_random_avatar_icon():
-    icons = [
-        'burger', 'pizza', 'apple', 'iceCream', 'carrot', 'fish', 
-        'lemon', 'coffee', 'cake', 'hotdog'
-    ]
-    return random.choice(icons)
-
-def create_mock_users(num_users=100):
-    """Create mock users with unique usernames."""
-    users = []
-    for _ in range(num_users):
-        while True:
-            username = fake.user_name()
-            if not CustomUser.objects.filter(username=username).exists():
-                break  # Found a unique username
-
-        email = fake.unique.email()  # Ensures unique emails
-        password = make_password("password123")  # Hash the password
-        avatar_icon = get_random_avatar_icon()
-        
-        user = CustomUser.objects.create(
-            username=username,
-            email=email,
-            password=password,
-            avatar_icon=avatar_icon
-        )
-        users.append(user)
-
-    return users
 
 def parse_ingredient(ingredient_str):
     """Extracts quantity and name from an ingredient string."""
@@ -144,29 +110,6 @@ def parse_ingredient(ingredient_str):
 
     return name, quantity
 
-
-def clean_r_vector_format(r_vector):
-    """Convert R-style c(...) format to Python list format."""
-    if r_vector == 'character(0)':
-        return []
-
-    # Replace R-style 'c(...)' with Python-style '[...]' and handle NA values
-    r_vector = r_vector.replace('c(', '[').replace(')', ']')
-    r_vector = r_vector.replace('NA', 'None')
-
-    try:
-        parsed_value = ast.literal_eval(r_vector)
-
-        # Ensure it's a list of strings
-        if isinstance(parsed_value, list) and all(isinstance(item, str) for item in parsed_value):
-            return parsed_value
-        else:
-            return None  # Return None if it's not a list of strings
-
-    except (SyntaxError, ValueError):
-        return None  # Return None if parsing fails
-
-
 def parse_time_to_minutes(time_str):
     """Convert a time string in PT format to minutes."""
     if not time_str or time_str == 'NA':
@@ -240,113 +183,13 @@ def load_recipes_from_csv(csv_file, max_recipe_count=1000):
             
             recipe_count += 1
 
-
-def create_mock_posts(num_posts=200, users=None, recipes=None):
-    """Create mock posts."""
-    for _ in range(num_posts):
-        user = random.choice(users)
-        recipe = random.choice(recipes)
-        post = Post.objects.create(
-            user=user,
-            recipe=recipe,
-            content=fake.text(max_nb_chars=200),
-        )
-
-        # Create mock comments (random 0-5 comments per post)
-        for _ in range(random.randint(0, 5)):
-            Comment.objects.create(
-                user=random.choice(users),
-                post=post,
-                content=fake.text(max_nb_chars=100)
-            )
-
-        # Create mock likes (random 0-10 likes per post)
-        for _ in range(random.randint(0, 10)):
-            Like.objects.create(
-                user=random.choice(users),
-                post=post
-            )
-
-        # Create mock votes (random upvotes or downvotes)
-        # Ensure each user only votes once per post
-        voters = random.sample(users, k=random.randint(0, 5))  # Randomly select up to 5 unique users
-        for voter in voters:
-            Vote.objects.create(
-                user=voter,
-                post=post,
-                value=random.choice([1, -1])  # Random upvote or downvote
-            )
-
-def create_mock_follows(users=None):
-    """Create mock follows."""
-    for user in users:
-        # Each user follows 5-15 other users
-        num_follows = random.randint(5, 15)
-        for _ in range(num_follows):
-            followed_user = random.choice(users)
-            if followed_user != user:  # Ensure a user doesn't follow themselves
-                Follow.objects.get_or_create(
-                    follower=user,
-                    followed=followed_user
-                )
-
-def create_mock_saves(users=None, recipes=None):
-    """Create mock saves by duplicating recipes for users."""
-    for user in users:
-        # Each user saves 5-10 recipes
-        num_saves = random.randint(5, 10)
-        for _ in range(num_saves):
-            original_recipe = random.choice(recipes)
-
-            # Ensure the user is not saving their own recipe
-            if original_recipe.created_by == user:
-                continue
-
-            cloned_recipe = Recipe.objects.create(
-                created_by=user,
-                title=original_recipe.title,
-                description=original_recipe.description,
-                instructions=original_recipe.instructions,
-                parent=original_recipe  # Track original recipe
-            )
-
-            # Copy ingredients (if applicable)
-            cloned_recipe.ingredients.set(original_recipe.ingredients.all())
-
 def main():
-    print("Creating mock data...")
+    print("Creating recipes...")
 
-    # Create mock users
-    # users = create_mock_users(num_users=100)
-    # print(f"Created {len(users)} users.")
-    
     # Load recipes from CSV
-    # load_recipes_from_csv('api/recipes.csv')
-    print("Created recipes.")
-    # Load the recipes CSV file
-    import pandas as pd
-    df = pd.read_csv('recipes.csv')
+    load_recipes_from_csv('recipes.csv')
 
-    # Select 1000 random rows
-    random_sample = df.sample(n=1000, random_state=42)
-
-    # Save the random sample to a new CSV
-    random_sample.to_csv('random_recipes.csv', index=False)
-
-    # # Create mock posts, comments, likes, and votes
-    # recipes = Recipe.objects.all()
-    # create_mock_posts(num_posts=200, users=users, recipes=recipes)
-    # print("Created posts, comments, likes, and votes.")
-
-    # # Create mock follows
-    # create_mock_follows(users=users)
-    # print("Created follows.")
-
-    # # Create mock saves
-    # create_mock_saves(users=users, recipes=recipes)
-    # print("Created saves.")
-
-    # print("Mock data creation complete!")
+    print("Recipe creation complete!")
 
 if __name__ == "__main__":
     main()
