@@ -48,8 +48,6 @@ def create_mock_users(num_users=100):
 
     return users
 
-import re
-
 def parse_ingredient(ingredient_str):
     """Extracts quantity and name from an ingredient string."""
     ingredient_str = ingredient_str.strip()
@@ -100,8 +98,15 @@ def parse_ingredient(ingredient_str):
 
     # Extract quantity
     if parts:
+        # Handle mixed numbers with Unicode fractions (e.g., "1 ½" -> "1.5")
+        if len(parts) >= 2 and parts[1].replace('.', '', 1).isdigit():
+            try:
+                quantity = float(parts[0]) + float(parts[1])
+                parts = parts[2:]  # Remove the processed parts
+            except ValueError:
+                pass
         # Handle fractions (e.g., "1/2" or "1/3")
-        if '/' in parts[0]:
+        elif '/' in parts[0]:
             try:
                 numerator, denominator = parts[0].split('/')
                 quantity = float(numerator) / float(denominator)
