@@ -12,5 +12,6 @@ __pycache__/
 # Ignore SQLite database
 db.sqlite3
 recipes.csv
-populate_mock_data.py
 recipe_urls.txt
+ricardo_scraper.py
+all_recipes.py
