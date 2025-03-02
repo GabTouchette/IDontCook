@@ -105,7 +105,7 @@ class RecipeInfo extends StatelessWidget {
               double adjustedQuantity = adjustQuantityForServings(
                   ingredient.quantity ?? 0, recipe.servings ?? 1, servings);
               String formattedIngredient =
-                  "${formatQuantity(adjustedQuantity)} ${ingredient.unit_of_measure ?? ''} ${ingredient.name ?? ''}"
+                  "${formatQuantity(adjustedQuantity)} ${ingredient.name ?? ''}"
                       .trim();
 
               return Padding(

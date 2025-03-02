@@ -5,7 +5,7 @@ from accounts.serializers import UserSerializer
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'quantity', 'unit_of_measure', 'substitutes']
+        fields = ['id', 'name', 'quantity', 'substitutes']
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -21,20 +21,18 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         if obj.image and hasattr(obj.image, 'url'):
             return obj.image.url
-        return None
+        return obj.web_image_url
     
     def get_thumnbnail_url(self, obj):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
             return obj.thumbnail.url
-        return None
+        return obj.web_image_url
 
     def to_representation(self, instance):
         """ Customize the GET response to properly format instructions as a list """
         representation = super().to_representation(instance)
         
-
         if isinstance(instance.instructions, str):
-    
             representation['instructions'] = eval(instance.instructions)
         
         return representation
@@ -52,7 +50,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_obj = Ingredient.objects.create(
                 name=ingredient_data["name"],
                 quantity=ingredient_data.get("quantity"),
-                unit_of_measure=ingredient_data.get("unit_of_measure"),
             )
             recipe.ingredients.add(ingredient_obj)
 
@@ -84,7 +81,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_obj = Ingredient.objects.create(
                 name=ingredient_data["name"],
                 quantity=ingredient_data.get("quantity"),
-                unit_of_measure=ingredient_data.get("unit_of_measure"),
             )
             instance.ingredients.add(ingredient_obj)
 
@@ -121,4 +117,4 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
     def get_thumbnail_url(self, obj):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
             return obj.thumbnail.url
-        return None
+        return obj.web_image_url

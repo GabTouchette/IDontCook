@@ -41,7 +41,7 @@ class ChatbotView(APIView):
                 "id": recipe.id,
                 "title": recipe.title,
                 "ingredients": [
-                    {"name": ing.name, "quantity": ing.quantity, "unit_of_measure": ing.unit_of_measure}
+                    {"name": ing.name, "quantity": ing.quantity}
                     for ing in recipe.ingredients.all()
                 ],
             }
