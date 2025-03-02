@@ -187,7 +187,7 @@ def main():
     print("Creating recipes...")
 
     # Load recipes from CSV
-    load_recipes_from_csv('recipes.csv')
+    load_recipes_from_csv('api/recipes.csv')
 
     print("Recipe creation complete!")
 
