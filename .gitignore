@@ -13,3 +13,4 @@ __pycache__/
 db.sqlite3
 recipes.csv
 populate_mock_data.py
+recipe_urls.txt
