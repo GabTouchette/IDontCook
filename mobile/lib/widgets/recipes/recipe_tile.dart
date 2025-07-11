@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/recipes_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/dialogs/recipe_preview_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:provider/provider.dart';
 
@@ -43,6 +46,22 @@ class RecipeTile extends StatelessWidget {
           recipesProvider.fetchRecipes();
           recipesProvider.setTabIndex(0);
         });
+      },
+      onLongPress: () async {
+        try {
+          var res = await RecipeApi().getRecipeById(recipe.id);
+          var fullRecipe = Recipe.fromJson(res);
+
+          showDialog(
+            context: context,
+            barrierColor: Colors.black45,
+            builder: (_) => RecipePreviewDialog(recipe: fullRecipe),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not load preview')),
+          );
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
