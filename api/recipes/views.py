@@ -51,6 +51,7 @@ class RecipeListAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            print(data)
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
                 serializer.save(created_by=user, parent=parent)
@@ -225,4 +226,4 @@ class GlobalFilteredRecipesView(APIView):
 
         serializer = RecipePreviewSerializer(recipes, many=True)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse(serializer.data, safe=False)

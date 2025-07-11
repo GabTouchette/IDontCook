@@ -98,9 +98,9 @@ def get_hybrid_recommendations(user_id, top_n=30, collab_weight=0.6, content_wei
     Generate hybrid recommendations by combining collaborative and content-based filtering.
     If no recommendations are found, recommend the most upvoted recipes.
     """
-    interactions = get_interaction_data()
-    interaction_matrix = preprocess_interactions(interactions)
-    reconstructed_matrix = train_collaborative_filtering(interaction_matrix)
+    # interactions = get_interaction_data()
+    # interaction_matrix = preprocess_interactions(interactions)
+    # reconstructed_matrix = train_collaborative_filtering(interaction_matrix)
 
     # Get the list of recipes the user has created
     user_created_recipes = set(
@@ -119,19 +119,19 @@ def get_hybrid_recommendations(user_id, top_n=30, collab_weight=0.6, content_wei
     # Combine the lists of interacted, created, and saved versions
     excluded_recipes = user_created_recipes.union(user_saved_versions)
 
-    # Get collaborative filtering recommendations if user is in the interaction matrix
-    collab_recs = []
-    if user_id in reconstructed_matrix.index and not reconstructed_matrix.empty:
-        user_interactions = reconstructed_matrix.loc[user_id]
-        collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in excluded_recipes][:top_n]
+    # # Get collaborative filtering recommendations if user is in the interaction matrix
+    # collab_recs = []
+    # if user_id in reconstructed_matrix.index and not reconstructed_matrix.empty:
+    #     user_interactions = reconstructed_matrix.loc[user_id]
+    #     collab_recs = [recipe_id for recipe_id in user_interactions.sort_values(ascending=False).index.tolist() if recipe_id not in excluded_recipes][:top_n]
 
     # Get content-based recommendations
     content_recs = [recipe_id for recipe_id in get_content_based_recommendations(user_id, top_n) if recipe_id not in excluded_recipes]
 
     # Combine recommendations without duplicates
     combined_recs = {}
-    for i, recipe_id in enumerate(collab_recs):
-        combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * collab_weight
+    # for i, recipe_id in enumerate(collab_recs):
+    #     combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * collab_weight
     for i, recipe_id in enumerate(content_recs):
         combined_recs[recipe_id] = combined_recs.get(recipe_id, 0) + (top_n - i) * content_weight
 
