@@ -13,7 +13,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from PIL import ExifTags, Image
 from io import BytesIO
 from django.core.files.base import ContentFile
-from django.db import connection
 from django.db.models import Q
 
 class RecipeListAPIView(APIView):
@@ -51,7 +50,6 @@ class RecipeListAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            print(data)
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
                 serializer.save(created_by=user, parent=parent)
@@ -184,46 +182,46 @@ class GlobalFilteredRecipesView(APIView):
         exclude_own_recipes = request.query_params.get('exclude_own_recipes', 'true').lower() == 'true'
 
         recipes = Recipe.objects.all()
+
+        # 🔍 Enhanced keyword search
         if search_query:
-            if connection.vendor == 'postgresql':
+            keywords = search_query.strip().split()
+            for word in keywords:
                 recipes = recipes.filter(
-                    Q(title__icontains=search_query) |
-                    Q(tags__contains=[search_query])
-                ).distinct()
-            else:
-                recipes = recipes.filter(
-                    Q(title__icontains=search_query) |
-                    Q(tags__icontains=f'"{search_query}"')
+                    Q(title__icontains=word) |
+                    Q(description__icontains=word) |
+                    Q(ingredients__name__icontains=word)
                 ).distinct()
 
+        # 🏷️ Tags filter
         if tags:
-            if connection.vendor == 'postgresql':
-                for tag in tags:
-                    recipes = recipes.filter(tags__contains=[tag])
-            else:
-                for tag in tags:
-                    recipes = recipes.filter(tags__icontains=f'"{tag}"')
-      
+            for tag in tags:
+                recipes = recipes.filter(tags__icontains=f'"{tag}"')
+
+        # ⏱️ Time filters
         if prep_time < 60:
             recipes = recipes.filter(preparation_time__lte=prep_time)
 
         if cook_time < 120:
             recipes = recipes.filter(cooking_time__lte=cook_time)
 
+        # 🔥 Calorie filters
         if calories_max != 1000 or calories_min != 0:
             recipes = recipes.filter(
                 calories__gte=calories_min,
                 calories__lte=calories_max
             )
-      
+
+        # 🤖 AI-generated filter
         if exclude_ai_generated:
-            recipes = recipes.exclude(models.Q(id=-1) | models.Q(parent=-1))
-      
+            recipes = recipes.exclude(Q(id=-1) | Q(parent=-1))
+
+        # 🙋 Exclude user’s own recipes
         if exclude_own_recipes:
             recipes = recipes.exclude(created_by=request.user)
 
-        recipes = recipes[:30]
-
+        # 🚀 Limit & serialize
+        recipes = recipes.distinct()[:30]
         serializer = RecipePreviewSerializer(recipes, many=True)
-
         return JsonResponse(serializer.data, safe=False)
+

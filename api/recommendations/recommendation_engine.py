@@ -146,7 +146,6 @@ def get_hybrid_recommendations(user_id, top_n=30, collab_weight=0.6, content_wei
         if len(unique_recs) >= top_n:
             break
     
-    print(unique_recs)
     # If no recommendations were found, or fewer than top_n, fill with random recipes
     if len(unique_recs) < top_n:
         remaining_slots = top_n - len(unique_recs)
@@ -156,7 +155,6 @@ def get_hybrid_recommendations(user_id, top_n=30, collab_weight=0.6, content_wei
             .order_by('?')[:remaining_slots]
             .values_list('id', flat=True)
         )
-        print(random_recipes)
         unique_recs.extend(random_recipes)
 
     return unique_recs[:top_n]

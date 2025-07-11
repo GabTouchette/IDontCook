@@ -65,7 +65,6 @@ class OpenAIService:
                     messages.append({"role": role, "content": entry["message"]})
 
             messages.append({"role": "user", "content": prompt})
-            print(messages)
             completion = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,

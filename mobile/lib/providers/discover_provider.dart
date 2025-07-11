@@ -25,7 +25,6 @@ class DiscoverProvider with ChangeNotifier {
       final recipes = await RecommendationsApi().fetchRecommendedRecipes();
       _recommendedRecipes = recipes;
       _lastFetchTime = now;
-      print(_lastFetchTime);
     } catch (e) {
       print('Error fetching recommended recipes: $e');
     } finally {
