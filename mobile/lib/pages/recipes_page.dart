@@ -128,7 +128,7 @@ class _RecipesPageState extends State<RecipesPage> {
                           provider.filteredRecipes.isEmpty
                               ? Center(
                                   child: Text(
-                                    'Your recipe list is empty, try adding a recipe!',
+                                    'No recipes were found.',
                                     style:
                                         TextStyle(color: ColorPalette.offWhite),
                                   ),

@@ -4,40 +4,43 @@ import 'package:i_cant_cook/models/user/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthApi {
-  final String _baseUrl = 'http://192.168.0.12:8000';
+  final String _baseUrl = 'http://192.168.0.127:8000';
   // final String _baseUrl = 'https://i-cant-cook-1500fc1d933c.herokuapp.com';
 
   Future<User> login(String username, String password) async {
-    final url = Uri.parse('$_baseUrl/api/accounts/login/');
-    final response = await http.post(
-      url,
-      body: {
-        'username': username,
-        'password': password,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      final String token = responseData['token'];
-      final Map<String, dynamic> user = responseData['user'];
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', token);
-      await prefs.setInt('user_id', user['id']);
-      await prefs.setString('username', user['username']);
-      await prefs.setString('email', user['email']);
-      await prefs.setString('avatar_icon', user['avatar_icon']);
-
-      return User(
-        id: user['id'],
-        username: user['username'],
-        email: user['email'],
-        token: token,
-        avatar_icon: user['avatar_icon'],
+    try {
+      final url = Uri.parse('$_baseUrl/api/accounts/login/');
+      final response = await http.post(
+        url,
+        body: {
+          'username': username,
+          'password': password,
+        },
       );
-    } else {
-      throw Exception('Failed to login: ${response.body}');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final String token = responseData['token'];
+        final Map<String, dynamic> user = responseData['user'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+        await prefs.setInt('user_id', user['id']);
+        await prefs.setString('username', user['username']);
+        await prefs.setString('email', user['email']);
+        await prefs.setString('avatar_icon', user['avatar_icon']);
+
+        return User(
+          id: user['id'],
+          username: user['username'],
+          email: user['email'],
+          token: token,
+          avatar_icon: user['avatar_icon'],
+        );
+      } else {
+        throw Exception('Failed to login: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('An error occurred during login');
     }
   }
 
