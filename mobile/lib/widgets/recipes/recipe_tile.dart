@@ -198,11 +198,9 @@ class RecipeTile extends StatelessWidget {
             style: TextStyle(fontSize: fontSize, color: ColorPalette.offBlack),
           ),
         ],
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         if (recipe.is_favorite ?? false) ...[
-          Icon(Icons.favorite,
-              size: iconSize,
-              color: Colors.redAccent.withOpacity(0.85)), // or ColorPalette.red
+          Icon(Icons.favorite, size: iconSize, color: ColorPalette.red),
         ],
       ],
     );
