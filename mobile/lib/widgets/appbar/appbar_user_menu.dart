@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/pages/login_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/theme/colors.dart';
@@ -47,7 +48,12 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
             } else if (value == 1) {
               await _authApi.logout();
               if (mounted) {
-                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LoginPage(),
+                  ),
+                );
               }
             }
           },

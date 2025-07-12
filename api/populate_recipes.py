@@ -14,6 +14,68 @@ django.setup()
 
 from recipes.models import Recipe, Ingredient
 
+allowed_tags_map = {
+    "Convenience": [
+        "5 Ingredients or Less", "5-Minute Meal", "10-Minute Meal", "30-Minute Meal",
+        "Batch Cooking", "Budget-Friendly", "Easy Clean-Up", "Meal Prep",
+        "Quick", "Under 1 Hour"
+    ],
+    "Cooking Methods": [
+        "Air Fryer", "Baked", "Grilled", "Instant Pot", "No Cook", "One-Pot",
+        "Raw", "Sheet Pan Meal", "Slow Cooker"
+    ],
+    "Cuisine & Style": [
+        "Comfort Food", "Exotic", "Farm-to-Table", "Fusion", "Gourmet",
+        "International Cuisine", "Luxury", "Street Food", "Traditional"
+    ],
+    "Dietary Preferences": [
+        "Dairy-Free", "Diabetes-Friendly", "Gluten-Free", "High Fiber",
+        "High Protein", "Keto", "Low Carb", "Low Fat", "Nut-Free", "Organic",
+        "Paleo", "Sugar-Free", "Vegan", "Vegetarian", "Whole30", "GMO-Free"
+    ],
+    "Ethnic Cuisines": [
+        "African", "American", "Asian", "Caribbean", "Chinese", "Ethiopian",
+        "French", "Greek", "Indian", "Italian", "Japanese", "Korean",
+        "Latin American", "Mediterranean", "Mexican", "Middle Eastern",
+        "Moroccan", "Southern", "Spanish", "Thai", "Vietnamese", "Hawaiian"
+    ],
+    "Food Categories": [
+        "Burger", "Burrito", "Casserole", "Curry", "Pizza", "Pasta",
+        "Rice Dish", "Salad", "Sandwich", "Soup", "Stir-Fry", "Stew",
+        "Sushi", "Taco", "Wrap"
+    ],
+    "Health Benefits": [
+        "Anti-Inflammatory", "Brain-Boosting", "Energy-Boosting", "Gut Health",
+        "Heart Healthy", "Immune-Boosting", "Mood-Boosting", "Post-Workout",
+        "Pre-Workout", "Skin-Glowing"
+    ],
+    "Lifestyle & Audience": [
+        "Athlete-Friendly", "Bodybuilding", "Detox", "Elderly-Friendly",
+        "Kid-Friendly", "Pregnancy-Safe", "Toddler-Friendly", "Weight Gain",
+        "Weight Loss", "Juicing"
+    ],
+    "Meal Types": [
+        "Appetizer", "Beverage", "Brunch", "Cocktail", "Dessert", "Dinner",
+        "Lunch", "Mocktail", "Snack", "Smoothie", "Breakfast"
+    ],
+    "Special Occasions": [
+        "BBQ", "Holiday", "Picnic", "Seasonal"
+    ],
+}
+
+# Flatten and create lowercase set for matching
+all_allowed_tags_lower = {
+    tag.lower() for tags in allowed_tags_map.values() for tag in tags
+}
+
+# Optional: map lowercase to original tag casing to restore proper casing
+lower_to_proper_tag = {}
+for tags in allowed_tags_map.values():
+    for tag in tags:
+        lower_to_proper_tag[tag.lower()] = tag
+
+
+
 def parse_ingredient(ingredient_str):
     """Extracts quantity and name from an ingredient string."""
     ingredient_str = ingredient_str.strip()
@@ -130,64 +192,74 @@ def parse_time_to_minutes(time_str):
 
 def load_recipes_from_csv(csv_file, max_recipe_count=1000):
     """Load recipes from a CSV file and format data properly."""
-    
+
     with open(csv_file, newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         recipe_count = 0
-        for row in reader:  # Iterate through all rows in the CSV
+        for row in reader:
             try:
-                if recipe_count >= max_recipe_count:  # Check if max recipes limit reached
+                if recipe_count >= max_recipe_count:
                     print("Reached maximum limit of recipes.")
-                    break 
+                    break
 
-                # Parse ingredients: Split the string and parse each one
+                # Parse ingredients
                 ingredients_str = row['recipeIngredients'].split(";")
                 ingredients = []
-                
                 for ingredient_str in ingredients_str:
                     name, quantity = parse_ingredient(ingredient_str)
-                    ingredient, created = Ingredient.objects.get_or_create(name=name)
+                    ingredient, _ = Ingredient.objects.get_or_create(name=name)
                     if quantity:
                         ingredient.quantity = quantity
                     ingredient.save()
                     ingredients.append(ingredient)
 
-                # Extract instructions and tags
+                # Parse instructions
                 instructions = row['recipeInstructions'].split(";")
+
+                # Parse and filter tags (case-insensitive)
                 tag_names = [tag for tag in row['tags'].split(";")] if row['tags'] else []
-                tags = []
+                filtered_tags = []
                 for tag in tag_names:
                     name = tag.split('_')[-1]
                     formatted_name = ' '.join(word.capitalize() for word in name.split('-')).capitalize()
-                    tags.append(formatted_name)
+                    if formatted_name.lower() in all_allowed_tags_lower:
+                        proper_cased_tag = lower_to_proper_tag.get(formatted_name.lower(), formatted_name)
+                        filtered_tags.append(proper_cased_tag)
+
+                if not filtered_tags:
+                    print(f"Skipping recipe '{row['title']}' due to no valid tags.")
+                    continue
+
+                # Parse servings (safe)
+                match = re.search(r'\d+(\.\d+)?', row['recipeYield']) if row['recipeYield'] and row['recipeYield'] != 'NA' else None
+                servings = float(match.group()) if match else None
 
                 # Create the recipe
                 recipe = Recipe.objects.create(
                     title=row['title'],
                     instructions=instructions,
-                    tags=tags,
+                    tags=filtered_tags,
                     cooking_time=parse_time_to_minutes(row['cookTime']),
-                    preparation_time=parse_time_to_minutes(row['prepTime']),                
-                    servings=int(row['recipeYield'].split()[0]) if row['recipeYield'] and row['recipeYield'] != 'NA' else None,
+                    preparation_time=parse_time_to_minutes(row['prepTime']),
+                    servings=servings,
                     description=row['description'],
                     web_image_url=row['image'] if row['image'] else None,
                 )
-                
 
-                # Add ingredients to the recipe
                 recipe.ingredients.set(ingredients)
 
             except Exception as e:
-                print(f"Error processing recipe {row['title']}: {e}")
+                print(f"Error processing recipe '{row['title']}': {e}")
                 continue
-            
+
             recipe_count += 1
+
 
 def main():
     print("Creating recipes...")
 
     # Load recipes from CSV
-    load_recipes_from_csv('api/recipes.csv')
+    load_recipes_from_csv('recipes.csv')
 
     print("Recipe creation complete!")
 

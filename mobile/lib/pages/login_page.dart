@@ -4,14 +4,14 @@ import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import '../theme/colors.dart';
 
-class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  _LandingPageState createState() => _LandingPageState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _LandingPageState extends State<LandingPage> {
+class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
