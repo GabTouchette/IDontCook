@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import models
-from .models import Recipe
+from .models import Recipe, SavedRecipe
 from .serializers import RecipeSerializer
 from django.utils.timezone import now
 from .serializers import RecipePreviewSerializer
@@ -17,20 +17,22 @@ from django.db.models import Q
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
         user = request.user
-        recipes = Recipe.objects.filter(created_by=user)
-        serializer = RecipePreviewSerializer(recipes, many=True)
+        # Only show recipes the user has saved (their personal copies)
+        saved_recipe_ids = SavedRecipe.objects.filter(user=user).values_list('recipe_id', flat=True)
+        recipes = Recipe.objects.filter(id__in=saved_recipe_ids)
+        serializer = RecipePreviewSerializer(recipes, many=True, context={'request': request})
         return JsonResponse(serializer.data, safe=False)
 
     def post(self, request):
         user = request.user
         data = request.data
+        parent_id = data.get('parent_id')
 
-        parent_id = data.get('parent_id', None)
-
-        if parent_id is not None and parent_id > 0:
+        # Case: Saving a copy of someone else's recipe
+        if parent_id:
             try:
                 parent = Recipe.objects.get(id=parent_id)
             except Recipe.DoesNotExist:
@@ -38,62 +40,97 @@ class RecipeListAPIView(APIView):
                     {"error": "Parent recipe not found"},
                     status=status.HTTP_404_NOT_FOUND
                 )
-          
-            if Recipe.objects.filter(
-                    created_by=user
-                ).filter(
-                    models.Q(id=parent.id) | models.Q(parent_id=parent.id)
-                ).exists():
 
+            # Prevent saving same recipe multiple times
+            already_saved = SavedRecipe.objects.filter(
+                user=user,
+                original_recipe=parent
+            ).exists()
+
+            if already_saved:
                 return Response(
-                    {"error": "You have already saved this recipe"},
+                    {"error": "You have already saved this recipe."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             serializer = RecipeSerializer(data=data, context={'request': request})
             if serializer.is_valid():
-                serializer.save(created_by=user, parent=parent)
+                # Clone the recipe with parent link
+                cloned_recipe = serializer.save(created_by=user, parent=parent)
+                
+                # Create SavedRecipe link
+                SavedRecipe.objects.create(
+                    user=user,
+                    recipe=cloned_recipe,
+                    original_recipe=parent
+                )
+
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        else:
-            serializer = RecipeSerializer(data=data, context={'request': request})
-            if serializer.is_valid():
-                serializer.save(created_by=user)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Case: User creating a new recipe from scratch (no parent)
+        serializer = RecipeSerializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            recipe = serializer.save(created_by=user)
+
+            # Optional: If you want newly created recipes to also appear as "saved", create SavedRecipe
+            SavedRecipe.objects.create(
+                user=user,
+                recipe=recipe,
+                original_recipe=None  # It's an original recipe
+            )
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class RecipeDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request, pk):
         user = request.user
-        recipe = get_object_or_404(Recipe, pk=pk)
+        original_recipe = get_object_or_404(Recipe, pk=pk)
 
-        if recipe.created_by != user:
-            user_recipe = Recipe.objects.filter(created_by=user, parent=recipe.id).first()            
-            if user_recipe:
-                recipe = user_recipe
+        # Check if the user has saved this recipe
+        try:
+            saved_entry = SavedRecipe.objects.get(user=user, original_recipe=original_recipe)
+            recipe = saved_entry.recipe  # Use user's copy
+        except SavedRecipe.DoesNotExist:
+            recipe = original_recipe
 
+        # Update last_visited only if user owns this recipe
         if recipe.created_by == user:
             recipe.last_visited_at = now()
             recipe.save(update_fields=['last_visited_at'])
 
-        serializer = RecipeSerializer(recipe)
+        serializer = RecipeSerializer(recipe, context={'request': request})
         return JsonResponse(serializer.data)
 
     def put(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
-        serializer = RecipeSerializer(recipe, data=request.data)
+
+        # Only allow editing user's own recipe
+        if recipe.created_by != request.user:
+            return Response({"error": "You do not have permission to edit this recipe."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        serializer = RecipeSerializer(recipe, data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def patch(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
-        serializer = RecipeSerializer(recipe, data=request.data, partial=True)
+
+        if recipe.created_by != request.user:
+            return Response({"error": "You do not have permission to edit this recipe."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        serializer = RecipeSerializer(recipe, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data)
@@ -101,6 +138,11 @@ class RecipeDetailAPIView(APIView):
 
     def delete(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
+
+        if recipe.created_by != request.user:
+            return Response({"error": "You do not have permission to delete this recipe."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -156,17 +198,6 @@ class RecipeImageUploadAPIView(APIView):
 
         return img
 
-class HasSavedRecipeAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, recipe_id):
-        user = request.user
-        exists = Recipe.objects.filter(created_by=user).filter(
-            models.Q(id=recipe_id) | models.Q(parent=recipe_id)
-        ).exists()
-
-        return JsonResponse({"is_saved": exists})
-
 
 class GlobalFilteredRecipesView(APIView):
     permission_classes = [IsAuthenticated]
@@ -183,7 +214,7 @@ class GlobalFilteredRecipesView(APIView):
 
         recipes = Recipe.objects.all()
 
-        # 🔍 Enhanced keyword search
+        # 🔍 Keyword search
         if search_query:
             keywords = search_query.strip().split()
             for word in keywords:
@@ -193,35 +224,50 @@ class GlobalFilteredRecipesView(APIView):
                     Q(ingredients__name__icontains=word)
                 ).distinct()
 
-        # 🏷️ Tags filter
+        # 🏷️ Tags
         if tags:
             for tag in tags:
                 recipes = recipes.filter(tags__icontains=f'"{tag}"')
 
-        # ⏱️ Time filters
+        # ⏱️ Time
         if prep_time < 60:
             recipes = recipes.filter(preparation_time__lte=prep_time)
-
         if cook_time < 120:
             recipes = recipes.filter(cooking_time__lte=cook_time)
 
-        # 🔥 Calorie filters
+        # 🔥 Calories
         if calories_max != 1000 or calories_min != 0:
             recipes = recipes.filter(
                 calories__gte=calories_min,
                 calories__lte=calories_max
             )
 
-        # 🤖 AI-generated filter
+        # 🤖 AI-generated
         if exclude_ai_generated:
             recipes = recipes.exclude(Q(id=-1) | Q(parent=-1))
 
-        # 🙋 Exclude user’s own recipes
+        # 🙋 Exclude own
         if exclude_own_recipes:
             recipes = recipes.exclude(created_by=request.user)
 
-        # 🚀 Limit & serialize
-        recipes = recipes.distinct()[:30]
-        serializer = RecipePreviewSerializer(recipes, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        recipes = recipes.distinct()[:50]
 
+        # ✨ Replace originals with saved versions if user has any
+        recipe_ids = list(recipes.values_list('id', flat=True))
+        user_saved = SavedRecipe.objects.filter(
+            user=request.user,
+            original_recipe_id__in=recipe_ids
+        ).select_related('recipe')
+
+        # Create a mapping from original ID → saved recipe
+        saved_map = {s.original_recipe_id: s.recipe for s in user_saved}
+
+        final_recipes = []
+        for recipe in recipes:
+            if recipe.id in saved_map:
+                final_recipes.append(saved_map[recipe.id])
+            else:
+                final_recipes.append(recipe)
+
+        serializer = RecipePreviewSerializer(final_recipes, many=True, context={'request': request})
+        return JsonResponse(serializer.data, safe=False)

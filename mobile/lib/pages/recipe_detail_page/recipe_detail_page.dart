@@ -80,7 +80,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             widget.viewMode.when(
               normal: () => "Details",
               preview: () => "Preview",
-              savedRecipe: () => "Details",
             ),
             style: const TextStyle(
               fontFamily: 'Poppins',
@@ -93,134 +92,80 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           ),
           elevation: 0,
           leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(
               Icons.chevron_left,
               size: 32,
               color: ColorPalette.offWhite,
             ),
           ),
-          actions: widget.viewMode.when(
-            // CASE: NORMAL
-            normal: () => [
-              IconButton(
-                onPressed: () =>
-                    context.read<RecipeDetailProvider>().saveRecipe(context),
-                icon: FaIcon(
-                  provider.isSaved
-                      ? FontAwesomeIcons.solidBookmark
-                      : FontAwesomeIcons.bookmark,
-                  color: ColorPalette.offWhite,
-                ),
-              ),
-            ],
-
-            // CASE: PREVIEW
-            preview: () => [
-              PopupMenuButton<String>(
-                icon: Icon(
-                  FontAwesomeIcons.floppyDisk,
-                  size: 36,
-                  color: ColorPalette.green,
-                ),
-                color: ColorPalette.darkgray,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'save':
-                      _onSave(context);
-                      break;
-                    case 'save_as_new':
-                      _onSaveAsNew(context);
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (provider.isSaved) ...[
-                    _popupItem(
-                      value: 'save',
-                      icon: FontAwesomeIcons.floppyDisk,
-                      label: "Save",
-                    ),
-                    _popupItem(
-                      value: 'save_as_new',
-                      icon: FontAwesomeIcons.fileCirclePlus,
-                      label: "Save as New",
-                    ),
-                  ],
-                ],
-              ),
-            ],
-
-            // CASE: SAVED RECIPE
-            savedRecipe: () => [
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: ColorPalette.offWhite),
-                color: ColorPalette.darkgray,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'share':
-                      showDialog(
-                        context: context,
-                        builder: (_) => PostDialog(
-                          recipe: recipe,
-                          onPostSuccess: () {},
-                        ),
-                      );
-                      break;
-                    case 'favorite':
-                      provider.toggleFavorite(context);
-                      break;
-                    case 'edit':
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              UpdateRecipePage(recipeId: recipe.id),
-                        ),
-                      ).then((_) {
-                        provider.initializeRecipe(
-                          recipe: widget.recipe,
-                          recipeId: widget.recipeId,
+          actions: [
+            if (recipe.is_saved == true) ...[
+              widget.viewMode.when(
+                // CASE: NORMAL
+                normal: () => PopupMenuButton<String>(
+                  icon:
+                      const Icon(Icons.more_vert, color: ColorPalette.offWhite),
+                  color: ColorPalette.darkgray,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'share':
+                        showDialog(
+                          context: context,
+                          builder: (_) => PostDialog(
+                            recipe: recipe,
+                            onPostSuccess: () {},
+                          ),
                         );
-                      });
-                      break;
-                    case 'delete':
-                      showDialog(
-                        context: context,
-                        builder: (_) => ConfirmationDialog(
-                          message:
-                              "Are you sure you want to delete this recipe?",
-                          onConfirm: () async {
-                            Navigator.pop(context);
-                            bool success =
-                                await RecipeApi().deleteRecipe(recipe.id);
-                            if (success) Navigator.pop(context);
-                            InformationToast.show(
-                              context: context,
-                              message: success
-                                  ? "Recipe deleted successfully!"
-                                  : "There was an error deleting the recipe.",
-                              textColor: success
-                                  ? ColorPalette.green
-                                  : ColorPalette.red,
-                            );
-                          },
-                          onCancel: () => Navigator.pop(context),
-                        ),
-                      );
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (provider.isSaved) ...[
+                        break;
+                      case 'favorite':
+                        provider.toggleFavorite(context);
+                        break;
+                      case 'edit':
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                UpdateRecipePage(recipeId: recipe.id),
+                          ),
+                        ).then((_) {
+                          provider.initializeRecipe(
+                            recipe: widget.recipe,
+                            recipeId: widget.recipeId,
+                          );
+                        });
+                        break;
+                      case 'delete':
+                        showDialog(
+                          context: context,
+                          builder: (_) => ConfirmationDialog(
+                            message:
+                                "Are you sure you want to delete this recipe?",
+                            onConfirm: () async {
+                              Navigator.pop(context);
+                              bool success =
+                                  await RecipeApi().deleteRecipe(recipe.id);
+                              if (success) Navigator.pop(context);
+                              InformationToast.show(
+                                context: context,
+                                message: success
+                                    ? "Recipe deleted successfully!"
+                                    : "There was an error deleting the recipe.",
+                                textColor: success
+                                    ? ColorPalette.green
+                                    : ColorPalette.red,
+                              );
+                            },
+                            onCancel: () => Navigator.pop(context),
+                          ),
+                        );
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
                     _popupItem(
                       value: 'share',
                       icon: FontAwesomeIcons.shareNodes,
@@ -251,10 +196,56 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       textColor: ColorPalette.red,
                     ),
                   ],
-                ],
+                ),
+
+                // CASE: PREVIEW
+                preview: () => PopupMenuButton<String>(
+                  icon: const Icon(
+                    FontAwesomeIcons.floppyDisk,
+                    size: 36,
+                    color: ColorPalette.green,
+                  ),
+                  color: ColorPalette.darkgray,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'save':
+                        _onSave(context);
+                        break;
+                      case 'save_as_new':
+                        _onSaveAsNew(context);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    _popupItem(
+                      value: 'save',
+                      icon: FontAwesomeIcons.floppyDisk,
+                      label: "Save",
+                    ),
+                    _popupItem(
+                      value: 'save_as_new',
+                      icon: FontAwesomeIcons.fileCirclePlus,
+                      label: "Save as New",
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              // If not saved, show floppy save icon
+              IconButton(
+                onPressed: () =>
+                    context.read<RecipeDetailProvider>().saveRecipe(context),
+                icon: const FaIcon(
+                  FontAwesomeIcons.floppyDisk,
+                  color: ColorPalette.offWhite,
+                  size: 28,
+                ),
               ),
             ],
-          ),
+          ],
         ),
         body: Stack(
           children: [
@@ -291,9 +282,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ),
             ),
 
-            // Floating chat button
-            widget.viewMode.maybeWhen(
-              savedRecipe: () => Positioned(
+            // Floating Action Button for Chat
+            if (recipe.is_saved == true &&
+                widget.viewMode == RecipeViewMode.normal())
+              Positioned(
                 bottom: 24,
                 right: 24,
                 child: FloatingActionButton(
@@ -315,8 +307,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       color: ColorPalette.offBlack, size: 28),
                 ),
               ),
-              orElse: () => const SizedBox.shrink(),
-            )
           ],
         ),
       );
@@ -374,7 +364,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   void _pickImage() async {
     final provider = context.read<RecipeDetailProvider>();
     final recipe = provider.recipe;
-    if (recipe == null || !provider.isSaved) return;
+    if (recipe == null || recipe.is_saved != true) return;
 
     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
     if (image != null) {

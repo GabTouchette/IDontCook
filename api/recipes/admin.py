@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Recipe, Ingredient
-from imagekit.admin import AdminThumbnail
+from .models import Recipe, Ingredient, SavedRecipe
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -44,6 +43,12 @@ class RecipeAdmin(admin.ModelAdmin):
 
     inlines = []
 
+class SavedRecipeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe', 'saved_at')
+    search_fields = ('user__username', 'recipe__title')
+    list_filter = ('saved_at', 'user')
+    ordering = ('-saved_at',)
 
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(SavedRecipe, SavedRecipeAdmin)

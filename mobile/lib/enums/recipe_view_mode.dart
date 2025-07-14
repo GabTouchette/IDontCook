@@ -6,5 +6,4 @@ part 'recipe_view_mode.freezed.dart';
 class RecipeViewMode with _$RecipeViewMode {
   const factory RecipeViewMode.normal() = Normal;
   const factory RecipeViewMode.preview() = Preview;
-  const factory RecipeViewMode.savedRecipe() = SavedRecipe;
 }

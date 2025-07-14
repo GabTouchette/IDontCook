@@ -59,13 +59,4 @@ class RecipeApi {
   Future<bool> deleteRecipe(int recipeId) async {
     return await _apiHelper.deleteRequest('recipes/$recipeId/');
   }
-
-  Future<bool> isRecipeSaved(int recipeId) async {
-    var response = await _apiHelper.getRequest('recipes/$recipeId/is_saved/');
-
-    if (response != null && response.containsKey('is_saved')) {
-      return response['is_saved'];
-    }
-    return false;
-  }
 }

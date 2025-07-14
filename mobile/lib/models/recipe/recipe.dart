@@ -21,6 +21,7 @@ class Recipe with _$Recipe {
     String? thumbnail_url,
     String? notes,
     bool? is_favorite,
+    bool? is_saved,
     DateTime? created_at,
     User? created_by,
     DateTime? last_visited_at,

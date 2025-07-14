@@ -33,6 +33,7 @@ mixin _$Recipe {
   String? get thumbnail_url => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   bool? get is_favorite => throw _privateConstructorUsedError;
+  bool? get is_saved => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
   User? get created_by => throw _privateConstructorUsedError;
   DateTime? get last_visited_at => throw _privateConstructorUsedError;
@@ -65,6 +66,7 @@ abstract class $RecipeCopyWith<$Res> {
       String? thumbnail_url,
       String? notes,
       bool? is_favorite,
+      bool? is_saved,
       DateTime? created_at,
       User? created_by,
       DateTime? last_visited_at});
@@ -100,6 +102,7 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? thumbnail_url = freezed,
     Object? notes = freezed,
     Object? is_favorite = freezed,
+    Object? is_saved = freezed,
     Object? created_at = freezed,
     Object? created_by = freezed,
     Object? last_visited_at = freezed,
@@ -157,6 +160,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
           ? _value.is_favorite
           : is_favorite // ignore: cast_nullable_to_non_nullable
               as bool?,
+      is_saved: freezed == is_saved
+          ? _value.is_saved
+          : is_saved // ignore: cast_nullable_to_non_nullable
+              as bool?,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
@@ -208,6 +215,7 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       String? thumbnail_url,
       String? notes,
       bool? is_favorite,
+      bool? is_saved,
       DateTime? created_at,
       User? created_by,
       DateTime? last_visited_at});
@@ -242,6 +250,7 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? thumbnail_url = freezed,
     Object? notes = freezed,
     Object? is_favorite = freezed,
+    Object? is_saved = freezed,
     Object? created_at = freezed,
     Object? created_by = freezed,
     Object? last_visited_at = freezed,
@@ -299,6 +308,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value.is_favorite
           : is_favorite // ignore: cast_nullable_to_non_nullable
               as bool?,
+      is_saved: freezed == is_saved
+          ? _value.is_saved
+          : is_saved // ignore: cast_nullable_to_non_nullable
+              as bool?,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
@@ -332,6 +345,7 @@ class _$RecipeImpl implements _Recipe {
       this.thumbnail_url,
       this.notes,
       this.is_favorite,
+      this.is_saved,
       this.created_at,
       this.created_by,
       this.last_visited_at})
@@ -393,6 +407,8 @@ class _$RecipeImpl implements _Recipe {
   @override
   final bool? is_favorite;
   @override
+  final bool? is_saved;
+  @override
   final DateTime? created_at;
   @override
   final User? created_by;
@@ -401,7 +417,7 @@ class _$RecipeImpl implements _Recipe {
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, thumbnail_url: $thumbnail_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
+    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, thumbnail_url: $thumbnail_url, notes: $notes, is_favorite: $is_favorite, is_saved: $is_saved, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
   }
 
   @override
@@ -431,6 +447,8 @@ class _$RecipeImpl implements _Recipe {
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.is_favorite, is_favorite) ||
                 other.is_favorite == is_favorite) &&
+            (identical(other.is_saved, is_saved) ||
+                other.is_saved == is_saved) &&
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at) &&
             (identical(other.created_by, created_by) ||
@@ -456,6 +474,7 @@ class _$RecipeImpl implements _Recipe {
       thumbnail_url,
       notes,
       is_favorite,
+      is_saved,
       created_at,
       created_by,
       last_visited_at);
@@ -491,6 +510,7 @@ abstract class _Recipe implements Recipe {
       final String? thumbnail_url,
       final String? notes,
       final bool? is_favorite,
+      final bool? is_saved,
       final DateTime? created_at,
       final User? created_by,
       final DateTime? last_visited_at}) = _$RecipeImpl;
@@ -523,6 +543,8 @@ abstract class _Recipe implements Recipe {
   String? get notes;
   @override
   bool? get is_favorite;
+  @override
+  bool? get is_saved;
   @override
   DateTime? get created_at;
   @override

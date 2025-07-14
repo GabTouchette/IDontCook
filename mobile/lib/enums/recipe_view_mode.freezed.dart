@@ -20,21 +20,18 @@ mixin _$RecipeViewMode {
   TResult when<TResult extends Object?>({
     required TResult Function() normal,
     required TResult Function() preview,
-    required TResult Function() savedRecipe,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? normal,
     TResult? Function()? preview,
-    TResult? Function()? savedRecipe,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? normal,
     TResult Function()? preview,
-    TResult Function()? savedRecipe,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -42,21 +39,18 @@ mixin _$RecipeViewMode {
   TResult map<TResult extends Object?>({
     required TResult Function(Normal value) normal,
     required TResult Function(Preview value) preview,
-    required TResult Function(SavedRecipe value) savedRecipe,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(Normal value)? normal,
     TResult? Function(Preview value)? preview,
-    TResult? Function(SavedRecipe value)? savedRecipe,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(Normal value)? normal,
     TResult Function(Preview value)? preview,
-    TResult Function(SavedRecipe value)? savedRecipe,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -126,7 +120,6 @@ class _$NormalImpl implements Normal {
   TResult when<TResult extends Object?>({
     required TResult Function() normal,
     required TResult Function() preview,
-    required TResult Function() savedRecipe,
   }) {
     return normal();
   }
@@ -136,7 +129,6 @@ class _$NormalImpl implements Normal {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? normal,
     TResult? Function()? preview,
-    TResult? Function()? savedRecipe,
   }) {
     return normal?.call();
   }
@@ -146,7 +138,6 @@ class _$NormalImpl implements Normal {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? normal,
     TResult Function()? preview,
-    TResult Function()? savedRecipe,
     required TResult orElse(),
   }) {
     if (normal != null) {
@@ -160,7 +151,6 @@ class _$NormalImpl implements Normal {
   TResult map<TResult extends Object?>({
     required TResult Function(Normal value) normal,
     required TResult Function(Preview value) preview,
-    required TResult Function(SavedRecipe value) savedRecipe,
   }) {
     return normal(this);
   }
@@ -170,7 +160,6 @@ class _$NormalImpl implements Normal {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(Normal value)? normal,
     TResult? Function(Preview value)? preview,
-    TResult? Function(SavedRecipe value)? savedRecipe,
   }) {
     return normal?.call(this);
   }
@@ -180,7 +169,6 @@ class _$NormalImpl implements Normal {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(Normal value)? normal,
     TResult Function(Preview value)? preview,
-    TResult Function(SavedRecipe value)? savedRecipe,
     required TResult orElse(),
   }) {
     if (normal != null) {
@@ -237,7 +225,6 @@ class _$PreviewImpl implements Preview {
   TResult when<TResult extends Object?>({
     required TResult Function() normal,
     required TResult Function() preview,
-    required TResult Function() savedRecipe,
   }) {
     return preview();
   }
@@ -247,7 +234,6 @@ class _$PreviewImpl implements Preview {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? normal,
     TResult? Function()? preview,
-    TResult? Function()? savedRecipe,
   }) {
     return preview?.call();
   }
@@ -257,7 +243,6 @@ class _$PreviewImpl implements Preview {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? normal,
     TResult Function()? preview,
-    TResult Function()? savedRecipe,
     required TResult orElse(),
   }) {
     if (preview != null) {
@@ -271,7 +256,6 @@ class _$PreviewImpl implements Preview {
   TResult map<TResult extends Object?>({
     required TResult Function(Normal value) normal,
     required TResult Function(Preview value) preview,
-    required TResult Function(SavedRecipe value) savedRecipe,
   }) {
     return preview(this);
   }
@@ -281,7 +265,6 @@ class _$PreviewImpl implements Preview {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(Normal value)? normal,
     TResult? Function(Preview value)? preview,
-    TResult? Function(SavedRecipe value)? savedRecipe,
   }) {
     return preview?.call(this);
   }
@@ -291,7 +274,6 @@ class _$PreviewImpl implements Preview {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(Normal value)? normal,
     TResult Function(Preview value)? preview,
-    TResult Function(SavedRecipe value)? savedRecipe,
     required TResult orElse(),
   }) {
     if (preview != null) {
@@ -303,115 +285,4 @@ class _$PreviewImpl implements Preview {
 
 abstract class Preview implements RecipeViewMode {
   const factory Preview() = _$PreviewImpl;
-}
-
-/// @nodoc
-abstract class _$$SavedRecipeImplCopyWith<$Res> {
-  factory _$$SavedRecipeImplCopyWith(
-          _$SavedRecipeImpl value, $Res Function(_$SavedRecipeImpl) then) =
-      __$$SavedRecipeImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$SavedRecipeImplCopyWithImpl<$Res>
-    extends _$RecipeViewModeCopyWithImpl<$Res, _$SavedRecipeImpl>
-    implements _$$SavedRecipeImplCopyWith<$Res> {
-  __$$SavedRecipeImplCopyWithImpl(
-      _$SavedRecipeImpl _value, $Res Function(_$SavedRecipeImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of RecipeViewMode
-  /// with the given fields replaced by the non-null parameter values.
-}
-
-/// @nodoc
-
-class _$SavedRecipeImpl implements SavedRecipe {
-  const _$SavedRecipeImpl();
-
-  @override
-  String toString() {
-    return 'RecipeViewMode.savedRecipe()';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$SavedRecipeImpl);
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() normal,
-    required TResult Function() preview,
-    required TResult Function() savedRecipe,
-  }) {
-    return savedRecipe();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? normal,
-    TResult? Function()? preview,
-    TResult? Function()? savedRecipe,
-  }) {
-    return savedRecipe?.call();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? normal,
-    TResult Function()? preview,
-    TResult Function()? savedRecipe,
-    required TResult orElse(),
-  }) {
-    if (savedRecipe != null) {
-      return savedRecipe();
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(Normal value) normal,
-    required TResult Function(Preview value) preview,
-    required TResult Function(SavedRecipe value) savedRecipe,
-  }) {
-    return savedRecipe(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Normal value)? normal,
-    TResult? Function(Preview value)? preview,
-    TResult? Function(SavedRecipe value)? savedRecipe,
-  }) {
-    return savedRecipe?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(Normal value)? normal,
-    TResult Function(Preview value)? preview,
-    TResult Function(SavedRecipe value)? savedRecipe,
-    required TResult orElse(),
-  }) {
-    if (savedRecipe != null) {
-      return savedRecipe(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class SavedRecipe implements RecipeViewMode {
-  const factory SavedRecipe() = _$SavedRecipeImpl;
 }

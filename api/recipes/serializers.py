@@ -13,6 +13,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
     image_url = serializers.SerializerMethodField()
     thumnbnail_url = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -27,6 +28,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
             return obj.thumbnail.url
         return obj.web_image_url
+    
+    def get_is_saved(self, obj):
+        user = self.context.get('request').user
+        if not user or not user.is_authenticated:
+            return False
+
+        # Either the user created it or has saved a version of it
+        return obj.created_by == user or Recipe.objects.filter(created_by=user, parent=obj.id).exists()
 
     def to_representation(self, instance):
         """ Customize the GET response to properly format instructions as a list """
@@ -100,6 +109,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipePreviewSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
     ingredients_count = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -113,7 +123,8 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
             'tags', 
             'is_favorite', 
             'last_visited_at',
-            'ingredients_count'
+            'ingredients_count',
+            'is_saved'
         ]
 
     def get_thumbnail_url(self, obj):
@@ -123,3 +134,10 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
 
     def get_ingredients_count(self, obj):
         return obj.ingredients.count()
+    
+    def get_is_saved(self, obj):
+        user = self.context.get('request').user
+        if not user or not user.is_authenticated:
+            return False
+
+        return Recipe.objects.filter(parent=obj.id).exists()

@@ -15,6 +15,6 @@ class RecommendRecipesAPIView(APIView):
         recipes = Recipe.objects.filter(id__in=recommended_recipe_ids)
         sorted_recipes = sorted(recipes, key=lambda recipe: recommended_recipe_ids.index(recipe.id))
 
-        serializer = RecipePreviewSerializer(sorted_recipes, many=True)
+        serializer = RecipePreviewSerializer(sorted_recipes, many=True, context={'request': request})
 
         return JsonResponse({'recommendations': serializer.data}, safe=False)
