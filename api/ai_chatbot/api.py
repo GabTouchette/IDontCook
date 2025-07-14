@@ -2,7 +2,6 @@ import os
 import base64
 from openai import OpenAI, OpenAIError
 from io import BytesIO
-from PIL import Image
 import json
 import re
 
@@ -52,9 +51,10 @@ class OpenAIService:
         except Exception as e:
             return f"An unexpected error occurred: {e}"
 
-    def ask_openai_stream(self, prompt, chat_history=None):
+    def ask_openai_stream(self, prompt, chat_history=None, recipe_context=None):
         """
-        Handles chatbot conversation with streaming response.
+        Handles chatbot conversation with streaming response. 
+        If a recipe_context is provided, it uses a recipe-editing prompt.
         """
         try:
             messages = []
@@ -64,7 +64,14 @@ class OpenAIService:
                     role = "user" if entry["sender"] == "user" else "assistant"
                     messages.append({"role": role, "content": entry["message"]})
 
-            messages.append({"role": "user", "content": prompt})
+            if recipe_context:
+                final_prompt = PromptTemplates.recipe_edit_prompt(recipe_context, prompt)
+            else:
+                final_prompt = prompt
+
+            print(f"Final Prompt: {final_prompt}")
+            messages.append({"role": "user", "content": final_prompt})
+
             completion = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
@@ -79,6 +86,7 @@ class OpenAIService:
             yield f"Error communicating with OpenAI: {e}"
         except Exception as e:
             yield f"An unexpected error occurred: {e}"
+
 
 
 class PromptTemplates:
@@ -123,6 +131,26 @@ class PromptTemplates:
             "Additionally, when answering general cooking questions, remind the user that you can also assist with finding or creating recipes.\n\n"
             f"Answer the following user query:\n{query}"
         )
+    
+    @staticmethod
+    def recipe_edit_prompt(recipe, query):
+        return (
+            "You are an AI cooking assistant helping the user modify a recipe.\n\n"
+            "The user might ask to:\n"
+            "- Change ingredients or quantities\n"
+            "- Adjust servings, times, or tags\n"
+            "- Update title, description, or notes\n"
+            "- Remove steps, add comments, etc.\n\n"
+            "Rules:\n"
+            "- Return only the fields you changed, not the entire recipe.\n"
+            "- Wrap your response in double at-signs like this: @@{ JSON }@@\n"
+            "- Format as valid JSON with only the updated fields.\n"
+            "- Ingredient quantities must be decimals (e.g. 1.0, 0.5).\n"
+            "- Use proper keys like `title`, `ingredients`, `instructions`, etc.\n\n"
+            f"Here is the current recipe:\n{json.dumps(recipe, indent=2)}\n\n"
+            f"User request:\n{query}"
+        )
+
 
     @staticmethod
     def ocr_prompt():

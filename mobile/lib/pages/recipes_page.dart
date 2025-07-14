@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:provider/provider.dart';
 import 'package:i_cant_cook/pages/create_recipe_page.dart';
@@ -359,6 +360,7 @@ class _RecipesPageState extends State<RecipesPage> {
           small: tileMode == 0,
           medium: tileMode == 1,
           large: tileMode == 2,
+          viewMode: RecipeViewMode.savedRecipe(),
         ),
       ),
     );

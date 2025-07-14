@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
@@ -14,6 +15,7 @@ class RecipeTile extends StatelessWidget {
   final bool large;
   final bool medium;
   final bool small;
+  final RecipeViewMode viewMode;
 
   const RecipeTile({
     Key? key,
@@ -21,6 +23,7 @@ class RecipeTile extends StatelessWidget {
     this.large = false,
     this.medium = false,
     this.small = false,
+    this.viewMode = const RecipeViewMode.normal(),
   }) : super(key: key);
 
   @override
@@ -149,7 +152,7 @@ class RecipeTile extends StatelessWidget {
               _buildTimeRow(iconSize: 18, fontSize: 15),
               const SizedBox(height: 8),
               Text(
-                '${'N/A'} ingredients',
+                '${recipe.ingredients_count ?? 'N/A'} ingredients',
                 style: TextStyle(
                   fontSize: 14,
                   color: ColorPalette.offBlack,
@@ -210,7 +213,8 @@ class RecipeTile extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RecipeDetailPage(recipeId: recipe.id),
+        builder: (context) =>
+            RecipeDetailPage(recipeId: recipe.id, viewMode: viewMode),
       ),
     ).then((_) {
       final recipesProvider =

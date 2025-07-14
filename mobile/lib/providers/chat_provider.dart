@@ -1,59 +1,84 @@
 import 'package:flutter/material.dart';
 
 class ChatProvider with ChangeNotifier {
-  List<Map<String, dynamic>> _messages = [];
+  List<Map<String, dynamic>> _globalMessages = [];
+  List<Map<String, dynamic>> _recipeMessages = [];
+  int? _currentRecipeId;
 
-  List<Map<String, dynamic>> get messages => _messages;
+  List<Map<String, dynamic>> get globalMessages => _globalMessages;
+  List<Map<String, dynamic>> get recipeMessages => _recipeMessages;
 
-  void addMessage(
-      {String sender = "ai",
-      String text = "",
-      bool isLoading = false,
-      bool isRecipeLoading = false}) {
-    if (_messages.isEmpty || _messages.last["text"] != "") {
+  void setCurrentRecipe(int recipeId) {
+    if (_currentRecipeId != recipeId) {
+      _currentRecipeId = recipeId;
+      _recipeMessages.clear();
+      notifyListeners();
+    }
+  }
+
+  void addMessage({
+    bool isRecipeChat = false,
+    String sender = "ai",
+    String text = "",
+    bool isLoading = false,
+    bool isRecipeLoading = false,
+  }) {
+    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
+
+    if (messages.isEmpty || messages.last["text"] != "") {
       final message = {
         "sender": sender,
         "text": text,
         "isLoading": isLoading,
         "isRecipeLoading": isRecipeLoading,
       };
-      _messages.add(message);
+      messages.add(message);
       notifyListeners();
     }
   }
 
-  void updateLastMessage(String text) {
-    if (_messages.isNotEmpty) {
-      _messages.last["text"] = text;
-      _messages.last["isLoading"] = false;
-      _messages.last["isRecipeLoading"] = false;
+  void updateLastMessage(String text, {bool isRecipeChat = false}) {
+    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
 
+    if (messages.isNotEmpty) {
+      messages.last["text"] = text;
+      messages.last["isLoading"] = false;
+      messages.last["isRecipeLoading"] = false;
       notifyListeners();
     }
   }
 
-  void setLastMessageLoadingState(bool isLoading) {
-    if (_messages.isNotEmpty) {
-      _messages.last["isLoading"] = isLoading;
+  void setLastMessageLoadingState(bool isLoading, {bool isRecipeChat = false}) {
+    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
+
+    if (messages.isNotEmpty) {
+      messages.last["isLoading"] = isLoading;
       notifyListeners();
     }
   }
 
-  void setLastMessageRecipeLoadingState(bool isRecipeLoading) {
-    if (_messages.isNotEmpty) {
-      _messages.last["isRecipeLoading"] = isRecipeLoading;
+  void setLastMessageRecipeLoadingState(bool isRecipeLoading,
+      {bool isRecipeChat = false}) {
+    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
+
+    if (messages.isNotEmpty) {
+      messages.last["isRecipeLoading"] = isRecipeLoading;
       notifyListeners();
     }
   }
 
-  void clearMessages() {
-    _messages.clear();
+  void clearMessages({bool isRecipeChat = false}) {
+    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
+
+    messages.clear();
     notifyListeners();
   }
 
-  void removeLastMessage() {
-    if (_messages.isNotEmpty) {
-      _messages.removeLast();
+  void removeLastMessage({bool isRecipeChat = false}) {
+    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
+
+    if (messages.isNotEmpty) {
+      messages.removeLast();
       notifyListeners();
     }
   }

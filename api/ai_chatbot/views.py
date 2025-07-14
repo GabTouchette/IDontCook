@@ -23,13 +23,35 @@ class ChatbotView(APIView):
         """
         query = request.data.get("query")
         chat_history = request.data.get("chat_history", None)
+        recipe_id = request.data.get("recipe_id", None)
 
         if not query:
             return JsonResponse({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return self.process_chat_response(request.user, query, chat_history)
+        recipe_context = None
+        if recipe_id:
+            try:
+                recipe = Recipe.objects.get(id=recipe_id, created_by=request.user)
+                recipe_context = {
+                    "id": recipe.id,
+                    "title": recipe.title,
+                    "ingredients": [
+                        {"name": ing.name, "quantity": ing.quantity}
+                        for ing in recipe.ingredients.all()
+                    ],
+                    "instructions": recipe.instructions,
+                    "tags": recipe.tags,
+                    "description": recipe.description,
+                    "notes": recipe.notes,
+                    "preparation_time": recipe.preparation_time,
+                    "cooking_time": recipe.cooking_time,
+                }
+            except Recipe.DoesNotExist:
+                return JsonResponse({"error": "Recipe not found"}, status=404)
 
-    def process_chat_response(self, user, query, chat_history=None):
+        return self.process_chat_response(request.user, query, chat_history, recipe_context)
+
+    def process_chat_response(self, user, query, chat_history=None, recipe_context=None):
         """
         Handles chatbot queries and streams the AI response.
         """
@@ -48,12 +70,12 @@ class ChatbotView(APIView):
             for recipe in saved_recipes
         ]
 
-        prompt = PromptTemplates.chatbot_prompt(recipes_list, query)
+        prompt = PromptTemplates.chatbot_prompt(recipes_list, query) if recipe_context is None else query
 
         def event_stream():
             openai_service = OpenAIService()
             full_response = ""
-            for chunk in openai_service.ask_openai_stream(prompt, chat_history):
+            for chunk in openai_service.ask_openai_stream(prompt, chat_history, recipe_context):
                 full_response += chunk
                 yield f"data: {json.dumps({'token': chunk})}\n\n"
 

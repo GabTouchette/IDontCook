@@ -99,6 +99,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipePreviewSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
+    ingredients_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -111,10 +112,14 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
             'thumbnail_url',
             'tags', 
             'is_favorite', 
-            'last_visited_at'
+            'last_visited_at',
+            'ingredients_count'
         ]
 
     def get_thumbnail_url(self, obj):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
             return obj.thumbnail.url
         return obj.web_image_url
+
+    def get_ingredients_count(self, obj):
+        return obj.ingredients.count()

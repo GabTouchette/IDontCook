@@ -15,6 +15,7 @@ class RecipePreview with _$RecipePreview {
     String? thumbnail_url,
     List<String>? tags,
     bool? is_favorite,
+    int? ingredients_count,
     DateTime? last_visited_at,
   }) = _RecipePreview;
 

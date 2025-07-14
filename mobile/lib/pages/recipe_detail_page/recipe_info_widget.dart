@@ -10,6 +10,7 @@ class RecipeInfo extends StatelessWidget {
   final Function incrementServings;
   final Function decrementServings;
   final Function onCompletedInstructions;
+  final Set<String> updatedFields;
 
   const RecipeInfo({
     Key? key,
@@ -19,6 +20,7 @@ class RecipeInfo extends StatelessWidget {
     required this.decrementServings,
     required this.completedInstructions,
     required this.onCompletedInstructions,
+    required this.updatedFields,
   }) : super(key: key);
 
   @override
@@ -49,7 +51,12 @@ class RecipeInfo extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   'Prep: ${recipe.preparation_time} min',
-                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+                  style: TextStyle(
+                    color: updatedFields.contains("preparation_time")
+                        ? ColorPalette.mustard
+                        : ColorPalette.offWhite,
+                    fontSize: 16,
+                  ),
                 ),
               ],
               if (recipe.cooking_time != null) ...[
@@ -59,7 +66,12 @@ class RecipeInfo extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   'Cook: ${recipe.cooking_time} min',
-                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+                  style: TextStyle(
+                    color: updatedFields.contains("cooking_time")
+                        ? ColorPalette.mustard
+                        : ColorPalette.offWhite,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ],
@@ -73,9 +85,12 @@ class RecipeInfo extends StatelessWidget {
               Text(
                 'Serves: ',
                 style: TextStyle(
-                    color: ColorPalette.offWhite,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600),
+                  color: updatedFields.contains("servings")
+                      ? ColorPalette.mustard
+                      : ColorPalette.offWhite,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               IconButton(
                   icon: const Icon(Icons.remove, color: ColorPalette.offWhite),
@@ -110,9 +125,17 @@ class RecipeInfo extends StatelessWidget {
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Text("- $formattedIngredient",
-                    style:
-                        TextStyle(color: ColorPalette.offWhite, fontSize: 16)),
+                child: Container(
+                  child: Text(
+                    "- $formattedIngredient",
+                    style: TextStyle(
+                      color: updatedFields.contains("ingredients")
+                          ? ColorPalette.mustard
+                          : ColorPalette.offWhite,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               );
             }).toList(),
           ),

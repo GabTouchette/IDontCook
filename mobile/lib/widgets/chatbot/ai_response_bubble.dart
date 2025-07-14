@@ -2,25 +2,30 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
 import 'package:i_cant_cook/widgets/chatbot/recipe_card.dart';
+import 'package:i_cant_cook/widgets/chatbot/recipe_modification_suggestion.dart';
 import 'package:i_cant_cook/widgets/chatbot/user_recipe_card.dart';
+import 'package:provider/provider.dart';
 
 class AiResponseBubble extends StatelessWidget {
   final String? message;
   final bool isLoading;
   final bool isRecipeLoading;
+  final Recipe? originalRecipe;
 
   const AiResponseBubble({
     super.key,
     this.message,
     this.isLoading = false,
     this.isRecipeLoading = false,
+    this.originalRecipe,
   });
 
   List<String> splitRecipes(String message) {
-    final regex = RegExp(r'\*\*(.*?)\*\*|&&(.*?)&&', dotAll: true);
+    final regex = RegExp(r'\*\*(.*?)\*\*|&&(.*?)&&|@@(.*?)@@', dotAll: true);
     final matches = regex.allMatches(message);
 
     List<String> parts = [];
@@ -84,6 +89,7 @@ class AiResponseBubble extends StatelessWidget {
       children: recipeParts.map<Widget>((part) {
         Widget widget;
         if (part.startsWith("**") && part.endsWith("**")) {
+          // New Recipe Suggestion
           try {
             final recipeJson = json.decode(part.substring(2, part.length - 2));
             widget = RecipeCard(
@@ -94,6 +100,7 @@ class AiResponseBubble extends StatelessWidget {
                 "Failed to decode new recipe, please try again.");
           }
         } else if (part.startsWith("&&") && part.endsWith("&&")) {
+          // Existing User Recipe Suggestion
           try {
             final userRecipeJson =
                 json.decode(part.substring(2, part.length - 2));
@@ -103,6 +110,61 @@ class AiResponseBubble extends StatelessWidget {
           } catch (e) {
             widget = _buildErrorWidget(
                 "Failed to decode existing recipe, please try again.");
+          }
+        } else if (part.startsWith("@@") && part.endsWith("@@")) {
+          try {
+            widget = Consumer<RecipeDetailProvider>(
+              builder: (context, provider, _) {
+                final originalRecipe = provider.recipe;
+
+                if (originalRecipe == null) {
+                  return const SizedBox.shrink(); // Or a loading widget
+                }
+
+                try {
+                  final modJson =
+                      json.decode(part.substring(2, part.length - 2));
+                  final modifiedRecipe = Recipe.fromJson(modJson);
+                  final filledModRecipe = modifiedRecipe.copyWith(
+                    title: modifiedRecipe.title.isEmpty
+                        ? originalRecipe.title
+                        : modifiedRecipe.title,
+                    ingredients: modifiedRecipe.ingredients.isEmpty
+                        ? originalRecipe.ingredients
+                        : modifiedRecipe.ingredients,
+                    instructions: modifiedRecipe.instructions.isEmpty
+                        ? originalRecipe.instructions
+                        : modifiedRecipe.instructions,
+                    preparation_time:
+                        (modifiedRecipe.preparation_time == null ||
+                                modifiedRecipe.preparation_time == 0)
+                            ? originalRecipe.preparation_time
+                            : modifiedRecipe.preparation_time,
+                    cooking_time: (modifiedRecipe.cooking_time == null ||
+                            modifiedRecipe.cooking_time == 0)
+                        ? originalRecipe.cooking_time
+                        : modifiedRecipe.cooking_time,
+                    description: (modifiedRecipe.description?.isEmpty ?? true)
+                        ? originalRecipe.description
+                        : modifiedRecipe.description,
+                    notes: (modifiedRecipe.notes?.isEmpty ?? true)
+                        ? originalRecipe.notes
+                        : modifiedRecipe.notes,
+                    tags: (modifiedRecipe.tags?.isEmpty ?? true)
+                        ? originalRecipe.tags
+                        : modifiedRecipe.tags,
+                  );
+
+                  return RecipeModificationSuggestion(recipe: filledModRecipe);
+                } catch (e) {
+                  return _buildErrorWidget(
+                      "Failed to decode recipe modification.");
+                }
+              },
+            );
+          } catch (e) {
+            widget = _buildErrorWidget(
+                "Failed to decode recipe modification, please try again.");
           }
         } else {
           widget = MessageWidget(
@@ -130,7 +192,7 @@ class AiResponseBubble extends StatelessWidget {
       ),
       child: Text(
         errorMessage,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.red,
           fontSize: 16,
         ),

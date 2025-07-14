@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:i_cant_cook/api/recipe_api.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
-import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:i_cant_cook/widgets/recipes/camera_capture.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_extra_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_ingredients_section.dart';
@@ -60,85 +58,23 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     );
   }
 
-  bool _isNumber(String str) {
-    return double.tryParse(str) != null;
-  }
-
-  void _submitRecipe() async {
-    String title = _titleController.text;
-    List<Map<String, String>> ingredients = _ingredients
-        .map((field) {
-          String text = field.controller.text.trim();
-          if (text.isEmpty) {
-            return {};
-          }
-
-          List<String> parts = text.split(" ");
-
-          if (!_isNumber(parts[0])) {
-            return {
-              "quantity": "1",
-              "name": parts.join(" "),
-            };
-          }
-          if (parts.length == 2) {
-            return {
-              "quantity": parts[0],
-              "name": parts[1],
-            };
-          }
-          if (parts.length >= 3) {
-            return {
-              "quantity": parts[0],
-              "name": parts.sublist(2).join(" "),
-            };
-          }
-          return {};
-        })
-        .where((ingredient) => ingredient.isNotEmpty)
-        .cast<Map<String, String>>()
-        .toList();
-
-    List<String> instructions = _instructions
-        .map((field) => field.controller.text)
-        .where((instruction) => instruction.isNotEmpty)
-        .toList();
-
-    int prepTime = int.tryParse(_preptimeController.text) ?? 0;
-    int cookTime = int.tryParse(_cooktimeController.text) ?? 0;
-    String desc = _descriptionController.text;
-    String notes = _notesController.text;
-
-    Map<String, dynamic> recipeData = {
-      "title": title,
-      "ingredients": ingredients,
-      "instructions": instructions,
-      "preparation_time": prepTime,
-      "cooking_time": cookTime,
-      "description": desc,
-      "notes": notes,
-      "tags": _selectedTags,
-    };
-
-    int? recipeId = await RecipeApi().createRecipe(recipeData);
-    bool success = recipeId != null;
-
-    InformationToast.show(
-      context: context,
-      message: success
-          ? 'Your recipe has been successfully created!'
-          : 'There was an error submitting your recipe.',
-      textColor: success ? ColorPalette.green : ColorPalette.red,
+  void _submitRecipe() {
+    final recipeData = buildRecipeDataFromForm(
+      titleController: _titleController,
+      instructionControllers: _instructions.map((f) => f.controller).toList(),
+      ingredientFields: _ingredients,
+      prepTimeController: _preptimeController,
+      cookTimeController: _cooktimeController,
+      descriptionController: _descriptionController,
+      notesController: _notesController,
+      selectedTags: _selectedTags,
     );
-    if (success) {
-      Navigator.pop(context);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RecipeDetailPage(recipeId: recipeId),
-        ),
-      );
-    }
+
+    submitRecipe(
+      context: context,
+      recipeData: recipeData,
+      isUpdate: false,
+    );
   }
 
   void _onIngredientsChanged(List<IngredientField> ingredients) {
