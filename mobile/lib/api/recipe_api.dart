@@ -16,19 +16,6 @@ class RecipeApi {
     return [];
   }
 
-  Future<List<RecipePreview>> getGlobalFilteredRecipes(
-      Map<String, String> filters) async {
-    var data = await _apiHelper.getRequest('recipes/global/filter/',
-        queryParams: filters);
-
-    if (data != null) {
-      return (data as List)
-          .map((recipe) => RecipePreview.fromJson(recipe))
-          .toList();
-    }
-    return [];
-  }
-
   Future<int?> createRecipe(Map<String, dynamic> recipeData) async {
     var response = await _apiHelper.postRequest('recipes/', recipeData);
     return response["id"];

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 import 'package:i_cant_cook/mixins/chatbot_mixin.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
+import 'package:provider/provider.dart';
 
 class RecipeChatModal extends StatefulWidget {
   final Recipe recipe;

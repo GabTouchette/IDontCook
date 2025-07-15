@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 
 class LoginPage extends StatefulWidget {

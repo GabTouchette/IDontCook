@@ -1,6 +1,10 @@
 from django.db import models
 from accounts.models import CustomUser
 from recipes.models import Recipe
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from django.core.paginator import Paginator, InvalidPage
 
 class UserRecipeInteraction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -18,3 +22,34 @@ class UserRecipeInteraction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} {self.interaction_type}d {self.recipe.title}"
+
+
+class MixedRecommendationPagination(PageNumberPagination):
+    page_size = 20
+    
+    def paginate_queryset(self, queryset, request, view=None):
+        page_size = self.get_page_size(request)
+        if not page_size:
+            return None
+
+        paginator = Paginator(queryset, page_size)
+        page_number = self.get_page_number(request, paginator)
+
+        try:
+            page = paginator.page(page_number)
+        except InvalidPage as exc:
+            raise NotFound(f'Invalid page {page_number}: {str(exc)}')
+
+        self.page = page
+        self.request = request
+        self.count = paginator.count
+
+        return list(page)
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data
+        })

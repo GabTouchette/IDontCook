@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:i_cant_cook/pages/social_page.dart';
 import 'package:i_cant_cook/pages/explore_page.dart';
-import 'package:i_cant_cook/pages/global_recipes_search_page.dart';
-import 'package:i_cant_cook/pages/discover_page.dart';
 import 'package:i_cant_cook/widgets/navbar.dart';
 import 'package:i_cant_cook/pages/ai_chatbot_page.dart';
 import 'package:i_cant_cook/pages/recipes_page.dart';
@@ -38,11 +37,9 @@ class _DashboardPageState extends State<DashboardPage> {
       case 1:
         return const AiChatBotPage();
       case 2:
-        return const GlobalRecipeSearchPage();
+        return ExplorePage();
       case 3:
-        return const DiscoverPage();
-      case 4:
-        return const ExplorePage();
+        return const SocialPage();
       default:
         return const Center(child: Text('Page Not Found'));
     }

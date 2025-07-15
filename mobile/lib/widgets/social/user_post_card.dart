@@ -6,7 +6,7 @@ import 'package:i_cant_cook/models/post/post.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
-import 'package:i_cant_cook/providers/post_mixin.dart';
+import 'package:i_cant_cook/mixins/post_mixin.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
@@ -323,7 +323,7 @@ class _UserPostCardState extends State<UserPostCard>
 
   Future<void> _deletePost() async {
     final result = await SocialApi().deletePost(widget.post.id);
-    
+
     Navigator.pop(context);
     widget.provider.refresh();
 

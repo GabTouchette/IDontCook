@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import CustomUser
+from rest_framework.pagination import PageNumberPagination
 from storages.backends.gcloud import GoogleCloudStorage
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill

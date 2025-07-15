@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 
-class RecipesProvider with ChangeNotifier {
+class UserRecipesProvider with ChangeNotifier {
   List<RecipePreview> _allRecipes = [];
   List<RecipePreview> _filteredRecipes = [];
   int _tabIndex = 0;

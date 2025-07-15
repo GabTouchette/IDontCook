@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
-import 'package:provider/provider.dart';
+
 import 'package:i_cant_cook/pages/create_recipe_page.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
-import 'package:i_cant_cook/providers/recipes_provider.dart';
+import 'package:i_cant_cook/providers/user_recipes_provider.dart';
+import 'package:provider/provider.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -16,20 +17,17 @@ class RecipesPage extends StatefulWidget {
 }
 
 class _RecipesPageState extends State<RecipesPage> {
-  double _scale = 1.0;
-  double _baseScale = 1.0;
-
   @override
   void initState() {
     super.initState();
     final recipesProvider =
-        Provider.of<RecipesProvider>(context, listen: false);
+        Provider.of<UserRecipesProvider>(context, listen: false);
     recipesProvider.fetchRecipes();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RecipesProvider>(
+    return Consumer<UserRecipesProvider>(
       builder: (context, provider, child) {
         return Scaffold(
           extendBodyBehindAppBar: true,
@@ -48,7 +46,7 @@ class _RecipesPageState extends State<RecipesPage> {
                   ),
                 ).then((_) {
                   final recipesProvider =
-                      Provider.of<RecipesProvider>(context, listen: false);
+                      Provider.of<UserRecipesProvider>(context, listen: false);
                   recipesProvider.fetchRecipes();
                 });
               },
@@ -81,36 +79,7 @@ class _RecipesPageState extends State<RecipesPage> {
                 padding: const EdgeInsets.only(top: 100.0),
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        decoration: BoxDecoration(
-                          color: ColorPalette.darkergray,
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: ColorPalette.darkgray),
-                        ),
-                        child: TextField(
-                          style: TextStyle(
-                            color: ColorPalette.offWhite,
-                          ),
-                          decoration: InputDecoration(
-                            icon: const Icon(
-                              Icons.search,
-                              color: ColorPalette.offWhite,
-                            ),
-                            hintText: 'Search for a recipe',
-                            hintStyle: TextStyle(
-                              color: ColorPalette.placeholdergray,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 16.0, horizontal: 8.0),
-                          ),
-                          onChanged: provider.onSearchChanged,
-                        ),
-                      ),
-                    ),
+                    _buildSearchBar(context),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -128,200 +97,182 @@ class _RecipesPageState extends State<RecipesPage> {
                       ),
                     ),
                     Expanded(
-                      child: GestureDetector(
-                        onScaleStart: (details) {
-                          _baseScale = _scale;
-                        },
-                        onScaleUpdate: (details) {
-                          setState(() {
-                            _scale =
-                                (_baseScale * details.scale).clamp(0.5, 2.0);
-                          });
-                        },
-                        child: Builder(
-                          builder: (context) {
-                            if (provider.tabIndex == 3 &&
-                                provider.selectedTag == null) {
-                              // Show tags grid only when on Tags tab and no tag selected
-                              final tags = provider.userTags;
-                              if (tags.isEmpty) {
-                                return Center(
-                                  child: Text('No tags found.',
-                                      style: TextStyle(
-                                          color: ColorPalette.offWhite)),
-                                );
-                              }
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: GridView.count(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 16,
-                                  crossAxisSpacing: 16,
-                                  childAspectRatio: 1,
-                                  padding: const EdgeInsets.only(top: 16.0),
-                                  children: tags.map((tag) {
-                                    return GestureDetector(
-                                      onTap: () => provider.setSelectedTag(tag),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          onTap: () =>
-                                              provider.setSelectedTag(tag),
-                                          splashColor: Colors.white24,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  ColorPalette.darkgray,
-                                                  ColorPalette.darkergray
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.3),
-                                                  blurRadius: 6,
-                                                  offset: Offset(0, 3),
-                                                ),
-                                              ],
-                                            ),
-                                            alignment: Alignment.center,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 12),
-                                            child: Text(
-                                              tag.toUpperCase(),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16,
-                                                letterSpacing: 1.2,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
+                      child: Builder(
+                        builder: (context) {
+                          if (provider.tabIndex == 3 &&
+                              provider.selectedTag == null) {
+                            // Show tags grid only when on Tags tab and no tag selected
+                            final tags = provider.userTags;
+                            if (tags.isEmpty) {
+                              return Center(
+                                child: Text('No tags found.',
+                                    style: TextStyle(
+                                        color: ColorPalette.offWhite)),
                               );
-                            } else {
-                              // Show recipe list (filteredRecipes) for all other cases
-                              if (provider.filteredRecipes.isEmpty) {
-                                return Center(
-                                  child: Text(
-                                    'No recipes were found.',
-                                    style:
-                                        TextStyle(color: ColorPalette.offWhite),
-                                  ),
-                                );
-                              }
-                              return ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: provider.filteredRecipes.length + 1,
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    // Header row with count and tile mode buttons
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0, horizontal: 16.0),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          provider.tabIndex == 3 &&
-                                                  provider.selectedTag != null
-                                              ? GestureDetector(
-                                                  onTap: () {
-                                                    provider
-                                                        .setSelectedTag(null);
-                                                  },
-                                                  child: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.chevron_left,
-                                                        color: ColorPalette
-                                                            .offWhite,
-                                                        size: 36,
-                                                      ),
-                                                      Text(
-                                                        provider.selectedTag!,
-                                                        style: const TextStyle(
-                                                            color: ColorPalette
-                                                                .offWhite,
-                                                            fontSize: 20,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )
-                                              : Text(
-                                                  'Showing ${provider.filteredRecipes.length} recipes',
-                                                  style: const TextStyle(
-                                                    color:
-                                                        ColorPalette.offWhite,
-                                                    fontSize: 18,
-                                                  ),
-                                                ),
-                                          Row(
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(Icons.view_list,
-                                                    color: provider.tileMode ==
-                                                            0
-                                                        ? Colors.white
-                                                        : ColorPalette
-                                                            .placeholdergray),
-                                                onPressed: () =>
-                                                    provider.setTileMode(0),
-                                                tooltip: 'Small view',
-                                              ),
-                                              IconButton(
-                                                icon: Icon(Icons.view_module,
-                                                    color: provider.tileMode ==
-                                                            1
-                                                        ? Colors.white
-                                                        : ColorPalette
-                                                            .placeholdergray),
-                                                onPressed: () =>
-                                                    provider.setTileMode(1),
-                                                tooltip: 'Medium view',
-                                              ),
-                                              IconButton(
-                                                icon: Icon(Icons.view_comfy,
-                                                    color: provider.tileMode ==
-                                                            2
-                                                        ? Colors.white
-                                                        : ColorPalette
-                                                            .placeholdergray),
-                                                onPressed: () =>
-                                                    provider.setTileMode(2),
-                                                tooltip: 'Large view',
+                            }
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: GridView.count(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                childAspectRatio: 1,
+                                padding: const EdgeInsets.only(top: 16.0),
+                                children: tags.map((tag) {
+                                  return GestureDetector(
+                                    onTap: () => provider.setSelectedTag(tag),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(16),
+                                        onTap: () =>
+                                            provider.setSelectedTag(tag),
+                                        splashColor: Colors.white24,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                ColorPalette.darkgray,
+                                                ColorPalette.darkergray
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.3),
+                                                blurRadius: 6,
+                                                offset: Offset(0, 3),
                                               ),
                                             ],
                                           ),
-                                        ],
+                                          alignment: Alignment.center,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 12),
+                                          child: Text(
+                                            tag.toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
+                                              letterSpacing: 1.2,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
                                       ),
-                                    );
-                                  } else {
-                                    final recipe =
-                                        provider.filteredRecipes[index - 1];
-                                    return _buildRecipeTile(recipe);
-                                  }
-                                },
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            );
+                          } else {
+                            // Show recipe list (filteredRecipes) for all other cases
+                            if (provider.filteredRecipes.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  'No recipes were found.',
+                                  style:
+                                      TextStyle(color: ColorPalette.offWhite),
+                                ),
                               );
                             }
-                          },
-                        ),
+                            return ListView.builder(
+                              padding: EdgeInsets.zero,
+                              itemCount: provider.filteredRecipes.length + 1,
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  // Header row with count and tile mode buttons
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0, horizontal: 16.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        provider.tabIndex == 3 &&
+                                                provider.selectedTag != null
+                                            ? GestureDetector(
+                                                onTap: () {
+                                                  provider.setSelectedTag(null);
+                                                },
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.chevron_left,
+                                                      color:
+                                                          ColorPalette.offWhite,
+                                                      size: 36,
+                                                    ),
+                                                    Text(
+                                                      provider.selectedTag!,
+                                                      style: const TextStyle(
+                                                          color: ColorPalette
+                                                              .offWhite,
+                                                          fontSize: 20,
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            : Text(
+                                                'Showing ${provider.filteredRecipes.length} recipes',
+                                                style: const TextStyle(
+                                                  color: ColorPalette.offWhite,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.view_list,
+                                                  color: provider.tileMode == 0
+                                                      ? Colors.white
+                                                      : ColorPalette
+                                                          .placeholdergray),
+                                              onPressed: () =>
+                                                  provider.setTileMode(0),
+                                              tooltip: 'Small view',
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.view_module,
+                                                  color: provider.tileMode == 1
+                                                      ? Colors.white
+                                                      : ColorPalette
+                                                          .placeholdergray),
+                                              onPressed: () =>
+                                                  provider.setTileMode(1),
+                                              tooltip: 'Medium view',
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.view_comfy,
+                                                  color: provider.tileMode == 2
+                                                      ? Colors.white
+                                                      : ColorPalette
+                                                          .placeholdergray),
+                                              onPressed: () =>
+                                                  provider.setTileMode(2),
+                                              tooltip: 'Large view',
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  final recipe =
+                                      provider.filteredRecipes[index - 1];
+                                  return _buildRecipeTile(recipe);
+                                }
+                              },
+                            );
+                          }
+                        },
                       ),
                     ),
                   ],
@@ -334,8 +285,43 @@ class _RecipesPageState extends State<RecipesPage> {
     );
   }
 
+  Widget _buildSearchBar(BuildContext context) {
+    final provider = Provider.of<UserRecipesProvider>(context, listen: false);
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        decoration: BoxDecoration(
+          color: ColorPalette.darkergray,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: ColorPalette.darkgray),
+        ),
+        child: TextField(
+          style: TextStyle(
+            color: ColorPalette.offWhite,
+          ),
+          decoration: InputDecoration(
+            icon: const Icon(
+              Icons.search,
+              color: ColorPalette.offWhite,
+            ),
+            hintText: 'Search for a recipe',
+            hintStyle: TextStyle(
+              color: ColorPalette.placeholdergray,
+            ),
+            border: InputBorder.none,
+            contentPadding:
+                EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+          ),
+          onChanged: provider.onSearchChanged,
+        ),
+      ),
+    );
+  }
+
   Widget _buildRecipeTile(RecipePreview recipe) {
-    final provider = Provider.of<RecipesProvider>(context, listen: false);
+    final provider = Provider.of<UserRecipesProvider>(context, listen: false);
     final tileMode = provider.tileMode;
 
     return AnimatedSwitcher(
@@ -364,7 +350,7 @@ class _RecipesPageState extends State<RecipesPage> {
     );
   }
 
-  Widget _buildTab(String title, int index, RecipesProvider provider) {
+  Widget _buildTab(String title, int index, UserRecipesProvider provider) {
     bool isSelected = provider.tabIndex == index;
     return Expanded(
       child: GestureDetector(
