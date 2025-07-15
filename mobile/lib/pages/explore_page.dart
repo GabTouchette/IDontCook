@@ -47,27 +47,8 @@ class ExplorePage extends StatelessWidget {
 
                     return ListView.builder(
                       controller: provider.scrollController,
-                      itemCount: provider.items.length + 1,
+                      itemCount: provider.items.length,
                       itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Found ${provider.items.length} recipe${provider.items.length == 1 ? "" : "s"}',
-                                  style: const TextStyle(
-                                    color: ColorPalette.offWhite,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
                         if (index == provider.items.length) {
                           return provider.isFetching
                               ? const Padding(
@@ -81,7 +62,7 @@ class ExplorePage extends StatelessWidget {
                               : const SizedBox(height: 100);
                         }
 
-                        final recipe = provider.items[index - 1];
+                        final recipe = provider.items[index];
                         return BigRecipeTile(recipe: recipe);
                       },
                     );

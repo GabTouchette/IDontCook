@@ -314,7 +314,7 @@ class _RecipesPageState extends State<RecipesPage> {
             contentPadding:
                 EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
           ),
-          onChanged: provider.onSearchChanged,
+          onChanged: provider.onSearchTextChanged,
         ),
       ),
     );
