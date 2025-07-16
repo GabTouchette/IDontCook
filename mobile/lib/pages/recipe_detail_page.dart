@@ -4,15 +4,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_chat_modal.dart';
+import 'package:i_cant_cook/widgets/dialogs/recipe_chat_dialog.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/additional_section_widget.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_skeleton.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_image_widget.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_info_widget.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/additional_section_widget.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/recipe_detail_skeleton.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/recipe_image_widget.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/recipe_info_widget.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/pages/update_recipe_page.dart';
@@ -95,7 +95,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             onPressed: () => Navigator.pop(context),
             icon: const Icon(
               Icons.chevron_left,
-              size: 32,
+              size: 36,
               color: ColorPalette.offWhite,
             ),
           ),
@@ -104,8 +104,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               widget.viewMode.when(
                 // CASE: NORMAL
                 normal: () => PopupMenuButton<String>(
-                  icon:
-                      const Icon(Icons.more_vert, color: ColorPalette.offWhite),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: ColorPalette.offWhite,
+                    size: 32,
+                  ),
                   color: ColorPalette.darkgray,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -296,7 +299,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       backgroundColor: Colors.transparent,
                       builder: (_) => Container(
                         height: MediaQuery.of(context).size.height,
-                        child: RecipeChatModal(recipe: recipe),
+                        child: RecipeChatDialog(recipe: recipe),
                       ),
                     );
                   },
@@ -332,6 +335,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       isUpdate: false,
       shouldNavigate: true,
     );
+    Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   PopupMenuItem<String> _popupItem({

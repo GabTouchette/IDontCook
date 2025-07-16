@@ -7,8 +7,26 @@ import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
 import 'package:i_cant_cook/widgets/recommendations/big_recipe_tile.dart';
 import 'package:provider/provider.dart';
 
-class ExplorePage extends StatelessWidget {
-  ExplorePage({super.key});
+class ExplorePage extends StatefulWidget {
+  const ExplorePage({super.key});
+
+  @override
+  State<ExplorePage> createState() => _ExplorePageState();
+}
+
+class _ExplorePageState extends State<ExplorePage> {
+  bool _hasFetched = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Ensure it's only called once
+    if (!_hasFetched) {
+      Provider.of<ExploreProvider>(context, listen: false).fetchInitialItems();
+      _hasFetched = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +36,7 @@ class ExplorePage extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Container(
-              color: ColorPalette.darkergray,
-            ),
+            child: Container(color: ColorPalette.darkergray),
           ),
           Column(
             children: [

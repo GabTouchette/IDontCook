@@ -3,7 +3,7 @@ import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/dialogs/recipe_preview_dialog.dart';

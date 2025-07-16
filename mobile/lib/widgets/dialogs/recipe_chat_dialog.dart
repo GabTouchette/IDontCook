@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:i_cant_cook/mixins/chatbot_mixin.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
@@ -8,16 +7,16 @@ import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
 import 'package:provider/provider.dart';
 
-class RecipeChatModal extends StatefulWidget {
+class RecipeChatDialog extends StatefulWidget {
   final Recipe recipe;
 
-  const RecipeChatModal({Key? key, required this.recipe}) : super(key: key);
+  const RecipeChatDialog({Key? key, required this.recipe}) : super(key: key);
 
   @override
-  State<RecipeChatModal> createState() => _RecipeChatModalState();
+  State<RecipeChatDialog> createState() => _RecipeChatDialogState();
 }
 
-class _RecipeChatModalState extends State<RecipeChatModal> with ChatBotMixin {
+class _RecipeChatDialogState extends State<RecipeChatDialog> {
   bool _starterMessageSent = false;
 
   @override
@@ -29,7 +28,7 @@ class _RecipeChatModalState extends State<RecipeChatModal> with ChatBotMixin {
     if (!_starterMessageSent) {
       _starterMessageSent = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (provider.recipeMessages.isEmpty) {
+        if (provider.currentMessages.isEmpty) {
           provider.addMessage(
             sender: "ai",
             text: "Ask me something about your ${widget.recipe.title} recipe!",
@@ -93,11 +92,11 @@ class _RecipeChatModalState extends State<RecipeChatModal> with ChatBotMixin {
                   const SizedBox(height: 16),
                   Expanded(
                     child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: provider.recipeMessages.length,
+                      controller: provider.scrollController,
+                      itemCount: provider.currentMessages.length,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemBuilder: (context, index) {
-                        final msg = provider.recipeMessages[index];
+                        final msg = provider.currentMessages[index];
                         final isUser = msg['sender'] == 'user';
                         return Align(
                           alignment: isUser
@@ -136,11 +135,12 @@ class _RecipeChatModalState extends State<RecipeChatModal> with ChatBotMixin {
                               Border.all(color: ColorPalette.placeholdergray),
                         ),
                         child: TextField(
-                          controller: chatController,
+                          controller: provider.chatController,
                           style: const TextStyle(color: ColorPalette.offWhite),
-                          onSubmitted: (query) => sendMessageWithContext(
-                              query, provider,
-                              recipeId: widget.recipe.id, isRecipeChat: true),
+                          onSubmitted: (query) => provider.sendMessage(
+                              query: query,
+                              recipeId: widget.recipe.id,
+                              isRecipeChat: true),
                           decoration: const InputDecoration(
                             icon: Icon(Icons.search,
                                 color: ColorPalette.placeholdergray),

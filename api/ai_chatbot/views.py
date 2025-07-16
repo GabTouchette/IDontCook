@@ -62,15 +62,41 @@ class ChatbotView(APIView):
             {
                 "id": recipe.id,
                 "title": recipe.title,
-                "ingredients": [
-                    {"name": ing.name, "quantity": ing.quantity}
-                    for ing in recipe.ingredients.all()
-                ],
             }
             for recipe in saved_recipes
         ]
 
-        prompt = PromptTemplates.chatbot_prompt(recipes_list, query) if recipe_context is None else query
+        try:
+            settings = user.settings
+            user_settings = {
+                "age": settings.age,
+                "gender": settings.gender,
+                "city": settings.city,
+                "country": settings.country,
+                "ethnicity": settings.ethnicity,
+                "is_vegan": settings.is_vegan,
+                "is_vegetarian": settings.is_vegetarian,
+                "is_gluten_free": settings.is_gluten_free,
+                "is_lactose_intolerant": settings.is_lactose_intolerant,
+                "has_peanut_allergy": settings.has_peanut_allergy,
+                "has_tree_nut_allergy": settings.has_tree_nut_allergy,
+                "has_shellfish_allergy": settings.has_shellfish_allergy,
+                "has_egg_allergy": settings.has_egg_allergy,
+                "has_milk_allergy": settings.has_milk_allergy,
+                "has_soy_allergy": settings.has_soy_allergy,
+                "has_wheat_allergy": settings.has_wheat_allergy,
+                "has_fish_allergy": settings.has_fish_allergy,
+            }
+        except Exception:
+            user_settings = {}
+
+        # 🔹 Build prompt
+        prompt = PromptTemplates.chatbot_prompt(
+            user_recipes=recipes_list,
+            query=query,
+            user_settings=user_settings,
+            recipe_context=recipe_context
+        ) if recipe_context is None else query
 
         def event_stream():
             openai_service = OpenAIService()
@@ -81,8 +107,7 @@ class ChatbotView(APIView):
 
             conversation.ai_response = full_response
             conversation.save()
-            print(f"AI Response: {full_response}")
-            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=conversation.ai_response)
+            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=full_response)
 
         return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 

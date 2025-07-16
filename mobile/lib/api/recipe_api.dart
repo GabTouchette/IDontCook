@@ -9,6 +9,7 @@ class RecipeApi {
   Future<List<RecipePreview>> fetchRecipes() async {
     var data = await _apiHelper.getRequest('recipes/');
     if (data != null) {
+      print(data);
       return (data as List)
           .map((recipe) => RecipePreview.fromJson(recipe))
           .toList();

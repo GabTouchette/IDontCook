@@ -1,5 +1,5 @@
+import random
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -7,12 +7,14 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.utils.timezone import now
 from django.core.files.base import ContentFile
-from django.db.models import Q, Case, When
+from django.db.models import Case, When, Q
+from django.db.models.functions import Random
 
 from PIL import Image, ExifTags
 from io import BytesIO
 
 from recipes.models import Recipe, SavedRecipe
+from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
 from recommendations.models import MixedRecommendationPagination
 from recommendations.api import get_similar_recipes
@@ -39,7 +41,7 @@ class RecipeListAPIView(APIView):
             try:
                 parent = Recipe.objects.get(id=parent_id)
             except Recipe.DoesNotExist:
-                return Response(
+                return JsonResponse(
                     {"error": "Parent recipe not found"},
                     status=status.HTTP_404_NOT_FOUND
                 )
@@ -51,7 +53,7 @@ class RecipeListAPIView(APIView):
             ).exists()
 
             if already_saved:
-                return Response(
+                return JsonResponse(
                     {"error": "You have already saved this recipe."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
@@ -68,9 +70,9 @@ class RecipeListAPIView(APIView):
                     original_recipe=parent
                 )
 
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Case: User creating a new recipe from scratch (no parent)
         serializer = RecipeSerializer(data=data, context={'request': request})
@@ -83,9 +85,9 @@ class RecipeListAPIView(APIView):
                 original_recipe=None
             )
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -116,7 +118,7 @@ class RecipeDetailAPIView(APIView):
 
         # Only allow editing user's own recipe
         if recipe.created_by != request.user:
-            return Response({"error": "You do not have permission to edit this recipe."},
+            return JsonResponse({"error": "You do not have permission to edit this recipe."},
                             status=status.HTTP_403_FORBIDDEN)
 
         serializer = RecipeSerializer(recipe, data=request.data, context={'request': request})
@@ -129,7 +131,7 @@ class RecipeDetailAPIView(APIView):
         recipe = get_object_or_404(Recipe, pk=pk)
 
         if recipe.created_by != request.user:
-            return Response({"error": "You do not have permission to edit this recipe."},
+            return JsonResponse({"error": "You do not have permission to edit this recipe."},
                             status=status.HTTP_403_FORBIDDEN)
 
         serializer = RecipeSerializer(recipe, data=request.data, partial=True, context={'request': request})
@@ -142,11 +144,11 @@ class RecipeDetailAPIView(APIView):
         recipe = get_object_or_404(Recipe, pk=pk)
 
         if recipe.created_by != request.user:
-            return Response({"error": "You do not have permission to delete this recipe."},
+            return JsonResponse({"error": "You do not have permission to delete this recipe."},
                             status=status.HTTP_403_FORBIDDEN)
 
         recipe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({"message": "Recipe deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 class RecipeImageUploadAPIView(APIView):
@@ -168,19 +170,19 @@ class RecipeImageUploadAPIView(APIView):
                 recipe.thumbnail = img_file
                 recipe.save()
 
-                return Response(
+                return JsonResponse(
                     {
                         "image_url": recipe.image.url,
                         "thumbnail_url": recipe.thumbnail.url
                     },
                     status=status.HTTP_200_OK
                 )
-            
-            return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+            return JsonResponse({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         except Recipe.DoesNotExist:
-            return Response({"error": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+            return JsonResponse({"error": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
+
     def correct_image_orientation(self, img):
         """Auto-rotate image based on EXIF data."""
         try:
@@ -210,7 +212,7 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         """
         Apply filtering params from query params and return a queryset.
         """
-        search_query = request.query_params.get('search', '')
+        search_query = request.query_params.get('search', '').strip()
         tags = request.query_params.get('tags', '').split(',') if request.query_params.get('tags') else []
         prep_time = float(request.query_params.get('prep_time', 60))
         cook_time = float(request.query_params.get('cook_time', 120))
@@ -219,22 +221,17 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         exclude_ai_generated = request.query_params.get('exclude_ai_generated', 'false').lower() == 'true'
         exclude_own_recipes = request.query_params.get('exclude_own_recipes', 'true').lower() == 'true'
 
-        recipes = Recipe.objects.all()
-
-        # Keyword search
-        if search_query:
-            keywords = search_query.strip().split()
-            for word in keywords:
-                recipes = recipes.filter(
-                    Q(title__icontains=word) |
-                    Q(description__icontains=word) |
-                    Q(ingredients__name__icontains=word)
-                ).distinct()
+        recipes = Recipe.objects.all().prefetch_related('ingredients')
 
         # Tags filter
         if tags:
+            # Create Q objects for each tag we want to match
+            tag_filters = Q()
             for tag in tags:
-                recipes = recipes.filter(tags__icontains=f'"{tag}"')
+                if tag:
+                    tag_filters |= Q(tags__contains=[tag.strip().lower()])
+            
+            recipes = recipes.filter(tag_filters)
 
         # Time filters
         if prep_time < 60:
@@ -257,8 +254,22 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         if exclude_own_recipes:
             recipes = recipes.exclude(created_by=request.user)
 
+        # Apply search if query exists
+        if search_query:
+            search_engine = RecipeSearchEngine()
+            recipe_list = list(recipes)
+            scored_recipes = search_engine.search(search_query, recipe_list)
+            
+            # Get just the recipes (without scores) in order
+            sorted_recipes = [r[0] for r in scored_recipes]
+            recipe_ids = [r.id for r in sorted_recipes]
+            
+            # Create new queryset preserving order
+            preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(recipe_ids)])
+            return Recipe.objects.filter(id__in=recipe_ids).order_by(preserved_order)
+    
         return recipes.distinct()
-
+    
     def get_combined_recipe_ids(self, user):
         # 1. Recommended recipe IDs
         recommended_ids = get_similar_recipes(user.id, top_n=500)
@@ -278,33 +289,44 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         filtered_recipes = self.get_filtered_recipes(request)
         combined_ids = self.get_combined_recipe_ids(user)
 
-        # Intersect filtered queryset with combined_ids while preserving order
-
         # Get filtered recipe IDs
         filtered_ids = set(filtered_recipes.values_list('id', flat=True))
 
-        # Filter combined_ids to those that pass filters, preserve order
+        # Filter combined_ids to those that pass filters, preserving order
         filtered_combined_ids = [rid for rid in combined_ids if rid in filtered_ids]
 
-        paginator = self.pagination_class()
+        # Shuffle combined_ids before pagination for different order each time
+        random.shuffle(filtered_combined_ids)
 
+        paginator = self.pagination_class()
         page_ids = paginator.paginate_queryset(filtered_combined_ids, request, view=self)
 
+        # If no page IDs, return empty response
         if not page_ids:
-            return Response({
+            return JsonResponse({
                 'count': len(filtered_combined_ids),
                 'next': None,
                 'previous': None,
                 'results': []
             })
 
-        # Query recipes preserving order
+        # Query filtered recipes for current page
         preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(page_ids)])
+        page_recipes = Recipe.objects.filter(id__in=page_ids).order_by(preserved_order)
 
-        recipes_page = Recipe.objects.filter(id__in=page_ids).order_by(preserved_order)
+        # Include 4–10 additional random recipes that also pass the filters
+        num_random = random.randint(4, 10)
+        random_recipes = (
+            filtered_recipes.exclude(id__in=page_ids)
+            .order_by(Random())[:num_random]
+        )
 
-        # Replace originals with saved versions if any
-        recipe_ids = list(recipes_page.values_list('id', flat=True))
+        # Merge and shuffle final recipes
+        all_recipes = list(page_recipes) + list(random_recipes)
+        random.shuffle(all_recipes)
+
+        # Replace originals with user-saved versions
+        recipe_ids = [r.id for r in all_recipes]
         user_saved = SavedRecipe.objects.filter(
             user=user,
             original_recipe_id__in=recipe_ids
@@ -313,12 +335,9 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         saved_map = {s.original_recipe_id: s.recipe for s in user_saved}
 
         final_recipes = []
-        for recipe in recipes_page:
-            if recipe.id in saved_map:
-                final_recipes.append(saved_map[recipe.id])
-            else:
-                final_recipes.append(recipe)
+        for r in all_recipes:
+            final_recipes.append(saved_map.get(r.id, r))
 
+        # Serialize and return
         serializer = self.serializer_class(final_recipes, many=True, context={'request': request})
-
         return paginator.get_paginated_response(serializer.data)

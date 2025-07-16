@@ -1,8 +1,8 @@
 from django.db import models
+from django.http import JsonResponse
 from accounts.models import CustomUser
 from recipes.models import Recipe
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from django.core.paginator import Paginator, InvalidPage
 
@@ -47,7 +47,7 @@ class MixedRecommendationPagination(PageNumberPagination):
         return list(page)
 
     def get_paginated_response(self, data):
-        return Response({
+        return JsonResponse({
             'count': self.count,
             'next': self.get_next_link(),
             'previous': self.get_previous_link(),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:i_cant_cook/mixins/chatbot_mixin.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
@@ -15,17 +14,7 @@ class AiChatBotPage extends StatefulWidget {
   AiChatBotPageState createState() => AiChatBotPageState();
 }
 
-class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
-  final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
+class AiChatBotPageState extends State<AiChatBotPage> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ChatProvider>(builder: (context, provider, child) {
@@ -80,7 +69,7 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                   padding: const EdgeInsets.only(top: 120.0),
                   child: Column(
                     children: [
-                      if (provider.globalMessages.isEmpty) ...[
+                      if (provider.currentMessages.isEmpty) ...[
                         Expanded(
                           child: Center(
                             child: Column(
@@ -99,7 +88,7 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                                           color: ColorPalette.darkgray),
                                     ),
                                     child: TextField(
-                                      controller: _searchController,
+                                      controller: provider.chatController,
                                       style: TextStyle(
                                         color: ColorPalette.offWhite,
                                       ),
@@ -117,8 +106,7 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                                             vertical: 16.0, horizontal: 8.0),
                                       ),
                                       onSubmitted: (query) =>
-                                          sendMessageWithContext(
-                                              query, provider),
+                                          provider.sendMessage(query: query),
                                     ),
                                   ),
                                 ),
@@ -135,25 +123,25 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                                             'New Idea',
                                             FontAwesomeIcons.lightbulb,
                                             ColorPalette.mustard, () {
-                                          sendMessageWithContext(
-                                              'Can you suggest a new recipe idea?',
-                                              provider);
+                                          provider.sendMessage(
+                                              query:
+                                                  'Can you suggest a new recipe idea?');
                                         }),
                                         _buildBreadcrumb(
                                             'Something I have',
                                             FontAwesomeIcons.file,
                                             Colors.green, () {
-                                          sendMessageWithContext(
-                                              'Can you suggest a recipe that I have?',
-                                              provider);
+                                          provider.sendMessage(
+                                              query:
+                                                  'Can you suggest a recipe that I have?');
                                         }),
                                         _buildBreadcrumb(
                                             'A popular choice',
                                             FontAwesomeIcons.fire,
                                             Colors.orange, () {
-                                          sendMessageWithContext(
-                                              'Can you suggest a popular recipe at the moment?',
-                                              provider);
+                                          provider.sendMessage(
+                                              query:
+                                                  'Can you suggest a popular recipe at the moment?');
                                         }),
                                       ],
                                     ),
@@ -164,14 +152,14 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                           ),
                         ),
                       ],
-                      if (provider.globalMessages.isNotEmpty) ...[
+                      if (provider.currentMessages.isNotEmpty) ...[
                         Expanded(
                           child: ListView.builder(
-                            controller: _scrollController,
+                            controller: provider.scrollController,
                             padding: EdgeInsets.zero,
-                            itemCount: provider.globalMessages.length,
+                            itemCount: provider.currentMessages.length,
                             itemBuilder: (context, index) {
-                              final message = provider.globalMessages[index];
+                              final message = provider.currentMessages[index];
                               final bool isUser = message['sender'] == 'user';
 
                               return Align(
@@ -212,7 +200,7 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                                   color: ColorPalette.placeholdergray),
                             ),
                             child: TextField(
-                              controller: _searchController,
+                              controller: provider.chatController,
                               style: TextStyle(
                                 color: ColorPalette.offWhite,
                               ),
@@ -230,7 +218,7 @@ class AiChatBotPageState extends State<AiChatBotPage> with ChatBotMixin {
                                     vertical: 16.0, horizontal: 8.0),
                               ),
                               onSubmitted: (query) =>
-                                  sendMessageWithContext(query, provider),
+                                  provider.sendMessage(query: query),
                             ),
                           ),
                         ),

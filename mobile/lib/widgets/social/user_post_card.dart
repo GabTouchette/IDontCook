@@ -4,7 +4,7 @@ import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
 import 'package:i_cant_cook/models/post/post.dart';
 import 'package:i_cant_cook/models/user/user.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/mixins/post_mixin.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
