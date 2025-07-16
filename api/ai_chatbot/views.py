@@ -81,7 +81,7 @@ class ChatbotView(APIView):
 
             conversation.ai_response = full_response
             conversation.save()
-
+            print(f"AI Response: {full_response}")
             ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=conversation.ai_response)
 
         return StreamingHttpResponse(event_stream(), content_type="text/event-stream")

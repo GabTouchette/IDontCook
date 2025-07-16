@@ -1,13 +1,17 @@
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import serializers
-from rest_framework.views import APIView
-from accounts.models import CustomUser
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from django.http import JsonResponse
 import random
 
+from django.http import JsonResponse
+
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
+
+from accounts.models import CustomUser
+from .models import UserSettings
+from .serializers import UserSettingsSerializer
 
 class RegisterView(APIView):
     permission_classes = []
@@ -75,3 +79,20 @@ class CustomAuthToken(ObtainAuthToken):
                 'avatar_icon': user.avatar_icon,
             }
         })
+
+
+class UserSettingsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        settings, _ = UserSettings.objects.get_or_create(user=request.user)
+        serializer = UserSettingsSerializer(settings)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        settings, _ = UserSettings.objects.get_or_create(user=request.user)
+        serializer = UserSettingsSerializer(settings, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

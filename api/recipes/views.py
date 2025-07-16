@@ -33,10 +33,9 @@ class RecipeListAPIView(APIView):
         user = request.user
         data = request.data
         parent_id = data.get('parent_id')
-        print(parent_id)
 
         # Case: Saving a copy of someone else's recipe
-        if parent_id > 0:
+        if parent_id is not None and parent_id > 0:
             try:
                 parent = Recipe.objects.get(id=parent_id)
             except Recipe.DoesNotExist:

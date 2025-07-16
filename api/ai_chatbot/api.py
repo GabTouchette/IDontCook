@@ -109,8 +109,8 @@ class PromptTemplates:
             "- If you provide an existing recipe, use the following format wrapped in && tags:\n"
             "  &&{ \"id\": recipeId, \"title\": \"recipeTitle\" }&&\n"
             "- Do not provide an existing recipe that is not in the list above as this will give an error.\n"
-            "- If you create a new recipe, use the following format wrapped in ** tags:\n"
-            "  **{\n"
+            "- If you create a new recipe, use the following format wrapped in $$ tags:\n"
+            "  $${\n"
             '    "title": "Recipe Name",\n'
             '    "ingredients": [\n'
             '      {"name": "cups Flour", "quantity": 0.75},\n'
@@ -124,7 +124,7 @@ class PromptTemplates:
             '    "tags": ["vegetarian", "easy"],\n'
             '    "description": "A brief description of the recipe",\n'
             '    "notes": "Any extra notes for the recipe"\n'
-            "  }**\n\n"
+            "  }$$\n\n"
             "Important: Ensure that the quantity for each ingredient is a decimal (e.g., 0.75, 1.0, 0.25). "
             "Do not use fractions (e.g., 1/2, 3/4) or integers (e.g., 1). Always represent quantities as doubles.\n\n"
             "You are not limited to choosing only one option; you can provide both an existing and a new recipe in the same response.\n"
@@ -135,19 +135,15 @@ class PromptTemplates:
     @staticmethod
     def recipe_edit_prompt(recipe, query):
         return (
-            "You are an AI cooking assistant helping the user modify a recipe.\n\n"
-            "The user might ask to:\n"
-            "- Change ingredients or quantities\n"
-            "- Adjust servings, times, or tags\n"
-            "- Update title, description, or notes\n"
-            "- Remove steps, add comments, etc.\n\n"
-            "Rules:\n"
-            "- Return only the fields you changed, not the entire recipe.\n"
-            "- Wrap your response in double at-signs like this: @@{ JSON }@@\n"
-            "- Format as valid JSON with only the updated fields.\n"
-            "- Ingredient quantities must be decimals (e.g. 1.0, 0.5).\n"
-            "- Use proper keys like `title`, `ingredients`, `instructions`, etc.\n\n"
-            f"Here is the current recipe:\n{json.dumps(recipe, indent=2)}\n\n"
+            "You are an AI assistant helping a user modify or answer questions about a recipe.\n"
+            "You can respond to the user, suggest changes to the recipe or ask for more details.\n"
+            "When responding with a modified recipe:\n"
+            " - Respond only with fields that changed, wrapped in @@{...}@@.\n"
+            "-  Use valid JSON keys like: title, ingredients, instructions, cooking_time, preparation_time, servings, tags, description, notes.\n"
+            " - If you change `ingredients` or `tags`, return the full updated list.\n"
+            " - Each ingredient must be: {\"name\": \"ingredient name\", \"quantity\": 1.0} — quantity must be a decimal.\n"
+            " - Instructions must be a list of strings.\n\n"
+            f"Current recipe:\n{json.dumps(recipe, indent=2)}\n\n"
             f"User request:\n{query}"
         )
 

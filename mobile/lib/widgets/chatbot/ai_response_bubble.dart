@@ -25,7 +25,7 @@ class AiResponseBubble extends StatelessWidget {
   });
 
   List<String> splitRecipes(String message) {
-    final regex = RegExp(r'\*\*(.*?)\*\*|&&(.*?)&&|@@(.*?)@@', dotAll: true);
+    final regex = RegExp(r'\$\$(.*?)\$\$|&&(.*?)&&|@@(.*?)@@', dotAll: true);
     final matches = regex.allMatches(message);
 
     List<String> parts = [];
@@ -88,7 +88,7 @@ class AiResponseBubble extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: recipeParts.map<Widget>((part) {
         Widget widget;
-        if (part.startsWith("**") && part.endsWith("**")) {
+        if (part.startsWith("\$\$") && part.endsWith("\$\$")) {
           // New Recipe Suggestion
           try {
             final recipeJson = json.decode(part.substring(2, part.length - 2));
@@ -120,6 +120,12 @@ class AiResponseBubble extends StatelessWidget {
                 if (originalRecipe == null) {
                   return const SizedBox.shrink(); // Or a loading widget
                 }
+
+                late RecipeModificationSuggestion suggestion;
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  // No-op: just ensures we're not triggering rebuilds during build
+                });
 
                 try {
                   final modJson =
@@ -155,7 +161,9 @@ class AiResponseBubble extends StatelessWidget {
                         : modifiedRecipe.tags,
                   );
 
-                  return RecipeModificationSuggestion(recipe: filledModRecipe);
+                  suggestion =
+                      RecipeModificationSuggestion(recipe: filledModRecipe);
+                  return suggestion;
                 } catch (e) {
                   return _buildErrorWidget(
                       "Failed to decode recipe modification.");

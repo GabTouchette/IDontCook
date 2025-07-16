@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
+import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/providers/social_provider.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
@@ -19,6 +20,7 @@ void main() {
         ChangeNotifierProvider(create: (context) => SocialProvider()),
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
         ChangeNotifierProvider(create: (context) => ExploreProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],

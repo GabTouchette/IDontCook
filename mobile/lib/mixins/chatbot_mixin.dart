@@ -44,7 +44,7 @@ mixin ChatBotMixin<T extends StatefulWidget> on State<T> {
       await for (String token in stream) {
         if (recipeTagOpen) {
           recipeBuffer += token;
-          if (token.trim() == "**" ||
+          if (token.trim() == "\$\$" ||
               token.trim() == "&&" ||
               token.trim() == "@@") {
             provider.addMessage(isRecipeChat: isRecipeChat);
@@ -54,7 +54,7 @@ mixin ChatBotMixin<T extends StatefulWidget> on State<T> {
             recipeBuffer = "";
           }
         } else {
-          if (token.trim() == "**" ||
+          if (token.trim() == "\$\$" ||
               token.trim() == "&&" ||
               token.trim() == "@@") {
             recipeTagOpen = true;
