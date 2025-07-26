@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
 ThemeData appTheme() {
   return ThemeData(
-    fontFamily: 'Poppins',
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-      bodyMedium: TextStyle(fontSize: 18),
+    textTheme: GoogleFonts.nunitoTextTheme(
+      const TextTheme(
+        headlineLarge: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+        bodyMedium: TextStyle(fontSize: 18),
+      ),
     ),
     primaryColor: ColorPalette.offBlack,
     scaffoldBackgroundColor: ColorPalette.offWhite,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 
 class AdditionalSections extends StatelessWidget {
@@ -20,43 +22,99 @@ class AdditionalSections extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Tags Section
         if (tags != null && tags!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ColorPalette.darkgray,
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Tags",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w300,
-                  ),
+                Row(
+                  children: [
+                    const FaIcon(
+                      FontAwesomeIcons.tags,
+                      color: ColorPalette.yellow,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tags',
+                      style: GoogleFonts.nunito(
+                        color: updatedFields.contains("tags")
+                            ? ColorPalette.mustard
+                            : ColorPalette.offWhite,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: ColorPalette.yellow.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: ColorPalette.yellow.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        '${tags!.length} tags',
+                        style: const TextStyle(
+                          color: ColorPalette.yellow,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8.0),
+                const SizedBox(height: 16),
                 Wrap(
                   spacing: 8.0,
-                  runSpacing: 4.0,
+                  runSpacing: 8.0,
                   children: tags!.map((tag) {
                     final isHighlighted = updatedFields.contains("tags");
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0, vertical: 6.0),
+                          horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: ColorPalette.darkgray,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        tag,
-                        style: TextStyle(
+                        color: ColorPalette.yellow.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
                           color: isHighlighted
-                              ? ColorPalette.mustard
-                              : Colors.white,
-                          fontWeight: isHighlighted
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                              ? ColorPalette.mustard.withOpacity(0.5)
+                              : ColorPalette.yellow.withOpacity(0.3),
                         ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.label,
+                            size: 14,
+                            color: isHighlighted
+                                ? ColorPalette.mustard
+                                : ColorPalette.yellow,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            tag,
+                            style: TextStyle(
+                              color: isHighlighted
+                                  ? ColorPalette.mustard
+                                  : ColorPalette.yellow,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }).toList(),
@@ -64,66 +122,146 @@ class AdditionalSections extends StatelessWidget {
               ],
             ),
           ),
+
+        // Description Section
         if (description != null && description!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ColorPalette.darkgray,
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Description",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w300,
-                  ),
+                Row(
+                  children: [
+                    const FaIcon(
+                      FontAwesomeIcons.fileLines,
+                      color: ColorPalette.blue,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Description',
+                      style: TextStyle(
+                        color: updatedFields.contains("description")
+                            ? ColorPalette.mustard
+                            : ColorPalette.offWhite,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  description!,
-                  style: TextStyle(
-                    color: updatedFields.contains("description")
-                        ? ColorPalette.mustard
-                        : Colors.white,
-                    fontWeight: updatedFields.contains("description")
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    fontSize: 16,
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: ColorPalette.darkergray.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: updatedFields.contains("description")
+                          ? ColorPalette.mustard.withOpacity(0.3)
+                          : ColorPalette.lightgray.withOpacity(0.1),
+                    ),
+                  ),
+                  child: Text(
+                    description!,
+                    style: GoogleFonts.inter(
+                      color: updatedFields.contains("description")
+                          ? ColorPalette.mustard
+                          : ColorPalette.offWhite,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+
+        // Notes Section
         if (notes != null && notes!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ColorPalette.darkgray,
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Notes",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w300,
-                  ),
+                Row(
+                  children: [
+                    const FaIcon(
+                      FontAwesomeIcons.noteSticky,
+                      color: ColorPalette.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Notes',
+                      style: TextStyle(
+                        color: updatedFields.contains("notes")
+                            ? ColorPalette.mustard
+                            : ColorPalette.offWhite,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  notes!,
-                  style: TextStyle(
-                    color: updatedFields.contains("notes")
-                        ? ColorPalette.mustard
-                        : Colors.white,
-                    fontWeight: updatedFields.contains("notes")
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    fontSize: 16,
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: ColorPalette.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: updatedFields.contains("notes")
+                          ? ColorPalette.mustard.withOpacity(0.3)
+                          : ColorPalette.orange.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: ColorPalette.orange,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          notes!,
+                          style: TextStyle(
+                            color: updatedFields.contains("notes")
+                                ? ColorPalette.mustard
+                                : ColorPalette.offWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+
         const SizedBox(height: 64),
       ],
     );

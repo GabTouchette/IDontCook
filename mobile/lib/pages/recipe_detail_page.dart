@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/widgets/dialogs/recipe_chat_dialog.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
@@ -81,8 +82,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               normal: () => "Details",
               preview: () => "Preview",
             ),
-            style: const TextStyle(
-              fontFamily: 'Poppins',
+            style: GoogleFonts.nunito(
               fontWeight: FontWeight.bold,
               fontSize: 36,
               color: ColorPalette.offWhite,
@@ -354,8 +354,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           const SizedBox(width: 12),
           Text(
             label,
-            style: TextStyle(
-              fontFamily: 'Poppins',
+            style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: textColor,

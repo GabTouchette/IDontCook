@@ -9,6 +9,7 @@ import 'package:i_cant_cook/providers/user_profile_provider.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 
 import 'package:i_cant_cook/routes.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -36,7 +37,7 @@ class ICantCook extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ICantCook',
-      theme: ThemeData.light(),
+      theme: appTheme(),
       initialRoute: '/',
       onGenerateRoute: generateRoute,
     );

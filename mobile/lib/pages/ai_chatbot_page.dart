@@ -16,6 +16,15 @@ class AiChatBotPage extends StatefulWidget {
 
 class AiChatBotPageState extends State<AiChatBotPage> {
   @override
+  void initState() {
+    super.initState();
+    // Ensure we're in global chat mode when this page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ChatProvider>().setGlobalChat();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<ChatProvider>(builder: (context, provider, child) {
       return Scaffold(
@@ -44,7 +53,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                 size: 32,
               ),
               onPressed: () {
-                provider.clearMessages();
+                provider.clearMessages(isRecipeChat: false);
               },
             ),
           ),

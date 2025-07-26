@@ -129,10 +129,5 @@ const Map<String, List<String>> tagOptions = {
     "Smoothie",
     "Breakfast"
   ],
-  "Special Occasions": [
-    "BBQ",
-    "Holiday",
-    "Picnic",
-    "Seasonal"
-  ]
+  "Special Occasions": ["BBQ", "Holiday", "Picnic", "Seasonal"]
 };

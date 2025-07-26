@@ -13,8 +13,8 @@ class ExploreProvider
         SearchMixin {
   bool _isLoading = false;
   Map<String, dynamic> _filters = {
-    'prepTime': 0.0,
-    'cookTime': 0.0,
+    'prepTime': 60.0,
+    'cookTime': 60.0,
     'cuisine': 'Any',
     'calories': RangeValues(0, 1000),
     'excludeAIGenerated': false,
@@ -53,14 +53,8 @@ class ExploreProvider
       params['tags'] = (_filters['selectedTags'] as List<String>).join(',');
     }
 
-    if (_filters['prepTime'] > 0) {
-      params['prep_time'] = _filters['prepTime'].toString();
-    }
-
-    if (_filters['cookTime'] > 0) {
-      params['cook_time'] = _filters['cookTime'].toString();
-    }
-
+    params['prep_time'] = _filters['prepTime'].toString();
+    params['cook_time'] = _filters['cookTime'].toString();
     params['calories_min'] = _filters['calories'].start.toString();
     params['calories_max'] = _filters['calories'].end.toString();
     params['exclude_ai_generated'] = _filters['excludeAIGenerated'].toString();
@@ -99,8 +93,8 @@ class ExploreProvider
 
   void clearFilters() {
     _filters = {
-      'prepTime': 0.0,
-      'cookTime': 0.0,
+      'prepTime': 60.0,
+      'cookTime': 60.0,
       'cuisine': 'Any',
       'calories': RangeValues(0, 1000),
       'excludeAIGenerated': false,

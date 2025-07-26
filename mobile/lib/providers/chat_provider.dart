@@ -6,19 +6,33 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
   final TextEditingController chatController = TextEditingController();
 
   List<Map<String, dynamic>> _globalMessages = [];
-  List<Map<String, dynamic>> _recipeMessages = [];
+  Map<int, List<Map<String, dynamic>>> _recipeChats = {};
   int? _currentRecipeId;
 
   List<Map<String, dynamic>> get globalMessages => _globalMessages;
-  List<Map<String, dynamic>> get recipeMessages => _recipeMessages;
+  
+  List<Map<String, dynamic>> get recipeMessages {
+    if (_currentRecipeId == null) return [];
+    return _recipeChats[_currentRecipeId!] ?? [];
+  }
 
   List<Map<String, dynamic>> get currentMessages =>
-      _currentRecipeId != null ? _recipeMessages : _globalMessages;
+      _currentRecipeId != null ? recipeMessages : _globalMessages;
 
   void setCurrentRecipe(int recipeId) {
     if (_currentRecipeId != recipeId) {
       _currentRecipeId = recipeId;
-      _recipeMessages.clear();
+      // Initialize empty chat for this recipe if it doesn't exist
+      if (!_recipeChats.containsKey(recipeId)) {
+        _recipeChats[recipeId] = [];
+      }
+      notifyListeners();
+    }
+  }
+
+  void setGlobalChat() {
+    if (_currentRecipeId != null) {
+      _currentRecipeId = null;
       notifyListeners();
     }
   }
@@ -35,7 +49,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
 
     try {
       List<Map<String, String>> history = [];
-      final messages = isRecipeChat ? _recipeMessages : _globalMessages;
+      final messages = isRecipeChat ? recipeMessages : _globalMessages;
       int historyLength = messages.length - 1;
       int start = (historyLength >= 5) ? historyLength - 5 : 0;
 
@@ -77,7 +91,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
             addMessage(isRecipeLoading: true, isRecipeChat: isRecipeChat);
           } else {
             final currentText = (isRecipeChat
-                    ? _recipeMessages.last['text']
+                    ? recipeMessages.last['text']
                     : _globalMessages.last['text']) ??
                 '';
             updateLastMessage(currentText + token, isRecipeChat: isRecipeChat);
@@ -99,60 +113,99 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     bool isLoading = false,
     bool isRecipeLoading = false,
   }) {
-    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
-
-    if (messages.isEmpty || messages.last["text"] != "") {
-      messages.add({
-        "sender": sender,
-        "text": text,
-        "isLoading": isLoading,
-        "isRecipeLoading": isRecipeLoading,
-      });
-      notifyListeners();
+    if (isRecipeChat && _currentRecipeId != null) {
+      if (!_recipeChats.containsKey(_currentRecipeId!)) {
+        _recipeChats[_currentRecipeId!] = [];
+      }
+      final messages = _recipeChats[_currentRecipeId!]!;
+      
+      if (messages.isEmpty || messages.last["text"] != "") {
+        messages.add({
+          "sender": sender,
+          "text": text,
+          "isLoading": isLoading,
+          "isRecipeLoading": isRecipeLoading,
+        });
+        notifyListeners();
+      }
+    } else if (!isRecipeChat) {
+      if (_globalMessages.isEmpty || _globalMessages.last["text"] != "") {
+        _globalMessages.add({
+          "sender": sender,
+          "text": text,
+          "isLoading": isLoading,
+          "isRecipeLoading": isRecipeLoading,
+        });
+        notifyListeners();
+      }
     }
   }
 
   void updateLastMessage(String text, {bool isRecipeChat = false}) {
-    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
-
-    if (messages.isNotEmpty) {
-      messages.last["text"] = text;
-      messages.last["isLoading"] = false;
-      messages.last["isRecipeLoading"] = false;
-      notifyListeners();
+    if (isRecipeChat && _currentRecipeId != null) {
+      final messages = _recipeChats[_currentRecipeId!];
+      if (messages != null && messages.isNotEmpty) {
+        messages.last["text"] = text;
+        messages.last["isLoading"] = false;
+        messages.last["isRecipeLoading"] = false;
+        notifyListeners();
+      }
+    } else if (!isRecipeChat) {
+      if (_globalMessages.isNotEmpty) {
+        _globalMessages.last["text"] = text;
+        _globalMessages.last["isLoading"] = false;
+        _globalMessages.last["isRecipeLoading"] = false;
+        notifyListeners();
+      }
     }
   }
 
   void setLastMessageLoadingState(bool isLoading, {bool isRecipeChat = false}) {
-    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
-
-    if (messages.isNotEmpty) {
-      messages.last["isLoading"] = isLoading;
+    if (isRecipeChat && _currentRecipeId != null) {
+      final messages = _recipeChats[_currentRecipeId!];
+      if (messages != null && messages.isNotEmpty) {
+        messages.last["isLoading"] = isLoading;
+        notifyListeners();
+      }
+    } else if (!isRecipeChat && _globalMessages.isNotEmpty) {
+      _globalMessages.last["isLoading"] = isLoading;
       notifyListeners();
     }
   }
 
   void setLastMessageRecipeLoadingState(bool isRecipeLoading,
       {bool isRecipeChat = false}) {
-    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
-
-    if (messages.isNotEmpty) {
-      messages.last["isRecipeLoading"] = isRecipeLoading;
+    if (isRecipeChat && _currentRecipeId != null) {
+      final messages = _recipeChats[_currentRecipeId!];
+      if (messages != null && messages.isNotEmpty) {
+        messages.last["isRecipeLoading"] = isRecipeLoading;
+        notifyListeners();
+      }
+    } else if (!isRecipeChat && _globalMessages.isNotEmpty) {
+      _globalMessages.last["isRecipeLoading"] = isRecipeLoading;
       notifyListeners();
     }
   }
 
   void clearMessages({bool isRecipeChat = false}) {
-    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
-    messages.clear();
-    notifyListeners();
+    if (isRecipeChat && _currentRecipeId != null) {
+      _recipeChats[_currentRecipeId!] = [];
+      notifyListeners();
+    } else if (!isRecipeChat) {
+      _globalMessages.clear();
+      notifyListeners();
+    }
   }
 
   void removeLastMessage({bool isRecipeChat = false}) {
-    final messages = isRecipeChat ? _recipeMessages : _globalMessages;
-
-    if (messages.isNotEmpty) {
-      messages.removeLast();
+    if (isRecipeChat && _currentRecipeId != null) {
+      final messages = _recipeChats[_currentRecipeId!];
+      if (messages != null && messages.isNotEmpty) {
+        messages.removeLast();
+        notifyListeners();
+      }
+    } else if (!isRecipeChat && _globalMessages.isNotEmpty) {
+      _globalMessages.removeLast();
       notifyListeners();
     }
   }

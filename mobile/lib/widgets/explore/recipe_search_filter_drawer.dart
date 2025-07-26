@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
 
 import 'package:i_cant_cook/theme/colors.dart';
-import 'package:i_cant_cook/utils/constants.dart';
+import 'package:i_cant_cook/widgets/explore/ai_generated_filter.dart';
+import 'package:i_cant_cook/widgets/explore/calories_filter.dart';
+import 'package:i_cant_cook/widgets/explore/cook_time_filter.dart';
+import 'package:i_cant_cook/widgets/explore/own_recipes_filter.dart';
+import 'package:i_cant_cook/widgets/explore/prep_time_filter.dart';
+import 'package:i_cant_cook/widgets/explore/tag_filter.dart';
 import 'package:provider/provider.dart';
 
 class RecipeSearchFilterDrawer extends StatelessWidget {
@@ -60,20 +65,20 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
-                      children: const [
-                        _ClearFiltersButton(),
+                      children: [
+                        _buildClearFiltersButton(context),
                         SizedBox(height: 20),
-                        _AIGeneratedFilter(),
+                        AIGeneratedFilter(),
                         SizedBox(height: 15),
-                        _OwnRecipesFilter(),
+                        OwnRecipesFilter(),
                         SizedBox(height: 30),
-                        _PrepTimeFilter(),
+                        PrepTimeFilter(),
                         SizedBox(height: 40),
-                        _CookTimeFilter(),
+                        CookTimeFilter(),
                         SizedBox(height: 40),
-                        _CaloriesFilter(),
+                        CaloriesFilter(),
                         SizedBox(height: 40),
-                        _TagFilters(),
+                        TagFilters(),
                       ],
                     ),
                   ),
@@ -85,14 +90,10 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
       );
     });
   }
-}
 
-class _ClearFiltersButton extends StatelessWidget {
-  const _ClearFiltersButton();
-
-  @override
-  Widget build(BuildContext context) {
+  _buildClearFiltersButton(BuildContext context) {
     final provider = Provider.of<ExploreProvider>(context, listen: false);
+
     return Row(
       children: [
         Container(
@@ -121,288 +122,6 @@ class _ClearFiltersButton extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AIGeneratedFilter extends StatelessWidget {
-  const _AIGeneratedFilter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        return Row(
-          children: [
-            const Text(
-              'Exclude AI-Generated Recipes',
-              style: TextStyle(
-                color: ColorPalette.offWhite,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            Switch(
-              value: provider.filters['excludeAIGenerated'] ?? false,
-              onChanged: (value) =>
-                  provider.updateFilter('excludeAIGenerated', value),
-              inactiveThumbColor: ColorPalette.lightgray,
-              inactiveTrackColor: ColorPalette.darkgray,
-              activeColor: ColorPalette.green,
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _OwnRecipesFilter extends StatelessWidget {
-  const _OwnRecipesFilter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        return Row(
-          children: [
-            const Text(
-              'Exclude My Recipes',
-              style: TextStyle(
-                color: ColorPalette.offWhite,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            Switch(
-              value: provider.filters['excludeOwnRecipes'] ?? true,
-              onChanged: (value) =>
-                  provider.updateFilter('excludeOwnRecipes', value),
-              inactiveThumbColor: ColorPalette.lightgray,
-              inactiveTrackColor: ColorPalette.darkgray,
-              activeColor: ColorPalette.green,
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _PrepTimeFilter extends StatelessWidget {
-  const _PrepTimeFilter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        final value = (provider.filters['prepTime'] ?? 0).toDouble();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Prep Time (minutes)',
-                style: TextStyle(
-                    color: ColorPalette.offWhite,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-            Slider(
-              value: value,
-              min: 0,
-              max: 60,
-              divisions: 24,
-              label: value == 60 ? '∞' : '${value.round()} min',
-              onChanged: (val) => provider.updateFilter('prepTime', val),
-              activeColor: ColorPalette.gray,
-              inactiveColor: ColorPalette.darkgray,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('0 min', style: TextStyle(color: ColorPalette.offWhite)),
-                  Text('∞',
-                      style: TextStyle(
-                          color: ColorPalette.offWhite,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _CookTimeFilter extends StatelessWidget {
-  const _CookTimeFilter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        final value = (provider.filters['cookTime'] ?? 0).toDouble();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Cook Time (minutes)',
-                style: TextStyle(
-                    color: ColorPalette.offWhite,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-            Slider(
-              value: value,
-              min: 0,
-              max: 120,
-              divisions: 24,
-              label: value == 120 ? '∞' : '${value.round()} min',
-              onChanged: (val) => provider.updateFilter('cookTime', val),
-              activeColor: ColorPalette.gray,
-              inactiveColor: ColorPalette.darkgray,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('0 min', style: TextStyle(color: ColorPalette.offWhite)),
-                  Text('∞',
-                      style: TextStyle(
-                          color: ColorPalette.offWhite,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _CaloriesFilter extends StatelessWidget {
-  const _CaloriesFilter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        final RangeValues values = provider.filters['calories'];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Calories',
-                style: TextStyle(
-                    color: ColorPalette.offWhite,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: ColorPalette.gray,
-                inactiveTrackColor: ColorPalette.darkgray,
-                thumbColor: ColorPalette.gray,
-                overlayColor: ColorPalette.gray.withOpacity(0.2),
-                valueIndicatorColor: ColorPalette.gray,
-              ),
-              child: RangeSlider(
-                values: values,
-                min: 0,
-                max: 1000,
-                divisions: 20,
-                labels: RangeLabels(
-                  '${values.start.round()} cal',
-                  values.end == 1000 ? '∞' : '${values.end.round()} cal',
-                ),
-                onChanged: (val) => provider.updateFilter('calories', val),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('0 cal', style: TextStyle(color: ColorPalette.offWhite)),
-                  Text('∞',
-                      style: TextStyle(
-                          color: ColorPalette.offWhite,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _TagFilters extends StatelessWidget {
-  const _TagFilters();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: tagOptions.entries
-          .map((entry) =>
-              _CategoryFilter(category: entry.key, tags: entry.value))
-          .toList(),
-    );
-  }
-}
-
-class _CategoryFilter extends StatelessWidget {
-  final String category;
-  final List<String> tags;
-
-  const _CategoryFilter({required this.category, required this.tags});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        final selectedTags = provider.filters['selectedTags'] ?? [];
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              category,
-              style: const TextStyle(
-                  color: ColorPalette.offWhite,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8.0),
-            Wrap(
-              spacing: 8.0,
-              children: tags.map((tag) {
-                final isSelected = selectedTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    final updatedTags = List<String>.from(selectedTags);
-                    selected ? updatedTags.add(tag) : updatedTags.remove(tag);
-                    provider.updateFilter('selectedTags', updatedTags);
-                  },
-                  selectedColor: ColorPalette.lightgray,
-                  backgroundColor: ColorPalette.darkgray,
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? ColorPalette.darkgray
-                        : ColorPalette.placeholdergray,
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-          ],
-        );
-      },
     );
   }
 }

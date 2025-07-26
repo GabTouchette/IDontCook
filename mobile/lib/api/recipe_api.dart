@@ -47,4 +47,12 @@ class RecipeApi {
   Future<bool> deleteRecipe(int recipeId) async {
     return await _apiHelper.deleteRequest('recipes/$recipeId/');
   }
+
+  Future<List<String>> fetchRecipeTags() async {
+    var data = await _apiHelper.getRequest('recipes/tags/');
+    if (data != null) {
+      return List<String>.from(data);
+    }
+    return [];
+  }
 }

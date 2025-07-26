@@ -8,8 +8,10 @@ class Ingredient with _$Ingredient {
   const factory Ingredient({
     int? id,
     String? name,
-    List<String>? substitutes,
     double? quantity,
+    String? unit,
+    List<String>? substitutes,
+    Map<String, dynamic>? nutrition,
   }) = _Ingredient;
 
   factory Ingredient.fromJson(Map<String, dynamic> json) =>

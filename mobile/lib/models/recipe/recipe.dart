@@ -12,6 +12,7 @@ class Recipe with _$Recipe {
     @Default("") String title,
     @Default([]) List<Ingredient> ingredients,
     @Default([]) List<String> instructions,
+    int? parent_id,
     int? cooking_time,
     int? preparation_time,
     int? servings,
@@ -25,6 +26,10 @@ class Recipe with _$Recipe {
     DateTime? created_at,
     User? created_by,
     DateTime? last_visited_at,
+    double? calories,
+    double? protein,
+    double? fat,
+    double? carbs,
   }) = _Recipe;
 
   factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);
