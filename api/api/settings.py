@@ -40,8 +40,10 @@ ALLOWED_HOSTS = [
     '*',
 ]
 
-
-
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 # In production, get the credentials from the environment variable
 google_credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON', '{}')
@@ -189,3 +191,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# API Keys for nutrition services
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+USDA_API_KEY = os.getenv('USDA_API_KEY')
+
+# Cache configuration for nutrition lookups
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}

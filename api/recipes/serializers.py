@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from .models import Recipe, Ingredient
+from .models import Recipe, Ingredient, NutritionData
 from accounts.serializers import UserSerializer
 
 class IngredientSerializer(serializers.ModelSerializer):
+    nutrition = serializers.SerializerMethodField()
+    
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'quantity', 'substitutes']
+        fields = ['id', 'name', 'unit', 'quantity', 'substitutes', 'nutrition']
+    
+    def get_nutrition(self, obj):
+        """Get nutrition data for this ingredient's quantity."""
+        return obj.get_nutrition_per_quantity()
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -59,8 +65,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_obj = Ingredient.objects.create(
                 name=ingredient_data["name"],
                 quantity=ingredient_data.get("quantity"),
+                unit=ingredient_data.get("unit"),
             )
             recipe.ingredients.add(ingredient_obj)
+
+        # Calculate nutrition after ingredients are added
+        try:
+            recipe.calculate_nutrition()
+        except Exception:
+            pass  # Don't fail recipe creation if nutrition calculation fails
 
         return recipe
 
@@ -90,8 +103,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_obj = Ingredient.objects.create(
                 name=ingredient_data["name"],
                 quantity=ingredient_data.get("quantity"),
+                unit=ingredient_data.get("unit"),
             )
             instance.ingredients.add(ingredient_obj)
+
+        # Recalculate nutrition after ingredients are updated
+        try:
+            instance.calculate_nutrition()
+        except Exception:
+            pass  # Don't fail update if nutrition calculation fails
 
         return instance
     
@@ -124,6 +144,10 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
             'is_favorite', 
             'last_visited_at',
             'ingredients_count',
+            'calories',
+            'protein',
+            'fat',
+            'carbs',
             'is_saved'
         ]
 

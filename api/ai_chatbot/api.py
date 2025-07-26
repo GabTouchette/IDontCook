@@ -2,6 +2,8 @@ import os
 import base64
 import json
 import re
+from typing import List
+from recipes.models import Ingredient, Recipe
 from openai import OpenAI, OpenAIError
 
 
@@ -87,6 +89,47 @@ class OpenAIService:
             yield f"An unexpected error occurred: {e}"
 
 
+    def llm_format_ingredients(self, recipe) -> Recipe:
+        # STEP 1 – Turn list of raw ingredient strings into a single string
+        if not recipe.ingredients:
+            raise ValueError("Recipe must have ingredients to format.")
+        
+        raw_ingredient_text = "\n".join(str(ingredient) for ingredient in recipe.ingredients.all())  # or recipe.ingredients_raw if available
+
+        completion = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": PromptTemplates.format_ingredients_with_llm_prompt(raw_ingredient_text)}
+                ]
+            )
+
+        response_content = completion.choices[0].message.content
+        response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+        try:
+            ingredient_data = json.loads(response_content)
+        except json.JSONDecodeError:
+            return "Error: The response was not valid JSON."
+
+        # STEP 4 – Convert to Ingredient model instances (without saving yet)
+        ingredients: List[Ingredient] = []
+        for item in ingredient_data:
+            ingredient = Ingredient(
+                name=item.get("name"),
+                quantity=item.get("quantity"),
+                unit=item.get("unit"),
+                substitutes=item.get("substitutes", [])
+            )
+            ingredient.save()
+
+            ingredients.append(ingredient)
+
+        print(f"Formatted ingredients: {ingredients}")
+
+        # STEP 5 – Replace recipe.ingredients
+        recipe.ingredients.set(ingredients)
+        return recipe
+
 
 class PromptTemplates:
     @staticmethod
@@ -122,9 +165,9 @@ class PromptTemplates:
             "$$ {\n"
             "  \"title\": \"Spaghetti Bolognese\",\n"
             "  \"ingredients\": [\n"
-            "    {\"name\": \"ounce spaghetti\", \"quantity\": 1.0},\n"
-            "    {\"name\": \"kg ground beef\", \"quantity\": 0.5},\n"
-            "    {\"name\": \"L tomato sauce\", \"quantity\": 1.0}\n"
+            "    {\"name\": \"spaghetti\", \"quantity\": 100.0, \"unit\": \"g\"},\n"
+            "    {\"name\": \"ground turkey\", \"quantity\": 0.5, \"unit\": \"kg\"},\n"
+            "    {\"name\": \"tomato sauce\", \"quantity\": 1.0, \"unit\": \"cup\"}\n"
             "  ],\n"
             "  \"instructions\": [\n"
             "    \"Boil the spaghetti until al dente.\",\n"
@@ -150,14 +193,14 @@ class PromptTemplates:
             "- Respond only with fields that changed, wrapped in @@{...}@@.\n"
             "- Use valid JSON keys like: title, ingredients, instructions, cooking_time, preparation_time, servings, tags, description, notes.\n"
             "- If you change `ingredients` or `tags`, return the full updated list.\n"
-            "- Each ingredient must be: {\"name\": \"ingredient name\", \"quantity\": 1.0} — quantity must be a decimal.\n"
+            "- Each ingredient must be: {\"name\": \"ingredient name\", \"quantity\": 1.0, \"unit\": \"unit\"} — quantity must be a decimal, unit can be empty if not applicable.\n"
             "- Instructions must be a list of strings.\n\n"
             "**Example of a modified recipe response (only changed fields):**\n"
             "@@ {\n"
             "  \"ingredients\": [\n"
-            "    {\"name\": \"g spaghetti\", \"quantity\": 100.0},\n"
-            "    {\"name\": \"kg ground turkey\", \"quantity\": 0.5},\n"
-            "    {\"name\": \"L tomato sauce\", \"quantity\": 1.0}\n"
+            "    {\"name\": \"spaghetti\", \"quantity\": 100.0, \"unit\": \"g\"},\n"
+            "    {\"name\": \"ground turkey\", \"quantity\": 0.5, \"unit\": \"kg\"},\n"
+            "    {\"name\": \"tomato sauce\", \"quantity\": 1.0, \"unit\": \"cup\"}\n"
             "  ],\n"
             "  \"cooking_time\": 25\n"
             "} @@\n\n"
@@ -165,7 +208,24 @@ class PromptTemplates:
             f"User request:\n{query}"
         )
 
+    @staticmethod
+    def format_ingredients_with_llm_prompt(raw_ingredient_text: str) -> str:
+        prompt = f"""
+            You are a recipe assistant that transforms unstructured ingredient lists into a structured JSON list of Ingredient objects.
 
+            Each ingredient must follow this format:
+            - name: string (e.g. "all-purpose flour")
+            - quantity: float (e.g. 2.5)
+            - unit: string (e.g. "cups", "tbsp", "g", "ml", "cloves", "oz", etc.) ** Can be empty if not applicable
+            - substitutes: optional list of strings (or empty list)
+
+            Here is the ingredient list:
+
+            \"\"\"{raw_ingredient_text}\"\"\"
+
+            Return **only** a valid JSON list of ingredients.
+        """
+        return prompt
 
     @staticmethod
     def ocr_prompt():

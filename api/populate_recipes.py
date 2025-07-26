@@ -1,17 +1,14 @@
 import os
 import re
 import django
-import random
 import csv
-from faker import Faker
 from django.contrib.auth.hashers import make_password
-import json
-import ast
 
 # Set up Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
 django.setup()
 
+from accounts.models import CustomUser
 from recipes.models import Recipe, Ingredient
 
 allowed_tags_map = {
@@ -190,7 +187,7 @@ def parse_time_to_minutes(time_str):
     return hours * 60 + minutes  # Convert hours to minutes and add minutes
 
 
-def load_recipes_from_csv(csv_file, max_recipe_count=1000):
+def load_recipes_from_csv(csv_file, created_user, max_recipe_count=1000):
     """Load recipes from a CSV file and format data properly."""
 
     with open(csv_file, newline='', encoding='utf-8') as file:
@@ -242,6 +239,7 @@ def load_recipes_from_csv(csv_file, max_recipe_count=1000):
                     cooking_time=parse_time_to_minutes(row['cookTime']),
                     preparation_time=parse_time_to_minutes(row['prepTime']),
                     servings=servings,
+                    created_by=created_user,
                     description=row['description'],
                     web_image_url=row['image'] if row['image'] else None,
                 )
@@ -258,8 +256,14 @@ def load_recipes_from_csv(csv_file, max_recipe_count=1000):
 def main():
     print("Creating recipes...")
 
+    # Create a fake user for recipe creation
+    user, created = CustomUser.objects.get_or_create(
+        username='recipe_scraper',
+        password=make_password('password123'),
+    )
+
     # Load recipes from CSV
-    load_recipes_from_csv('recipes.csv')
+    load_recipes_from_csv('recipes.csv', created_user=user, max_recipe_count=10)
 
     print("Recipe creation complete!")
 
