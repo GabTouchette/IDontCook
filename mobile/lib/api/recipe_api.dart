@@ -9,19 +9,7 @@ class RecipeApi {
   Future<List<RecipePreview>> fetchRecipes() async {
     var data = await _apiHelper.getRequest('recipes/');
     if (data != null) {
-      return (data as List)
-          .map((recipe) => RecipePreview.fromJson(recipe))
-          .toList();
-    }
-    return [];
-  }
-
-  Future<List<RecipePreview>> getGlobalFilteredRecipes(
-      Map<String, String> filters) async {
-    var data = await _apiHelper.getRequest('recipes/global/filter/',
-        queryParams: filters);
-
-    if (data != null) {
+      print(data);
       return (data as List)
           .map((recipe) => RecipePreview.fromJson(recipe))
           .toList();
@@ -60,12 +48,11 @@ class RecipeApi {
     return await _apiHelper.deleteRequest('recipes/$recipeId/');
   }
 
-  Future<bool> isRecipeSaved(int recipeId) async {
-    var response = await _apiHelper.getRequest('recipes/$recipeId/is_saved/');
-
-    if (response != null && response.containsKey('is_saved')) {
-      return response['is_saved'];
+  Future<List<String>> fetchRecipeTags() async {
+    var data = await _apiHelper.getRequest('recipes/tags/');
+    if (data != null) {
+      return List<String>.from(data);
     }
-    return false;
+    return [];
   }
 }

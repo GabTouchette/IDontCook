@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+
 from rest_framework.views import APIView
 from .models import Post, Comment, Like, Vote, Follow
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer, VoteSerializer
@@ -170,7 +170,7 @@ class UserSearchAPIView(APIView):
         query = request.query_params.get('q', '').strip()  
 
         if not query:
-            return Response(
+            return JsonResponse(
                 {"error": "Search query parameter 'q' is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -178,7 +178,7 @@ class UserSearchAPIView(APIView):
         users = CustomUser.objects.filter(username__icontains=query)
 
         serializer = UserSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse(serializer.data, status=status.HTTP_200_OK)
     
     
 class UserPostsAPIView(generics.ListAPIView):
@@ -219,13 +219,13 @@ class CreateFollowAPIView(APIView):
         user_to_follow = get_object_or_404(CustomUser, id=user_id)
 
         if current_user == user_to_follow:
-            return Response({"error": "You cannot follow yourself."}, status=400)
+            return JsonResponse({"error": "You cannot follow yourself."}, status=400)
 
         if not Follow.objects.filter(follower=current_user, followed=user_to_follow).exists():
             Follow.objects.create(follower=current_user, followed=user_to_follow)
-            return Response({"message": "You are now following this user."}, status=201)
+            return JsonResponse({"message": "You are now following this user."}, status=201)
         else:
-            return Response({"error": "You are already following this user."}, status=400)
+            return JsonResponse({"error": "You are already following this user."}, status=400)
 
 
 class DeleteFollowAPIView(APIView):
@@ -238,9 +238,9 @@ class DeleteFollowAPIView(APIView):
 
         if follow:
             follow.delete()
-            return Response({"message": "You have unfollowed this user."}, status=204)
+            return JsonResponse({"message": "You have unfollowed this user."}, status=204)
         else:
-            return Response({"error": "You are not following this user."}, status=400)
+            return JsonResponse({"error": "You are not following this user."}, status=400)
         
 
 class IsUserFollowingAPIView(APIView):

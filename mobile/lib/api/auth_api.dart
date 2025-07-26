@@ -4,113 +4,131 @@ import 'package:i_cant_cook/models/user/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthApi {
-  // final String _baseUrl = 'http://192.168.0.12:8000';
-  final String _baseUrl = 'https://i-cant-cook-1500fc1d933c.herokuapp.com';
+  static const bool useProd = false;
 
+  final String _baseUrl = useProd
+      ? 'https://i-cant-cook-1500fc1d933c.herokuapp.com'
+      : 'http://192.168.0.198:8000';
+
+  static const _userKey = 'user_data';
+  static const _tokenKey = 'auth_token';
+
+  /// LOGIN
   Future<User> login(String username, String password) async {
-    final url = Uri.parse('$_baseUrl/api/accounts/login/');
-    final response = await http.post(
-      url,
-      body: {
-        'username': username,
-        'password': password,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      final String token = responseData['token'];
-      final Map<String, dynamic> user = responseData['user'];
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', token);
-      await prefs.setInt('user_id', user['id']);
-      await prefs.setString('username', user['username']);
-      await prefs.setString('email', user['email']);
-      await prefs.setString('avatar_icon', user['avatar_icon']);
-
-      return User(
-        id: user['id'],
-        username: user['username'],
-        email: user['email'],
-        token: token,
-        avatar_icon: user['avatar_icon'],
+    try {
+      final url = Uri.parse('$_baseUrl/api/accounts/login/');
+      final response = await http.post(
+        url,
+        body: {
+          'username': username,
+          'password': password,
+        },
       );
-    } else {
-      throw Exception('Failed to login: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final String token = responseData['token'];
+        final Map<String, dynamic> userJson = responseData['user'];
+
+        final user = User(
+          id: userJson['id'],
+          username: userJson['username'],
+          email: userJson['email'],
+          token: token,
+          avatar_icon: userJson['avatar_icon'] ?? '',
+        );
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_tokenKey, token);
+        await prefs.setString(_userKey, json.encode(user.toJson()));
+
+        return user;
+      } else {
+        throw Exception('Failed to login: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Login error: $e');
     }
   }
 
+  /// REGISTER
   Future<User> register(String username, String email, String password) async {
-    final url = Uri.parse('$_baseUrl/api/accounts/register/');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'username': username,
-        'email': email,
-        'password': password,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      final String token = responseData['token'];
-      final Map<String, dynamic> user = responseData['user'];
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', token);
-      await prefs.setInt('user_id', user['id']);
-      await prefs.setString('username', user['username']);
-      await prefs.setString('email', user['email']);
-
-      return User(
-        id: user['id'],
-        username: user['username'],
-        email: user['email'],
-        token: token,
-        avatar_icon: user['avatar_icon'] ?? '',
+    try {
+      final url = Uri.parse('$_baseUrl/api/accounts/register/');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'username': username,
+          'email': email,
+          'password': password,
+        }),
       );
-    } else {
-      throw Exception('Failed to register: ${response.body}');
+
+      if (response.statusCode == 201) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final String token = responseData['token'];
+        final Map<String, dynamic> userJson = responseData['user'];
+
+        final user = User(
+          id: userJson['id'],
+          username: userJson['username'],
+          email: userJson['email'],
+          token: token,
+          avatar_icon: userJson['avatar_icon'] ?? '',
+        );
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_tokenKey, token);
+        await prefs.setString(_userKey, json.encode(user.toJson()));
+
+        return user;
+      } else {
+        throw Exception('Failed to register: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Registration error: $e');
     }
   }
 
+  /// GET CURRENT USER FROM LOCAL STORAGE
   static Future<User?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    int? id = prefs.getInt('user_id');
-    String? username = prefs.getString('username');
-    String? email = prefs.getString('email');
-    String? avatar_icon = prefs.getString('avatar_icon');
-    String? token = prefs.getString('auth_token');
+    final String? userJson = prefs.getString(_userKey);
+    final String? token = prefs.getString(_tokenKey);
 
-    if (id != null && username != null && email != null) {
+    if (userJson != null && token != null) {
+      final Map<String, dynamic> data = json.decode(userJson);
       return User(
-        id: id,
-        username: username,
-        email: email,
+        id: data['id'],
+        username: data['username'],
+        email: data['email'],
         token: token,
-        avatar_icon: avatar_icon ?? '',
+        avatar_icon: data['avatar_icon'] ?? '',
       );
     }
     return null;
   }
 
+  /// LOGOUT
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('user_id');
-    await prefs.remove('username');
-    await prefs.remove('email');
+    await prefs.remove(_userKey);
+    await prefs.remove(_tokenKey);
   }
 
+  /// GET AUTH HEADERS
   static Future<Map<String, String>> getAuthHeader() async {
     final user = await getUser();
-    return {
-      'Authorization': 'Token ${user?.token}',
-      'Content-Type': 'application/json',
-    };
+    if (user != null && user.token != null) {
+      return {
+        'Authorization': 'Token ${user.token}',
+        'Content-Type': 'application/json',
+      };
+    } else {
+      return {'Content-Type': 'application/json'};
+    }
   }
 }

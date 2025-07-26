@@ -15,6 +15,8 @@ class RecipePreview with _$RecipePreview {
     String? thumbnail_url,
     List<String>? tags,
     bool? is_favorite,
+    bool? is_saved,
+    int? ingredients_count,
     DateTime? last_visited_at,
   }) = _RecipePreview;
 
@@ -32,6 +34,8 @@ class RecipePreview with _$RecipePreview {
       tags: recipe.tags != null ? List<String>.from(recipe.tags!) : null,
       is_favorite: recipe.is_favorite,
       last_visited_at: recipe.last_visited_at,
+      ingredients_count: recipe.ingredients.length,
+      is_saved: recipe.is_saved,
     );
   }
 }

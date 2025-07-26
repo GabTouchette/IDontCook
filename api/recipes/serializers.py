@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from .models import Recipe, Ingredient
+from .models import Recipe, Ingredient, NutritionData
 from accounts.serializers import UserSerializer
 
 class IngredientSerializer(serializers.ModelSerializer):
+    nutrition = serializers.SerializerMethodField()
+    
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'quantity', 'substitutes']
+        fields = ['id', 'name', 'unit', 'quantity', 'substitutes', 'nutrition']
+    
+    def get_nutrition(self, obj):
+        """Get nutrition data for this ingredient's quantity."""
+        return obj.get_nutrition_per_quantity()
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -13,6 +19,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
     image_url = serializers.SerializerMethodField()
     thumnbnail_url = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -27,6 +34,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
             return obj.thumbnail.url
         return obj.web_image_url
+    
+    def get_is_saved(self, obj):
+        user = self.context.get('request').user
+        if not user or not user.is_authenticated:
+            return False
+
+        # Either the user created it or has saved a version of it
+        return obj.created_by == user or Recipe.objects.filter(created_by=user, parent=obj.id).exists()
 
     def to_representation(self, instance):
         """ Customize the GET response to properly format instructions as a list """
@@ -50,8 +65,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_obj = Ingredient.objects.create(
                 name=ingredient_data["name"],
                 quantity=ingredient_data.get("quantity"),
+                unit=ingredient_data.get("unit"),
             )
             recipe.ingredients.add(ingredient_obj)
+
+        # Calculate nutrition after ingredients are added
+        try:
+            recipe.calculate_nutrition()
+        except Exception:
+            pass  # Don't fail recipe creation if nutrition calculation fails
 
         return recipe
 
@@ -81,8 +103,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_obj = Ingredient.objects.create(
                 name=ingredient_data["name"],
                 quantity=ingredient_data.get("quantity"),
+                unit=ingredient_data.get("unit"),
             )
             instance.ingredients.add(ingredient_obj)
+
+        # Recalculate nutrition after ingredients are updated
+        try:
+            instance.calculate_nutrition()
+        except Exception:
+            pass  # Don't fail update if nutrition calculation fails
 
         return instance
     
@@ -99,6 +128,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipePreviewSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
+    ingredients_count = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -111,10 +142,26 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
             'thumbnail_url',
             'tags', 
             'is_favorite', 
-            'last_visited_at'
+            'last_visited_at',
+            'ingredients_count',
+            'calories',
+            'protein',
+            'fat',
+            'carbs',
+            'is_saved'
         ]
 
     def get_thumbnail_url(self, obj):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
             return obj.thumbnail.url
         return obj.web_image_url
+
+    def get_ingredients_count(self, obj):
+        return obj.ingredients.count()
+    
+    def get_is_saved(self, obj):
+        user = self.context.get('request').user
+        if not user or not user.is_authenticated:
+            return False
+
+        return Recipe.objects.filter(parent=obj.id).exists()

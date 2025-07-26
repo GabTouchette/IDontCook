@@ -1,10 +1,10 @@
 import os
 import base64
-from openai import OpenAI, OpenAIError
-from io import BytesIO
-from PIL import Image
 import json
 import re
+from typing import List
+from recipes.models import Ingredient, Recipe
+from openai import OpenAI, OpenAIError
 
 
 def encode_image(image_path):
@@ -52,9 +52,10 @@ class OpenAIService:
         except Exception as e:
             return f"An unexpected error occurred: {e}"
 
-    def ask_openai_stream(self, prompt, chat_history=None):
+    def ask_openai_stream(self, prompt, chat_history=None, recipe_context=None):
         """
-        Handles chatbot conversation with streaming response.
+        Handles chatbot conversation with streaming response. 
+        If a recipe_context is provided, it uses a recipe-editing prompt.
         """
         try:
             messages = []
@@ -64,8 +65,14 @@ class OpenAIService:
                     role = "user" if entry["sender"] == "user" else "assistant"
                     messages.append({"role": role, "content": entry["message"]})
 
-            messages.append({"role": "user", "content": prompt})
-            print(messages)
+            if recipe_context:
+                final_prompt = PromptTemplates.recipe_edit_prompt(recipe_context, prompt)
+            else:
+                final_prompt = prompt
+
+            print(f"Final Prompt: {final_prompt}")
+            messages.append({"role": "user", "content": final_prompt})
+
             completion = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
@@ -82,48 +89,143 @@ class OpenAIService:
             yield f"An unexpected error occurred: {e}"
 
 
+    def llm_format_ingredients(self, recipe) -> Recipe:
+        # STEP 1 – Turn list of raw ingredient strings into a single string
+        if not recipe.ingredients:
+            raise ValueError("Recipe must have ingredients to format.")
+        
+        raw_ingredient_text = "\n".join(str(ingredient) for ingredient in recipe.ingredients.all())  # or recipe.ingredients_raw if available
+
+        completion = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": PromptTemplates.format_ingredients_with_llm_prompt(raw_ingredient_text)}
+                ]
+            )
+
+        response_content = completion.choices[0].message.content
+        response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+        try:
+            ingredient_data = json.loads(response_content)
+        except json.JSONDecodeError:
+            return "Error: The response was not valid JSON."
+
+        # STEP 4 – Convert to Ingredient model instances (without saving yet)
+        ingredients: List[Ingredient] = []
+        for item in ingredient_data:
+            ingredient = Ingredient(
+                name=item.get("name"),
+                quantity=item.get("quantity"),
+                unit=item.get("unit"),
+                substitutes=item.get("substitutes", [])
+            )
+            ingredient.save()
+
+            ingredients.append(ingredient)
+
+        print(f"Formatted ingredients: {ingredients}")
+
+        # STEP 5 – Replace recipe.ingredients
+        recipe.ingredients.set(ingredients)
+        return recipe
+
+
 class PromptTemplates:
     @staticmethod
-    def chatbot_prompt(user_recipes, query):
-        """Generates a prompt for the AI chatbot."""
-        recipe_info = "\n".join([
-            f"- {r['title']} (ID: {r['id']}) | Ingredients: {', '.join([i['name'] for i in r['ingredients']])}"
-            for r in user_recipes
-        ]) if user_recipes else "The user has no saved recipes yet."
+    def chatbot_prompt(user_recipes, query, user_settings=None, recipe_context=None):
+        """Generates a prompt for the AI chatbot with recipe and user context."""
+        recipe_info = "\n".join([f"- {r['title']} (ID: {r['id']})" for r in user_recipes]) if user_recipes else "No saved recipes."
+
+        settings = ""
+        if user_settings:
+            prefs = [k.replace("_", " ").capitalize() for k, v in user_settings.items() if isinstance(v, bool) and v]
+            demographics = [f"{k.capitalize()}: {v}" for k, v in user_settings.items() if v and not isinstance(v, bool)]
+            settings = (
+                "User profile:\n" +
+                (", ".join(demographics) if demographics else "") + "\n" +
+                ("Dietary preferences / allergies: " + ", ".join(prefs) if prefs else "")
+            )
 
         return (
-            "You are a cookbook AI chatbot tasked with helping users with their cooking and recipe needs.\n\n"
-            f"Here is a list of the user's saved recipes:\n{recipe_info}\n\n"
-            "Your task is to assist the user by either:\n"
-            "- Suggesting an existing recipe\n"
-            "- Creating a new recipe\n"
-            "- Answering general food and cooking-related questions\n\n"
+            "You are a cookbook AI chatbot that helps users with their cooking and recipe needs.\n\n"
+            f"{settings}\n\n"
+            f"User's saved recipes:\n{recipe_info}\n\n"
+            "You can:\n"
+            "- Suggest an existing recipe\n"
+            "- Create a new recipe\n"
+            "- Answer general cooking/food questions\n\n"
             "Rules:\n"
-            "- If you provide an existing recipe, use the following format wrapped in && tags:\n"
-            "  &&{ \"id\": recipeId, \"title\": \"recipeTitle\" }&&\n"
-            "- Do not provide an existing recipe that is not in the list above as this will give an error.\n"
-            "- If you create a new recipe, use the following format wrapped in ** tags:\n"
-            "  **{\n"
-            '    "title": "Recipe Name",\n'
-            '    "ingredients": [\n'
-            '      {"name": "cups Flour", "quantity": 0.75},\n'
-            '      {"name": "tbps Sugar", "quantity": 0.5}\n'
-            '      ...\n'
-            '    ],\n'
-            '    "instructions": ["Step 1", "Step 2"],\n'
-            '    "cooking_time": 30,\n'
-            '    "preparation_time": 15,\n'
-            '    "servings": 2,\n'
-            '    "tags": ["vegetarian", "easy"],\n'
-            '    "description": "A brief description of the recipe",\n'
-            '    "notes": "Any extra notes for the recipe"\n'
-            "  }**\n\n"
-            "Important: Ensure that the quantity for each ingredient is a decimal (e.g., 0.75, 1.0, 0.25). "
-            "Do not use fractions (e.g., 1/2, 3/4) or integers (e.g., 1). Always represent quantities as doubles.\n\n"
-            "You are not limited to choosing only one option; you can provide both an existing and a new recipe in the same response.\n"
-            "Additionally, when answering general cooking questions, remind the user that you can also assist with finding or creating recipes.\n\n"
-            f"Answer the following user query:\n{query}"
+            "- Use this format for existing recipes: &&{ \"id\": recipeId, \"title\": \"recipeTitle\" }&&\n"
+            "- Only reference recipes from the list above.\n"
+            "- For new recipes, use this format: $$ { ... } $$ with valid JSON.\n"
+            "- Use decimal format for ingredient quantities (e.g. 0.75, 1.0).\n"
+            "- When answering general questions, you may remind the user you can generate or suggest recipes.\n\n"
+            "**Example of a new recipe (inside $$ ... $$):**\n"
+            "$$ {\n"
+            "  \"title\": \"Spaghetti Bolognese\",\n"
+            "  \"ingredients\": [\n"
+            "    {\"name\": \"spaghetti\", \"quantity\": 100.0, \"unit\": \"g\"},\n"
+            "    {\"name\": \"ground turkey\", \"quantity\": 0.5, \"unit\": \"kg\"},\n"
+            "    {\"name\": \"tomato sauce\", \"quantity\": 1.0, \"unit\": \"cup\"}\n"
+            "  ],\n"
+            "  \"instructions\": [\n"
+            "    \"Boil the spaghetti until al dente.\",\n"
+            "    \"Cook ground beef in a pan.\",\n"
+            "    \"Add tomato sauce and simmer.\"\n"
+            "  ],\n"
+            "  \"preparation_time\": 10,\n"
+            "  \"cooking_time\": 20,\n"
+            "  \"servings\": 2,\n"
+            "  \"tags\": [\"italian\", \"pasta\"],\n"
+            "  \"description\": \"A classic Italian pasta dish with meat sauce.\",\n"
+            "  \"notes\": \"You can substitute beef with lentils for a vegetarian version.\"\n"
+            "} $$\n\n"
+            f"User question:\n{query}"
         )
+
+    @staticmethod
+    def recipe_edit_prompt(recipe, query):
+        return (
+            "You are an AI assistant helping a user modify or answer questions about a recipe.\n"
+            "You can respond to the user, suggest changes to the recipe or ask for more details.\n"
+            "When responding with a modified recipe:\n"
+            "- Respond only with fields that changed, wrapped in @@{...}@@.\n"
+            "- Use valid JSON keys like: title, ingredients, instructions, cooking_time, preparation_time, servings, tags, description, notes.\n"
+            "- If you change `ingredients` or `tags`, return the full updated list.\n"
+            "- Each ingredient must be: {\"name\": \"ingredient name\", \"quantity\": 1.0, \"unit\": \"unit\"} — quantity must be a decimal, unit can be empty if not applicable.\n"
+            "- Instructions must be a list of strings.\n\n"
+            "**Example of a modified recipe response (only changed fields):**\n"
+            "@@ {\n"
+            "  \"ingredients\": [\n"
+            "    {\"name\": \"spaghetti\", \"quantity\": 100.0, \"unit\": \"g\"},\n"
+            "    {\"name\": \"ground turkey\", \"quantity\": 0.5, \"unit\": \"kg\"},\n"
+            "    {\"name\": \"tomato sauce\", \"quantity\": 1.0, \"unit\": \"cup\"}\n"
+            "  ],\n"
+            "  \"cooking_time\": 25\n"
+            "} @@\n\n"
+            f"Current recipe:\n{json.dumps(recipe, indent=2)}\n\n"
+            f"User request:\n{query}"
+        )
+
+    @staticmethod
+    def format_ingredients_with_llm_prompt(raw_ingredient_text: str) -> str:
+        prompt = f"""
+            You are a recipe assistant that transforms unstructured ingredient lists into a structured JSON list of Ingredient objects.
+
+            Each ingredient must follow this format:
+            - name: string (e.g. "all-purpose flour")
+            - quantity: float (e.g. 2.5)
+            - unit: string (e.g. "cups", "tbsp", "g", "ml", "cloves", "oz", etc.) ** Can be empty if not applicable
+            - substitutes: optional list of strings (or empty list)
+
+            Here is the ingredient list:
+
+            \"\"\"{raw_ingredient_text}\"\"\"
+
+            Return **only** a valid JSON list of ingredients.
+        """
+        return prompt
 
     @staticmethod
     def ocr_prompt():

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/theme/colors.dart';
@@ -8,13 +7,11 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 class RecipeDetailProvider with ChangeNotifier {
   bool _isLoading = false;
   Recipe? _recipe;
-  bool _isSaved = false;
   int _servings = 1;
   List<bool> _completedInstructions = [];
 
   bool get isLoading => _isLoading;
   Recipe? get recipe => _recipe;
-  bool get isSaved => _isSaved;
   int get servings => _servings;
   List<bool> get completedInstructions => _completedInstructions;
 
@@ -31,7 +28,6 @@ class RecipeDetailProvider with ChangeNotifier {
       _servings = recipe.servings ?? 1;
       _completedInstructions =
           List<bool>.filled(recipe.instructions.length, false);
-      await _checkIfSaved();
       notifyListeners();
       return;
     }
@@ -51,7 +47,6 @@ class RecipeDetailProvider with ChangeNotifier {
       _servings = _recipe!.servings ?? 1;
       _completedInstructions =
           List<bool>.filled(_recipe!.instructions.length, false);
-      await _checkIfSaved();
     } catch (error) {
       print("Error fetching recipe: $error");
     } finally {
@@ -66,7 +61,7 @@ class RecipeDetailProvider with ChangeNotifier {
   }
 
   Future<void> saveRecipe(BuildContext context) async {
-    if (_isSaved || _recipe == null) return;
+    if (_recipe == null) return;
 
     Map<String, dynamic> recipeData = {
       "title": _capitalize(_recipe!.title),
@@ -83,14 +78,14 @@ class RecipeDetailProvider with ChangeNotifier {
       "notes": _capitalize(_recipe!.notes),
       "tags": _recipe!.tags,
       "parent_id": _recipe!.id,
+      "web_image_url": _recipe!.image_url,
     };
 
     int? newId = await RecipeApi().createRecipe(recipeData);
     bool success = newId != null;
 
     if (success) {
-      _isSaved = true;
-      _recipe = recipe?.copyWith(id: newId);
+      _recipe = recipe?.copyWith(id: newId, is_saved: true);
       notifyListeners();
     }
 
@@ -100,15 +95,6 @@ class RecipeDetailProvider with ChangeNotifier {
           success ? "Recipe saved successfully!" : "Failed to save recipe.",
       textColor: success ? ColorPalette.green : ColorPalette.red,
     );
-  }
-
-  Future<void> _checkIfSaved() async {
-    var user = await AuthApi.getUser();
-    _isSaved = false;
-    if (user != null && _recipe?.created_by?.id == user.id) {
-      _isSaved = true;
-      notifyListeners();
-    }
   }
 
   void toggleFavorite(BuildContext context) async {

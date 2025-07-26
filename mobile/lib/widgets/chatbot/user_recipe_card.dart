@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/pages/recipe_detail_page/recipe_detail_page.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 
 class UserRecipeCard extends StatefulWidget {

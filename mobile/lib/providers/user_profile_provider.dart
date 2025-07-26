@@ -3,7 +3,7 @@ import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/user/user.dart';
-import 'package:i_cant_cook/providers/post_mixin.dart';
+import 'package:i_cant_cook/mixins/post_mixin.dart';
 
 class UserProfileProvider with ChangeNotifier, PostMixin {
   User? _user;

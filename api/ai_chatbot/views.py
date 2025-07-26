@@ -23,13 +23,35 @@ class ChatbotView(APIView):
         """
         query = request.data.get("query")
         chat_history = request.data.get("chat_history", None)
+        recipe_id = request.data.get("recipe_id", None)
 
         if not query:
             return JsonResponse({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return self.process_chat_response(request.user, query, chat_history)
+        recipe_context = None
+        if recipe_id:
+            try:
+                recipe = Recipe.objects.get(id=recipe_id, created_by=request.user)
+                recipe_context = {
+                    "id": recipe.id,
+                    "title": recipe.title,
+                    "ingredients": [
+                        {"name": ing.name, "quantity": ing.quantity}
+                        for ing in recipe.ingredients.all()
+                    ],
+                    "instructions": recipe.instructions,
+                    "tags": recipe.tags,
+                    "description": recipe.description,
+                    "notes": recipe.notes,
+                    "preparation_time": recipe.preparation_time,
+                    "cooking_time": recipe.cooking_time,
+                }
+            except Recipe.DoesNotExist:
+                return JsonResponse({"error": "Recipe not found"}, status=404)
 
-    def process_chat_response(self, user, query, chat_history=None):
+        return self.process_chat_response(request.user, query, chat_history, recipe_context)
+
+    def process_chat_response(self, user, query, chat_history=None, recipe_context=None):
         """
         Handles chatbot queries and streams the AI response.
         """
@@ -40,27 +62,52 @@ class ChatbotView(APIView):
             {
                 "id": recipe.id,
                 "title": recipe.title,
-                "ingredients": [
-                    {"name": ing.name, "quantity": ing.quantity}
-                    for ing in recipe.ingredients.all()
-                ],
             }
             for recipe in saved_recipes
         ]
 
-        prompt = PromptTemplates.chatbot_prompt(recipes_list, query)
+        try:
+            settings = user.settings
+            user_settings = {
+                "age": settings.age,
+                "gender": settings.gender,
+                "city": settings.city,
+                "country": settings.country,
+                "ethnicity": settings.ethnicity,
+                "is_vegan": settings.is_vegan,
+                "is_vegetarian": settings.is_vegetarian,
+                "is_gluten_free": settings.is_gluten_free,
+                "is_lactose_intolerant": settings.is_lactose_intolerant,
+                "has_peanut_allergy": settings.has_peanut_allergy,
+                "has_tree_nut_allergy": settings.has_tree_nut_allergy,
+                "has_shellfish_allergy": settings.has_shellfish_allergy,
+                "has_egg_allergy": settings.has_egg_allergy,
+                "has_milk_allergy": settings.has_milk_allergy,
+                "has_soy_allergy": settings.has_soy_allergy,
+                "has_wheat_allergy": settings.has_wheat_allergy,
+                "has_fish_allergy": settings.has_fish_allergy,
+            }
+        except Exception:
+            user_settings = {}
+
+        # 🔹 Build prompt
+        prompt = PromptTemplates.chatbot_prompt(
+            user_recipes=recipes_list,
+            query=query,
+            user_settings=user_settings,
+            recipe_context=recipe_context
+        ) if recipe_context is None else query
 
         def event_stream():
             openai_service = OpenAIService()
             full_response = ""
-            for chunk in openai_service.ask_openai_stream(prompt, chat_history):
+            for chunk in openai_service.ask_openai_stream(prompt, chat_history, recipe_context):
                 full_response += chunk
                 yield f"data: {json.dumps({'token': chunk})}\n\n"
 
             conversation.ai_response = full_response
             conversation.save()
-
-            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=conversation.ai_response)
+            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=full_response)
 
         return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 

@@ -24,6 +24,7 @@ mixin _$Recipe {
   String get title => throw _privateConstructorUsedError;
   List<Ingredient> get ingredients => throw _privateConstructorUsedError;
   List<String> get instructions => throw _privateConstructorUsedError;
+  int? get parent_id => throw _privateConstructorUsedError;
   int? get cooking_time => throw _privateConstructorUsedError;
   int? get preparation_time => throw _privateConstructorUsedError;
   int? get servings => throw _privateConstructorUsedError;
@@ -33,9 +34,14 @@ mixin _$Recipe {
   String? get thumbnail_url => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   bool? get is_favorite => throw _privateConstructorUsedError;
+  bool? get is_saved => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
   User? get created_by => throw _privateConstructorUsedError;
   DateTime? get last_visited_at => throw _privateConstructorUsedError;
+  double? get calories => throw _privateConstructorUsedError;
+  double? get protein => throw _privateConstructorUsedError;
+  double? get fat => throw _privateConstructorUsedError;
+  double? get carbs => throw _privateConstructorUsedError;
 
   /// Serializes this Recipe to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -56,6 +62,7 @@ abstract class $RecipeCopyWith<$Res> {
       String title,
       List<Ingredient> ingredients,
       List<String> instructions,
+      int? parent_id,
       int? cooking_time,
       int? preparation_time,
       int? servings,
@@ -65,9 +72,14 @@ abstract class $RecipeCopyWith<$Res> {
       String? thumbnail_url,
       String? notes,
       bool? is_favorite,
+      bool? is_saved,
       DateTime? created_at,
       User? created_by,
-      DateTime? last_visited_at});
+      DateTime? last_visited_at,
+      double? calories,
+      double? protein,
+      double? fat,
+      double? carbs});
 
   $UserCopyWith<$Res>? get created_by;
 }
@@ -91,6 +103,7 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? title = null,
     Object? ingredients = null,
     Object? instructions = null,
+    Object? parent_id = freezed,
     Object? cooking_time = freezed,
     Object? preparation_time = freezed,
     Object? servings = freezed,
@@ -100,9 +113,14 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? thumbnail_url = freezed,
     Object? notes = freezed,
     Object? is_favorite = freezed,
+    Object? is_saved = freezed,
     Object? created_at = freezed,
     Object? created_by = freezed,
     Object? last_visited_at = freezed,
+    Object? calories = freezed,
+    Object? protein = freezed,
+    Object? fat = freezed,
+    Object? carbs = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -121,6 +139,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
           ? _value.instructions
           : instructions // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      parent_id: freezed == parent_id
+          ? _value.parent_id
+          : parent_id // ignore: cast_nullable_to_non_nullable
+              as int?,
       cooking_time: freezed == cooking_time
           ? _value.cooking_time
           : cooking_time // ignore: cast_nullable_to_non_nullable
@@ -157,6 +179,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
           ? _value.is_favorite
           : is_favorite // ignore: cast_nullable_to_non_nullable
               as bool?,
+      is_saved: freezed == is_saved
+          ? _value.is_saved
+          : is_saved // ignore: cast_nullable_to_non_nullable
+              as bool?,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
@@ -169,6 +195,22 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
           ? _value.last_visited_at
           : last_visited_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      calories: freezed == calories
+          ? _value.calories
+          : calories // ignore: cast_nullable_to_non_nullable
+              as double?,
+      protein: freezed == protein
+          ? _value.protein
+          : protein // ignore: cast_nullable_to_non_nullable
+              as double?,
+      fat: freezed == fat
+          ? _value.fat
+          : fat // ignore: cast_nullable_to_non_nullable
+              as double?,
+      carbs: freezed == carbs
+          ? _value.carbs
+          : carbs // ignore: cast_nullable_to_non_nullable
+              as double?,
     ) as $Val);
   }
 
@@ -199,6 +241,7 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       String title,
       List<Ingredient> ingredients,
       List<String> instructions,
+      int? parent_id,
       int? cooking_time,
       int? preparation_time,
       int? servings,
@@ -208,9 +251,14 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
       String? thumbnail_url,
       String? notes,
       bool? is_favorite,
+      bool? is_saved,
       DateTime? created_at,
       User? created_by,
-      DateTime? last_visited_at});
+      DateTime? last_visited_at,
+      double? calories,
+      double? protein,
+      double? fat,
+      double? carbs});
 
   @override
   $UserCopyWith<$Res>? get created_by;
@@ -233,6 +281,7 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? title = null,
     Object? ingredients = null,
     Object? instructions = null,
+    Object? parent_id = freezed,
     Object? cooking_time = freezed,
     Object? preparation_time = freezed,
     Object? servings = freezed,
@@ -242,9 +291,14 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? thumbnail_url = freezed,
     Object? notes = freezed,
     Object? is_favorite = freezed,
+    Object? is_saved = freezed,
     Object? created_at = freezed,
     Object? created_by = freezed,
     Object? last_visited_at = freezed,
+    Object? calories = freezed,
+    Object? protein = freezed,
+    Object? fat = freezed,
+    Object? carbs = freezed,
   }) {
     return _then(_$RecipeImpl(
       id: null == id
@@ -263,6 +317,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value._instructions
           : instructions // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      parent_id: freezed == parent_id
+          ? _value.parent_id
+          : parent_id // ignore: cast_nullable_to_non_nullable
+              as int?,
       cooking_time: freezed == cooking_time
           ? _value.cooking_time
           : cooking_time // ignore: cast_nullable_to_non_nullable
@@ -299,6 +357,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value.is_favorite
           : is_favorite // ignore: cast_nullable_to_non_nullable
               as bool?,
+      is_saved: freezed == is_saved
+          ? _value.is_saved
+          : is_saved // ignore: cast_nullable_to_non_nullable
+              as bool?,
       created_at: freezed == created_at
           ? _value.created_at
           : created_at // ignore: cast_nullable_to_non_nullable
@@ -311,6 +373,22 @@ class __$$RecipeImplCopyWithImpl<$Res>
           ? _value.last_visited_at
           : last_visited_at // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      calories: freezed == calories
+          ? _value.calories
+          : calories // ignore: cast_nullable_to_non_nullable
+              as double?,
+      protein: freezed == protein
+          ? _value.protein
+          : protein // ignore: cast_nullable_to_non_nullable
+              as double?,
+      fat: freezed == fat
+          ? _value.fat
+          : fat // ignore: cast_nullable_to_non_nullable
+              as double?,
+      carbs: freezed == carbs
+          ? _value.carbs
+          : carbs // ignore: cast_nullable_to_non_nullable
+              as double?,
     ));
   }
 }
@@ -323,6 +401,7 @@ class _$RecipeImpl implements _Recipe {
       this.title = "",
       final List<Ingredient> ingredients = const [],
       final List<String> instructions = const [],
+      this.parent_id,
       this.cooking_time,
       this.preparation_time,
       this.servings,
@@ -332,9 +411,14 @@ class _$RecipeImpl implements _Recipe {
       this.thumbnail_url,
       this.notes,
       this.is_favorite,
+      this.is_saved,
       this.created_at,
       this.created_by,
-      this.last_visited_at})
+      this.last_visited_at,
+      this.calories,
+      this.protein,
+      this.fat,
+      this.carbs})
       : _ingredients = ingredients,
         _instructions = instructions,
         _tags = tags;
@@ -367,6 +451,8 @@ class _$RecipeImpl implements _Recipe {
   }
 
   @override
+  final int? parent_id;
+  @override
   final int? cooking_time;
   @override
   final int? preparation_time;
@@ -393,15 +479,25 @@ class _$RecipeImpl implements _Recipe {
   @override
   final bool? is_favorite;
   @override
+  final bool? is_saved;
+  @override
   final DateTime? created_at;
   @override
   final User? created_by;
   @override
   final DateTime? last_visited_at;
+  @override
+  final double? calories;
+  @override
+  final double? protein;
+  @override
+  final double? fat;
+  @override
+  final double? carbs;
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, thumbnail_url: $thumbnail_url, notes: $notes, is_favorite: $is_favorite, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at)';
+    return 'Recipe(id: $id, title: $title, ingredients: $ingredients, instructions: $instructions, parent_id: $parent_id, cooking_time: $cooking_time, preparation_time: $preparation_time, servings: $servings, tags: $tags, description: $description, image_url: $image_url, thumbnail_url: $thumbnail_url, notes: $notes, is_favorite: $is_favorite, is_saved: $is_saved, created_at: $created_at, created_by: $created_by, last_visited_at: $last_visited_at, calories: $calories, protein: $protein, fat: $fat, carbs: $carbs)';
   }
 
   @override
@@ -415,6 +511,8 @@ class _$RecipeImpl implements _Recipe {
                 .equals(other._ingredients, _ingredients) &&
             const DeepCollectionEquality()
                 .equals(other._instructions, _instructions) &&
+            (identical(other.parent_id, parent_id) ||
+                other.parent_id == parent_id) &&
             (identical(other.cooking_time, cooking_time) ||
                 other.cooking_time == cooking_time) &&
             (identical(other.preparation_time, preparation_time) ||
@@ -431,34 +529,48 @@ class _$RecipeImpl implements _Recipe {
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.is_favorite, is_favorite) ||
                 other.is_favorite == is_favorite) &&
+            (identical(other.is_saved, is_saved) ||
+                other.is_saved == is_saved) &&
             (identical(other.created_at, created_at) ||
                 other.created_at == created_at) &&
             (identical(other.created_by, created_by) ||
                 other.created_by == created_by) &&
             (identical(other.last_visited_at, last_visited_at) ||
-                other.last_visited_at == last_visited_at));
+                other.last_visited_at == last_visited_at) &&
+            (identical(other.calories, calories) ||
+                other.calories == calories) &&
+            (identical(other.protein, protein) || other.protein == protein) &&
+            (identical(other.fat, fat) || other.fat == fat) &&
+            (identical(other.carbs, carbs) || other.carbs == carbs));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      title,
-      const DeepCollectionEquality().hash(_ingredients),
-      const DeepCollectionEquality().hash(_instructions),
-      cooking_time,
-      preparation_time,
-      servings,
-      const DeepCollectionEquality().hash(_tags),
-      description,
-      image_url,
-      thumbnail_url,
-      notes,
-      is_favorite,
-      created_at,
-      created_by,
-      last_visited_at);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        title,
+        const DeepCollectionEquality().hash(_ingredients),
+        const DeepCollectionEquality().hash(_instructions),
+        parent_id,
+        cooking_time,
+        preparation_time,
+        servings,
+        const DeepCollectionEquality().hash(_tags),
+        description,
+        image_url,
+        thumbnail_url,
+        notes,
+        is_favorite,
+        is_saved,
+        created_at,
+        created_by,
+        last_visited_at,
+        calories,
+        protein,
+        fat,
+        carbs
+      ]);
 
   /// Create a copy of Recipe
   /// with the given fields replaced by the non-null parameter values.
@@ -482,6 +594,7 @@ abstract class _Recipe implements Recipe {
       final String title,
       final List<Ingredient> ingredients,
       final List<String> instructions,
+      final int? parent_id,
       final int? cooking_time,
       final int? preparation_time,
       final int? servings,
@@ -491,9 +604,14 @@ abstract class _Recipe implements Recipe {
       final String? thumbnail_url,
       final String? notes,
       final bool? is_favorite,
+      final bool? is_saved,
       final DateTime? created_at,
       final User? created_by,
-      final DateTime? last_visited_at}) = _$RecipeImpl;
+      final DateTime? last_visited_at,
+      final double? calories,
+      final double? protein,
+      final double? fat,
+      final double? carbs}) = _$RecipeImpl;
 
   factory _Recipe.fromJson(Map<String, dynamic> json) = _$RecipeImpl.fromJson;
 
@@ -505,6 +623,8 @@ abstract class _Recipe implements Recipe {
   List<Ingredient> get ingredients;
   @override
   List<String> get instructions;
+  @override
+  int? get parent_id;
   @override
   int? get cooking_time;
   @override
@@ -524,11 +644,21 @@ abstract class _Recipe implements Recipe {
   @override
   bool? get is_favorite;
   @override
+  bool? get is_saved;
+  @override
   DateTime? get created_at;
   @override
   User? get created_by;
   @override
   DateTime? get last_visited_at;
+  @override
+  double? get calories;
+  @override
+  double? get protein;
+  @override
+  double? get fat;
+  @override
+  double? get carbs;
 
   /// Create a copy of Recipe
   /// with the given fields replaced by the non-null parameter values.

@@ -22,8 +22,10 @@ Ingredient _$IngredientFromJson(Map<String, dynamic> json) {
 mixin _$Ingredient {
   int? get id => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
-  List<String>? get substitutes => throw _privateConstructorUsedError;
   double? get quantity => throw _privateConstructorUsedError;
+  String? get unit => throw _privateConstructorUsedError;
+  List<String>? get substitutes => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get nutrition => throw _privateConstructorUsedError;
 
   /// Serializes this Ingredient to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,7 +44,12 @@ abstract class $IngredientCopyWith<$Res> {
       _$IngredientCopyWithImpl<$Res, Ingredient>;
   @useResult
   $Res call(
-      {int? id, String? name, List<String>? substitutes, double? quantity});
+      {int? id,
+      String? name,
+      double? quantity,
+      String? unit,
+      List<String>? substitutes,
+      Map<String, dynamic>? nutrition});
 }
 
 /// @nodoc
@@ -62,8 +69,10 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
   $Res call({
     Object? id = freezed,
     Object? name = freezed,
-    Object? substitutes = freezed,
     Object? quantity = freezed,
+    Object? unit = freezed,
+    Object? substitutes = freezed,
+    Object? nutrition = freezed,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -74,14 +83,22 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String?,
-      substitutes: freezed == substitutes
-          ? _value.substitutes
-          : substitutes // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
       quantity: freezed == quantity
           ? _value.quantity
           : quantity // ignore: cast_nullable_to_non_nullable
               as double?,
+      unit: freezed == unit
+          ? _value.unit
+          : unit // ignore: cast_nullable_to_non_nullable
+              as String?,
+      substitutes: freezed == substitutes
+          ? _value.substitutes
+          : substitutes // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      nutrition: freezed == nutrition
+          ? _value.nutrition
+          : nutrition // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
     ) as $Val);
   }
 }
@@ -95,7 +112,12 @@ abstract class _$$IngredientImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int? id, String? name, List<String>? substitutes, double? quantity});
+      {int? id,
+      String? name,
+      double? quantity,
+      String? unit,
+      List<String>? substitutes,
+      Map<String, dynamic>? nutrition});
 }
 
 /// @nodoc
@@ -113,8 +135,10 @@ class __$$IngredientImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? name = freezed,
-    Object? substitutes = freezed,
     Object? quantity = freezed,
+    Object? unit = freezed,
+    Object? substitutes = freezed,
+    Object? nutrition = freezed,
   }) {
     return _then(_$IngredientImpl(
       id: freezed == id
@@ -125,14 +149,22 @@ class __$$IngredientImplCopyWithImpl<$Res>
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String?,
-      substitutes: freezed == substitutes
-          ? _value._substitutes
-          : substitutes // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
       quantity: freezed == quantity
           ? _value.quantity
           : quantity // ignore: cast_nullable_to_non_nullable
               as double?,
+      unit: freezed == unit
+          ? _value.unit
+          : unit // ignore: cast_nullable_to_non_nullable
+              as String?,
+      substitutes: freezed == substitutes
+          ? _value._substitutes
+          : substitutes // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      nutrition: freezed == nutrition
+          ? _value._nutrition
+          : nutrition // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
     ));
   }
 }
@@ -141,8 +173,14 @@ class __$$IngredientImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$IngredientImpl implements _Ingredient {
   const _$IngredientImpl(
-      {this.id, this.name, final List<String>? substitutes, this.quantity})
-      : _substitutes = substitutes;
+      {this.id,
+      this.name,
+      this.quantity,
+      this.unit,
+      final List<String>? substitutes,
+      final Map<String, dynamic>? nutrition})
+      : _substitutes = substitutes,
+        _nutrition = nutrition;
 
   factory _$IngredientImpl.fromJson(Map<String, dynamic> json) =>
       _$$IngredientImplFromJson(json);
@@ -151,6 +189,10 @@ class _$IngredientImpl implements _Ingredient {
   final int? id;
   @override
   final String? name;
+  @override
+  final double? quantity;
+  @override
+  final String? unit;
   final List<String>? _substitutes;
   @override
   List<String>? get substitutes {
@@ -161,12 +203,19 @@ class _$IngredientImpl implements _Ingredient {
     return EqualUnmodifiableListView(value);
   }
 
+  final Map<String, dynamic>? _nutrition;
   @override
-  final double? quantity;
+  Map<String, dynamic>? get nutrition {
+    final value = _nutrition;
+    if (value == null) return null;
+    if (_nutrition is EqualUnmodifiableMapView) return _nutrition;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
 
   @override
   String toString() {
-    return 'Ingredient(id: $id, name: $name, substitutes: $substitutes, quantity: $quantity)';
+    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, substitutes: $substitutes, nutrition: $nutrition)';
   }
 
   @override
@@ -176,16 +225,25 @@ class _$IngredientImpl implements _Ingredient {
             other is _$IngredientImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.quantity, quantity) ||
+                other.quantity == quantity) &&
+            (identical(other.unit, unit) || other.unit == unit) &&
             const DeepCollectionEquality()
                 .equals(other._substitutes, _substitutes) &&
-            (identical(other.quantity, quantity) ||
-                other.quantity == quantity));
+            const DeepCollectionEquality()
+                .equals(other._nutrition, _nutrition));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name,
-      const DeepCollectionEquality().hash(_substitutes), quantity);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      name,
+      quantity,
+      unit,
+      const DeepCollectionEquality().hash(_substitutes),
+      const DeepCollectionEquality().hash(_nutrition));
 
   /// Create a copy of Ingredient
   /// with the given fields replaced by the non-null parameter values.
@@ -207,8 +265,10 @@ abstract class _Ingredient implements Ingredient {
   const factory _Ingredient(
       {final int? id,
       final String? name,
+      final double? quantity,
+      final String? unit,
       final List<String>? substitutes,
-      final double? quantity}) = _$IngredientImpl;
+      final Map<String, dynamic>? nutrition}) = _$IngredientImpl;
 
   factory _Ingredient.fromJson(Map<String, dynamic> json) =
       _$IngredientImpl.fromJson;
@@ -218,9 +278,13 @@ abstract class _Ingredient implements Ingredient {
   @override
   String? get name;
   @override
+  double? get quantity;
+  @override
+  String? get unit;
+  @override
   List<String>? get substitutes;
   @override
-  double? get quantity;
+  Map<String, dynamic>? get nutrition;
 
   /// Create a copy of Ingredient
   /// with the given fields replaced by the non-null parameter values.

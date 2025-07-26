@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/pages/settings_page.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/theme/colors.dart';
-import 'package:provider/provider.dart';
+
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
-import 'package:i_cant_cook/widgets/explore/user_post_card.dart';
+import 'package:i_cant_cook/widgets/social/user_post_card.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
+import 'package:provider/provider.dart';
 
 class UserProfilePage extends StatelessWidget {
   final User user;
@@ -30,6 +32,21 @@ class UserProfilePage extends StatelessWidget {
               color: ColorPalette.offWhite,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.settings,
+                color: ColorPalette.offWhite,
+                size: 32,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                );
+              },
+            ),
+          ],
         ),
         body: Consumer<UserProfileProvider>(
           builder: (context, provider, child) {

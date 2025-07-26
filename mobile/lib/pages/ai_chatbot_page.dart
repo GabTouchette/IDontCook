@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:i_cant_cook/api/ai_chatbot_api.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
@@ -16,79 +15,12 @@ class AiChatBotPage extends StatefulWidget {
 }
 
 class AiChatBotPageState extends State<AiChatBotPage> {
-  final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-
   @override
-  void dispose() {
-    _searchController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _sendMessage(String query, ChatProvider chatProvider) async {
-    if (query.isNotEmpty) {
-      chatProvider.addMessage(sender: "user", text: query);
-
-      _searchController.clear();
-      _scrollToBottom();
-
-      try {
-        List<Map<String, String>> chatHistory = [];
-        int historyLength = chatProvider.messages.length - 1;
-        int start = (historyLength >= 5) ? historyLength - 5 : 0;
-
-        for (int i = historyLength - 1; i >= start; i--) {
-          chatHistory.insert(0, {
-            "message": chatProvider.messages[i]['text'] ?? '',
-            "sender": chatProvider.messages[i]['sender'] ?? ''
-          });
-        }
-
-        chatProvider.addMessage(isLoading: true, isRecipeLoading: true);
-        final stream = AiChatbotApi().chatWithBotStream(query, chatHistory);
-
-        bool recipeTagOpen = false;
-        String recipeBuffer = "";
-
-        await for (String token in stream) {
-          if (recipeTagOpen) {
-            recipeBuffer += token;
-            if (token.trim() == "**" || token.trim() == "&&") {
-              chatProvider.addMessage();
-              recipeTagOpen = false;
-              chatProvider.updateLastMessage(recipeBuffer);
-              recipeBuffer = "";
-            }
-          } else {
-            if (token.trim() == "**" || token.trim() == "&&") {
-              recipeTagOpen = true;
-              recipeBuffer += token;
-              chatProvider.addMessage(isRecipeLoading: true);
-            } else {
-              chatProvider.updateLastMessage(
-                  (chatProvider.messages.last["text"] ?? "") + token);
-            }
-          }
-        }
-      } catch (e) {
-        chatProvider.removeLastMessage();
-        chatProvider.addMessage(text: "Error: ${e.toString()}");
-      } finally {
-        _scrollToBottom();
-      }
-    }
-  }
-
-  void _scrollToBottom() {
+  void initState() {
+    super.initState();
+    // Ensure we're in global chat mode when this page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+      context.read<ChatProvider>().setGlobalChat();
     });
   }
 
@@ -121,7 +53,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                 size: 32,
               ),
               onPressed: () {
-                provider.clearMessages();
+                provider.clearMessages(isRecipeChat: false);
               },
             ),
           ),
@@ -146,7 +78,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                   padding: const EdgeInsets.only(top: 120.0),
                   child: Column(
                     children: [
-                      if (provider.messages.isEmpty) ...[
+                      if (provider.currentMessages.isEmpty) ...[
                         Expanded(
                           child: Center(
                             child: Column(
@@ -165,7 +97,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                           color: ColorPalette.darkgray),
                                     ),
                                     child: TextField(
-                                      controller: _searchController,
+                                      controller: provider.chatController,
                                       style: TextStyle(
                                         color: ColorPalette.offWhite,
                                       ),
@@ -183,7 +115,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                             vertical: 16.0, horizontal: 8.0),
                                       ),
                                       onSubmitted: (query) =>
-                                          _sendMessage(query, provider),
+                                          provider.sendMessage(query: query),
                                     ),
                                   ),
                                 ),
@@ -200,25 +132,25 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                             'New Idea',
                                             FontAwesomeIcons.lightbulb,
                                             ColorPalette.mustard, () {
-                                          _sendMessage(
-                                              'Can you suggest a new recipe idea?',
-                                              provider);
+                                          provider.sendMessage(
+                                              query:
+                                                  'Can you suggest a new recipe idea?');
                                         }),
                                         _buildBreadcrumb(
                                             'Something I have',
                                             FontAwesomeIcons.file,
                                             Colors.green, () {
-                                          _sendMessage(
-                                              'Can you suggest a recipe that I have?',
-                                              provider);
+                                          provider.sendMessage(
+                                              query:
+                                                  'Can you suggest a recipe that I have?');
                                         }),
                                         _buildBreadcrumb(
                                             'A popular choice',
                                             FontAwesomeIcons.fire,
                                             Colors.orange, () {
-                                          _sendMessage(
-                                              'Can you suggest a popular recipe at the moment?',
-                                              provider);
+                                          provider.sendMessage(
+                                              query:
+                                                  'Can you suggest a popular recipe at the moment?');
                                         }),
                                       ],
                                     ),
@@ -229,19 +161,15 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                           ),
                         ),
                       ],
-                      if (provider.messages.isNotEmpty) ...[
+                      if (provider.currentMessages.isNotEmpty) ...[
                         Expanded(
                           child: ListView.builder(
-                            controller: _scrollController,
+                            controller: provider.scrollController,
                             padding: EdgeInsets.zero,
-                            itemCount: provider.messages.length,
+                            itemCount: provider.currentMessages.length,
                             itemBuilder: (context, index) {
-                              final message = provider.messages[index];
+                              final message = provider.currentMessages[index];
                               final bool isUser = message['sender'] == 'user';
-                              final bool isLoading =
-                                  message['isLoading'] == true;
-                              final bool isRecipeLoading =
-                                  message['isRecipeLoading'] == true;
 
                               return Align(
                                 alignment: isUser
@@ -253,8 +181,11 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                   child: message['sender'] == 'ai'
                                       ? AiResponseBubble(
                                           message: message['text'],
-                                          isLoading: isLoading,
-                                          isRecipeLoading: isRecipeLoading,
+                                          isLoading:
+                                              message['isLoading'] == true,
+                                          isRecipeLoading:
+                                              message['isRecipeLoading'] ==
+                                                  true,
                                         )
                                       : MessageWidget(
                                           messageText: message['text']!,
@@ -278,7 +209,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                   color: ColorPalette.placeholdergray),
                             ),
                             child: TextField(
-                              controller: _searchController,
+                              controller: provider.chatController,
                               style: TextStyle(
                                 color: ColorPalette.offWhite,
                               ),
@@ -296,7 +227,7 @@ class AiChatBotPageState extends State<AiChatBotPage> {
                                     vertical: 16.0, horizontal: 8.0),
                               ),
                               onSubmitted: (query) =>
-                                  _sendMessage(query, provider),
+                                  provider.sendMessage(query: query),
                             ),
                           ),
                         ),

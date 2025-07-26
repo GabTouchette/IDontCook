@@ -8,12 +8,17 @@ class AiChatbotApi {
   final ApiHelper _apiHelper = ApiHelper();
 
   Stream<String> chatWithBotStream(
-      String query, List<Map<String, String>>? chatHistory) async* {
-    var data = jsonEncode({
+    String query,
+    List<Map<String, String>>? chatHistory, {
+    int? recipeId,
+  }) async* {
+    final payload = {
       'query': query,
       'chat_history': chatHistory ?? [],
-    });
+      if (recipeId != null) 'recipe_id': recipeId,
+    };
 
+    var data = jsonEncode(payload);
     final headers = await AuthApi.getAuthHeader();
     yield* _apiHelper.streamResponse('ai/chat/', data, headers);
   }
