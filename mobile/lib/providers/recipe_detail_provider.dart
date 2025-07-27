@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class RecipeDetailProvider with ChangeNotifier {
   bool _isLoading = false;
+  bool _isSaving = false;
   Recipe? _recipe;
   int _servings = 1;
   List<bool> _completedInstructions = [];
 
   bool get isLoading => _isLoading;
+  bool get isSaving => _isSaving;
   Recipe? get recipe => _recipe;
   int get servings => _servings;
   List<bool> get completedInstructions => _completedInstructions;
@@ -61,40 +64,56 @@ class RecipeDetailProvider with ChangeNotifier {
   }
 
   Future<void> saveRecipe(BuildContext context) async {
-    if (_recipe == null) return;
+    if (_recipe == null || _isSaving) return;
 
-    Map<String, dynamic> recipeData = {
-      "title": _capitalize(_recipe!.title),
-      "ingredients": _recipe!.ingredients
-          .map((ingredient) => {
-                "name": _capitalize(ingredient.name),
-                "quantity": ingredient.quantity,
-              })
-          .toList(),
-      "instructions": _recipe!.instructions,
-      "preparation_time": _recipe!.preparation_time,
-      "cooking_time": _recipe!.cooking_time,
-      "description": _capitalize(_recipe!.description),
-      "notes": _capitalize(_recipe!.notes),
-      "tags": _recipe!.tags,
-      "parent_id": _recipe!.id,
-      "web_image_url": _recipe!.image_url,
-    };
+    _isSaving = true;
+    notifyListeners();
 
-    int? newId = await RecipeApi().createRecipe(recipeData);
-    bool success = newId != null;
+    try {
+      Map<String, dynamic> recipeData = {
+        "title": _capitalize(_recipe!.title),
+        "ingredients": _recipe!.ingredients
+            .map((ingredient) => {
+                  "name": _capitalize(ingredient.name),
+                  "quantity": ingredient.quantity,
+                })
+            .toList(),
+        "instructions": _recipe!.instructions,
+        "preparation_time": _recipe!.preparation_time,
+        "cooking_time": _recipe!.cooking_time,
+        "description": _capitalize(_recipe!.description),
+        "notes": _capitalize(_recipe!.notes),
+        "tags": _recipe!.tags,
+        "parent_id": _recipe!.id,
+        "web_image_url": _recipe!.image_url,
+      };
 
-    if (success) {
-      _recipe = recipe?.copyWith(id: newId, is_saved: true);
+      int? newId = await RecipeApi().createRecipe(recipeData);
+      bool success = newId != null;
+
+      if (success) {
+        // Fetch the full recipe data including nutrition to refresh the UI
+        var fullRecipeData = await RecipeApi().getRecipeById(newId);
+        _recipe = Recipe.fromJson(fullRecipeData);
+        notifyListeners();
+      }
+
+      InformationToast.show(
+        context: context,
+        message:
+            success ? "Recipe saved successfully!" : "Failed to save recipe.",
+        type: success ? ToastType.success : ToastType.error,
+      );
+    } catch (e) {
+      InformationToast.show(
+        context: context,
+        message: "Error saving recipe: $e",
+        type: ToastType.error,
+      );
+    } finally {
+      _isSaving = false;
       notifyListeners();
     }
-
-    InformationToast.show(
-      context: context,
-      message:
-          success ? "Recipe saved successfully!" : "Failed to save recipe.",
-      textColor: success ? ColorPalette.green : ColorPalette.red,
-    );
   }
 
   void toggleFavorite(BuildContext context) async {
@@ -114,7 +133,7 @@ class RecipeDetailProvider with ChangeNotifier {
       InformationToast.show(
         context: context,
         message: 'There was an error updating the favorite status.',
-        textColor: ColorPalette.red,
+        type: ToastType.error,
       );
     }
   }

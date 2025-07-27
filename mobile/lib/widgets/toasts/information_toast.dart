@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class InformationToast {
   static void show({
@@ -7,16 +8,39 @@ class InformationToast {
     required String message,
     String? title,
     Duration duration = const Duration(seconds: 3),
-    Color backgroundColor = ColorPalette.darkgray,
-    Color textColor = ColorPalette.offWhite,
+    Color? backgroundColor,
+    ToastType type = ToastType.info,
   }) {
+    Color toastBackgroundColor;
+
+    if (backgroundColor != null) {
+      toastBackgroundColor = backgroundColor;
+    } else {
+      switch (type) {
+        case ToastType.info:
+          toastBackgroundColor = Theme.of(context).colorScheme.info;
+          break;
+        case ToastType.warning:
+          toastBackgroundColor = Theme.of(context).colorScheme.warning;
+          break;
+        case ToastType.success:
+          toastBackgroundColor = Theme.of(context).colorScheme.success;
+          break;
+        case ToastType.error:
+          toastBackgroundColor = Theme.of(context).colorScheme.error;
+          break;
+      }
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(color: textColor),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
         ),
-        backgroundColor: backgroundColor,
+        backgroundColor: toastBackgroundColor,
         duration: duration,
         behavior: SnackBarBehavior.floating,
       ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class RecipeHeader extends StatelessWidget {
   final Recipe recipe;
@@ -31,9 +30,13 @@ class RecipeHeader extends StatelessWidget {
           child: Text(
             recipe.title,
             style: GoogleFonts.nunito(
-              fontWeight: FontWeight.bold,
-              fontSize: 32,
-              color: ColorPalette.offWhite,
+              fontWeight: FontWeight.w800,
+              fontSize: 34,
+              color: updatedFields.contains("title")
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.onSurface,
+              height: 1.2,
+              letterSpacing: -0.5,
             ),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -48,31 +51,47 @@ class RecipeHeader extends StatelessWidget {
               children: [
                 if (recipe.preparation_time != null) ...[
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: ColorPalette.yellow.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: ColorPalette.yellow.withOpacity(0.3)),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .secondary
+                              .withOpacity(0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .secondary
+                              .withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const FaIcon(
+                        FaIcon(
                           FontAwesomeIcons.clock,
-                          size: 14,
-                          color: ColorPalette.yellow,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           'Prep: ${recipe.preparation_time}m',
                           style: GoogleFonts.nunito(
                             color: updatedFields.contains("preparation_time")
-                                ? ColorPalette.mustard
-                                : ColorPalette.yellow,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.secondary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -84,31 +103,47 @@ class RecipeHeader extends StatelessWidget {
                   const SizedBox(width: 12),
                 if (recipe.cooking_time != null) ...[
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: ColorPalette.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: ColorPalette.orange.withOpacity(0.3)),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const FaIcon(
+                        FaIcon(
                           FontAwesomeIcons.fire,
-                          size: 14,
-                          color: ColorPalette.orange,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           'Cook: ${recipe.cooking_time}m',
                           style: GoogleFonts.nunito(
                             color: updatedFields.contains("cooking_time")
-                                ? ColorPalette.mustard
-                                : ColorPalette.orange,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                                ? Theme.of(context).colorScheme.secondary
+                                : Theme.of(context).colorScheme.primary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],

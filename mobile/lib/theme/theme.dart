@@ -2,6 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
+// Custom extension to add all ColorPalette colors to ColorScheme
+extension CustomColors on ColorScheme {
+  // Semantic colors
+  Color get warning => brightness == Brightness.light
+      ? ColorPalette.lightWarning
+      : ColorPalette.darkWarning;
+
+  Color get success => brightness == Brightness.light
+      ? ColorPalette.lightSuccess
+      : ColorPalette.darkSuccess;
+
+  Color get info => brightness == Brightness.light
+      ? ColorPalette.lightInfo
+      : ColorPalette.darkInfo;
+
+  // Background variants
+  Color get backgroundDark => brightness == Brightness.light
+      ? ColorPalette.lightBgDark
+      : ColorPalette.darkBgDark;
+
+  Color get backgroundLight => brightness == Brightness.light
+      ? ColorPalette.lightBgLight
+      : ColorPalette.darkBgLight;
+
+  // Text variants
+  Color get textMuted => brightness == Brightness.light
+      ? ColorPalette.lightTextMuted
+      : ColorPalette.darkTextMuted;
+
+  // Interactive colors
+  Color get highlight => brightness == Brightness.light
+      ? ColorPalette.lightHighlight
+      : ColorPalette.darkHighlight;
+
+  // Border variants
+  Color get borderMuted => brightness == Brightness.light
+      ? ColorPalette.lightBorderMuted
+      : ColorPalette.darkBorderMuted;
+}
+
 ThemeData lightTheme() {
   return ThemeData(
     brightness: Brightness.light,
@@ -29,8 +69,12 @@ ThemeData lightTheme() {
     colorScheme: const ColorScheme.light().copyWith(
       primary: ColorPalette.lightPrimary,
       secondary: ColorPalette.lightSecondary,
-      surface: ColorPalette.lightBg,
-      surfaceBright: ColorPalette.lightBgLight,
+      surface: ColorPalette.lightBgLight,
+      surfaceContainerHighest: ColorPalette.lightBgDark,
+      onSurface: ColorPalette.lightText,
+      onSurfaceVariant: ColorPalette.lightTextMuted,
+      outline: ColorPalette.lightBorder,
+      outlineVariant: ColorPalette.lightBorderMuted,
       error: ColorPalette.lightDanger,
     ),
   );
@@ -63,9 +107,16 @@ ThemeData darkTheme() {
     colorScheme: const ColorScheme.dark().copyWith(
       primary: ColorPalette.darkPrimary,
       secondary: ColorPalette.darkSecondary,
-      background: ColorPalette.darkBg,
       surface: ColorPalette.darkBgLight,
+      surfaceContainerHighest: ColorPalette.darkBgDark,
+      onSurface: ColorPalette.darkText,
+      onSurfaceVariant: ColorPalette.darkTextMuted,
+      outline: ColorPalette.darkBorder,
+      outlineVariant: ColorPalette.darkBorderMuted,
       error: ColorPalette.darkDanger,
+      onPrimary: ColorPalette.darkBgDark,
+      onSecondary: ColorPalette.darkBgDark,
+      onError: ColorPalette.darkBgDark,
     ),
   );
 }

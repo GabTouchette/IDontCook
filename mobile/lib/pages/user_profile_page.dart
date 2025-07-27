@@ -3,7 +3,7 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/settings_page.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
 import 'package:i_cant_cook/widgets/social/user_post_card.dart';
@@ -20,23 +20,37 @@ class UserProfilePage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => UserProfileProvider(user: user),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
           leading: IconButton(
+            padding: const EdgeInsets.only(left: 16.0),
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
+            icon: Icon(
               Icons.chevron_left,
+              color: Theme.of(context).colorScheme.primary,
               size: 32,
-              color: ColorPalette.offWhite,
+            ),
+          ),
+          title: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'Profile',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w900,
+                fontSize: 28,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
           actions: [
             IconButton(
-              icon: const Icon(
+              padding: const EdgeInsets.only(right: 16.0),
+              icon: Icon(
                 Icons.settings,
-                color: ColorPalette.offWhite,
+                color: Theme.of(context).colorScheme.primary,
                 size: 32,
               ),
               onPressed: () {
@@ -59,7 +73,7 @@ class UserProfilePage extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 100.0),
+                  padding: const EdgeInsets.only(top: 16.0),
                   child: Column(
                     children: [
                       Center(
@@ -67,17 +81,18 @@ class UserProfilePage extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 50,
-                              backgroundColor: ColorPalette.lightgray,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.surface,
                               child: Avatars.getAvatarIcon(user.avatar_icon,
                                   size: 50),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               "@${user.username}",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: ColorPalette.offWhite,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ],
@@ -87,9 +102,11 @@ class UserProfilePage extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStat("Followers", provider.followerCount),
-                          _buildStat("Recipes", provider.recipes.length),
-                          _buildStat("Posts", provider.posts.length),
+                          _buildStat(
+                              context, "Followers", provider.followerCount),
+                          _buildStat(
+                              context, "Recipes", provider.recipes.length),
+                          _buildStat(context, "Posts", provider.posts.length),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -103,55 +120,62 @@ class UserProfilePage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             backgroundColor: provider.isFollowing
-                                ? ColorPalette.darkgray
-                                : ColorPalette.blue,
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                : Theme.of(context).colorScheme.primary,
                           ),
                           icon: provider.isFollowing
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check,
-                                  color: ColorPalette.green,
+                                  color: Theme.of(context).colorScheme.primary,
                                   size: 20,
                                 )
-                              : const Icon(
+                              : Icon(
                                   Icons.add,
-                                  color: ColorPalette.offWhite,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                   size: 20,
                                 ),
                           label: Text(
                             provider.isFollowing ? "Following" : "Follow",
-                            style: const TextStyle(
-                                color: ColorPalette.offWhite, fontSize: 16),
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 16),
                           ),
                         ),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildTab('Recipes', 0, provider),
-                          _buildTab('Posts', 1, provider),
+                          _buildTab(context, 'Recipes', 0, provider),
+                          _buildTab(context, 'Posts', 1, provider),
                         ],
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Container(
                           height: 1,
-                          color: ColorPalette.placeholdergray,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Expanded(
                         child: provider.isLoading
-                            ? const Center(
+                            ? Center(
                                 child: CircularProgressIndicator(
-                                  color: ColorPalette.offWhite,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                               )
                             : provider.tabIndex == 0
                                 ? provider.recipes.isEmpty
-                                    ? const Center(
+                                    ? Center(
                                         child: Text(
                                           "No recipes available.",
                                           style: TextStyle(
-                                              color: ColorPalette.offWhite),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface),
                                         ),
                                       )
                                     : ListView.builder(
@@ -167,7 +191,9 @@ class UserProfilePage extends StatelessWidget {
                                               child: Text(
                                                 'Showing ${provider.recipes.length} recipes',
                                                 style: TextStyle(
-                                                  color: ColorPalette.offWhite,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface,
                                                   fontSize: 18,
                                                 ),
                                               ),
@@ -182,11 +208,13 @@ class UserProfilePage extends StatelessWidget {
                                         },
                                       )
                                 : provider.posts.isEmpty
-                                    ? const Center(
+                                    ? Center(
                                         child: Text(
                                           "No posts available.",
                                           style: TextStyle(
-                                              color: ColorPalette.offWhite),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface),
                                         ),
                                       )
                                     : ListView.builder(
@@ -202,7 +230,9 @@ class UserProfilePage extends StatelessWidget {
                                               child: Text(
                                                 'Showing ${provider.posts.length} posts',
                                                 style: TextStyle(
-                                                  color: ColorPalette.offWhite,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface,
                                                   fontSize: 18,
                                                 ),
                                               ),
@@ -227,7 +257,8 @@ class UserProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTab(String title, int index, UserProfileProvider provider) {
+  Widget _buildTab(BuildContext context, String title, int index,
+      UserProfileProvider provider) {
     bool isSelected = provider.tabIndex == index;
     return Expanded(
       child: GestureDetector(
@@ -236,8 +267,9 @@ class UserProfilePage extends StatelessWidget {
           decoration: BoxDecoration(
             border: isSelected
                 ? Border(
-                    bottom:
-                        BorderSide(color: ColorPalette.offWhite, width: 1.0))
+                    bottom: BorderSide(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        width: 1.0))
                 : null,
           ),
           child: Padding(
@@ -249,8 +281,8 @@ class UserProfilePage extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: isSelected
-                        ? ColorPalette.offWhite
-                        : ColorPalette.placeholdergray,
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -264,22 +296,22 @@ class UserProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStat(String label, int value) {
+  Widget _buildStat(BuildContext context, String label, int value) {
     return Column(
       children: [
         Text(
           value.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: ColorPalette.offWhite,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: ColorPalette.placeholdergray,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],

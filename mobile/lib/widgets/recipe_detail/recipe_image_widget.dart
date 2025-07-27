@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class RecipeImage extends StatelessWidget {
   final String imageUrl;
@@ -39,13 +38,18 @@ class RecipeImage extends StatelessWidget {
                     Positioned.fill(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                        child: Container(),
+                        child: Container(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withOpacity(0.2),
+                        ),
                       ),
                     ),
                     Center(
                       child: Icon(
                         Icons.image,
-                        color: ColorPalette.lightgray,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         size: 80,
                       ),
                     ),

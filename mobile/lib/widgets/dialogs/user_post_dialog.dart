@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class PostDialog extends StatefulWidget {
@@ -89,7 +91,7 @@ class _PostDialogState extends State<PostDialog> {
       context: context,
       message:
           success ? "Post created successfully!" : "Failed to create post.",
-      textColor: success ? ColorPalette.green : ColorPalette.red,
+      type: success ? ToastType.success : ToastType.error,
     );
   }
 
@@ -97,8 +99,8 @@ class _PostDialogState extends State<PostDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      surfaceTintColor: ColorPalette.darkergray,
-      backgroundColor: ColorPalette.offWhite,
+      surfaceTintColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
@@ -120,7 +122,10 @@ class _PostDialogState extends State<PostDialog> {
                   widget.recipe!.description?.isNotEmpty == true
                       ? widget.recipe!.description!
                       : "No description available.",
-                  style: TextStyle(color: ColorPalette.gray),
+                  style: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -174,7 +179,10 @@ class _PostDialogState extends State<PostDialog> {
                     _selectedRecipe!.description?.isNotEmpty == true
                         ? _selectedRecipe!.description!
                         : "No description available.",
-                    style: TextStyle(color: ColorPalette.gray),
+                    style: GoogleFonts.nunito(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -199,8 +207,8 @@ class _PostDialogState extends State<PostDialog> {
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: ColorPalette.offWhite,
-                      backgroundColor: ColorPalette.red,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
+                      backgroundColor: Theme.of(context).colorScheme.error,
                       elevation: 0,
                     ),
                     child: const Text("Cancel"),
@@ -208,8 +216,8 @@ class _PostDialogState extends State<PostDialog> {
                   ElevatedButton(
                     onPressed: handlePost,
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: ColorPalette.offWhite,
-                      backgroundColor: ColorPalette.darkgray,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       elevation: 0,
                     ),
                     child: const Text("Post"),
@@ -232,10 +240,12 @@ class _PostDialogState extends State<PostDialog> {
           : Container(
               height: 150,
               decoration: BoxDecoration(
-                  color: ColorPalette.offWhite,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(12)),
-              child: const Center(
-                child: Icon(Icons.image, color: ColorPalette.gray, size: 60),
+              child: Center(
+                child: Icon(Icons.image,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 60),
               ),
             ),
     );

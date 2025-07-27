@@ -7,12 +7,15 @@ import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
+import 'package:i_cant_cook/providers/theme_provider.dart';
 
 import 'package:i_cant_cook/routes.dart';
 import 'package:i_cant_cook/theme/theme.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
   runApp(
     MultiProvider(
       providers: [
@@ -24,6 +27,7 @@ void main() {
         ChangeNotifierProvider(create: (context) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
       ],
       child: ICantCook(),
     ),
@@ -35,13 +39,17 @@ class ICantCook extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ICantCook',
-      theme: lightTheme(),
-      darkTheme: darkTheme(),
-      themeMode: ThemeMode.system,
-      initialRoute: '/',
-      onGenerateRoute: generateRoute,
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'ICantCook',
+          theme: lightTheme(),
+          darkTheme: darkTheme(),
+          themeMode: themeProvider.themeMode,
+          initialRoute: '/',
+          onGenerateRoute: generateRoute,
+        );
+      },
     );
   }
 }

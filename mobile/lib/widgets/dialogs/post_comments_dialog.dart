@@ -5,7 +5,7 @@ import 'package:i_cant_cook/models/comment/comment.dart';
 import 'package:i_cant_cook/models/post/post.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CommentDrawer extends StatefulWidget {
   final Post post;
@@ -56,8 +56,8 @@ class _CommentDrawerState extends State<CommentDrawer> {
         minChildSize: 0.3,
         builder: (context, scrollController) {
           return Container(
-            decoration: const BoxDecoration(
-              color: ColorPalette.darkgray,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Padding(
@@ -77,10 +77,12 @@ class _CommentDrawerState extends State<CommentDrawer> {
                           return Center(child: Text(snapshot.error.toString()));
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          return const Center(
+                          return Center(
                               child: Text("No comments yet.",
-                                  style:
-                                      TextStyle(color: ColorPalette.offWhite)));
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface)));
                         }
                         return ListView.builder(
                           controller: scrollController,
@@ -101,14 +103,18 @@ class _CommentDrawerState extends State<CommentDrawer> {
                                 },
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: ColorPalette.lightgray,
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
                                     child: Avatars.getAvatarIcon(
                                         comment.user.avatar_icon),
                                   ),
                                   title: Text(
                                     "@${comment.user.username}",
-                                    style: const TextStyle(
-                                        color: ColorPalette.offWhite),
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface),
                                   ),
                                   subtitle: Text(
                                     comment.content,
@@ -138,11 +144,12 @@ class _CommentDrawerState extends State<CommentDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: ColorPalette.lightgray,
+          CircleAvatar(
+            backgroundColor:
+                Theme.of(context).colorScheme.surfaceContainerHighest,
             child: FaIcon(
               FontAwesomeIcons.solidLemon,
-              color: ColorPalette.mustard,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(width: 8),
@@ -151,15 +158,16 @@ class _CommentDrawerState extends State<CommentDrawer> {
             children: [
               Text(
                 "@${widget.post.user.username}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w300,
-                  color: ColorPalette.offWhite,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-              const Text(
+              Text(
                 "shared a recipe",
-                style: TextStyle(color: ColorPalette.placeholdergray),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -174,7 +182,7 @@ class _CommentDrawerState extends State<CommentDrawer> {
       padding: const EdgeInsets.all(8.0),
       child: Container(
         decoration: BoxDecoration(
-          color: ColorPalette.lightgray,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -182,11 +190,12 @@ class _CommentDrawerState extends State<CommentDrawer> {
             Expanded(
               child: TextField(
                 controller: _commentController,
-                style: const TextStyle(color: ColorPalette.offBlack),
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: "Add a comment...",
-                  hintStyle:
-                      const TextStyle(color: ColorPalette.placeholdergray),
+                  hintStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                       vertical: 16.0, horizontal: 16.0),
@@ -195,7 +204,8 @@ class _CommentDrawerState extends State<CommentDrawer> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.send, color: ColorPalette.mustard),
+              icon: Icon(Icons.send,
+                  color: Theme.of(context).colorScheme.primary),
               onPressed: _addComment,
             ),
           ],

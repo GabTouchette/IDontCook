@@ -35,8 +35,6 @@ def get_nutrition(ingredient_name: str, grams: float):
     nutrients = food_data.get("foodNutrients", [])
     nutrient_values = {}
 
-    print("Extracting nutrients:", nutrients)
-
     for nutrient in nutrients:
         name = nutrient.get("nutrientName")
         unit = nutrient.get("unitName")

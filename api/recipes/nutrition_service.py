@@ -23,20 +23,26 @@ class NutritionService:
         Returns nutrition per specified quantity/unit.
         """
         try:
+            print(f"DEBUG: Getting nutrition for ingredient: '{ingredient_text}' with quantity: {quantity}, unit: {unit}")
             # Parse ingredient text to extract quantity, unit, and name if not provided
             if quantity is None or unit is None:
                 parsed = self.ingredient_parser.parse_ingredient(ingredient_text)
                 ingredient_name = parsed['name']
                 quantity = parsed['quantity'] or 100  # Default to 100g
                 unit = parsed['unit'] or 'g'
+                logger.info(f"DEBUG: Parsed ingredient '{ingredient_text}' -> name: '{ingredient_name}', quantity: {quantity}, unit: {unit}")
             else:
                 ingredient_name = ingredient_text
+                logger.info(f"DEBUG: Using provided values for '{ingredient_text}' -> quantity: {quantity}, unit: {unit}")
             
             # Step 1: Check cache first
             cache_key = self._make_cache_key(f"nutrition:{ingredient_name.lower()}")
             cached_data = cache.get(cache_key)
             if cached_data:
-                return self._scale_nutrition(cached_data, quantity, unit)
+                logger.info(f"DEBUG: Found cached nutrition for '{ingredient_name}': {cached_data}")
+                scaled_result = self._scale_nutrition(cached_data, quantity, unit)
+                logger.info(f"DEBUG: Scaled nutrition result: {scaled_result}")
+                return scaled_result
             
             # Step 2: Try exact match in local database
             nutrition_data = self._find_exact_match(ingredient_name)
@@ -53,7 +59,11 @@ class NutritionService:
                 return self._scale_nutrition(result, quantity, unit)
             
             # Step 4: USDA API lookup
-            usda_result = self.usda_client.search_food(ingredient_name)
+            # Clean the ingredient name for better USDA search results
+            search_name = self._clean_ingredient_for_usda(ingredient_name)
+            logger.info(f"DEBUG: Searching USDA with cleaned name: '{search_name}' (original: '{ingredient_name}')")
+            
+            usda_result = self.usda_client.search_food(search_name)
             if usda_result:
                 nutrition_data = self._save_usda_result(usda_result, ingredient_name)
                 result = self._nutrition_to_dict(nutrition_data)
@@ -117,17 +127,26 @@ class NutritionService:
         grams = self._convert_to_grams(quantity, unit)
         scale_factor = grams / 100.0  # nutrition_data is per 100g
         
-        return {
+        logger.info(f"DEBUG: Scaling nutrition - quantity: {quantity} {unit} -> {grams}g, scale factor: {scale_factor}")
+        
+        scaled_result = {
             key: value * scale_factor
             for key, value in nutrition_data.items()
         }
+        
+        logger.info(f"DEBUG: Original nutrition (per 100g): {nutrition_data}")
+        logger.info(f"DEBUG: Scaled nutrition result: {scaled_result}")
+        
+        return scaled_result
     
     def _convert_to_grams(self, quantity: float, unit: str) -> float:
         """Convert quantity/unit to grams."""
         if not unit:
+            logger.info(f"DEBUG: No unit provided, assuming {quantity}g")
             return quantity  # Assume grams if no unit
             
         unit = unit.lower().strip()
+        logger.info(f"DEBUG: Converting {quantity} {unit} to grams")
         
         # Weight conversions
         weight_conversions = {
@@ -155,19 +174,26 @@ class NutritionService:
         
         # Check weight first (most accurate)
         if unit in weight_conversions:
-            return quantity * weight_conversions[unit]
+            result = quantity * weight_conversions[unit]
+            logger.info(f"DEBUG: Weight conversion: {quantity} {unit} = {result}g")
+            return result
         
         # Then volume
         if unit in volume_conversions:
-            return quantity * volume_conversions[unit]
+            result = quantity * volume_conversions[unit]
+            logger.info(f"DEBUG: Volume conversion: {quantity} {unit} = {result}g")
+            return result
         
         # Then pieces
         if unit in piece_conversions:
-            return quantity * piece_conversions[unit]
+            result = quantity * piece_conversions[unit]
+            logger.info(f"DEBUG: Piece conversion: {quantity} {unit} = {result}g")
+            return result
         
         # Default fallback
-        logger.warning(f"Unknown unit '{unit}', assuming 100g")
-        return quantity * 100
+        result = quantity * 100
+        logger.warning(f"DEBUG: Unknown unit '{unit}', assuming 100g per unit = {result}g")
+        return result
     
     def _save_usda_result(self, usda_data: Dict[str, Any], original_name: str) -> NutritionData:
         """Save USDA API result to local database."""
@@ -207,8 +233,12 @@ class NutritionService:
             'carbs': 0,
         }
         
+        logger.info(f"DEBUG: Calculating nutrition for recipe '{recipe.title}' with {recipe.ingredients.count()} ingredients")
+        
         for ingredient in recipe.ingredients.all():
             if ingredient.name and ingredient.quantity:
+                logger.info(f"DEBUG: Processing ingredient: '{ingredient.name}' - {ingredient.quantity} {ingredient.unit}")
+                
                 nutrition = self.get_nutrition_for_ingredient(
                     ingredient.name, 
                     ingredient.quantity or 100, 
@@ -216,14 +246,59 @@ class NutritionService:
                 )
                 
                 if nutrition:
+                    logger.info(f"DEBUG: Ingredient nutrition: {nutrition}")
                     total_nutrition['calories'] += nutrition.get('calories', 0)
                     total_nutrition['protein'] += nutrition.get('protein', 0)
                     total_nutrition['fat'] += nutrition.get('fat', 0)
                     total_nutrition['carbs'] += nutrition.get('carbs', 0)
+                else:
+                    logger.warning(f"DEBUG: No nutrition data found for ingredient: {ingredient.name}")
+        
+        logger.info(f"DEBUG: Total nutrition before servings adjustment: {total_nutrition}")
         
         # Scale by servings if available
         if recipe.servings and recipe.servings > 0:
+            logger.info(f"DEBUG: Dividing by {recipe.servings} servings")
             for key in total_nutrition:
                 total_nutrition[key] = total_nutrition[key] / recipe.servings
         
+        logger.info(f"DEBUG: Final recipe nutrition per serving: {total_nutrition}")
         return total_nutrition
+    
+    def _clean_ingredient_for_usda(self, ingredient_name: str) -> str:
+        """Clean ingredient name specifically for USDA API searches."""
+        # Use the basic cleaning from ingredient parser but be more aggressive
+        cleaned = ingredient_name.lower().strip()
+        
+        # Remove descriptors that don't help with USDA searches
+        descriptors_to_remove = [
+            'thin', 'thick', 'about', 'peeled', 'with', 'tail', 'without', 
+            'boneless', 'skinless', 'slices', 'pieces', 'strips', 'chunks',
+            'cubes', 'fresh', 'dried', 'frozen', 'canned', 'chopped', 'diced',
+            'sliced', 'minced', 'grated', 'shredded', 'ground', 'whole',
+            'large', 'small', 'medium', 'raw', 'cooked', 'organic', 'free-range'
+        ]
+        
+        for descriptor in descriptors_to_remove:
+            cleaned = re.sub(rf'\b{descriptor}\b', '', cleaned)
+        
+        # Remove extra whitespace and punctuation
+        cleaned = re.sub(r'[,\-]+', ' ', cleaned)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        
+        # Handle special cases for better USDA matching
+        replacements = {
+            'sambal oelek': 'chili paste',
+            'pancetta': 'bacon',
+            'toothpicks': '',  # Not food
+        }
+        
+        for old, new in replacements.items():
+            if old in cleaned:
+                cleaned = new
+                
+        # Remove empty results
+        if not cleaned or len(cleaned) < 2:
+            return ingredient_name  # Return original if cleaning failed
+            
+        return cleaned

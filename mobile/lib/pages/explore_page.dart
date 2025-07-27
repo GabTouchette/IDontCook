@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
 import 'package:i_cant_cook/widgets/recommendations/big_recipe_tile.dart';
@@ -31,12 +31,28 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: false,
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'Explore Recipes',
+            style: GoogleFonts.nunito(
+              fontWeight: FontWeight.w900,
+              fontSize: 28,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        actions: [UserMenuWidget()],
+      ),
       body: Stack(
         children: [
           Positioned.fill(
-            child: Container(color: ColorPalette.darkergray),
+            child: Container(color: Theme.of(context).scaffoldBackgroundColor),
           ),
           Column(
             children: [
@@ -45,18 +61,22 @@ class _ExplorePageState extends State<ExplorePage> {
                 child: Consumer<ExploreProvider>(
                   builder: (context, provider, _) {
                     if (provider.isLoading && provider.items.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: CircularProgressIndicator(
-                          color: ColorPalette.offWhite,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       );
                     }
 
                     if (provider.items.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
                           'No recipes found.',
-                          style: TextStyle(color: ColorPalette.offWhite),
+                          style: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       );
                     }
@@ -67,11 +87,13 @@ class _ExplorePageState extends State<ExplorePage> {
                       itemBuilder: (context, index) {
                         if (index == provider.items.length) {
                           return provider.isFetching
-                              ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 24),
+                              ? Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 24),
                                   child: Center(
                                     child: CircularProgressIndicator(
-                                      color: ColorPalette.offWhite,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                                 )
@@ -92,51 +114,47 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      backgroundColor: ColorPalette.darkergray,
-      elevation: 0,
-      centerTitle: true,
-      title: const Text(
-        'Explore Recipes',
-        style: TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.bold,
-          fontSize: 32,
-          color: ColorPalette.offWhite,
-        ),
-      ),
-      actions: const [UserMenuWidget()],
-    );
-  }
-
   Widget _buildSearchBar(BuildContext context) {
     final provider = Provider.of<ExploreProvider>(context, listen: false);
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         decoration: BoxDecoration(
-          color: ColorPalette.darkergray,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: ColorPalette.darkgray),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, color: ColorPalette.offWhite),
-            const SizedBox(width: 8.0),
+            Icon(
+              Icons.search,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 12.0),
             Expanded(
               child: TextField(
                 controller: provider.searchController,
-                style: const TextStyle(color: ColorPalette.offWhite),
-                decoration: const InputDecoration(
+                style: GoogleFonts.nunito(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
                   hintText: 'Search recipes',
-                  hintStyle: TextStyle(color: ColorPalette.placeholdergray),
+                  hintStyle: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                   border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16.0, horizontal: 8.0),
                 ),
                 onChanged: (query) => provider.onSearchChanged(
                   query,
@@ -145,10 +163,10 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
             ),
             IconButton(
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.sliders,
-                color: ColorPalette.offWhite,
-                size: 24,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
               ),
               onPressed: () => _openFilterDrawer(context),
             ),

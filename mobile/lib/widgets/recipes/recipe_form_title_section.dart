@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class TitleSection extends StatelessWidget {
   final TextEditingController titleController;
@@ -11,41 +12,64 @@ class TitleSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Title",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
+      child: Container(
+        padding: const EdgeInsets.all(24.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
           ),
-          SizedBox(height: 8.0),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            decoration: BoxDecoration(
-              color: ColorPalette.lightgray,
-              borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: TextField(
-              controller: titleController,
-              style: TextStyle(
-                color: ColorPalette.offBlack,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Title",
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                letterSpacing: -0.3,
               ),
-              decoration: InputDecoration(
-                hintText: 'Recipe title',
-                hintStyle: TextStyle(
-                  color: ColorPalette.placeholdergray,
-                  fontSize: 14,
+            ),
+            const SizedBox(height: 16.0),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
                 ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.0),
+              ),
+              child: TextField(
+                controller: titleController,
+                style: GoogleFonts.nunito(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Recipe title',
+                  hintStyle: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 16,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

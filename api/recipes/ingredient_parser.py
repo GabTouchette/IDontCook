@@ -58,14 +58,13 @@ class IngredientParser:
         """Parse ingredient using regex patterns."""
         text = text.strip()
         
-        # Pattern: quantity unit ingredient
-        # Examples: "2 cups tomatoes", "1.5 lbs ground beef", "3-4 large eggs"
-        pattern = r'^([\d\s/.,\-]+)\s*(cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|lb|lbs|pounds?|kg|g|grams?|ml|l|liters?|pieces?|cloves?)?\s+(.+)$'
+        # Pattern 1: quantity unit ingredient (e.g., "2 cups tomatoes", "1 tbsp butter")
+        pattern1 = r'^([\d\s/.,\-]+)\s+(cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|lb|lbs|pounds?|kg|g|grams?|ml|l|liters?|pieces?|cloves?)\s+(.+)$'
         
-        match = re.match(pattern, text, re.IGNORECASE)
+        match = re.match(pattern1, text, re.IGNORECASE)
         if match:
             quantity_str = match.group(1).strip()
-            unit = match.group(2)
+            unit = match.group(2).strip()
             ingredient_name = match.group(3).strip()
             
             quantity = self._parse_quantity(quantity_str)
@@ -75,6 +74,39 @@ class IngredientParser:
                 'name': ingredient_name,
                 'quantity': quantity,
                 'unit': self._standardize_unit(unit) if unit else None
+            }
+        
+        # Pattern 2: unit ingredient without explicit quantity (e.g., "Tbsp butter" = "1 Tbsp butter")
+        pattern2 = r'^(cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|lb|lbs|pounds?|kg|g|grams?|ml|l|liters?|pieces?|cloves?)\s+(.+)$'
+        
+        match = re.match(pattern2, text, re.IGNORECASE)
+        if match:
+            unit = match.group(1).strip()
+            ingredient_name = match.group(2).strip()
+            
+            ingredient_name = self._clean_ingredient_name(ingredient_name)
+            
+            return {
+                'name': ingredient_name,
+                'quantity': 1.0,  # Default to 1 unit
+                'unit': self._standardize_unit(unit)
+            }
+        
+        # Pattern 3: quantity ingredient without unit (e.g., "3-4 large eggs")
+        pattern3 = r'^([\d\s/.,\-]+)\s+(.+)$'
+        
+        match = re.match(pattern3, text, re.IGNORECASE)
+        if match:
+            quantity_str = match.group(1).strip()
+            ingredient_name = match.group(2).strip()
+            
+            quantity = self._parse_quantity(quantity_str)
+            ingredient_name = self._clean_ingredient_name(ingredient_name)
+            
+            return {
+                'name': ingredient_name,
+                'quantity': quantity,
+                'unit': 'piece'  # Default to pieces for countable items
             }
         
         # No quantity pattern found
@@ -185,15 +217,23 @@ JSON:'''
         """Clean ingredient name by removing descriptors."""
         text = text.lower().strip()
         
-        # Remove common descriptors
-        descriptors = r'\b(fresh|dried|frozen|canned|chopped|diced|sliced|minced|grated|shredded|ground|whole|large|small|medium|raw|cooked|organic|free-range|to taste)\b'
+        # Remove common descriptors and preparation methods
+        descriptors = r'\b(fresh|dried|frozen|canned|chopped|diced|sliced|minced|grated|shredded|ground|whole|large|small|medium|raw|cooked|organic|free-range|to taste|thin|thick|about|peeled|with|tail|without|boneless|skinless)\b'
         text = re.sub(descriptors, '', text)
         
-        # Remove extra whitespace
+        # Remove measurement descriptors that often appear with ingredient names
+        measure_descriptors = r'\b(slices?|pieces?|strips?|chunks?|cubes?|cloves?)\b'
+        text = re.sub(measure_descriptors, '', text)
+        
+        # Remove extra whitespace and commas
+        text = re.sub(r'[,]+', ' ', text)
         text = re.sub(r'\s+', ' ', text).strip()
         
         # Remove parenthetical information
         text = re.sub(r'\([^)]*\)', '', text).strip()
+        
+        # Remove leading/trailing non-letter characters
+        text = re.sub(r'^[^a-zA-Z]+|[^a-zA-Z]+$', '', text).strip()
         
         return text
     

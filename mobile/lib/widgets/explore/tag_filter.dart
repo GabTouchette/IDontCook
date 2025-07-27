@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/utils/constants.dart';
 import 'package:provider/provider.dart';
 
@@ -49,7 +49,14 @@ class TagFiltersState extends State<TagFilters> {
       future: _usedTagsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Container(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          );
         }
 
         if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
@@ -88,41 +95,64 @@ class _CategoryFilter extends StatelessWidget {
       builder: (context, provider, child) {
         final selectedTags = provider.filters['selectedTags'] ?? [];
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              category,
-              style: const TextStyle(
-                  color: ColorPalette.offWhite,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8.0),
-            Wrap(
-              spacing: 8.0,
-              children: tags.map((tag) {
-                final isSelected = selectedTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    final updatedTags = List<String>.from(selectedTags);
-                    selected ? updatedTags.add(tag) : updatedTags.remove(tag);
-                    provider.updateFilter('selectedTags', updatedTags);
-                  },
-                  selectedColor: ColorPalette.lightgray,
-                  backgroundColor: ColorPalette.darkgray,
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? ColorPalette.darkgray
-                        : ColorPalette.placeholdergray,
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-          ],
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                category,
+                style: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12.0),
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                children: tags.map((tag) {
+                  final isSelected = selectedTags.contains(tag);
+                  return Container(
+                    child: GestureDetector(
+                      onTap: () {
+                        final updatedTags = List<String>.from(selectedTags);
+                        isSelected ? updatedTags.remove(tag) : updatedTags.add(tag);
+                        provider.updateFilter('selectedTags', updatedTags);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected 
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          tag,
+                          style: GoogleFonts.nunito(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         );
       },
     );

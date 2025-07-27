@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/chatbot/parts/animated_loading_text.dart';
 import 'package:i_cant_cook/widgets/chatbot/parts/recipe_parser.dart';
 import 'package:i_cant_cook/widgets/chatbot/parts/recipe_part_widget.dart';
@@ -44,31 +43,59 @@ class AiResponseBubble extends StatelessWidget {
     );
   }
 
-  Widget _loadingIndicator() => Container(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
+  Widget _loadingIndicator() {
+    return Builder(
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
         decoration: BoxDecoration(
-          color: ColorPalette.darkgray,
-          borderRadius: BorderRadius.circular(30),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: const SizedBox(
-          width: 20,
-          height: 20,
+        child: SizedBox(
+          width: 24,
+          height: 24,
           child: CircularProgressIndicator(
-            color: ColorPalette.offWhite,
+            color: Theme.of(context).colorScheme.primary,
             strokeWidth: 2.5,
           ),
         ),
-      );
+      ),
+    );
+  }
 
-  Widget _animatedTextLoader() => Container(
+  Widget _animatedTextLoader() {
+    return Builder(
+      builder: (context) => Container(
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
         decoration: BoxDecoration(
-          color: ColorPalette.darkgray,
-          borderRadius: BorderRadius.circular(30),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [AnimatedLoadingText()],
         ),
-      );
+      ),
+    );
+  }
 }

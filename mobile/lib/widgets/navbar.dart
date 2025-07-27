@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;
@@ -14,50 +13,93 @@ class Navbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: selectedIndex,
-      onTap: onTabChanged,
-      backgroundColor: ColorPalette.lightgray,
-      selectedItemColor: Colors.black,
-      unselectedItemColor: ColorPalette.gray,
-      type: BottomNavigationBarType.fixed,
-      items: <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.book),
+    final navItems = [
+      {'icon': FontAwesomeIcons.book},
+      {'icon': FontAwesomeIcons.robot},
+      {'icon': FontAwesomeIcons.compass},
+      {'icon': FontAwesomeIcons.users},
+    ];
+
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+            width: 1,
           ),
-          label: '',
         ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.solidMessage),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -8),
           ),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.utensils),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(navItems.length, (index) {
+              final isSelected = selectedIndex == index;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onTabChanged(index),
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: EdgeInsets.symmetric(
+                            horizontal: isSelected ? 20 : 16,
+                            vertical: isSelected ? 16 : 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FaIcon(
+                              navItems[index]['icon'] as IconData,
+                              size: isSelected ? 26 : 24,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
-          label: '',
         ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: FaIcon(FontAwesomeIcons.users),
-          ),
-          label: '',
-        ),
-        // BottomNavigationBarItem(
-        //   icon: Padding(
-        //     padding: const EdgeInsets.only(top: 12.0),
-        //     child: FaIcon(FontAwesomeIcons.solidCalendar),
-        //   ),
-        //   label: '',
-        // ),
-      ],
+      ),
     );
   }
 }

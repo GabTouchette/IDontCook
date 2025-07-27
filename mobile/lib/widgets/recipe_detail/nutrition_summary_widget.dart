@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class NutritionSummary extends StatelessWidget {
   final Recipe recipe;
@@ -33,7 +33,7 @@ class NutritionSummary extends StatelessWidget {
         if (showLabel) ...[
           FaIcon(
             FontAwesomeIcons.chartPie,
-            color: ColorPalette.mustard,
+            color: Theme.of(context).colorScheme.secondary,
             size: iconSize,
           ),
           const SizedBox(width: 4),
@@ -41,16 +41,16 @@ class NutritionSummary extends StatelessWidget {
         if (caloriesPerServing != null) ...[
           FaIcon(
             FontAwesomeIcons.fire,
-            color: ColorPalette.orange,
+            color: Theme.of(context).colorScheme.secondary,
             size: iconSize,
           ),
           const SizedBox(width: 2),
           Text(
             '$caloriesPerServing cal',
-            style: TextStyle(
-              color: ColorPalette.offWhite,
+            style: GoogleFonts.nunito(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: fontSize,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -60,15 +60,16 @@ class NutritionSummary extends StatelessWidget {
           const SizedBox(width: 8),
           FaIcon(
             FontAwesomeIcons.dumbbell,
-            color: ColorPalette.green,
+            color: Theme.of(context).colorScheme.primary,
             size: iconSize - 2,
           ),
           const SizedBox(width: 2),
           Text(
             '${(recipe.protein! / servings).toStringAsFixed(0)}g',
-            style: TextStyle(
-              color: ColorPalette.lightgray,
+            style: GoogleFonts.nunito(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: fontSize - 1,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

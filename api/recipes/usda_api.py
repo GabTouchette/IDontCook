@@ -1,5 +1,7 @@
 import requests
 import logging
+import re
+import hashlib
 from typing import Optional, Dict, Any, List
 from django.conf import settings
 from django.core.cache import cache
@@ -17,15 +19,12 @@ class USDAClient:
         """
         Search for food in USDA database and return the best match with nutrition data.
         """
-        if not self.api_key:
-            logger.warning("USDA API key not configured")
-            return None
-            
         try:
             # Check cache first
-            cache_key = f"usda_search:{query.lower()}"
+            cache_key = self._make_cache_key(f"usda_search:{query.lower()}")
             cached_result = cache.get(cache_key)
             if cached_result:
+                logger.info(f"DEBUG: Found cached USDA result for '{query}'")
                 return cached_result
             
             # Search for foods
@@ -41,22 +40,33 @@ class USDAClient:
             
             response = requests.get(search_url, params=search_params, timeout=10)
             response.raise_for_status()
+
+            print(f"DEBUG: USDA API response for query '{query}': {response.status_code}")  # Debugging line
             
             search_data = response.json()
             foods = search_data.get('foods', [])
             
             if not foods:
-                logger.info(f"No USDA foods found for query: {query}")
+                logger.warning(f"DEBUG: No USDA foods found for query: '{query}' - API returned empty results")
                 return None
             
+            logger.info(f"DEBUG: Found {len(foods)} USDA foods for query: '{query}'")
+            
             # Find the best match and get detailed nutrition data
-            for food in foods:
+            for i, food in enumerate(foods):
+                food_desc = food.get('description', 'Unknown')
+                logger.info(f"DEBUG: Trying food {i+1}/{len(foods)}: '{food_desc}'")
+                
                 nutrition_data = self._extract_nutrition_data(food, query)
                 if nutrition_data:
+                    logger.info(f"DEBUG: Successfully extracted nutrition from '{food_desc}': {nutrition_data}")
                     # Cache the result
                     cache.set(cache_key, nutrition_data, 60 * 60 * 24 * 7)  # Cache for 1 week
                     return nutrition_data
+                else:
+                    logger.warning(f"DEBUG: Failed to extract nutrition from '{food_desc}'")
             
+            logger.warning(f"DEBUG: No valid nutrition data found in any of the {len(foods)} USDA results for '{query}'")
             return None
             
         except requests.RequestException as e:
@@ -105,9 +115,17 @@ class USDAClient:
                     field_name = nutrient_map[nutrient_id]
                     nutrition_data[field_name] = float(value) if value else 0
             
-            # Validate that we have at least calories
-            if nutrition_data['calories'] > 0:
+            logger.info(f"DEBUG: Extracted nutrition values: {nutrition_data}")
+            
+            # Validate that we have meaningful nutrition data (at least calories OR protein OR carbs)
+            has_meaningful_data = (nutrition_data['calories'] > 0 or 
+                                 nutrition_data['protein'] > 0 or 
+                                 nutrition_data['carbs'] > 0)
+            
+            if has_meaningful_data:
                 return nutrition_data
+            else:
+                logger.warning(f"DEBUG: No meaningful nutrition data found in food '{description}' - all values are 0")
             
             return None
             
@@ -132,3 +150,14 @@ class USDAClient:
         except requests.RequestException as e:
             logger.error(f"USDA API request failed for FDC ID '{fdc_id}': {e}")
             return None
+    
+    def _make_cache_key(self, key: str) -> str:
+        """Create a safe cache key by hashing problematic characters."""
+        # If key is safe (alphanumeric, underscore, hyphen), use as-is
+        if re.match(r'^[a-zA-Z0-9_:-]+$', key) and len(key) <= 250:
+            return key
+        
+        # Otherwise, create a hash-based key
+        safe_prefix = re.sub(r'[^a-zA-Z0-9_-]', '_', key[:50])
+        key_hash = hashlib.md5(key.encode('utf-8')).hexdigest()
+        return f"{safe_prefix}_{key_hash}"

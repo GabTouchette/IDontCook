@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class ServingsSection extends StatelessWidget {
   final int servings;
@@ -23,24 +22,31 @@ class ServingsSection extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorPalette.darkgray,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.users,
-            color: ColorPalette.mustard,
-            size: 20,
+            color: Theme.of(context).colorScheme.primary,
+            size: 22,
           ),
           const SizedBox(width: 8),
           Text(
             'Servings',
             style: GoogleFonts.nunito(
               color: updatedFields.contains("servings")
-                  ? ColorPalette.mustard
-                  : ColorPalette.offWhite,
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.onSurface,
               fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
@@ -50,36 +56,59 @@ class ServingsSection extends StatelessWidget {
           // Servings Controls
           Container(
             decoration: BoxDecoration(
-              color: ColorPalette.darkergray,
-              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove,
-                      color: ColorPalette.offWhite, size: 20),
+                  icon: Icon(Icons.remove,
+                      color: Theme.of(context).colorScheme.onSurface, size: 22),
                   onPressed: () => decrementServings(),
                   constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     '$servings',
                     style: GoogleFonts.nunito(
-                      color: ColorPalette.mustard,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add,
-                      color: ColorPalette.offWhite, size: 20),
+                  icon: Icon(Icons.add,
+                      color: Theme.of(context).colorScheme.onSurface, size: 22),
                   onPressed: () => incrementServings(),
                   constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
               ],
             ),

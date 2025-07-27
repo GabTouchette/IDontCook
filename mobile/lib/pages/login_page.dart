@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
-import '../theme/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -33,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       InformationToast.show(
         context: context,
         message: 'Invalid username or password.',
-        backgroundColor: ColorPalette.red,
+        type: ToastType.error,
       );
     }
   }
@@ -53,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
       InformationToast.show(
         context: context,
         message: 'Failed to register. Please try again.',
-        textColor: ColorPalette.red,
+        type: ToastType.error,
       );
     }
   }
@@ -61,175 +62,261 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/images/landing_page_background.png',
-            fit: BoxFit.cover,
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'ICantCook',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: ColorPalette.offWhite,
-                      fontSize: 72,
-                      fontWeight: FontWeight.w300,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Your culinary companion for effortless meals.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: ColorPalette.offWhite,
-                      fontWeight: FontWeight.w200,
-                    ),
-              ),
-              const SizedBox(height: 40),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  children: [
-                    if (!_isLoggingIn)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: ColorPalette.darkergray,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: TextField(
-                          controller: _emailController,
-                          style: TextStyle(
-                            color: ColorPalette.offWhite,
-                          ),
-                          decoration: InputDecoration(
-                            icon: const Icon(
-                              Icons.email,
-                              color: ColorPalette.offWhite,
-                            ),
-                            hintText: 'Email',
-                            hintStyle: TextStyle(
-                              color: ColorPalette.placeholdergray,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                    if (!_isLoggingIn) const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.darkergray,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: TextField(
-                        controller: _usernameController,
-                        style: TextStyle(
-                          color: ColorPalette.offWhite,
-                        ),
-                        decoration: InputDecoration(
-                          icon: const Icon(
-                            Icons.person,
-                            color: ColorPalette.offWhite,
-                          ),
-                          hintText:
-                              _isLoggingIn ? 'Username or email' : 'Username',
-                          hintStyle: TextStyle(
-                            color: ColorPalette.placeholdergray,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.darkergray,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        style: TextStyle(
-                          color: ColorPalette.offWhite,
-                        ),
-                        decoration: InputDecoration(
-                          icon: const Icon(
-                            Icons.lock,
-                            color: ColorPalette.offWhite,
-                          ),
-                          hintText: '••••••••••',
-                          hintStyle: TextStyle(
-                            color: ColorPalette.placeholdergray,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-              Consumer<AuthProvider>(
-                builder: (context, authProvider, child) {
-                  return SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.6,
-                    child: ElevatedButton(
-                      onPressed: authProvider.isLoading
-                          ? null
-                          : () => _isLoggingIn
-                              ? _handleLogin(context)
-                              : _handleRegister(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorPalette.yellow,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: authProvider.isLoading
-                          ? const CircularProgressIndicator(
-                              color: ColorPalette.offWhite,
-                            )
-                          : Text(
-                              _isLoggingIn ? 'Login' : 'Register',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: ColorPalette.offBlack,
-                                fontWeight: FontWeight.w300,
-                              ),
-                            ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isLoggingIn = !_isLoggingIn;
-                  });
-                },
-                child: Text(
-                  _isLoggingIn
-                      ? 'Don\'t have an account? Register'
-                      : 'Already have an account? Login',
-                  style: TextStyle(
-                    color: ColorPalette.offWhite,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-              ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).scaffoldBackgroundColor,
             ],
           ),
-        ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              'Pantry Pal',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 48,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Your culinary companion for effortless meals.',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Column(
+                children: [
+                  if (!_isLoggingIn)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.3),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _emailController,
+                        style: GoogleFonts.nunito(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          icon: Icon(
+                            Icons.email,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                          hintText: 'Email',
+                          hintStyle: GoogleFonts.nunito(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                  if (!_isLoggingIn) const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withOpacity(0.3),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _usernameController,
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        icon: Icon(
+                          Icons.person,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                        hintText:
+                            _isLoggingIn ? 'Username or email' : 'Username',
+                        hintStyle: GoogleFonts.nunito(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withOpacity(0.3),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        icon: Icon(
+                          Icons.lock,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                        hintText: 'Password',
+                        hintStyle: GoogleFonts.nunito(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                return SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  child: ElevatedButton(
+                    onPressed: authProvider.isLoading
+                        ? null
+                        : () => _isLoggingIn
+                            ? _handleLogin(context)
+                            : _handleRegister(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 8,
+                      shadowColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.3),
+                    ),
+                    child: authProvider.isLoading
+                        ? CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            strokeWidth: 3,
+                          )
+                        : Text(
+                            _isLoggingIn ? 'Login' : 'Register',
+                            style: GoogleFonts.nunito(
+                              fontSize: 18,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isLoggingIn = !_isLoggingIn;
+                });
+              },
+              child: Text(
+                _isLoggingIn
+                    ? 'Don\'t have an account? Register'
+                    : 'Already have an account? Login',
+                style: GoogleFonts.nunito(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

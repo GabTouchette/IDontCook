@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/utils/functions.dart';
 
 class IngredientsSection extends StatelessWidget {
@@ -23,9 +22,17 @@ class IngredientsSection extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorPalette.darkgray,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,9 +40,9 @@ class IngredientsSection extends StatelessWidget {
           // Header
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.listUl,
-                color: ColorPalette.green,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -43,8 +50,8 @@ class IngredientsSection extends StatelessWidget {
                 'Ingredients',
                 style: GoogleFonts.nunito(
                   color: updatedFields.contains("ingredients")
-                      ? ColorPalette.mustard
-                      : ColorPalette.offWhite,
+                      ? Theme.of(context).colorScheme.secondary
+                      : Theme.of(context).colorScheme.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -53,15 +60,18 @@ class IngredientsSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: ColorPalette.green.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: ColorPalette.green.withOpacity(0.3)),
+                  border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.3)),
                 ),
                 child: Text(
                   '${recipe.ingredients.length} items',
-                  style: const TextStyle(
-                    color: ColorPalette.green,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -73,6 +83,9 @@ class IngredientsSection extends StatelessWidget {
 
           // Ingredients List
           ...recipe.ingredients.map((ingredient) {
+            print(
+                "Ingredient: ${ingredient.name}, Quantity: ${ingredient.quantity}, Unit: ${ingredient.unit}");
+            print("calories: ${ingredient.nutrition}");
             double adjustedQuantity = adjustQuantityForServings(
                 ingredient.quantity ?? 0, recipe.servings ?? 1, servings);
             String formattedIngredient =
@@ -81,48 +94,83 @@ class IngredientsSection extends StatelessWidget {
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: ColorPalette.darkergray.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: updatedFields.contains("ingredients")
-                      ? ColorPalette.mustard.withOpacity(0.3)
-                      : ColorPalette.lightgray.withOpacity(0.1),
+                      ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
+                      : Theme.of(context).colorScheme.outline.withOpacity(0.1),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
+                    width: 10,
+                    height: 10,
                     decoration: BoxDecoration(
-                      color: ColorPalette.green,
-                      borderRadius: BorderRadius.circular(4),
+                      color: updatedFields.contains("ingredients")
+                          ? Theme.of(context).colorScheme.secondary
+                          : Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      formattedIngredient,
-                      style: TextStyle(
-                        color: updatedFields.contains("ingredients")
-                            ? ColorPalette.mustard
-                            : ColorPalette.offWhite,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          formattedIngredient,
+                          style: GoogleFonts.nunito(
+                            color: updatedFields.contains("ingredients")
+                                ? Theme.of(context).colorScheme.secondary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            height: 1.3,
+                          ),
+                        ),
+                        // Show calorie count if nutrition data is available
+                        if (ingredient.nutrition != null &&
+                            ingredient.nutrition!['calories'] != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${ingredient.nutrition!['calories'].toStringAsFixed(0)} cal',
+                            style: GoogleFonts.nunito(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  // Show nutrition info if available
-                  if (ingredient.nutrition != null) ...[
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.info_outline,
-                      color: ColorPalette.lightgray,
-                      size: 16,
-                    ),
-                  ],
                 ],
               ),
             );

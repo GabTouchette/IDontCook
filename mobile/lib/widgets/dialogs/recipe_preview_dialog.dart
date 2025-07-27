@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class RecipePreviewDialog extends StatelessWidget {
   final Recipe recipe;
@@ -15,7 +15,7 @@ class RecipePreviewDialog extends StatelessWidget {
       child: Center(
         child: Material(
           borderRadius: BorderRadius.circular(20),
-          color: ColorPalette.offWhite,
+          color: Theme.of(context).colorScheme.backgroundLight,
           child: Container(
             padding: const EdgeInsets.all(20),
             margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -26,10 +26,10 @@ class RecipePreviewDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(recipe.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: ColorPalette.offBlack)),
+                          color: Theme.of(context).colorScheme.backgroundDark)),
                   const SizedBox(height: 12),
                   if (recipe.description != null &&
                       recipe.description!.trim().isNotEmpty)

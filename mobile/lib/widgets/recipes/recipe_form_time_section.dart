@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TimeSection extends StatelessWidget {
   final TextEditingController prepTimeController;
@@ -15,18 +15,35 @@ class TimeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Time",
-            style: TextStyle(
-              color: ColorPalette.offWhite,
-              fontWeight: FontWeight.w300,
-              fontSize: 24,
-            ),
+      child: Container(
+        padding: const EdgeInsets.all(24.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
           ),
-          const SizedBox(height: 8.0),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Time",
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 16.0),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -35,35 +52,40 @@ class TimeSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Prep Time",
-                      style: TextStyle(
-                        color: ColorPalette.offWhite,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w300,
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       decoration: BoxDecoration(
-                        color: ColorPalette.lightgray,
-                        borderRadius: BorderRadius.circular(8),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                        ),
                       ),
                       child: TextField(
                         keyboardType: TextInputType.number,
                         controller: prepTimeController,
-                        style: const TextStyle(
-                          color: ColorPalette.offBlack,
+                        style: GoogleFonts.nunito(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'minutes',
-                          hintStyle: TextStyle(
-                            color: ColorPalette.placeholdergray,
-                            fontSize: 14,
+                          hintStyle: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 16,
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12.0),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
                         ),
                       ),
                     ),
@@ -78,35 +100,40 @@ class TimeSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Cook Time",
-                      style: TextStyle(
-                        color: ColorPalette.offWhite,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w300,
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       decoration: BoxDecoration(
-                        color: ColorPalette.lightgray,
-                        borderRadius: BorderRadius.circular(8),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                        ),
                       ),
                       child: TextField(
                         keyboardType: TextInputType.number,
                         controller: cookTimeController,
-                        style: const TextStyle(
-                          color: ColorPalette.offBlack,
+                        style: GoogleFonts.nunito(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'minutes',
-                          hintStyle: TextStyle(
-                            color: ColorPalette.placeholdergray,
-                            fontSize: 14,
+                          hintStyle: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 16,
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12.0),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
                         ),
                       ),
                     ),
@@ -115,7 +142,8 @@ class TimeSection extends StatelessWidget {
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

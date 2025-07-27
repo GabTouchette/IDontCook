@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
@@ -9,7 +10,7 @@ import 'package:i_cant_cook/widgets/recipes/recipe_form_tags_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_title_section.dart';
 import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class UpdateRecipePage extends StatefulWidget {
   final int recipeId;
@@ -141,87 +142,139 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
         elevation: 0,
-        title: Text(
-          'Update Recipe',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            fontSize: 32,
-            color: ColorPalette.offWhite,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            'Update Recipe',
+            style: GoogleFonts.nunito(
+              fontWeight: FontWeight.w900,
+              fontSize: 24,
+              color: Theme.of(context).colorScheme.onSurface,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.chevron_left,
-            size: 32,
-            color: ColorPalette.offWhite,
+        leading: Container(
+          margin: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(
+              Icons.chevron_left,
+              size: 28,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: _submitUpdatedRecipe,
-            icon: const Icon(
-              Icons.check_box_outlined,
-              size: 36,
-              color: ColorPalette.green,
+          Container(
+            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.success,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.success.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.success.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            tooltip: 'Save',
+            child: IconButton(
+              onPressed: _submitUpdatedRecipe,
+              icon: Icon(
+                Icons.check_box_outlined,
+                size: 28,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              tooltip: 'Save',
+            ),
           ),
         ],
       ),
-      body: LayoutBuilder(builder: (context, constraints) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/create_recipe_page_background.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 120.0),
-              child: SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                child: Column(
-                  children: [
-                    TitleSection(titleController: _titleController),
-                    IngredientsSection(
-                      ingredients: _ingredients,
-                      onIngredientsChanged: _onIngredientsChanged,
-                    ),
-                    InstructionsSection(
-                      instructions: _instructions,
-                      onInstructionsChanged: _onInstructionsChanged,
-                    ),
-                    TimeSection(
-                      prepTimeController: _preptimeController,
-                      cookTimeController: _cooktimeController,
-                    ),
-                    TagsSection(
-                      selectedTags: _selectedTags,
-                      onTagsChanged: _onTagsChanged,
-                    ),
-                    ExtraSection(
-                      descriptionController: _descriptionController,
-                      notesController: _notesController,
-                    ),
-                    SizedBox(height: 32.0),
-                  ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              Theme.of(context).scaffoldBackgroundColor,
+              Theme.of(context).colorScheme.surface,
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 16.0),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Column(
+              children: [
+                TitleSection(titleController: _titleController),
+                IngredientsSection(
+                  ingredients: _ingredients,
+                  onIngredientsChanged: _onIngredientsChanged,
                 ),
-              ),
+                InstructionsSection(
+                  instructions: _instructions,
+                  onInstructionsChanged: _onInstructionsChanged,
+                ),
+                TimeSection(
+                  prepTimeController: _preptimeController,
+                  cookTimeController: _cooktimeController,
+                ),
+                TagsSection(
+                  selectedTags: _selectedTags,
+                  onTagsChanged: _onTagsChanged,
+                ),
+                ExtraSection(
+                  descriptionController: _descriptionController,
+                  notesController: _notesController,
+                ),
+                const SizedBox(height: 32.0),
+              ],
             ),
-          ],
-        );
-      }),
+          ),
+        ),
+      ),
     );
   }
 
@@ -230,14 +283,26 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Container(
         width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: ElevatedButton(
           onPressed: _submitUpdatedRecipe,
           style: ElevatedButton.styleFrom(
-            backgroundColor: ColorPalette.darkgray,
-            padding: EdgeInsets.symmetric(vertical: 12.0),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(16),
             ),
+            elevation: 0,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -245,15 +310,16 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
             children: [
               Icon(
                 Icons.edit,
-                color: ColorPalette.offWhite,
+                color: Theme.of(context).colorScheme.onPrimary,
                 size: 24,
               ),
-              SizedBox(width: 8.0),
+              const SizedBox(width: 8.0),
               Text(
                 "Update",
-                style: TextStyle(
-                  color: ColorPalette.offWhite,
-                  fontSize: 20,
+                style: GoogleFonts.nunito(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],

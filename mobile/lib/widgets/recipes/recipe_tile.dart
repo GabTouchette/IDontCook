@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/recipe_preview_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
 
 class RecipeTile extends StatelessWidget {
@@ -44,16 +46,26 @@ class RecipeTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
-          color: ColorPalette.lightgray,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               recipe.title,
-              style: const TextStyle(
-                color: ColorPalette.offBlack,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
               ),
@@ -61,7 +73,7 @@ class RecipeTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 6),
-            _buildTimeRow(iconSize: 14, fontSize: 13),
+            _buildTimeRow(context, iconSize: 14, fontSize: 13),
           ],
         ),
       ),
@@ -76,7 +88,7 @@ class RecipeTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         padding: const EdgeInsets.all(14.0),
         decoration: BoxDecoration(
-          color: ColorPalette.lightgray,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -89,8 +101,8 @@ class RecipeTile extends StatelessWidget {
                 children: [
                   Text(
                     recipe.title,
-                    style: const TextStyle(
-                      color: ColorPalette.offBlack,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 20,
                       fontWeight: FontWeight.w400,
                     ),
@@ -98,7 +110,7 @@ class RecipeTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6.0),
-                  _buildTimeRow(iconSize: 16, fontSize: 14),
+                  _buildTimeRow(context, iconSize: 16, fontSize: 14),
                 ],
               ),
             ),
@@ -119,7 +131,7 @@ class RecipeTile extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: ColorPalette.lightgray,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -140,8 +152,8 @@ class RecipeTile extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 recipe.title,
-                style: const TextStyle(
-                  color: ColorPalette.offBlack,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                 ),
@@ -149,13 +161,13 @@ class RecipeTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              _buildTimeRow(iconSize: 18, fontSize: 15),
+              _buildTimeRow(context, iconSize: 18, fontSize: 15),
               const SizedBox(height: 8),
               Text(
                 '${recipe.ingredients_count ?? 'N/A'} ingredients',
                 style: TextStyle(
                   fontSize: 14,
-                  color: ColorPalette.offBlack,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -167,9 +179,10 @@ class RecipeTile extends StatelessWidget {
                     for (int i = 0;
                         i < (recipe.tags!.length > 5 ? 5 : recipe.tags!.length);
                         i++)
-                      _buildTagChip(recipe.tags![i]),
+                      _buildTagChip(context, recipe.tags![i]),
                     if (recipe.tags!.length > 5)
-                      _buildTagChip('+ ${recipe.tags!.length - 5} others'),
+                      _buildTagChip(
+                          context, '+ ${recipe.tags!.length - 5} others'),
                   ],
                 ),
             ],
@@ -179,31 +192,38 @@ class RecipeTile extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeRow({double iconSize = 16, double fontSize = 14}) {
+  Widget _buildTimeRow(BuildContext context,
+      {double iconSize = 16, double fontSize = 14}) {
     return Row(
       children: [
         if (recipe.preparation_time != null) ...[
-          Icon(Icons.timer, size: iconSize, color: ColorPalette.green),
+          Icon(Icons.timer,
+              size: iconSize, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 4),
           Text(
             '${recipe.preparation_time} min',
-            style: TextStyle(fontSize: fontSize, color: ColorPalette.offBlack),
+            style: TextStyle(
+                fontSize: fontSize,
+                color: Theme.of(context).colorScheme.onSurface),
           ),
         ],
         if (recipe.preparation_time != null && recipe.cooking_time != null)
           const SizedBox(width: 12),
         if (recipe.cooking_time != null) ...[
           Icon(Icons.local_fire_department,
-              size: iconSize, color: ColorPalette.red),
+              size: iconSize, color: Theme.of(context).colorScheme.error),
           const SizedBox(width: 4),
           Text(
             '${recipe.cooking_time} min',
-            style: TextStyle(fontSize: fontSize, color: ColorPalette.offBlack),
+            style: TextStyle(
+                fontSize: fontSize,
+                color: Theme.of(context).colorScheme.onSurface),
           ),
         ],
         const SizedBox(width: 16),
         if (recipe.is_favorite ?? false) ...[
-          Icon(Icons.favorite, size: iconSize, color: ColorPalette.red),
+          Icon(Icons.favorite,
+              size: iconSize, color: Theme.of(context).colorScheme.error),
         ],
       ],
     );
@@ -234,17 +254,19 @@ class RecipeTile extends StatelessWidget {
         builder: (_) => RecipePreviewDialog(recipe: fullRecipe),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not load preview')),
+      InformationToast.show(
+        context: context,
+        message: "Could not load preview",
+        type: ToastType.error,
       );
     }
   }
 
-  Widget _buildTagChip(String label) {
+  Widget _buildTagChip(BuildContext context, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       decoration: BoxDecoration(
-        color: ColorPalette.darkgray,
+        color: Theme.of(context).colorScheme.borderMuted,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(

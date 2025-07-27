@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
@@ -28,38 +28,37 @@ class AiChatBotPageState extends State<AiChatBotPage> {
   Widget build(BuildContext context) {
     return Consumer<ChatProvider>(builder: (context, provider, child) {
       return Scaffold(
-        extendBodyBehindAppBar: true,
-        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          elevation: 0,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           centerTitle: true,
-          title: Text(
-            'CookBot',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              fontSize: 32,
-              color: ColorPalette.offWhite,
-            ),
-          ),
-          leading: Padding(
+          leading: IconButton(
             padding: const EdgeInsets.only(left: 16.0),
-            child: IconButton(
-              icon: Icon(
+            onPressed: () {
+              provider.clearMessages(isRecipeChat: false);
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(16),
+              child: FaIcon(
                 Icons.assignment_add,
-                color: ColorPalette.offWhite,
-                size: 32,
+                color: Theme.of(context).colorScheme.primary,
+                size: 36,
               ),
-              onPressed: () {
-                provider.clearMessages(isRecipeChat: false);
-              },
             ),
           ),
-          actions: [
-            UserMenuWidget(),
-          ],
+          title: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'CookBot',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w900,
+                fontSize: 28,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+          actions: [UserMenuWidget()],
         ),
         body: GestureDetector(
           onTap: () {
@@ -69,171 +68,202 @@ class AiChatBotPageState extends State<AiChatBotPage> {
             return Stack(
               children: [
                 Positioned.fill(
-                  child: Image.asset(
-                    'assets/images/ai_chat_page_background.png',
-                    fit: BoxFit.cover,
-                  ),
+                  child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 120.0),
-                  child: Column(
-                    children: [
-                      if (provider.currentMessages.isEmpty) ...[
-                        Expanded(
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0),
-                                    decoration: BoxDecoration(
-                                      color: ColorPalette.darkergray,
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                          color: ColorPalette.darkgray),
-                                    ),
-                                    child: TextField(
-                                      controller: provider.chatController,
-                                      style: TextStyle(
-                                        color: ColorPalette.offWhite,
-                                      ),
-                                      decoration: InputDecoration(
-                                        icon: const Icon(
-                                          Icons.search,
-                                          color: ColorPalette.placeholdergray,
-                                        ),
-                                        hintText: 'Ask a question...',
-                                        hintStyle: TextStyle(
-                                          color: ColorPalette.placeholdergray,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                            vertical: 16.0, horizontal: 8.0),
-                                      ),
-                                      onSubmitted: (query) =>
-                                          provider.sendMessage(query: query),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
+                Column(
+                  children: [
+                    if (provider.currentMessages.isEmpty) ...[
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Container(
+                                  width: double.infinity,
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Wrap(
-                                      spacing: 16.0,
-                                      runSpacing: 12.0,
-                                      children: [
-                                        _buildBreadcrumb(
-                                            'New Idea',
-                                            FontAwesomeIcons.lightbulb,
-                                            ColorPalette.mustard, () {
-                                          provider.sendMessage(
-                                              query:
-                                                  'Can you suggest a new recipe idea?');
-                                        }),
-                                        _buildBreadcrumb(
-                                            'Something I have',
-                                            FontAwesomeIcons.file,
-                                            Colors.green, () {
-                                          provider.sendMessage(
-                                              query:
-                                                  'Can you suggest a recipe that I have?');
-                                        }),
-                                        _buildBreadcrumb(
-                                            'A popular choice',
-                                            FontAwesomeIcons.fire,
-                                            Colors.orange, () {
-                                          provider.sendMessage(
-                                              query:
-                                                  'Can you suggest a popular recipe at the moment?');
-                                        }),
-                                      ],
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outline
+                                          .withOpacity(0.3),
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.1),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: TextField(
+                                    controller: provider.chatController,
+                                    style: GoogleFonts.nunito(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    decoration: InputDecoration(
+                                      icon: Icon(
+                                        Icons.search,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      hintText: 'Ask a question...',
+                                      hintStyle: GoogleFonts.nunito(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          vertical: 16.0, horizontal: 8.0),
+                                    ),
+                                    onSubmitted: (query) =>
+                                        provider.sendMessage(query: query),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (provider.currentMessages.isNotEmpty) ...[
-                        Expanded(
-                          child: ListView.builder(
-                            controller: provider.scrollController,
-                            padding: EdgeInsets.zero,
-                            itemCount: provider.currentMessages.length,
-                            itemBuilder: (context, index) {
-                              final message = provider.currentMessages[index];
-                              final bool isUser = message['sender'] == 'user';
-
-                              return Align(
-                                alignment: isUser
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 24.0),
-                                  child: message['sender'] == 'ai'
-                                      ? AiResponseBubble(
-                                          message: message['text'],
-                                          isLoading:
-                                              message['isLoading'] == true,
-                                          isRecipeLoading:
-                                              message['isRecipeLoading'] ==
-                                                  true,
-                                        )
-                                      : MessageWidget(
-                                          messageText: message['text']!,
-                                          isUser: isUser,
-                                        ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Container(
-                            width: double.infinity,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            decoration: BoxDecoration(
-                              color: ColorPalette.darkgray,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                  color: ColorPalette.placeholdergray),
-                            ),
-                            child: TextField(
-                              controller: provider.chatController,
-                              style: TextStyle(
-                                color: ColorPalette.offWhite,
                               ),
-                              decoration: InputDecoration(
-                                icon: const Icon(
-                                  Icons.search,
-                                  color: ColorPalette.placeholdergray,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Wrap(
+                                    spacing: 16.0,
+                                    runSpacing: 12.0,
+                                    children: [
+                                      _buildBreadcrumb('New Idea',
+                                          FontAwesomeIcons.lightbulb, () {
+                                        provider.sendMessage(
+                                            query:
+                                                'Can you suggest a new recipe idea?');
+                                      }),
+                                      _buildBreadcrumb('Something I have',
+                                          FontAwesomeIcons.file, () {
+                                        provider.sendMessage(
+                                            query:
+                                                'Can you suggest a recipe that I have?');
+                                      }),
+                                      _buildBreadcrumb('A popular choice',
+                                          FontAwesomeIcons.fire, () {
+                                        provider.sendMessage(
+                                            query:
+                                                'Can you suggest a popular recipe at the moment?');
+                                      }),
+                                    ],
+                                  ),
                                 ),
-                                hintText: 'Ask a question...',
-                                hintStyle: TextStyle(
-                                  color: ColorPalette.placeholdergray,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    vertical: 16.0, horizontal: 8.0),
                               ),
-                              onSubmitted: (query) =>
-                                  provider.sendMessage(query: query),
-                            ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ],
-                  ),
+                    if (provider.currentMessages.isNotEmpty) ...[
+                      Expanded(
+                        child: ListView.builder(
+                          controller: provider.scrollController,
+                          padding: EdgeInsets.zero,
+                          itemCount: provider.currentMessages.length,
+                          itemBuilder: (context, index) {
+                            final message = provider.currentMessages[index];
+                            final bool isUser = message['sender'] == 'user';
+
+                            return Align(
+                              alignment: isUser
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24.0),
+                                child: message['sender'] == 'ai'
+                                    ? AiResponseBubble(
+                                        message: message['text'],
+                                        isLoading: message['isLoading'] == true,
+                                        isRecipeLoading:
+                                            message['isRecipeLoading'] == true,
+                                      )
+                                    : MessageWidget(
+                                        messageText: message['text']!,
+                                        isUser: isUser,
+                                      ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withOpacity(0.3),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.1),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            controller: provider.chatController,
+                            style: GoogleFonts.nunito(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              icon: Icon(
+                                Icons.search,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              hintText: 'Ask a question...',
+                              hintStyle: GoogleFonts.nunito(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 16.0, horizontal: 8.0),
+                            ),
+                            onSubmitted: (query) =>
+                                provider.sendMessage(query: query),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             );
@@ -243,30 +273,57 @@ class AiChatBotPageState extends State<AiChatBotPage> {
     });
   }
 
-  Widget _buildBreadcrumb(
-      String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildBreadcrumb(String title, IconData icon, VoidCallback onTap) {
+    // Define accent colors for each type
+    Color iconColor;
+    switch (icon) {
+      case FontAwesomeIcons.lightbulb:
+        iconColor = Colors.amber;
+        break;
+      case FontAwesomeIcons.file:
+        iconColor = Colors.green;
+        break;
+      case FontAwesomeIcons.fire:
+        iconColor = Colors.orange;
+        break;
+      default:
+        iconColor = Theme.of(context).colorScheme.primary;
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         decoration: BoxDecoration(
-          color: ColorPalette.darkgray,
-          borderRadius: BorderRadius.circular(16),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             FaIcon(
               icon,
-              color: color,
-              size: 18,
+              color: iconColor,
+              size: 16,
             ),
-            SizedBox(width: 6.0),
+            const SizedBox(width: 6.0),
             Text(
               title,
-              style: TextStyle(
-                color: ColorPalette.lightgray,
-                fontSize: 14,
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

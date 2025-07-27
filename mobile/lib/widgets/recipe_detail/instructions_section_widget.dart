@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class InstructionsSection extends StatelessWidget {
   final Recipe recipe;
@@ -24,9 +23,16 @@ class InstructionsSection extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorPalette.darkgray,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,9 +40,9 @@ class InstructionsSection extends StatelessWidget {
           // Header
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.clipboardList,
-                color: ColorPalette.blue,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -44,8 +50,8 @@ class InstructionsSection extends StatelessWidget {
                 'Instructions',
                 style: GoogleFonts.nunito(
                   color: updatedFields.contains("instructions")
-                      ? ColorPalette.mustard
-                      : ColorPalette.offWhite,
+                      ? Theme.of(context).colorScheme.secondary
+                      : Theme.of(context).colorScheme.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -54,14 +60,14 @@ class InstructionsSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: ColorPalette.blue.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: ColorPalette.blue.withOpacity(0.3)),
+                  border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
                 ),
                 child: Text(
                   '${recipe.instructions.length} steps',
-                  style: const TextStyle(
-                    color: ColorPalette.blue,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -83,30 +89,53 @@ class InstructionsSection extends StatelessWidget {
                 onTap: () => onCompletedInstructions(index),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: isCompleted
-                        ? ColorPalette.green.withOpacity(0.1)
-                        : ColorPalette.darkergray.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isCompleted
-                          ? ColorPalette.green.withOpacity(0.3)
-                          : ColorPalette.lightgray.withOpacity(0.1),
+                          ? Theme.of(context).colorScheme.primary.withOpacity(0.4)
+                          : Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                      width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isCompleted
+                            ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                            : Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                        blurRadius: isCompleted ? 8 : 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Step Number/Checkmark
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: isCompleted
-                              ? ColorPalette.green
-                              : ColorPalette.lightgray.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(16),
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: isCompleted
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline.withOpacity(0.4),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              blurRadius: isCompleted ? 8 : 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Center(
                           child: isCompleted
@@ -117,12 +146,12 @@ class InstructionsSection extends StatelessWidget {
                                 )
                               : Text(
                                   '${index + 1}',
-                                  style: TextStyle(
+                                  style: GoogleFonts.nunito(
                                     color: isCompleted
                                         ? Colors.white
-                                        : ColorPalette.offWhite,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                                        : Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                         ),
@@ -136,24 +165,25 @@ class InstructionsSection extends StatelessWidget {
                           children: [
                             Text(
                               'Step ${index + 1}',
-                              style: TextStyle(
+                              style: GoogleFonts.nunito(
                                 color: isCompleted
-                                    ? ColorPalette.green
-                                    : ColorPalette.lightgray,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               recipe.instructions[index],
-                              style: TextStyle(
+                              style: GoogleFonts.nunito(
                                 color: isCompleted
-                                    ? ColorPalette.green
-                                    : ColorPalette.offWhite,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurface,
                                 fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
+                                height: 1.4,
                                 decoration: isCompleted
                                     ? TextDecoration.lineThrough
                                     : null,

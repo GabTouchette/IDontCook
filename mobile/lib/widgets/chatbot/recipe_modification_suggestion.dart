@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:provider/provider.dart';
 
 class RecipeModificationSuggestion extends StatelessWidget {
@@ -57,10 +57,27 @@ class RecipeModificationSuggestion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.all(0),
-      color: ColorPalette.darkgray,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -74,10 +91,11 @@ class RecipeModificationSuggestion extends StatelessWidget {
                   constraints: const BoxConstraints(maxHeight: 100),
                   child: Text(
                     recipe.title,
-                    style: const TextStyle(
+                    style: GoogleFonts.nunito(
                       fontSize: 32,
-                      fontWeight: FontWeight.w500,
-                      color: ColorPalette.offWhite,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      letterSpacing: -0.5,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -91,54 +109,64 @@ class RecipeModificationSuggestion extends StatelessWidget {
                     recipe.description!,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: ColorPalette.offWhite,
+                    style: GoogleFonts.nunito(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 const SizedBox(height: 8),
                 // Time info
                 Row(
                   children: [
-                    const Icon(Icons.timer,
-                        color: ColorPalette.offWhite, size: 16),
+                    Icon(Icons.timer,
+                        color: Theme.of(context).colorScheme.primary, size: 16),
                     const SizedBox(width: 5),
                     Text(
                       "${recipe.preparation_time} min",
-                      style: const TextStyle(color: ColorPalette.offWhite),
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(width: 15),
-                    const Icon(Icons.local_fire_department,
-                        color: Colors.redAccent, size: 16),
+                    Icon(Icons.local_fire_department,
+                        color: Theme.of(context).colorScheme.error, size: 16),
                     const SizedBox(width: 5),
                     Text(
                       "${recipe.cooking_time} min",
-                      style: const TextStyle(color: ColorPalette.offWhite),
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   "Ingredients",
-                  style: TextStyle(
+                  style: GoogleFonts.nunito(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: ColorPalette.offWhite,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 5),
                 Stack(
                   children: [
                     Container(
-                      constraints: const BoxConstraints(maxHeight: 60),
+                      constraints: const BoxConstraints(maxHeight: 80),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: recipe.ingredients
                             .take(3)
                             .map((ingredient) => Text(
-                                  "- ${ingredient.quantity} ${ingredient.name}",
-                                  style: const TextStyle(
-                                      color: ColorPalette.offWhite),
+                                  "- ${ingredient.quantity} ${ingredient.unit} ${ingredient.name}",
+                                  style: GoogleFonts.nunito(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ))
                             .toList(),
@@ -148,13 +176,19 @@ class RecipeModificationSuggestion extends StatelessWidget {
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      height: 50,
+                      height: 30,
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              ColorPalette.darkgray.withOpacity(0),
-                              ColorPalette.darkgray.withOpacity(1),
+                              Theme.of(context)
+                                  .colorScheme
+                                  .surface
+                                  .withOpacity(0),
+                              Theme.of(context)
+                                  .colorScheme
+                                  .surface
+                                  .withOpacity(1),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -167,11 +201,14 @@ class RecipeModificationSuggestion extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: ColorPalette.placeholdergray, height: 0),
+          Divider(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            height: 0,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _textAction("Preview", onTap: () => _onPreview(context)),
+              _textAction("Preview", context, onTap: () => _onPreview(context)),
             ],
           ),
         ],
@@ -179,16 +216,38 @@ class RecipeModificationSuggestion extends StatelessWidget {
     );
   }
 
-  Widget _textAction(String text, {required VoidCallback onTap}) {
+  Widget _textAction(String text, BuildContext context,
+      {required VoidCallback onTap}) {
     return Expanded(
-      child: TextButton(
-        onPressed: onTap,
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: ColorPalette.offWhite,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            text,
+            style: GoogleFonts.nunito(
+              color: Theme.of(context).colorScheme.onPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
           ),
         ),
       ),

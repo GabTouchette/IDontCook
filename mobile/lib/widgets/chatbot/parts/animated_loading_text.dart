@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class AnimatedLoadingText extends StatefulWidget {
   @override
@@ -46,8 +45,7 @@ class _AnimatedLoadingTextState extends State<AnimatedLoadingText>
         opacity: _animation.value,
         child: Text(
           loadingText,
-          style: const TextStyle(
-            color: ColorPalette.offWhite,
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),

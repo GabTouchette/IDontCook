@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/dialogs/personal_info_dialog.dart';
 import 'package:provider/provider.dart';
 
@@ -13,43 +14,192 @@ class SettingsPage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => SettingsProvider(),
       child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text(
-            'Settings',
-            style: TextStyle(color: ColorPalette.offWhite),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 4,
+          shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          centerTitle: true,
+          title: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              'Settings',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w900,
+                fontSize: 24,
+                color: Theme.of(context).colorScheme.onSurface,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
-          backgroundColor: ColorPalette.darkgray,
-          iconTheme: const IconThemeData(color: ColorPalette.offWhite),
+          leading: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(
+                Icons.chevron_left,
+                size: 28,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
         ),
-        backgroundColor: ColorPalette.darkergray,
         body: Consumer<SettingsProvider>(
           builder: (context, settingsProvider, _) {
-            return ListView(
+            return Padding(
               padding: const EdgeInsets.all(16),
-              children: [
-                ListTile(
-                  leading:
-                      const Icon(Icons.person, color: ColorPalette.offWhite),
-                  title: const Text("Personal Information",
-                      style: TextStyle(color: ColorPalette.offWhite)),
-                  onTap: () => _openPersonalInfoModal(context),
-                ),
-                const Divider(height: 32, color: ColorPalette.placeholdergray),
-                Consumer<AuthProvider>(builder: (context, authProvider, _) {
-                  return ListTile(
-                    leading:
-                        const Icon(Icons.logout, color: ColorPalette.offWhite),
-                    title: const Text("Logout",
-                        style: TextStyle(color: ColorPalette.offWhite)),
-                    onTap: () => authProvider.logout().then(
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.person,
+                    title: "Personal Information",
+                    subtitle: "Update your profile and account details",
+                    onTap: () => _openPersonalInfoModal(context),
+                  ),
+                  const SizedBox(height: 16),
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, _) {
+                      return _buildSettingsCard(
+                        context,
+                        icon: Icons.logout,
+                        title: "Logout",
+                        subtitle: "Sign out of your account",
+                        isDestructive: true,
+                        onTap: () => authProvider.logout().then(
                           (_) => Navigator.of(context)
                               .pushReplacementNamed('/login'),
                         ),
-                  );
-                }),
-              ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDestructive 
+                        ? Theme.of(context).colorScheme.error.withOpacity(0.1)
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isDestructive 
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.nunito(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: isDestructive 
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -63,7 +213,7 @@ class SettingsPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: ColorPalette.darkgray,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/widgets/dialogs/recipe_chat_dialog.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,7 +18,6 @@ import 'package:i_cant_cook/widgets/recipe_detail/recipe_info_widget.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/pages/update_recipe_page.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:i_cant_cook/widgets/dialogs/user_post_dialog.dart';
 import 'package:provider/provider.dart';
@@ -74,29 +74,35 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       final recipe = provider.recipe!;
 
       return Scaffold(
-        backgroundColor: ColorPalette.darkergray,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: ColorPalette.darkergray,
-          title: Text(
-            widget.viewMode.when(
-              normal: () => "Details",
-              preview: () => "Preview",
-            ),
-            style: GoogleFonts.nunito(
-              fontWeight: FontWeight.bold,
-              fontSize: 36,
-              color: ColorPalette.offWhite,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          elevation: 0,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
           leading: IconButton(
+            padding: const EdgeInsets.only(left: 16.0),
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
+            icon: Icon(
               Icons.chevron_left,
-              size: 36,
-              color: ColorPalette.offWhite,
+              color: Theme.of(context).colorScheme.primary,
+              size: 40,
+            ),
+          ),
+          title: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              widget.viewMode.when(
+                normal: () => "Recipe Details",
+                preview: () => "Recipe Preview",
+              ),
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w900,
+                fontSize: 28,
+                letterSpacing: -0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           actions: [
@@ -104,14 +110,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               widget.viewMode.when(
                 // CASE: NORMAL
                 normal: () => PopupMenuButton<String>(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.more_vert,
-                    color: ColorPalette.offWhite,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 32,
                   ),
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surface,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   onSelected: (value) {
                     switch (value) {
@@ -157,9 +163,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                                 message: success
                                     ? "Recipe deleted successfully!"
                                     : "There was an error deleting the recipe.",
-                                textColor: success
-                                    ? ColorPalette.green
-                                    : ColorPalette.red,
+                                type: success
+                                    ? ToastType.success
+                                    : ToastType.error,
                               );
                             },
                             onCancel: () => Navigator.pop(context),
@@ -181,7 +187,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                           : FontAwesomeIcons.heart,
                       iconColor: recipe.is_favorite ?? false
                           ? Colors.red
-                          : ColorPalette.offWhite,
+                          : Theme.of(context).colorScheme.onSurface,
                       label: recipe.is_favorite ?? false
                           ? "Unfavorite"
                           : "Favorite",
@@ -195,22 +201,24 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       value: 'delete',
                       icon: FontAwesomeIcons.trash,
                       label: "Delete",
-                      iconColor: ColorPalette.red,
-                      textColor: ColorPalette.red,
+                      iconColor: Theme.of(context).colorScheme.error,
+                      textColor: Theme.of(context).colorScheme.error,
                     ),
                   ],
                 ),
-
                 // CASE: PREVIEW
                 preview: () => PopupMenuButton<String>(
-                  icon: const Icon(
-                    FontAwesomeIcons.floppyDisk,
-                    size: 36,
-                    color: ColorPalette.green,
+                  icon: Container(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: FaIcon(
+                      FontAwesomeIcons.floppyDisk,
+                      size: 32,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surface,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   onSelected: (value) {
                     switch (value) {
@@ -237,15 +245,32 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 ),
               ),
             ] else ...[
-              // If not saved, show floppy save icon
-              IconButton(
-                onPressed: () =>
-                    context.read<RecipeDetailProvider>().saveRecipe(context),
-                icon: const FaIcon(
-                  FontAwesomeIcons.floppyDisk,
-                  color: ColorPalette.offWhite,
-                  size: 28,
-                ),
+              // If not saved, show floppy save icon or loading indicator
+              Consumer<RecipeDetailProvider>(
+                builder: (context, provider, child) {
+                  return IconButton(
+                    onPressed: provider.isSaving
+                        ? null
+                        : () => provider.saveRecipe(context),
+                    icon: Container(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: provider.isSaving
+                          ? SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: CircularProgressIndicator(
+                                color: Theme.of(context).colorScheme.primary,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : FaIcon(
+                              FontAwesomeIcons.floppyDisk,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 32,
+                            ),
+                    ),
+                  );
+                },
               ),
             ],
           ],
@@ -303,11 +328,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       ),
                     );
                   },
-                  backgroundColor: ColorPalette.mustard,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100)),
-                  child: const Icon(Icons.chat,
-                      color: ColorPalette.offBlack, size: 28),
+                  child: Icon(Icons.chat,
+                      color: Theme.of(context).colorScheme.onPrimary, size: 28),
                 ),
               ),
           ],
@@ -343,21 +368,23 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     required String value,
     required IconData icon,
     required String label,
-    Color iconColor = ColorPalette.offWhite,
-    Color textColor = ColorPalette.offWhite,
+    Color? iconColor,
+    Color? textColor,
   }) {
     return PopupMenuItem<String>(
       value: value,
       child: Row(
         children: [
-          FaIcon(icon, size: 18, color: iconColor),
+          FaIcon(icon,
+              size: 18,
+              color: iconColor ?? Theme.of(context).colorScheme.onSurface),
           const SizedBox(width: 12),
           Text(
             label,
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: textColor,
+              color: textColor ?? Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -381,11 +408,12 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       if (success) {
         provider.image_url = newImageUrl;
         InformationToast.show(
-            context: context,
-            message: success
-                ? "Image uploaded successfully!"
-                : "Failed to upload image.",
-            textColor: success ? ColorPalette.green : ColorPalette.red);
+          context: context,
+          message: success
+              ? "Image uploaded successfully!"
+              : "Failed to upload image.",
+          type: success ? ToastType.success : ToastType.error,
+        );
       }
     }
   }
@@ -397,7 +425,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       InformationToast.show(
         context: context,
         message: "An error occurred while uploading the image.",
-        textColor: ColorPalette.red,
+        type: ToastType.error,
       );
       return "";
     }
@@ -439,7 +467,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     Center(
                       child: Icon(
                         Icons.image,
-                        color: ColorPalette.lightgray,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.5),
                         size: 80,
                       ),
                     ),

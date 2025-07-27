@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 Map<String, dynamic> buildRecipeDataFromRecipe(Recipe recipe) {
@@ -102,7 +103,7 @@ Future<void> submitRecipe({
       message: success
           ? (isUpdate ? 'Recipe updated!' : 'Recipe created!')
           : 'An error occurred.',
-      textColor: success ? ColorPalette.green : ColorPalette.red,
+      type: success ? ToastType.success : ToastType.error,
     );
 
     if (success && shouldNavigate) {
@@ -118,7 +119,7 @@ Future<void> submitRecipe({
     InformationToast.show(
       context: context,
       message: 'Error: $e',
-      textColor: ColorPalette.red,
+      backgroundColor: Theme.of(context).colorScheme.error,
     );
   }
 }

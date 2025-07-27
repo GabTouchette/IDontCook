@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class NutritionInfo extends StatelessWidget {
   final Recipe recipe;
@@ -31,25 +30,26 @@ class NutritionInfo extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorPalette.darkgray,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.lightgray.withOpacity(0.3)),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.chartPie,
-                color: ColorPalette.mustard,
+                color: Theme.of(context).colorScheme.secondary,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
-                'Nutrition Per Serving',
+                'Nutrition Data',
                 style: GoogleFonts.nunito(
-                  color: ColorPalette.offWhite,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -61,28 +61,38 @@ class NutritionInfo extends StatelessWidget {
           // Calories - Featured prominently
           if (perServingCalories != null) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: ColorPalette.mustard.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: ColorPalette.mustard.withOpacity(0.3)),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      const FaIcon(
+                      FaIcon(
                         FontAwesomeIcons.fire,
-                        color: ColorPalette.orange,
+                        color: Theme.of(context).colorScheme.secondary,
                         size: 18,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                       Text(
                         'Calories',
                         style: GoogleFonts.nunito(
-                          color: ColorPalette.offWhite,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -92,9 +102,10 @@ class NutritionInfo extends StatelessWidget {
                   Text(
                     '${perServingCalories.round()}',
                     style: GoogleFonts.nunito(
-                      color: ColorPalette.mustard,
-                      fontSize: 22,
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ],
@@ -109,89 +120,62 @@ class NutritionInfo extends StatelessWidget {
               if (perServingProtein != null)
                 Expanded(
                   child: _buildMacroCard(
+                    context,
                     'Protein',
                     perServingProtein,
                     'g',
                     FontAwesomeIcons.dumbbell,
-                    ColorPalette.green,
+                    Theme.of(context).colorScheme.secondary,
                   ),
                 ),
               if (perServingProtein != null && perServingFat != null)
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
               if (perServingFat != null)
                 Expanded(
                   child: _buildMacroCard(
+                    context,
                     'Fat',
                     perServingFat,
                     'g',
                     FontAwesomeIcons.droplet,
-                    ColorPalette.yellow,
+                    Theme.of(context).colorScheme.primary,
                   ),
                 ),
               if (perServingFat != null && perServingCarbs != null)
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
               if (perServingCarbs != null)
                 Expanded(
                   child: _buildMacroCard(
+                    context,
                     'Carbs',
                     perServingCarbs,
                     'g',
                     FontAwesomeIcons.wheatAwn,
-                    ColorPalette.blue,
+                    Theme.of(context).colorScheme.outline,
                   ),
                 ),
             ],
           ),
-
-          // Show total recipe nutrition if more than 1 serving
-          if (servings > 1 && _hasAnyNutritionValue()) ...[
-            const SizedBox(height: 16),
-            const Divider(color: ColorPalette.lightgray),
-            const SizedBox(height: 8),
-            Text(
-              'Total Recipe ($servings servings)',
-              style: TextStyle(
-                color: ColorPalette.lightgray,
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (recipe.calories != null)
-                  _buildTotalNutritionItem(
-                      '${(recipe.calories! * servings / (recipe.servings ?? 1)).round()}',
-                      'cal'),
-                if (recipe.protein != null)
-                  _buildTotalNutritionItem(
-                      '${(recipe.protein! * servings / (recipe.servings ?? 1)).toStringAsFixed(1)}g',
-                      'protein'),
-                if (recipe.fat != null)
-                  _buildTotalNutritionItem(
-                      '${(recipe.fat! * servings / (recipe.servings ?? 1)).toStringAsFixed(1)}g',
-                      'fat'),
-                if (recipe.carbs != null)
-                  _buildTotalNutritionItem(
-                      '${(recipe.carbs! * servings / (recipe.servings ?? 1)).toStringAsFixed(1)}g',
-                      'carbs'),
-              ],
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildMacroCard(
-      String label, double value, String unit, IconData icon, Color color) {
+  Widget _buildMacroCard(BuildContext context, String label, double value,
+      String unit, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -203,17 +187,19 @@ class NutritionInfo extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${value.toStringAsFixed(1)}$unit',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.nunito(
               color: color,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
             ),
           ),
           Text(
             label,
-            style: GoogleFonts.inter(
-              color: ColorPalette.lightgray,
+            style: GoogleFonts.nunito(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -221,22 +207,24 @@ class NutritionInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalNutritionItem(String value, String label) {
+  Widget _buildTotalNutritionItem(
+      BuildContext context, String value, String label) {
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(
-            color: ColorPalette.offWhite,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+          style: GoogleFonts.nunito(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
-            color: ColorPalette.lightgray,
+          style: GoogleFonts.nunito(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
