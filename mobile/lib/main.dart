@@ -37,7 +37,9 @@ class ICantCook extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ICantCook',
-      theme: appTheme(),
+      theme: lightTheme(),
+      darkTheme: darkTheme(),
+      themeMode: ThemeMode.system,
       initialRoute: '/',
       onGenerateRoute: generateRoute,
     );
