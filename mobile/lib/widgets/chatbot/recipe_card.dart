@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/models/ingredient/ingredient.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 
 class RecipeCard extends StatelessWidget {
@@ -94,6 +95,7 @@ class RecipeCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                const Spacer(),
               ],
             ),
             const SizedBox(height: 12),
@@ -115,7 +117,7 @@ class RecipeCard extends StatelessWidget {
                     children: recipe.ingredients
                         .take(3)
                         .map((ingredient) => Text(
-                              "- ${ingredient.quantity} ${ingredient.name}",
+                              "- ${_formatIngredientText(ingredient)}",
                               style: GoogleFonts.nunito(
                                 color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w500,
@@ -197,5 +199,31 @@ class RecipeCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatIngredientText(Ingredient ingredient) {
+    final parts = <String>[];
+
+    // Add quantity if available
+    if (ingredient.quantity != null && ingredient.quantity! > 0) {
+      // Format quantity to avoid unnecessary decimals
+      if (ingredient.quantity! == ingredient.quantity!.truncateToDouble()) {
+        parts.add(ingredient.quantity!.toInt().toString());
+      } else {
+        parts.add(ingredient.quantity!.toString());
+      }
+    }
+
+    // Add unit if available
+    if (ingredient.unit != null && ingredient.unit!.isNotEmpty) {
+      parts.add(ingredient.unit!);
+    }
+
+    // Add name
+    if (ingredient.name != null && ingredient.name!.isNotEmpty) {
+      parts.add(ingredient.name!);
+    }
+
+    return parts.isNotEmpty ? parts.join(' ') : 'Unknown ingredient';
   }
 }

@@ -8,7 +8,7 @@ class AuthApi {
 
   final String _baseUrl = useProd
       ? 'https://i-cant-cook-1500fc1d933c.herokuapp.com'
-      : 'http://192.168.0.198:8000';
+      : 'http://192.168.0.196:8000';
 
   static const _userKey = 'user_data';
   static const _tokenKey = 'auth_token';

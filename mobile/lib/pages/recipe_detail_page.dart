@@ -46,12 +46,36 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
+  Future<void> _showSaveDialog() async {
+    final provider = Provider.of<RecipeDetailProvider>(context, listen: false);
+    
+    try {
+      await provider.saveRecipeOnly(context);
+      
+      // Show success toast
+      InformationToast.show(
+        context: context,
+        message: 'Recipe saved successfully!',
+        type: ToastType.success,
+      );
+    } catch (e) {
+      // Show error toast
+      InformationToast.show(
+        context: context,
+        message: 'Failed to save recipe',
+        type: ToastType.error,
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      Provider.of<RecipeDetailProvider>(context, listen: false)
-          .initializeRecipe(
+      final recipeProvider =
+          Provider.of<RecipeDetailProvider>(context, listen: false);
+
+      recipeProvider.initializeRecipe(
         recipe: widget.recipe,
         recipeId: widget.recipeId,
       );
@@ -251,7 +275,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   return IconButton(
                     onPressed: provider.isSaving
                         ? null
-                        : () => provider.saveRecipe(context),
+                        : _showSaveDialog,
                     icon: Container(
                       padding: const EdgeInsets.only(right: 16),
                       child: provider.isSaving
@@ -298,7 +322,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                         provider.toggleInstructionCompletion,
                     updatedFields: updatedFields,
                   ),
-                  const SizedBox(height: 16),
                   AdditionalSections(
                     tags: recipe.tags,
                     description: recipe.description,

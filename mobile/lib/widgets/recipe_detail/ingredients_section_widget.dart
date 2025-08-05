@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/utils/functions.dart';
 
-class IngredientsSection extends StatelessWidget {
+class IngredientsSection extends StatefulWidget {
   final Recipe recipe;
   final int servings;
   final Set<String> updatedFields;
@@ -15,6 +15,12 @@ class IngredientsSection extends StatelessWidget {
     required this.servings,
     required this.updatedFields,
   }) : super(key: key);
+
+  @override
+  State<IngredientsSection> createState() => _IngredientsSectionState();
+}
+
+class _IngredientsSectionState extends State<IngredientsSection> {
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +55,7 @@ class IngredientsSection extends StatelessWidget {
               Text(
                 'Ingredients',
                 style: GoogleFonts.nunito(
-                  color: updatedFields.contains("ingredients")
+                  color: widget.updatedFields.contains("ingredients")
                       ? Theme.of(context).colorScheme.secondary
                       : Theme.of(context).colorScheme.onSurface,
                   fontSize: 20,
@@ -69,7 +75,7 @@ class IngredientsSection extends StatelessWidget {
                           .withOpacity(0.3)),
                 ),
                 child: Text(
-                  '${recipe.ingredients.length} items',
+                  '${widget.recipe.ingredients.length} items',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
@@ -82,12 +88,12 @@ class IngredientsSection extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Ingredients List
-          ...recipe.ingredients.map((ingredient) {
+          ...widget.recipe.ingredients.map((ingredient) {
             print(
                 "Ingredient: ${ingredient.name}, Quantity: ${ingredient.quantity}, Unit: ${ingredient.unit}");
             print("calories: ${ingredient.nutrition}");
             double adjustedQuantity = adjustQuantityForServings(
-                ingredient.quantity ?? 0, recipe.servings ?? 1, servings);
+                ingredient.quantity ?? 0, widget.recipe.servings ?? 1, widget.servings);
             String formattedIngredient =
                 "${formatQuantity(adjustedQuantity)}${ingredient.unit != null && ingredient.unit!.isNotEmpty ? ' ${ingredient.unit?.toLowerCase()}' : ''} ${ingredient.name?.toLowerCase() ?? ''}"
                     .trim();
@@ -102,7 +108,7 @@ class IngredientsSection extends StatelessWidget {
                     .withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: updatedFields.contains("ingredients")
+                  color: widget.updatedFields.contains("ingredients")
                       ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
                       : Theme.of(context).colorScheme.outline.withOpacity(0.1),
                 ),
@@ -121,7 +127,7 @@ class IngredientsSection extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: updatedFields.contains("ingredients")
+                      color: widget.updatedFields.contains("ingredients")
                           ? Theme.of(context).colorScheme.secondary
                           : Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(5),
@@ -145,7 +151,7 @@ class IngredientsSection extends StatelessWidget {
                         Text(
                           formattedIngredient,
                           style: GoogleFonts.nunito(
-                            color: updatedFields.contains("ingredients")
+                            color: widget.updatedFields.contains("ingredients")
                                 ? Theme.of(context).colorScheme.secondary
                                 : Theme.of(context).colorScheme.onSurface,
                             fontSize: 16,
@@ -153,21 +159,6 @@ class IngredientsSection extends StatelessWidget {
                             height: 1.3,
                           ),
                         ),
-                        // Show calorie count if nutrition data is available
-                        if (ingredient.nutrition != null &&
-                            ingredient.nutrition!['calories'] != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${ingredient.nutrition!['calories'].toStringAsFixed(0)} cal',
-                            style: GoogleFonts.nunito(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),

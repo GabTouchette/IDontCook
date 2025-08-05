@@ -74,6 +74,8 @@ class RecipeTile extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             _buildTimeRow(context, iconSize: 14, fontSize: 13),
+            const SizedBox(height: 4),
+            _buildNutritionSummary(context, compact: true),
           ],
         ),
       ),
@@ -111,6 +113,8 @@ class RecipeTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 6.0),
                   _buildTimeRow(context, iconSize: 16, fontSize: 14),
+                  const SizedBox(height: 6.0),
+                  _buildNutritionSummary(context, compact: false),
                 ],
               ),
             ),
@@ -170,6 +174,8 @@ class RecipeTile extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
+              const SizedBox(height: 8),
+              _buildNutritionSummary(context, compact: false),
               const SizedBox(height: 8),
               if (recipe.tags != null && recipe.tags!.isNotEmpty)
                 Wrap(
@@ -288,5 +294,10 @@ class RecipeTile extends StatelessWidget {
             )
           : PlaceholderImageWidget(recipeId: recipe.id, height: 100),
     );
+  }
+
+  Widget _buildNutritionSummary(BuildContext context, {bool compact = false}) {
+    // Nutrition removed from recipe tiles - shown only in recipe detail
+    return const SizedBox.shrink();
   }
 }

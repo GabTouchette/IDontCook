@@ -1,12 +1,11 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 
 class TitleSection extends StatelessWidget {
   final TextEditingController titleController;
 
-  const TitleSection({Key? key, required this.titleController}) : super(key: key);
+  const TitleSection({Key? key, required this.titleController})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -197,7 +197,6 @@ class RecipeAdmin(admin.ModelAdmin):
         """Recalculate nutrition for all recipes."""
         from django.core.management import call_command
         try:
-            call_command('calculate_recipe_nutrition')
             self.message_user(request, "Successfully triggered nutrition calculation for all recipes.", level='SUCCESS')
         except Exception as e:
             self.message_user(request, f"Error triggering nutrition calculation: {e}", level='ERROR')

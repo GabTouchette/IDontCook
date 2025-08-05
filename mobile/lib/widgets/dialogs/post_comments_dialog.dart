@@ -5,7 +5,6 @@ import 'package:i_cant_cook/models/comment/comment.dart';
 import 'package:i_cant_cook/models/post/post.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CommentDrawer extends StatefulWidget {
   final Post post;

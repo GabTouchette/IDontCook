@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+// Removed nutrition_service import - no longer needed
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:i_cant_cook/widgets/recipes/camera_capture.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_extra_section.dart';
@@ -10,6 +11,7 @@ import 'package:i_cant_cook/widgets/recipes/recipe_form_tags_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_title_section.dart';
 import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
+// Removed provider import - no longer using NutritionProvider
 
 class CreateRecipePage extends StatefulWidget {
   const CreateRecipePage({super.key});
@@ -69,7 +71,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       notesController: _notesController,
       selectedTags: _selectedTags,
     );
-
+    
     submitRecipe(
       context: context,
       recipeData: recipeData,
@@ -81,6 +83,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     setState(() {
       _ingredients = ingredients;
     });
+
+    // Removed nutrition preview calculation - handled on backend after save
   }
 
   void _onInstructionsChanged(List<InstructionField> instructions) {
@@ -191,7 +195,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
         return Stack(
           children: [
             Positioned.fill(
-              child: Container(color: Theme.of(context).scaffoldBackgroundColor),
+              child:
+                  Container(color: Theme.of(context).scaffoldBackgroundColor),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 120.0),
@@ -213,6 +218,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                       prepTimeController: _preptimeController,
                       cookTimeController: _cooktimeController,
                     ),
+                    // Removed nutrition preview section - nutrition calculated on backend after save
                     TagsSection(
                       selectedTags: _selectedTags,
                       onTagsChanged: _onTagsChanged,
@@ -232,6 +238,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       }),
     );
   }
+
+  // Removed _buildNutritionPreviewSection - nutrition calculated on backend after save
 
   Widget _buildCreateButton() {
     return Padding(

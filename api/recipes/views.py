@@ -1,4 +1,5 @@
 import random
+from recipes.tasks import format_recipe_ingredients
 from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +7,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.utils.timezone import now
+# Removed timezone import - no longer needed
 from django.core.files.base import ContentFile
 from django.db.models import Case, When, Q
 from django.db.models.functions import Random
@@ -17,7 +19,6 @@ from ai_chatbot.api import OpenAIService
 from recipes.models import Recipe, SavedRecipe
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
-from recipes.tasks import format_recipe_ingredients, get_recipe_nutrition_info
 from recommendations.models import MixedRecommendationPagination
 from recommendations.api import get_similar_recipes
 
@@ -51,10 +52,21 @@ class RecipeListAPIView(APIView):
         serializer = RecipeSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             new_recipe = serializer.save(created_by=user, parent=parent)
-
-            format_recipe_ingredients.delay(new_recipe.id)
-
-            get_recipe_nutrition_info.delay(new_recipe.id)
+            
+            # Format ingredients asynchronously in background
+            print(f"📤 DISPATCHING CELERY TASK: format_recipe_ingredients for recipe_id={new_recipe.id} ('{new_recipe.title}')")
+            try:
+                task = format_recipe_ingredients.delay(new_recipe.id)
+                print(f"📤 CELERY TASK DISPATCHED: task_id={task.id}")
+            except Exception as e:
+                print(f"⚠️ CELERY TASK DISPATCH FAILED: {e}")
+                print(f"🔄 FALLING BACK TO SYNCHRONOUS EXECUTION")
+                # Fallback to synchronous execution if Celery is not available
+                try:
+                    result = format_recipe_ingredients(new_recipe.id)
+                    print(f"✅ SYNCHRONOUS EXECUTION COMPLETED: {result}")
+                except Exception as sync_error:
+                    print(f"❌ SYNCHRONOUS EXECUTION FAILED: {sync_error}")
             
             SavedRecipe.objects.create(
                 user=user,
@@ -333,3 +345,4 @@ class RecipeTagsAPIView(APIView):
         tags = Recipe.objects.values_list('tags', flat=True).distinct()
         unique_tags = set(tag for sublist in tags for tag in sublist)
         return JsonResponse(list(unique_tags), safe=False, status=status.HTTP_200_OK)
+

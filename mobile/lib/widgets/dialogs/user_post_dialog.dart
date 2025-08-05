@@ -5,7 +5,6 @@ import 'package:i_cant_cook/api/social_api.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class PostDialog extends StatefulWidget {

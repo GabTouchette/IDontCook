@@ -223,10 +223,6 @@ def load_recipes_from_csv(csv_file, created_user, max_recipe_count=1000):
                         proper_cased_tag = lower_to_proper_tag.get(formatted_name.lower(), formatted_name)
                         filtered_tags.append(proper_cased_tag)
 
-                if not filtered_tags:
-                    print(f"Skipping recipe '{row['title']}' due to no valid tags.")
-                    continue
-
                 # Parse servings (safe)
                 match = re.search(r'\d+(\.\d+)?', row['recipeYield']) if row['recipeYield'] and row['recipeYield'] != 'NA' else None
                 servings = float(match.group()) if match else None
@@ -263,7 +259,7 @@ def main():
     )
 
     # Load recipes from CSV
-    load_recipes_from_csv('recipes.csv', created_user=user, max_recipe_count=10)
+    load_recipes_from_csv('recipes.csv', created_user=user)
 
     print("Recipe creation complete!")
 

@@ -6,7 +6,6 @@ from recipes.views import (
     FilteredRecommendationsAPIView,
     RecipeTagsAPIView,
 )
-from recipes.test_nutrition import test_nutrition_parsing, test_recipe_creation
 
 urlpatterns = [
     path("", RecipeListAPIView.as_view(), name="recipe-list"),
@@ -14,6 +13,4 @@ urlpatterns = [
     path("<int:recipe_id>/image", RecipeImageUploadAPIView.as_view(), name="recipe-image"),
     path('global/filter/', FilteredRecommendationsAPIView.as_view(), name='filtered-recommendations'),
     path('tags/', RecipeTagsAPIView.as_view(), name='recipe-tags'),
-    path('test-nutrition/', test_nutrition_parsing, name='test-nutrition'),
-    path('test-recipe/', test_recipe_creation, name='test-recipe'),
 ]

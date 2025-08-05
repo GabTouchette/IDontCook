@@ -50,6 +50,8 @@ class RecipeDetailProvider with ChangeNotifier {
       _servings = _recipe!.servings ?? 1;
       _completedInstructions =
           List<bool>.filled(_recipe!.instructions.length, false);
+      
+      print('DEBUG RecipeDetailProvider: Fetched recipe ${_recipe!.id}, is_saved: ${_recipe!.is_saved}');
     } catch (error) {
       print("Error fetching recipe: $error");
     } finally {
@@ -61,6 +63,61 @@ class RecipeDetailProvider with ChangeNotifier {
   String _capitalize(String? text) {
     if (text == null || text.isEmpty) return "";
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  Future<void> saveRecipeOnly(BuildContext context) async {
+    if (_recipe == null || _isSaving) return;
+
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      Map<String, dynamic> recipeData = {
+        "title": _capitalize(_recipe!.title),
+        "ingredients": _recipe!.ingredients
+            .map((ingredient) => {
+                  "name": _capitalize(ingredient.name),
+                  "quantity": ingredient.quantity,
+                })
+            .toList(),
+        "instructions": _recipe!.instructions,
+        "preparation_time": _recipe!.preparation_time,
+        "cooking_time": _recipe!.cooking_time,
+        "description": _capitalize(_recipe!.description),
+        "notes": _capitalize(_recipe!.notes),
+        "tags": _recipe!.tags,
+        "parent_id": _recipe!.id,
+        "web_image_url": _recipe!.image_url,
+      };
+
+      int? newId = await RecipeApi().createRecipe(recipeData);
+      bool success = newId != null;
+
+      if (success) {
+        // Fetch the full recipe data to refresh the UI
+        var fullRecipeData = await RecipeApi().getRecipeById(newId);
+        _recipe = Recipe.fromJson(fullRecipeData);
+        notifyListeners();
+
+        InformationToast.show(
+          context: context,
+          message: "Recipe saved successfully!",
+          type: ToastType.success,
+        );
+      } else {
+        throw Exception("Failed to save recipe");
+      }
+    } catch (e) {
+      InformationToast.show(
+        context: context,
+        message: "Error saving recipe: $e",
+        type: ToastType.error,
+      );
+      rethrow; // Let dialog handle the error
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
   }
 
   Future<void> saveRecipe(BuildContext context) async {
@@ -92,10 +149,27 @@ class RecipeDetailProvider with ChangeNotifier {
       bool success = newId != null;
 
       if (success) {
-        // Fetch the full recipe data including nutrition to refresh the UI
+        // Fetch the full recipe data to refresh the UI
         var fullRecipeData = await RecipeApi().getRecipeById(newId);
         _recipe = Recipe.fromJson(fullRecipeData);
         notifyListeners();
+
+        // Calculate nutrition after recipe is saved and formatted
+        try {
+          var nutritionResult = await RecipeApi().calculateRecipeNutrition(newId);
+          if (nutritionResult != null && nutritionResult['success'] == true) {
+            print("✅ Nutrition calculated successfully: ${nutritionResult['nutrition']}");
+            // Refresh recipe data again to get the updated nutrition
+            var updatedRecipeData = await RecipeApi().getRecipeById(newId);
+            _recipe = Recipe.fromJson(updatedRecipeData);
+            notifyListeners();
+          } else {
+            print("⚠️ Nutrition calculation failed or returned no data");
+          }
+        } catch (e) {
+          print("❌ Error calculating nutrition: $e");
+          // Don't show error to user - nutrition calculation is optional
+        }
       }
 
       InformationToast.show(

@@ -25,20 +25,8 @@ class Ingredient(models.Model):
     substitutes = models.JSONField(default=list, blank=True, null=True)
     quantity = models.FloatField(blank=True, null=True)
     unit = models.CharField(max_length=50, blank=True, null=True)
+    usda_name = models.CharField(max_length=255, blank=True, null=True)  # Simplified name for USDA lookup
     nutrition_data = models.ForeignKey(NutritionData, on_delete=models.SET_NULL, null=True, blank=True)
-
-    def get_nutrition_per_quantity(self):
-        """Get nutrition data for this ingredient's quantity."""
-        if not self.nutrition_data or not self.name:
-            return None
-            
-        from .nutrition_service import NutritionService
-        service = NutritionService()
-        return service.get_nutrition_for_ingredient(
-            self.name, 
-            self.quantity or 100, 
-            self.unit or 'g'
-        )
 
     def __str__(self):
         parts = []
@@ -67,6 +55,7 @@ class Recipe(models.Model):
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="clones")
     is_favorite = models.BooleanField(default=False)
     is_formatted = models.BooleanField(default=False)
+    is_nutrition_calculated = models.BooleanField(default=False)
 
     # Ingredients & Instructions
     ingredients = models.ManyToManyField('Ingredient', related_name="recipes", blank=True)
@@ -96,20 +85,6 @@ class Recipe(models.Model):
     protein = models.FloatField(null=True, blank=True)
     fat = models.FloatField(null=True, blank=True)
     carbs = models.FloatField(null=True, blank=True)
-    
-    def calculate_nutrition(self):
-        """Calculate and update nutrition fields from ingredients."""
-        from .nutrition_service import NutritionService
-        service = NutritionService()
-        nutrition = service.calculate_recipe_nutrition(self)
-        
-        self.calories = nutrition.get('calories')
-        self.protein = nutrition.get('protein')
-        self.fat = nutrition.get('fat')
-        self.carbs = nutrition.get('carbs')
-        self.save()
-        
-        return nutrition
     
     def __str__(self):
         return self.title

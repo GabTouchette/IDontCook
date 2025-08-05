@@ -54,4 +54,8 @@ class RecipeApi {
     }
     return [];
   }
+
+  Future<Map<String, dynamic>?> calculateRecipeNutrition(int recipeId) async {
+    return await _apiHelper.postRequest('recipes/$recipeId/nutrition/', {});
+  }
 }
