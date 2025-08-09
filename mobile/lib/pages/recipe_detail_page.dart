@@ -48,10 +48,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   Future<void> _showSaveDialog() async {
     final provider = Provider.of<RecipeDetailProvider>(context, listen: false);
-    
+
     try {
       await provider.saveRecipeOnly(context);
-      
+
       // Show success toast
       InformationToast.show(
         context: context,
@@ -273,9 +273,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               Consumer<RecipeDetailProvider>(
                 builder: (context, provider, child) {
                   return IconButton(
-                    onPressed: provider.isSaving
-                        ? null
-                        : _showSaveDialog,
+                    onPressed: provider.isSaving ? null : _showSaveDialog,
                     icon: Container(
                       padding: const EdgeInsets.only(right: 16),
                       child: provider.isSaving
@@ -318,8 +316,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     incrementServings: provider.incrementServings,
                     decrementServings: provider.decrementServings,
                     completedInstructions: provider.completedInstructions,
+                    completedIngredients: provider.completedIngredients,
                     onCompletedInstructions:
                         provider.toggleInstructionCompletion,
+                    onCompletedIngredient: provider.toggleIngredientCompletion,
                     updatedFields: updatedFields,
                   ),
                   AdditionalSections(

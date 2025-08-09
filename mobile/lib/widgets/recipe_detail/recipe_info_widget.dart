@@ -7,11 +7,13 @@ import 'package:i_cant_cook/widgets/recipe_detail/instructions_section_widget.da
 
 class RecipeInfo extends StatelessWidget {
   final Recipe recipe;
-  final int servings;
+  final double servings;
   final List<bool> completedInstructions;
+  final List<bool> completedIngredients;
   final Function incrementServings;
   final Function decrementServings;
   final Function onCompletedInstructions;
+  final Function onCompletedIngredient;
   final Set<String> updatedFields;
 
   const RecipeInfo({
@@ -21,7 +23,9 @@ class RecipeInfo extends StatelessWidget {
     required this.incrementServings,
     required this.decrementServings,
     required this.completedInstructions,
+    required this.completedIngredients,
     required this.onCompletedInstructions,
+    required this.onCompletedIngredient,
     required this.updatedFields,
   }) : super(key: key);
 
@@ -38,7 +42,7 @@ class RecipeInfo extends StatelessWidget {
           decrementServings: decrementServings,
           updatedFields: updatedFields,
         ),
-        
+
         // Servings Section
         ServingsSection(
           servings: servings,
@@ -46,14 +50,16 @@ class RecipeInfo extends StatelessWidget {
           decrementServings: decrementServings,
           updatedFields: updatedFields,
         ),
-        
+
         // Ingredients Section
         IngredientsSection(
           recipe: recipe,
           servings: servings,
+          completedIngredients: completedIngredients,
+          onCompletedIngredient: onCompletedIngredient,
           updatedFields: updatedFields,
         ),
-        
+
         // Instructions Section
         InstructionsSection(
           recipe: recipe,

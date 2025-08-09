@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ServingsSection extends StatelessWidget {
-  final int servings;
+  final double servings;
   final Function incrementServings;
   final Function decrementServings;
   final Set<String> updatedFields;
@@ -24,7 +24,8 @@ class ServingsSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
@@ -56,7 +57,10 @@ class ServingsSection extends StatelessWidget {
           // Servings Controls
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withOpacity(0.5),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
@@ -79,7 +83,8 @@ class ServingsSection extends StatelessWidget {
                   constraints:
                       const BoxConstraints(minWidth: 44, minHeight: 44),
                   style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -88,7 +93,7 @@ class ServingsSection extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    '$servings',
+                    _formatServings(servings),
                     style: GoogleFonts.nunito(
                       color: Theme.of(context).colorScheme.primary,
                       fontSize: 20,
@@ -104,7 +109,8 @@ class ServingsSection extends StatelessWidget {
                   constraints:
                       const BoxConstraints(minWidth: 44, minHeight: 44),
                   style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -116,5 +122,16 @@ class ServingsSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatServings(double value) {
+    // Show 1/2 or 1/4 for fractional servings
+    if ((value - value.floor()).abs() < 1e-9) {
+      return value.toInt().toString();
+    }
+    if ((value - 0.5).abs() < 1e-9) return '1/2';
+    if ((value - 0.25).abs() < 1e-9) return '1/4';
+    // Fallback: trim to at most one decimal
+    return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
   }
 }

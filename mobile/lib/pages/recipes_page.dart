@@ -404,8 +404,17 @@ class _RecipesPageState extends State<RecipesPage> {
 
     return GestureDetector(
       onTap: () {
-        provider.setTabIndex(index);
-        if (index != 3) provider.setSelectedTag(null);
+        if (index == 3) {
+          // Re-tapping the Tags tab when a tag is selected should go back to the grid (clear selection)
+          if (provider.tabIndex == 3 && provider.selectedTag != null) {
+            provider.setSelectedTag(null);
+          } else {
+            provider.setTabIndex(3);
+          }
+        } else {
+          provider.setTabIndex(index);
+          provider.setSelectedTag(null);
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),

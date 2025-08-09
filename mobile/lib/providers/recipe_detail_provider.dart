@@ -8,14 +8,16 @@ class RecipeDetailProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
   Recipe? _recipe;
-  int _servings = 1;
+  double _servings = 1.0;
   List<bool> _completedInstructions = [];
+  List<bool> _completedIngredients = [];
 
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   Recipe? get recipe => _recipe;
-  int get servings => _servings;
+  double get servings => _servings;
   List<bool> get completedInstructions => _completedInstructions;
+  List<bool> get completedIngredients => _completedIngredients;
 
   set image_url(String? newImageUrl) {
     if (_recipe != null) {
@@ -27,9 +29,11 @@ class RecipeDetailProvider with ChangeNotifier {
   Future<void> initializeRecipe({Recipe? recipe, int? recipeId}) async {
     if (recipe != null) {
       _recipe = recipe;
-      _servings = recipe.servings ?? 1;
+      _servings = (recipe.servings ?? 1).toDouble();
       _completedInstructions =
           List<bool>.filled(recipe.instructions.length, false);
+      _completedIngredients =
+          List<bool>.filled(recipe.ingredients.length, false);
       notifyListeners();
       return;
     }
@@ -46,9 +50,11 @@ class RecipeDetailProvider with ChangeNotifier {
     try {
       var response = await RecipeApi().getRecipeById(recipeId);
       _recipe = Recipe.fromJson(response);
-      _servings = _recipe!.servings ?? 1;
+      _servings = (_recipe!.servings ?? 1).toDouble();
       _completedInstructions =
           List<bool>.filled(_recipe!.instructions.length, false);
+      _completedIngredients =
+          List<bool>.filled(_recipe!.ingredients.length, false);
 
       print(
           'DEBUG RecipeDetailProvider: Fetched recipe ${_recipe!.id}, is_saved: ${_recipe!.is_saved}');
@@ -215,20 +221,39 @@ class RecipeDetailProvider with ChangeNotifier {
   }
 
   void incrementServings() {
-    _servings++;
+    // Step up through 0.25 -> 0.5 -> 1.0 -> +1 increments
+    if (_servings < 0.5) {
+      _servings = 0.5;
+    } else if (_servings < 1.0) {
+      _servings = 1.0;
+    } else {
+      _servings = _servings + 1.0;
+    }
     notifyListeners();
   }
 
   void decrementServings() {
-    if (_servings > 1) {
-      _servings--;
-      notifyListeners();
+    // Allow dropping to 0.5 and 0.25, minimum 0.25
+    if (_servings > 1.0) {
+      _servings = _servings - 1.0;
+    } else if (_servings > 0.5) {
+      _servings = 0.5;
+    } else if (_servings > 0.25) {
+      _servings = 0.25;
     }
+    notifyListeners();
   }
 
   void toggleInstructionCompletion(int index) {
     if (index >= 0 && index < _completedInstructions.length) {
       _completedInstructions[index] = !_completedInstructions[index];
+      notifyListeners();
+    }
+  }
+
+  void toggleIngredientCompletion(int index) {
+    if (index >= 0 && index < _completedIngredients.length) {
+      _completedIngredients[index] = !_completedIngredients[index];
       notifyListeners();
     }
   }

@@ -6,13 +6,17 @@ import 'package:i_cant_cook/utils/functions.dart';
 
 class IngredientsSection extends StatefulWidget {
   final Recipe recipe;
-  final int servings;
+  final double servings;
   final Set<String> updatedFields;
+  final List<bool> completedIngredients;
+  final Function onCompletedIngredient;
 
   const IngredientsSection({
     Key? key,
     required this.recipe,
     required this.servings,
+    required this.completedIngredients,
+    required this.onCompletedIngredient,
     required this.updatedFields,
   }) : super(key: key);
 
@@ -21,7 +25,6 @@ class IngredientsSection extends StatefulWidget {
 }
 
 class _IngredientsSectionState extends State<IngredientsSection> {
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -88,81 +91,118 @@ class _IngredientsSectionState extends State<IngredientsSection> {
           const SizedBox(height: 16),
 
           // Ingredients List
-          ...widget.recipe.ingredients.map((ingredient) {
+          ...widget.recipe.ingredients.asMap().entries.map((entry) {
+            final index = entry.key;
+            final ingredient = entry.value;
+            final isCompleted = (index < widget.completedIngredients.length)
+                ? widget.completedIngredients[index]
+                : false;
             print(
                 "Ingredient: ${ingredient.name}, Quantity: ${ingredient.quantity}, Unit: ${ingredient.unit}");
             print("calories: ${ingredient.nutrition}");
             double adjustedQuantity = adjustQuantityForServings(
-                ingredient.quantity ?? 0, widget.recipe.servings ?? 1, widget.servings);
+                ingredient.quantity ?? 0,
+                (widget.recipe.servings ?? 1).toDouble(),
+                widget.servings);
             String formattedIngredient =
                 "${formatQuantity(adjustedQuantity)}${ingredient.unit != null && ingredient.unit!.isNotEmpty ? ' ${ingredient.unit?.toLowerCase()}' : ''} ${ingredient.name?.toLowerCase() ?? ''}"
                     .trim();
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: widget.updatedFields.contains("ingredients")
-                      ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
-                      : Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+            return GestureDetector(
+              onTap: () => widget.onCompletedIngredient(index),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                      : Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isCompleted
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.35)
+                        : widget.updatedFields.contains("ingredients")
+                            ? Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.3)
+                            : Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.1),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: widget.updatedFields.contains("ingredients")
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
+                  boxShadow: [
+                    BoxShadow(
+                      color: isCompleted
+                          ? Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.3),
-                          blurRadius: 3,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
+                              .withOpacity(0.12)
+                          : Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.05),
+                      blurRadius: isCompleted ? 8 : 6,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          formattedIngredient,
-                          style: GoogleFonts.nunito(
-                            color: widget.updatedFields.contains("ingredients")
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: isCompleted
+                            ? Theme.of(context).colorScheme.primary
+                            : widget.updatedFields.contains("ingredients")
                                 ? Theme.of(context).colorScheme.secondary
-                                : Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            height: 1.3,
+                                : Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.3),
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            formattedIngredient,
+                            style: GoogleFonts.nunito(
+                              color: isCompleted
+                                  ? Theme.of(context).colorScheme.primary
+                                  : widget.updatedFields.contains("ingredients")
+                                      ? Theme.of(context).colorScheme.secondary
+                                      : Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                              decoration: isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),

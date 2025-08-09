@@ -5,7 +5,7 @@ import 'package:i_cant_cook/models/recipe/recipe.dart';
 
 class RecipeHeader extends StatelessWidget {
   final Recipe recipe;
-  final int servings;
+  final double servings;
   final Function incrementServings;
   final Function decrementServings;
   final Set<String> updatedFields;

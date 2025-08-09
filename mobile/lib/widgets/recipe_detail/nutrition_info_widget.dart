@@ -5,7 +5,7 @@ import 'package:i_cant_cook/models/recipe/recipe.dart';
 
 class NutritionInfo extends StatelessWidget {
   final Recipe recipe;
-  final int servings;
+  final double servings;
 
   const NutritionInfo({
     Key? key,
@@ -248,6 +248,7 @@ class NutritionInfo extends StatelessWidget {
   double? _getPerServingValue(double? totalValue) {
     if (totalValue == null) return null;
     final originalServings = recipe.servings ?? 1;
-    return (totalValue / originalServings) * (servings / originalServings);
+    // totalValue is total for originalServings; scale linearly by servings
+    return (totalValue / originalServings) * servings;
   }
 }
