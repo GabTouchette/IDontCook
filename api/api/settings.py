@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'accounts',
     'storages',
     'recommendations',
+    'meal_planning',
 ]
 
 AUTHENTICATION_BACKENDS = (

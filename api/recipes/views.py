@@ -10,6 +10,7 @@ from django.utils.timezone import now
 # Removed timezone import - no longer needed
 from django.core.files.base import ContentFile
 from django.db.models import Case, When, Q
+from django.db import connection
 from django.db.models.functions import Random
 
 from PIL import Image, ExifTags
@@ -211,13 +212,33 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
 
         recipes = Recipe.objects.filter(parent__isnull=True).prefetch_related('ingredients')
 
-        # Tags filter
+        # Tags filter (SQLite-friendly using JSON1; PostgreSQL uses JSON contains; fallback to string matching)
         if tags:
-            query = Q()
-            # TODO: Switch to PostgreSQL to use this.
-            # for tag in tags:
-            #     query |= Q(tags__contains=tag)
-            # recipes = recipes.filter(query)
+            db_vendor = connection.vendor
+            # Normalize tags (trim + lower) for case-insensitive match
+            norm_tags = [t.strip() for t in tags if t and t.strip()]
+            if norm_tags:
+                if db_vendor == 'sqlite':
+                    # Use json_each to test membership in the JSON array (OR semantics across provided tags)
+                    table = Recipe._meta.db_table
+                    clause_parts = [
+                        f"EXISTS (SELECT 1 FROM json_each({table}.\"tags\") AS je WHERE lower(je.value) = lower(%s))"
+                        for _ in norm_tags
+                    ]
+                    or_clause = " OR ".join(clause_parts)
+                    recipes = recipes.extra(where=[f"({or_clause})"], params=norm_tags)
+                elif db_vendor == 'postgresql':
+                    or_q = Q()
+                    for t in norm_tags:
+                        # JSON array contains the single tag
+                        or_q |= Q(tags__contains=[t])
+                    recipes = recipes.filter(or_q)
+                else:
+                    # Fallback: string contains on JSON text, match quotes to reduce false positives
+                    or_q = Q()
+                    for t in norm_tags:
+                        or_q |= Q(tags__icontains=f'"{t}"')
+                    recipes = recipes.filter(or_q)
 
         # Time filters
         if prep_time < 60:
