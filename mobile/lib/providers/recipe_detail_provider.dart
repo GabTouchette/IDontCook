@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class RecipeDetailProvider with ChangeNotifier {
@@ -50,8 +49,9 @@ class RecipeDetailProvider with ChangeNotifier {
       _servings = _recipe!.servings ?? 1;
       _completedInstructions =
           List<bool>.filled(_recipe!.instructions.length, false);
-      
-      print('DEBUG RecipeDetailProvider: Fetched recipe ${_recipe!.id}, is_saved: ${_recipe!.is_saved}');
+
+      print(
+          'DEBUG RecipeDetailProvider: Fetched recipe ${_recipe!.id}, is_saved: ${_recipe!.is_saved}');
     } catch (error) {
       print("Error fetching recipe: $error");
     } finally {
@@ -156,9 +156,11 @@ class RecipeDetailProvider with ChangeNotifier {
 
         // Calculate nutrition after recipe is saved and formatted
         try {
-          var nutritionResult = await RecipeApi().calculateRecipeNutrition(newId);
+          var nutritionResult =
+              await RecipeApi().calculateRecipeNutrition(newId);
           if (nutritionResult != null && nutritionResult['success'] == true) {
-            print("✅ Nutrition calculated successfully: ${nutritionResult['nutrition']}");
+            print(
+                "✅ Nutrition calculated successfully: ${nutritionResult['nutrition']}");
             // Refresh recipe data again to get the updated nutrition
             var updatedRecipeData = await RecipeApi().getRecipeById(newId);
             _recipe = Recipe.fromJson(updatedRecipeData);

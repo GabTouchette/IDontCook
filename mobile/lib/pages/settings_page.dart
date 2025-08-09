@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
@@ -17,58 +16,26 @@ class SettingsPage extends StatelessWidget {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 4,
-          shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
           centerTitle: true,
+          leading: IconButton(
+            padding: const EdgeInsets.only(left: 16.0),
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(
+              Icons.chevron_left,
+              size: 28,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
           title: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
             child: Text(
               'Settings',
               style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w900,
-                fontSize: 24,
-                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 28,
                 letterSpacing: -0.5,
-              ),
-            ),
-          ),
-          leading: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(
-                Icons.chevron_left,
-                size: 28,
-                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -97,9 +64,9 @@ class SettingsPage extends StatelessWidget {
                         subtitle: "Sign out of your account",
                         isDestructive: true,
                         onTap: () => authProvider.logout().then(
-                          (_) => Navigator.of(context)
-                              .pushReplacementNamed('/login'),
-                        ),
+                              (_) => Navigator.of(context)
+                                  .pushReplacementNamed('/login'),
+                            ),
                       );
                     },
                   ),
@@ -152,14 +119,17 @@ class SettingsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDestructive 
+                    color: isDestructive
                         ? Theme.of(context).colorScheme.error.withOpacity(0.1)
-                        : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        : Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
-                    color: isDestructive 
+                    color: isDestructive
                         ? Theme.of(context).colorScheme.error
                         : Theme.of(context).colorScheme.primary,
                     size: 24,
@@ -175,7 +145,7 @@ class SettingsPage extends StatelessWidget {
                         style: GoogleFonts.nunito(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: isDestructive 
+                          color: isDestructive
                               ? Theme.of(context).colorScheme.error
                               : Theme.of(context).colorScheme.onSurface,
                         ),

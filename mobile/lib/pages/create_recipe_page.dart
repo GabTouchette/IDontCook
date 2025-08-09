@@ -106,89 +106,42 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 4,
-        shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Text(
-            'Create Recipe',
-            style: GoogleFonts.nunito(
-              fontWeight: FontWeight.w900,
-              fontSize: 24,
-              color: Theme.of(context).colorScheme.onSurface,
-              letterSpacing: -0.5,
-            ),
+        title: Text(
+          'Create Recipe',
+          style: GoogleFonts.nunito(
+            fontWeight: FontWeight.w900,
+            fontSize: 24,
+            color: Theme.of(context).colorScheme.onSurface,
+            letterSpacing: -0.5,
           ),
         ),
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(
-              Icons.chevron_left,
-              size: 28,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(
+            Icons.chevron_left,
+            size: 36,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Container(
+              padding: const EdgeInsets.all(6.0),
+              child: IconButton(
+                onPressed: () => _openCamera(context),
+                icon: FaIcon(
+                  FontAwesomeIcons.camera,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
                 ),
-              ],
-            ),
-            child: IconButton(
-              onPressed: () => _openCamera(context),
-              icon: FaIcon(
-                FontAwesomeIcons.camera,
-                color: Theme.of(context).colorScheme.onPrimary,
-                size: 20,
               ),
             ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: LayoutBuilder(builder: (context, constraints) {

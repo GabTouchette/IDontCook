@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/settings_page.dart';
-import 'package:i_cant_cook/theme/avatars.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
-import 'package:i_cant_cook/widgets/social/user_post_card.dart';
+import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
-import 'package:provider/provider.dart';
+import 'package:i_cant_cook/widgets/social/user_post_card.dart';
 
 class UserProfilePage extends StatelessWidget {
   final User user;
@@ -31,7 +31,7 @@ class UserProfilePage extends StatelessWidget {
             icon: Icon(
               Icons.chevron_left,
               color: Theme.of(context).colorScheme.primary,
-              size: 32,
+              size: 28,
             ),
           ),
           title: Container(
@@ -51,7 +51,7 @@ class UserProfilePage extends StatelessWidget {
               icon: Icon(
                 Icons.settings,
                 color: Theme.of(context).colorScheme.primary,
-                size: 32,
+                size: 28,
               ),
               onPressed: () {
                 Navigator.push(
@@ -67,9 +67,8 @@ class UserProfilePage extends StatelessWidget {
             return Stack(
               children: [
                 Positioned.fill(
-                  child: Image.asset(
-                    'assets/images/explore_page_background.png',
-                    fit: BoxFit.cover,
+                  child: Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
                   ),
                 ),
                 Padding(
@@ -83,16 +82,19 @@ class UserProfilePage extends StatelessWidget {
                               radius: 50,
                               backgroundColor:
                                   Theme.of(context).colorScheme.surface,
-                              child: Avatars.getAvatarIcon(user.avatar_icon,
-                                  size: 50),
+                              child: Avatars.getAvatarIcon(
+                                user.avatar_icon,
+                                size: 50,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              "@${user.username}",
-                              style: TextStyle(
+                              '@${user.username}',
+                              style: GoogleFonts.nunito(
                                 fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.w800,
+                                color:
+                                    Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ],
@@ -103,10 +105,11 @@ class UserProfilePage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildStat(
-                              context, "Followers", provider.followerCount),
+                              context, 'Followers', provider.followerCount),
                           _buildStat(
-                              context, "Recipes", provider.recipes.length),
-                          _buildStat(context, "Posts", provider.posts.length),
+                              context, 'Recipes', provider.recipes.length),
+                          _buildStat(
+                              context, 'Posts', provider.posts.length),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -115,33 +118,33 @@ class UserProfilePage extends StatelessWidget {
                           onPressed: provider.toggleFollowUser,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 100),
+                                vertical: 10, horizontal: 100),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             backgroundColor: provider.isFollowing
                                 ? Theme.of(context)
                                     .colorScheme
                                     .surfaceContainerHighest
                                 : Theme.of(context).colorScheme.primary,
+                            foregroundColor: provider.isFollowing
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context).colorScheme.onPrimary,
+                            elevation: 0,
                           ),
-                          icon: provider.isFollowing
-                              ? Icon(
-                                  Icons.check,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 20,
-                                )
-                              : Icon(
-                                  Icons.add,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  size: 20,
-                                ),
+                          icon: Icon(
+                            provider.isFollowing ? Icons.check : Icons.add,
+                            size: 20,
+                            color: provider.isFollowing
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onPrimary,
+                          ),
                           label: Text(
-                            provider.isFollowing ? "Following" : "Follow",
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontSize: 16),
+                            provider.isFollowing ? 'Following' : 'Follow',
+                            style: GoogleFonts.nunito(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       const SizedBox(height: 16),
@@ -156,7 +159,10 @@ class UserProfilePage extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Container(
                           height: 1,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.3),
                         ),
                       ),
                       Expanded(
@@ -164,87 +170,12 @@ class UserProfilePage extends StatelessWidget {
                             ? Center(
                                 child: CircularProgressIndicator(
                                   color:
-                                      Theme.of(context).colorScheme.onSurface,
+                                      Theme.of(context).colorScheme.primary,
                                 ),
                               )
                             : provider.tabIndex == 0
-                                ? provider.recipes.isEmpty
-                                    ? Center(
-                                        child: Text(
-                                          "No recipes available.",
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface),
-                                        ),
-                                      )
-                                    : ListView.builder(
-                                        padding: EdgeInsets.zero,
-                                        itemCount: provider.recipes.length + 1,
-                                        itemBuilder: (context, index) {
-                                          if (index == 0) {
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 8.0,
-                                                      horizontal: 16.0),
-                                              child: Text(
-                                                'Showing ${provider.recipes.length} recipes',
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface,
-                                                  fontSize: 18,
-                                                ),
-                                              ),
-                                            );
-                                          } else {
-                                            return RecipeTile(
-                                              recipe: RecipePreview.fromRecipe(
-                                                provider.recipes[index - 1],
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      )
-                                : provider.posts.isEmpty
-                                    ? Center(
-                                        child: Text(
-                                          "No posts available.",
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface),
-                                        ),
-                                      )
-                                    : ListView.builder(
-                                        padding: EdgeInsets.zero,
-                                        itemCount: provider.posts.length + 1,
-                                        itemBuilder: (context, index) {
-                                          if (index == 0) {
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 8.0,
-                                                      horizontal: 16.0),
-                                              child: Text(
-                                                'Showing ${provider.posts.length} posts',
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface,
-                                                  fontSize: 18,
-                                                ),
-                                              ),
-                                            );
-                                          } else {
-                                            return UserPostCard(
-                                              post: provider.posts[index - 1],
-                                              provider: provider,
-                                            );
-                                          }
-                                        },
-                                      ),
+                                ? _buildRecipesList(context, provider)
+                                : _buildPostsList(context, provider),
                       ),
                     ],
                   ),
@@ -257,33 +188,119 @@ class UserProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTab(BuildContext context, String title, int index,
-      UserProfileProvider provider) {
-    bool isSelected = provider.tabIndex == index;
+  Widget _buildRecipesList(
+      BuildContext context, UserProfileProvider provider) {
+    if (provider.recipes.isEmpty) {
+      return Center(
+        child: Text(
+          'No recipes available.',
+          style: GoogleFonts.nunito(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: provider.recipes.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Text(
+              'Showing ${provider.recipes.length} recipes',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
+        }
+
+        return RecipeTile(
+          recipe: RecipePreview.fromRecipe(
+            provider.recipes[index - 1],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPostsList(BuildContext context, UserProfileProvider provider) {
+    if (provider.posts.isEmpty) {
+      return Center(
+        child: Text(
+          'No posts available.',
+          style: GoogleFonts.nunito(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: provider.posts.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Text(
+              'Showing ${provider.posts.length} posts',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
+        }
+
+        return UserPostCard(
+          post: provider.posts[index - 1],
+          provider: provider,
+        );
+      },
+    );
+  }
+
+  Widget _buildTab(
+      BuildContext context, String title, int index, UserProfileProvider provider) {
+    final isSelected = provider.tabIndex == index;
+
     return Expanded(
       child: GestureDetector(
         onTap: () => provider.setTabIndex(index),
         child: Container(
-          decoration: BoxDecoration(
-            border: isSelected
-                ? Border(
+          decoration: isSelected
+              ? BoxDecoration(
+                  border: Border(
                     bottom: BorderSide(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        width: 1.0))
-                : null,
-          ),
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2.0,
+                    ),
+                  ),
+                )
+              : null,
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             child: Column(
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: GoogleFonts.nunito(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.onSurface
+                        ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
                 ),
@@ -301,16 +318,17 @@ class UserProfilePage extends StatelessWidget {
       children: [
         Text(
           value.toString(),
-          style: TextStyle(
+          style: GoogleFonts.nunito(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.nunito(
             fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),

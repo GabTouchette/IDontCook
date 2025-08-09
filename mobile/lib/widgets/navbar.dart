@@ -15,7 +15,7 @@ class Navbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final navItems = [
       {'icon': FontAwesomeIcons.book},
-      {'icon': FontAwesomeIcons.robot},
+  {'icon': FontAwesomeIcons.utensils},
       {'icon': FontAwesomeIcons.compass},
       {'icon': FontAwesomeIcons.users},
     ];

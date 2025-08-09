@@ -119,6 +119,22 @@ class PersonalInfoDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: Text(
+                                "We collect this optional information to help guide the AI Cookbot in providing more personalized recipe suggestions and cooking advice tailored to your preferences and needs.",
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.7),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
                             _buildNumberField(
                                 context, "Age", provider.age, provider.setAge),
                             _buildDropdown(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/models/user/user.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

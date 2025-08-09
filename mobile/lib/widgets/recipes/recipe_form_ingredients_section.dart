@@ -23,97 +23,103 @@ class _IngredientsSectionState extends State<IngredientsSection> {
     for (int i = 0; i < widget.ingredients.length; i++) {
       inputFields.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(8),
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            // Number badge - smaller and lighter
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  width: 1,
                 ),
-                child: Center(
-                  child: Text(
-                    "${i + 1}",
-                    style: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
+              ),
+              child: Center(
+                child: Text(
+                  "${i + 1}",
+                  style: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                    ),
+            ),
+            const SizedBox(width: 10.0),
+            // Text field - expanded to take more space
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.15),
                   ),
-                  child: TextField(
-                    controller: widget.ingredients[i].controller,
-                    focusNode: widget.ingredients[i].focusNode,
-                    style: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                ),
+                child: TextField(
+                  controller: widget.ingredients[i].controller,
+                  focusNode: widget.ingredients[i].focusNode,
+                  style: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  onChanged: (text) {
+                    if (i == widget.ingredients.length - 1 && text.isNotEmpty) {
+                      setState(() {
+                        widget.ingredients.add(IngredientField(
+                            controller: TextEditingController(),
+                            focusNode: FocusNode()));
+                      });
+                      widget.onIngredientsChanged(widget.ingredients);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'e.g., 2 cups flour',
+                    hintStyle: GoogleFonts.nunito(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant
+                          .withOpacity(0.7),
+                      fontSize: 15,
                     ),
-                    onChanged: (text) {
-                      if (i == widget.ingredients.length - 1 &&
-                          text.isNotEmpty) {
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 14.0),
+                  ),
+                ),
+              ),
+            ),
+            // Delete button - smaller and more subtle, no extra padding
+            SizedBox(
+              width: 32,
+              height: 24,
+              child: IconButton(
+                padding: const EdgeInsets.only(bottom: 4.0, left: 12.0),
+                iconSize: 24,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).colorScheme.error.withOpacity(0.8),
+                ),
+                onPressed: widget.ingredients.length > 1
+                    ? () {
                         setState(() {
-                          widget.ingredients.add(IngredientField(
-                              controller: TextEditingController(),
-                              focusNode: FocusNode()));
+                          widget.ingredients.removeAt(i);
                         });
                         widget.onIngredientsChanged(widget.ingredients);
                       }
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Ingredient',
-                      hintStyle: GoogleFonts.nunito(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 16,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
-                    ),
-                  ),
-                ),
+                    : null,
               ),
-              Container(
-                margin: const EdgeInsets.only(left: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.delete,
-                    color: Theme.of(context).colorScheme.error,
-                    size: 20,
-                  ),
-                  onPressed: widget.ingredients.length > 1
-                      ? () {
-                          setState(() {
-                            widget.ingredients.removeAt(i);
-                          });
-                          widget.onIngredientsChanged(widget.ingredients);
-                        }
-                      : null,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ]),
         ),
       );
     }
@@ -124,45 +130,59 @@ class _IngredientsSectionState extends State<IngredientsSection> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       child: Container(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(18.0),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Ingredients",
-              style: GoogleFonts.nunito(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-                letterSpacing: -0.3,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.restaurant_menu,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Ingredients",
+                  style: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 14.0),
             ..._buildIngredientsInputFields(),
             Padding(
-              padding: const EdgeInsets.only(top: 8.0),
+              padding: const EdgeInsets.only(top: 6.0),
               child: Text(
-                "Enter in format: Qty Unit Ingredient (e.g., 100 g sugar, 1.75 cups flour)",
+                "Format: quantity unit ingredient (e.g., 2 cups flour, 1 tbsp salt)",
                 style: GoogleFonts.nunito(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 14,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.8),
+                  fontSize: 13,
                   fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
             ),

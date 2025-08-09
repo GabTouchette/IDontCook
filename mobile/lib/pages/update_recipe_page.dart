@@ -143,109 +143,48 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Text(
-            'Update Recipe',
-            style: GoogleFonts.nunito(
-              fontWeight: FontWeight.w900,
-              fontSize: 24,
-              color: Theme.of(context).colorScheme.onSurface,
-              letterSpacing: -0.5,
-            ),
+        title: Text(
+          'Update Recipe',
+          style: GoogleFonts.nunito(
+            fontWeight: FontWeight.w900,
+            fontSize: 24,
+            color: Theme.of(context).colorScheme.onSurface,
+            letterSpacing: -0.5,
           ),
         ),
-        leading: Container(
-          margin: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(
-              Icons.chevron_left,
-              size: 28,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(
+            Icons.chevron_left,
+            size: 36,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.success,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.success.withOpacity(0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.success.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
               onPressed: _submitUpdatedRecipe,
               icon: Icon(
                 Icons.check_box_outlined,
-                size: 28,
-                color: Theme.of(context).colorScheme.onPrimary,
+                size: 36,
+                color: Theme.of(context).colorScheme.success,
               ),
               tooltip: 'Save',
             ),
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.05),
-              Theme.of(context).scaffoldBackgroundColor,
-              Theme.of(context).colorScheme.surface,
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 16.0),
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Padding(
+        padding: const EdgeInsets.only(top: 16.0),
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               children: [
                 TitleSection(titleController: _titleController),
@@ -274,7 +213,6 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
             ),
           ),
         ),
-      ),
     );
   }
 
