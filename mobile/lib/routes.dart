@@ -16,6 +16,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case '/recommendations':
     case '/explore':
       return MaterialPageRoute(builder: (_) => const DashboardPage());
+    case '/meal-plans':
+      return MaterialPageRoute(builder: (_) => const DashboardPage());
 
     default:
       return MaterialPageRoute(builder: (_) => const LoginPage());

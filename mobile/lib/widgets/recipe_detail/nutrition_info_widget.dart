@@ -207,42 +207,11 @@ class NutritionInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalNutritionItem(
-      BuildContext context, String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.nunito(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
   bool _hasNutritionData() {
     return recipe.calories != null ||
         recipe.protein != null ||
         recipe.fat != null ||
         recipe.carbs != null;
-  }
-
-  bool _hasAnyNutritionValue() {
-    return (recipe.calories != null && recipe.calories! > 0) ||
-        (recipe.protein != null && recipe.protein! > 0) ||
-        (recipe.fat != null && recipe.fat! > 0) ||
-        (recipe.carbs != null && recipe.carbs! > 0);
   }
 
   double? _getPerServingValue(double? totalValue) {

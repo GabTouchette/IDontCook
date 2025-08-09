@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/widgets/dialogs/personal_info_dialog.dart';
+import 'package:i_cant_cook/widgets/developer/network_debug_widget.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -42,7 +43,7 @@ class SettingsPage extends StatelessWidget {
         ),
         body: Consumer<SettingsProvider>(
           builder: (context, settingsProvider, _) {
-            return Padding(
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
@@ -53,6 +54,14 @@ class SettingsPage extends StatelessWidget {
                     title: "Personal Information",
                     subtitle: "Update your profile and account details",
                     onTap: () => _openPersonalInfoModal(context),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.developer_mode,
+                    title: "Network Settings",
+                    subtitle: "Configure local IP address for development",
+                    onTap: () => _showNetworkDebugModal(context),
                   ),
                   const SizedBox(height: 16),
                   Consumer<AuthProvider>(
@@ -188,6 +197,38 @@ class SettingsPage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => const PersonalInfoDialog(),
+    );
+  }
+
+  void _showNetworkDebugModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.all(8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const NetworkDebugWidget(),
+          ],
+        ),
+      ),
     );
   }
 }

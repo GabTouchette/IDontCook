@@ -185,81 +185,30 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
         padding: const EdgeInsets.only(top: 16.0),
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Column(
-              children: [
-                TitleSection(titleController: _titleController),
-                IngredientsSection(
-                  ingredients: _ingredients,
-                  onIngredientsChanged: _onIngredientsChanged,
-                ),
-                InstructionsSection(
-                  instructions: _instructions,
-                  onInstructionsChanged: _onInstructionsChanged,
-                ),
-                TimeSection(
-                  prepTimeController: _preptimeController,
-                  cookTimeController: _cooktimeController,
-                ),
-                TagsSection(
-                  selectedTags: _selectedTags,
-                  onTagsChanged: _onTagsChanged,
-                ),
-                ExtraSection(
-                  descriptionController: _descriptionController,
-                  notesController: _notesController,
-                ),
-                const SizedBox(height: 32.0),
-              ],
-            ),
-          ),
-        ),
-    );
-  }
-
-  Widget _buildUpdateButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: _submitUpdatedRecipe,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
             children: [
-              Icon(
-                Icons.edit,
-                color: Theme.of(context).colorScheme.onPrimary,
-                size: 24,
+              TitleSection(titleController: _titleController),
+              IngredientsSection(
+                ingredients: _ingredients,
+                onIngredientsChanged: _onIngredientsChanged,
               ),
-              const SizedBox(width: 8.0),
-              Text(
-                "Update",
-                style: GoogleFonts.nunito(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+              InstructionsSection(
+                instructions: _instructions,
+                onInstructionsChanged: _onInstructionsChanged,
               ),
+              TimeSection(
+                prepTimeController: _preptimeController,
+                cookTimeController: _cooktimeController,
+              ),
+              TagsSection(
+                selectedTags: _selectedTags,
+                onTagsChanged: _onTagsChanged,
+              ),
+              ExtraSection(
+                descriptionController: _descriptionController,
+                notesController: _notesController,
+              ),
+              const SizedBox(height: 32.0),
             ],
           ),
         ),

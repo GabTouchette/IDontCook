@@ -4,6 +4,7 @@ import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/login_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
+import 'package:i_cant_cook/pages/settings_page.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -57,6 +58,13 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
                 } else if (value == 1) {
                   _toggleTheme();
                 } else if (value == 2) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(),
+                    ),
+                  );
+                } else if (value == 3) {
                   await _authApi.logout();
                   if (mounted) {
                     Navigator.pushReplacement(
@@ -92,9 +100,17 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
                     context: context,
                   ),
                 ),
-                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 2,
+                  child: _buildMenuItem(
+                    icon: Icons.settings,
+                    label: "Settings",
+                    context: context,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 3,
                   child: _buildMenuItem(
                     icon: Icons.logout,
                     label: "Logout",
