@@ -24,6 +24,10 @@ class MealPlanApi {
     return await _api.deleteRequest('meal-plans/$id/');
   }
 
+  Future<Map<String, dynamic>> get(int id) async {
+    return await _api.getRequest('meal-plans/$id/');
+  }
+
   Future<Map<String, dynamic>> groceryList(int id) async {
     return await _api.getRequest('meal-plans/$id/grocery_list/');
   }

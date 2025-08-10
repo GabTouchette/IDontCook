@@ -23,6 +23,7 @@ dependencies:
   mime: ^2.0.0
   flutter_markdown: ^0.6.17
   google_fonts: ^6.1.0
+  dotted_border: ^2.1.0
 
 dev_dependencies:
   flutter_test:
