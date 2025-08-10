@@ -4,9 +4,26 @@ from recipes.models import Recipe
 
 
 class PlannedMealSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = PlannedMeal
-        fields = ["id", "recipe", "day_of_week", "meal_type", "servings"]
+        fields = ["id", "recipe", "day_of_week", "meal_type", "servings", "title", "thumbnail_url"]
+
+    def get_title(self, obj: PlannedMeal):
+        return obj.recipe.title if obj.recipe else None
+
+    def get_thumbnail_url(self, obj: PlannedMeal):
+        try:
+            if obj.recipe and getattr(obj.recipe, 'thumbnail', None):
+                url = obj.recipe.thumbnail.url
+                request = self.context.get('request') if hasattr(self, 'context') else None
+                if request is not None and not (url.startswith('http://') or url.startswith('https://')):
+                    return request.build_absolute_uri(url)
+                return url
+        except Exception:
+            pass
+        return None
 
 
 class MealPlanSerializer(serializers.ModelSerializer):

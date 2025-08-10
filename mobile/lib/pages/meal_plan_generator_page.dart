@@ -16,35 +16,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
   bool _loading = false;
   bool _focusSaved = true;
 
-  String _dayLabel(DateTime weekStart, int dayIndex) {
-    const names = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday'
-    ];
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    final idx = dayIndex.clamp(0, 6);
-    final date = weekStart.add(Duration(days: idx));
-    final md = '${months[date.month - 1]} ${date.day}';
-    return '${names[idx]} • $md';
-  }
+  // _dayLabel was removed as unused
 
   String _dayLabelPlain(DateTime weekStart, int dayIndex) {
     const names = [

@@ -8,6 +8,7 @@ import 'package:i_cant_cook/pages/meal_plan_generator_page.dart';
 import 'package:i_cant_cook/pages/manual_planning_page.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/models/meal_planning/meal_plan.dart';
+import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/pages/plan_library_page.dart';
 import 'package:i_cant_cook/pages/templates_page.dart';
 import 'package:i_cant_cook/widgets/recipe_browser_list.dart';
@@ -46,7 +47,8 @@ class MealPlanPage extends StatelessWidget {
                     _copyFrom(context, mp);
                     break;
                   case 'clear':
-                    mp.clearMealsForRange(selected, const ['breakfast', 'lunch', 'dinner', 'snack']);
+                    mp.clearMealsForRange(selected,
+                        const ['breakfast', 'lunch', 'dinner', 'snack']);
                     break;
                   case 'templates':
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -100,128 +102,97 @@ class MealPlanPage extends StatelessWidget {
       body: Consumer<MealPlanProvider>(
         builder: (context, mp, child) {
           final weekStart = mp.visibleWeekStart;
-          final hasPlan = mp.activeMealPlan != null;
+          final selectedDays = [...mp.selectedDaysList]..sort();
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
-                WeeklyCalendar(
-                  weekStart: weekStart,
-                  selectedDay: mp.selectedDay,
-                  rangeStart: mp.rangeStart,
-                  rangeEnd: mp.rangeEnd,
-                  onDaySelected: mp.tapDay,
-                  onSwipeLeft: mp.nextWeek,
-                  onSwipeRight: mp.prevWeek,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              WeeklyCalendar(
+                weekStart: weekStart,
+                selectedDay: mp.selectedDay,
+                rangeStart: mp.rangeStart,
+                rangeEnd: mp.rangeEnd,
+                onDaySelected: mp.tapDay,
+                onSwipeLeft: mp.nextWeek,
+                onSwipeRight: mp.prevWeek,
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: mp.isGenerating
+                        ? null
+                        : () => _openCreatePlanSheet(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: mp.isGenerating
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.onPrimary),
+                          )
+                        : Text('Make a plan',
+                            style: GoogleFonts.nunito(
+                                fontWeight: FontWeight.w800)),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Padding(
+              ),
+              const SizedBox(height: 12),
+              // Scrollable meal slots list grouped by selected days
+              Expanded(
+                child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: mp.isGenerating ? null : () => _openCreatePlanSheet(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: mp.isGenerating
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimary),
-                            )
-                          : Text('Plan this week',
-                              style:
-                                  GoogleFonts.nunito(fontWeight: FontWeight.w800)),
-                    ),
-                  ),
+                  itemCount: selectedDays.length,
+                  itemBuilder: (context, index) {
+                    final dayIndex = selectedDays[index];
+                    return _DaySection(
+                      dayIndex: dayIndex,
+                      weekStart: weekStart,
+                      titleFor: (mealType) =>
+                          _titleForDay(mp, mealType, dayIndex),
+                      onTapSlot: (mealType) {
+                        mp.ensureActivePlanForWeek();
+                        _openRecipePicker(context, mealType, dayIndex);
+                      },
+                      onLongPressSlot: (mealType) =>
+                          _showSlotActions(context, mp, mealType),
+                    );
+                  },
                 ),
-                const SizedBox(height: 12),
-                // This Week summary if a plan exists
-                if (hasPlan)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildWeekSummary(context, mp),
-                  ),
-                if (hasPlan) const SizedBox(height: 8),
-                Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        // Show four slots always; when empty they render as dotted placeholders
-            MealSlot(
-                          label: 'Breakfast',
-                          title: _titleFor(mp, 'breakfast'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'breakfast', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'breakfast'),
-                        ),
-                        const SizedBox(height: 10),
-            MealSlot(
-                          label: 'Lunch',
-                          title: _titleFor(mp, 'lunch'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'lunch', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'lunch'),
-                        ),
-                        const SizedBox(height: 10),
-            MealSlot(
-                          label: 'Dinner',
-                          title: _titleFor(mp, 'dinner'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'dinner', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'dinner'),
-                        ),
-                        const SizedBox(height: 10),
-            MealSlot(
-                          label: 'Snack',
-                          title: _titleFor(mp, 'snack'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'snack', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'snack'),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
-  Future<void> _openRecipePicker(BuildContext context, String mealType, int dayIndex) async {
+  Future<void> _openRecipePicker(
+      BuildContext context, String mealType, int dayIndex) async {
     final scheme = Theme.of(context).colorScheme;
     final controller = TextEditingController();
     bool savedOnly = true;
-    final List<String> tags = ['breakfast','lunch','dinner','dessert','snack'];
-    final Set<String> selected = { mealType.toLowerCase() };
+    final List<String> tags = [
+      'breakfast',
+      'lunch',
+      'dinner',
+      'dessert',
+      'snack'
+    ];
+    final Set<String> selected = {mealType.toLowerCase()};
     RecipePreview? chosen;
     await showModalBottomSheet(
       context: context,
@@ -261,7 +232,8 @@ class MealPlanPage extends StatelessWidget {
                           FilterChip(
                             label: const Text('Saved only'),
                             selected: savedOnly,
-                            onSelected: (v) => setSheetState(() => savedOnly = v),
+                            onSelected: (v) =>
+                                setSheetState(() => savedOnly = v),
                           ),
                         ],
                       ),
@@ -282,8 +254,12 @@ class MealPlanPage extends StatelessWidget {
                                   label: Text(
                                     _capitalize(t),
                                     style: TextStyle(
-                                      fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                                      color: isSel ? scheme.primary : scheme.onSurfaceVariant,
+                                      fontWeight: isSel
+                                          ? FontWeight.w800
+                                          : FontWeight.w600,
+                                      color: isSel
+                                          ? scheme.primary
+                                          : scheme.onSurfaceVariant,
                                     ),
                                   ),
                                   selected: isSel,
@@ -295,11 +271,18 @@ class MealPlanPage extends StatelessWidget {
                                     }
                                   }),
                                   shape: const StadiumBorder(),
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-                                  side: BorderSide(color: scheme.outlineVariant.withOpacity(0.6)),
-                                  backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.6),
-                                  selectedColor: scheme.primary.withOpacity(0.12),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: const VisualDensity(
+                                      horizontal: -2, vertical: -2),
+                                  side: BorderSide(
+                                      color: scheme.outlineVariant
+                                          .withOpacity(0.6)),
+                                  backgroundColor: scheme
+                                      .surfaceContainerHighest
+                                      .withOpacity(0.6),
+                                  selectedColor:
+                                      scheme.primary.withOpacity(0.12),
                                 );
                               }),
                             ],
@@ -354,8 +337,8 @@ class MealPlanPage extends StatelessWidget {
     );
   }
 
-  String? _titleFor(MealPlanProvider mp, String mealType) {
-    final meals = mp.mealsForDay(mp.selectedDay);
+  String? _titleForDay(MealPlanProvider mp, String mealType, int dayIndex) {
+    final meals = mp.mealsForDay(dayIndex);
     for (final m in meals) {
       if (m.mealType == mealType) return m.title;
     }
@@ -402,7 +385,7 @@ class MealPlanPage extends StatelessWidget {
       ),
     );
   }
-  
+
   void _openCreatePlanSheet(BuildContext context) {
     final mp = context.read<MealPlanProvider>();
     showModalBottomSheet(
@@ -420,7 +403,8 @@ class MealPlanPage extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const MealPlanGeneratorPage()),
+                  MaterialPageRoute(
+                      builder: (_) => const MealPlanGeneratorPage()),
                 );
               },
             ),
@@ -434,10 +418,14 @@ class MealPlanPage extends StatelessWidget {
                     initialWeek: mp.visibleWeekStart,
                     preselectedDays: mp.selectedDaysList,
                   ),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    final offsetAnimation = Tween(begin: const Offset(0, 1), end: Offset.zero)
-                        .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-                    return SlideTransition(position: offsetAnimation, child: child);
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    final offsetAnimation =
+                        Tween(begin: const Offset(0, 1), end: Offset.zero)
+                            .animate(CurvedAnimation(
+                                parent: animation, curve: Curves.easeOutCubic));
+                    return SlideTransition(
+                        position: offsetAnimation, child: child);
                   },
                 ));
               },
@@ -486,55 +474,159 @@ class MealPlanPage extends StatelessWidget {
     mp.copyDayMeals(from, mp.selectedDaysList, replace: false);
   }
 
-  Widget _buildWeekSummary(BuildContext context, MealPlanProvider mp) {
+  // _buildWeekSummary removed per new design
+}
+
+class _DaySection extends StatelessWidget {
+  final int dayIndex;
+  final DateTime weekStart;
+  final String? Function(String mealType) titleFor;
+  final void Function(String mealType) onTapSlot;
+  final void Function(String mealType) onLongPressSlot;
+
+  const _DaySection({
+    required this.dayIndex,
+    required this.weekStart,
+    required this.titleFor,
+    required this.onTapSlot,
+    required this.onLongPressSlot,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final List<PlannedMeal> meals = List<PlannedMeal>.from(
-        mp.activeMealPlan?.plannedMeals ?? const []);
-    meals.sort((a, b) => a.dayOfWeek != b.dayOfWeek
-        ? a.dayOfWeek.compareTo(b.dayOfWeek)
-        : _mealTypeOrder(a.mealType).compareTo(_mealTypeOrder(b.mealType)));
-    final display = meals.take(6).toList();
-    if (display.isEmpty) return const SizedBox.shrink();
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('This Week',
-                style:
-                    GoogleFonts.nunito(fontWeight: FontWeight.w900, fontSize: 18)),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (int i = 0; i < display.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    _WeekChip(meal: display[i], colorScheme: scheme),
-                  ],
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Day divider header
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Divider(color: scheme.outlineVariant.withOpacity(0.6)),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _dayLabelPlain(weekStart, dayIndex),
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Divider(color: scheme.outlineVariant.withOpacity(0.6)),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          _SlotRow(
+              label: 'Breakfast',
+              mealType: 'breakfast',
+              titleFor: titleFor,
+              onTapSlot: onTapSlot,
+              onLongPressSlot: onLongPressSlot),
+          const SizedBox(height: 10),
+          _SlotRow(
+              label: 'Lunch',
+              mealType: 'lunch',
+              titleFor: titleFor,
+              onTapSlot: onTapSlot,
+              onLongPressSlot: onLongPressSlot),
+          const SizedBox(height: 10),
+          _SlotRow(
+              label: 'Dinner',
+              mealType: 'dinner',
+              titleFor: titleFor,
+              onTapSlot: onTapSlot,
+              onLongPressSlot: onLongPressSlot),
+          const SizedBox(height: 10),
+          _SlotRow(
+              label: 'Snack',
+              mealType: 'snack',
+              titleFor: titleFor,
+              onTapSlot: onTapSlot,
+              onLongPressSlot: onLongPressSlot),
+        ],
       ),
     );
   }
 
-  int _mealTypeOrder(String mt) {
-    switch (mt) {
-      case 'breakfast':
-        return 0;
-      case 'lunch':
-        return 1;
-      case 'dinner':
-        return 2;
-      case 'snack':
-        return 3;
-    }
-    return 99;
+  String _dayLabelPlain(DateTime weekStart, int dayIndex) {
+    const names = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    final idx = dayIndex.clamp(0, 6);
+    final date = weekStart.add(Duration(days: idx));
+    final md = '${months[date.month - 1]} ${date.day}';
+    return '${names[idx]} $md';
+  }
+}
+
+class _SlotRow extends StatelessWidget {
+  final String label;
+  final String mealType;
+  final String? Function(String mealType) titleFor;
+  final void Function(String mealType) onTapSlot;
+  final void Function(String mealType) onLongPressSlot;
+
+  const _SlotRow({
+    required this.label,
+    required this.mealType,
+    required this.titleFor,
+    required this.onTapSlot,
+    required this.onLongPressSlot,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final mp = context.watch<MealPlanProvider>();
+    final dayIndex =
+        (context.findAncestorWidgetOfExactType<_DaySection>()?.dayIndex) ??
+            mp.selectedDay;
+    final filled = mp.mealsForDay(dayIndex).firstWhere(
+          (m) => m.mealType == mealType,
+          orElse: () => PlannedMeal(
+              dayOfWeek: dayIndex, mealType: mealType, recipeId: -1, title: ''),
+        );
+    final hasMeal = filled.recipeId != -1 && filled.title.isNotEmpty;
+
+    return MealSlot(
+      label: label,
+      title: titleFor(mealType),
+      thumbnailUrl: hasMeal ? filled.thumbnailUrl : null,
+      onTap: () {
+        if (hasMeal) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => RecipeDetailPage(recipeId: filled.recipeId),
+          ));
+        } else {
+          onTapSlot(mealType);
+        }
+      },
+      onLongPress: () => onLongPressSlot(mealType),
+      onRemove: hasMeal ? () => mp.removeMeal(dayIndex, mealType) : null,
+    );
   }
 }
 
@@ -589,69 +681,4 @@ class _GroceryListPage extends StatelessWidget {
       ),
     );
   }
-}
-
-class _WeekChip extends StatelessWidget {
-  final PlannedMeal meal;
-  final ColorScheme colorScheme;
-  const _WeekChip({required this.meal, required this.colorScheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: _thumb(meal.thumbnailUrl),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_capitalize(meal.mealType),
-                  style: GoogleFonts.nunito(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant)),
-              SizedBox(
-                width: 140,
-                child: Text(meal.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.nunito(
-                        fontWeight: FontWeight.w800, fontSize: 14)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _thumb(String? url) {
-    final placeholder = Container(
-      width: 36,
-      height: 36,
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-      child: const Icon(Icons.image_outlined, size: 18),
-    );
-    if (url == null || url.trim().isEmpty) return placeholder;
-    return Image.network(
-      url,
-      width: 36,
-      height: 36,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => placeholder,
-    );
-  }
-
-  String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }

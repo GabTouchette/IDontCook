@@ -4,7 +4,9 @@ class MealPlanApi {
   final ApiHelper _api = ApiHelper();
 
   Future<Map<String, dynamic>> generate(Map<String, dynamic> body) async {
-    return await _api.postRequest('meal-plans/', body); // placeholder create
+  final int id = body['id'] as int; // meal plan id to generate into
+  final req = Map<String, dynamic>.from(body)..remove('id');
+  return await _api.postRequest('meal-plans/$id/generate/', req);
   }
 
   Future<List<dynamic>> list() async {

@@ -8,8 +8,9 @@ class MealSlot extends StatelessWidget {
   final VoidCallback? onLongPress;
   final String? title;
   final String? thumbnailUrl;
+  final VoidCallback? onRemove; // shows an X button when provided and slot filled
 
-  const MealSlot({super.key, required this.label, required this.onTap, this.onLongPress, this.title, this.thumbnailUrl});
+  const MealSlot({super.key, required this.label, required this.onTap, this.onLongPress, this.title, this.thumbnailUrl, this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +101,7 @@ class MealSlot extends StatelessWidget {
                       color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: thumbnailUrl != null
+                    child: thumbnailUrl != null && thumbnailUrl!.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(thumbnailUrl!, fit: BoxFit.cover),
@@ -133,7 +134,13 @@ class MealSlot extends StatelessWidget {
                         )
                       ],
                     ),
-                  )
+                  ),
+                  if (onRemove != null)
+                    IconButton(
+                      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      tooltip: 'Remove',
+                      onPressed: onRemove,
+                    )
                 ],
               ),
             ),
