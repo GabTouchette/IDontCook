@@ -55,7 +55,8 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        title: Text('Generate Meal Plan', style: GoogleFonts.nunito(fontWeight: FontWeight.w900)),
+        title: Text('Generate Meal Plan',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w900)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -70,19 +71,24 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                 if (selected.isEmpty) return const SizedBox.shrink();
                 final ws = mp.visibleWeekStart;
                 return Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('You\'re planning for:', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                        Text('You\'re planning for:',
+                            style: GoogleFonts.nunito(
+                                fontWeight: FontWeight.w800)),
                         const SizedBox(height: 8),
                         Text(
                           selected.length == 1
                               ? _dayLabelPlain(ws, selected.first)
                               : '${_dayLabelPlain(ws, selected.first)} - ${_dayLabelPlain(ws, selected.last)}',
-                          style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+                          style:
+                              GoogleFonts.nunito(fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -100,7 +106,8 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                 minLines: 5,
                 maxLines: 10,
                 decoration: const InputDecoration(
-                  hintText: 'e.g., Family-friendly dinners for 4, low-carb lunches, 30-min meals, include leftovers for next day…',
+                  hintText:
+                      'e.g., Family-friendly dinners for 4, low-carb lunches, 30-min meals, include leftovers for next day…',
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: Colors.white,
@@ -143,7 +150,8 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                               strokeWidth: 2,
                               color: Theme.of(context).colorScheme.onPrimary))
                       : Text('Generate',
-                          style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                          style:
+                              GoogleFonts.nunito(fontWeight: FontWeight.w800)),
                 ),
               )
             ],

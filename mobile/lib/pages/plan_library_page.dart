@@ -13,7 +13,8 @@ class PlanLibraryPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         title: Text('Plan Library',
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w900, fontSize: 24)),
+            style:
+                GoogleFonts.nunito(fontWeight: FontWeight.w900, fontSize: 24)),
         leading: IconButton(
           icon: const Icon(Icons.chevron_left, size: 32),
           onPressed: () => Navigator.pop(context),
@@ -39,17 +40,25 @@ class PlanLibraryPage extends StatelessWidget {
               final p = plans[i];
               final name = (p['name'] as String?) ?? 'Meal Plan';
               final ws = (p['week_start_date'] as String?) ?? '';
-              final count = ((p['planned_meals'] as List?)?.length ?? 0).toString();
+              final count =
+                  ((p['planned_meals'] as List?)?.length ?? 0).toString();
               return ListTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                  side: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.2)),
                 ),
-                title: Text(name, style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                title: Text(name,
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
                 subtitle: Text('Week of $ws • $count meals'),
                 trailing: TextButton(
                   onPressed: () async {
-                    await context.read<MealPlanProvider>().loadPlanById(p['id'] as int);
+                    await context
+                        .read<MealPlanProvider>()
+                        .loadPlanById(p['id'] as int);
                     if (context.mounted) Navigator.pop(context);
                   },
                   child: const Text('Load'),

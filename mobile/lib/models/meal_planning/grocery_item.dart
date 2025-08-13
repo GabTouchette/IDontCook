@@ -11,7 +11,8 @@ class GroceryItem {
     this.purchased = false,
   });
 
-  GroceryItem copyWith({String? name, String? unit, double? quantity, bool? purchased}) {
+  GroceryItem copyWith(
+      {String? name, String? unit, double? quantity, bool? purchased}) {
     return GroceryItem(
       name: name ?? this.name,
       unit: unit ?? this.unit,

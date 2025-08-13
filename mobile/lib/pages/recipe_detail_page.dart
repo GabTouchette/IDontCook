@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/additional_section_widget.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/nutrition_info_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_detail_skeleton.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_image_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_info_widget.dart';
@@ -321,6 +322,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                         provider.toggleInstructionCompletion,
                     onCompletedIngredient: provider.toggleIngredientCompletion,
                     updatedFields: updatedFields,
+                  ),
+                  NutritionInfo(
+                    recipe: recipe,
+                    servings: provider.servings,
                   ),
                   AdditionalSections(
                     tags: recipe.tags,

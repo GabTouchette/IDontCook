@@ -23,22 +23,31 @@ class NutritionData(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     substitutes = models.JSONField(default=list, blank=True, null=True)
-    quantity = models.FloatField(blank=True, null=True)
-    unit = models.CharField(max_length=50, blank=True, null=True)
+    quantity = models.FloatField(blank=True, null=True)  # Keep for backward compatibility
+    unit = models.CharField(max_length=50, blank=True, null=True)  # Keep for backward compatibility
+    quantity_unit = models.CharField(max_length=100, blank=True, null=True)  # New combined field
+    preparation = models.CharField(max_length=255, blank=True, null=True)  # New preparation field
+    original_text = models.CharField(max_length=500, blank=True, null=True)  # Full ingredient string
     usda_name = models.CharField(max_length=255, blank=True, null=True)  # Simplified name for USDA lookup
     nutrition_data = models.ForeignKey(NutritionData, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         parts = []
 
-        if self.quantity is not None:
-            parts.append(str(self.quantity))
-
-        if self.unit:
-            parts.append(self.unit)
+        # Use new quantity_unit field if available, otherwise fall back to old format
+        if self.quantity_unit:
+            parts.append(self.quantity_unit)
+        else:
+            if self.quantity is not None:
+                parts.append(str(self.quantity))
+            if self.unit:
+                parts.append(self.unit)
 
         if self.name:
             parts.append(self.name)
+
+        if self.preparation:
+            parts.append(f", {self.preparation}")
 
         return " ".join(parts)
 

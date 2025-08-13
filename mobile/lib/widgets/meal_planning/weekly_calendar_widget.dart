@@ -191,7 +191,7 @@ class _DayTile extends StatelessWidget {
     final sub = fillSelected
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurfaceVariant;
-  final bool showShadow = rangeActive ? inRange : selected;
+    final bool showShadow = rangeActive ? inRange : selected;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -201,7 +201,7 @@ class _DayTile extends StatelessWidget {
           color: bg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
-      boxShadow: showShadow
+          boxShadow: showShadow
               ? [
                   BoxShadow(
                       color: theme.colorScheme.primary.withOpacity(0.25),

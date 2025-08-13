@@ -9,7 +9,8 @@ import 'package:i_cant_cook/providers/meal_plan_provider.dart';
 class MealSelectorPage extends StatefulWidget {
   final int dayIndex;
   final String mealType;
-  const MealSelectorPage({super.key, required this.dayIndex, required this.mealType});
+  const MealSelectorPage(
+      {super.key, required this.dayIndex, required this.mealType});
 
   @override
   State<MealSelectorPage> createState() => _MealSelectorPageState();
@@ -39,7 +40,8 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        title: Text('Select ${widget.mealType}', style: GoogleFonts.nunito(fontWeight: FontWeight.w900)),
+        title: Text('Select ${widget.mealType}',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w900)),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -48,22 +50,36 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
               itemBuilder: (_, i) {
                 final r = _recipes[i];
                 return ListTile(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2))),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.2))),
                   tileColor: Theme.of(context).colorScheme.surface,
                   leading: r.thumbnail_url != null
-                      ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(r.thumbnail_url!, width: 56, height: 56, fit: BoxFit.cover))
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(r.thumbnail_url!,
+                              width: 56, height: 56, fit: BoxFit.cover))
                       : const Icon(Icons.image_outlined),
-                  title: Text(r.title, style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
-                  subtitle: Text('${r.preparation_time ?? '-'} + ${r.cooking_time ?? '-'} min'),
+                  title: Text(r.title,
+                      style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                  subtitle: Text(
+                      '${r.preparation_time ?? '-'} + ${r.cooking_time ?? '-'} min'),
                   onTap: () {
-                    mp.setMeal(widget.dayIndex, widget.mealType, PlannedMeal(
-                      dayOfWeek: widget.dayIndex,
-                      mealType: widget.mealType,
-                      recipeId: r.id,
-                      title: r.title,
-                      thumbnailUrl: r.thumbnail_url,
-                      servings: 1,
-                    ));
+                    mp.setMeal(
+                        widget.dayIndex,
+                        widget.mealType,
+                        PlannedMeal(
+                          dayOfWeek: widget.dayIndex,
+                          mealType: widget.mealType,
+                          recipeId: r.id,
+                          title: r.title,
+                          thumbnailUrl: r.thumbnail_url,
+                          servings: 1,
+                        ));
                     Navigator.pop(context);
                   },
                 );

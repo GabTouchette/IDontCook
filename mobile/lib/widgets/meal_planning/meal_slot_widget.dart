@@ -8,9 +8,17 @@ class MealSlot extends StatelessWidget {
   final VoidCallback? onLongPress;
   final String? title;
   final String? thumbnailUrl;
-  final VoidCallback? onRemove; // shows an X button when provided and slot filled
+  final VoidCallback?
+      onRemove; // shows an X button when provided and slot filled
 
-  const MealSlot({super.key, required this.label, required this.onTap, this.onLongPress, this.title, this.thumbnailUrl, this.onRemove});
+  const MealSlot(
+      {super.key,
+      required this.label,
+      required this.onTap,
+      this.onLongPress,
+      this.title,
+      this.thumbnailUrl,
+      this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +48,17 @@ class MealSlot extends StatelessWidget {
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.6),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.6),
                           style: BorderStyle.solid,
                           width: 1,
                         ),
                       ),
-                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      child: Icon(Icons.add,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -56,7 +69,9 @@ class MealSlot extends StatelessWidget {
                             label,
                             style: GoogleFonts.nunito(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -68,7 +83,9 @@ class MealSlot extends StatelessWidget {
                             style: GoogleFonts.nunito(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           )
                         ],
@@ -83,10 +100,13 @@ class MealSlot extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.2)),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.shadow.withOpacity(0.06),
+                    color:
+                        Theme.of(context).colorScheme.shadow.withOpacity(0.06),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   )
@@ -98,15 +118,21 @@ class MealSlot extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: thumbnailUrl != null && thumbnailUrl!.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.network(thumbnailUrl!, fit: BoxFit.cover),
+                            child:
+                                Image.network(thumbnailUrl!, fit: BoxFit.cover),
                           )
-                        : Icon(Icons.image_outlined, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        : Icon(Icons.image_outlined,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -117,7 +143,8 @@ class MealSlot extends StatelessWidget {
                           label,
                           style: GoogleFonts.nunito(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -137,7 +164,9 @@ class MealSlot extends StatelessWidget {
                   ),
                   if (onRemove != null)
                     IconButton(
-                      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      icon: Icon(Icons.close,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant),
                       tooltip: 'Remove',
                       onPressed: onRemove,
                     )
