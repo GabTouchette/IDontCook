@@ -19,8 +19,6 @@ class ManualPlanningPage extends StatefulWidget {
   State<ManualPlanningPage> createState() => _ManualPlanningPageState();
 }
 
-enum _TopMenuAction { planSelected, copyFrom, clearSelected, templates }
-
 class _ManualPlanningPageState extends State<ManualPlanningPage> {
   final TextEditingController _searchCtrl = TextEditingController();
   RecipePreview? _selectedRecipe;
@@ -33,12 +31,6 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
     'snack',
   ];
   final Set<String> _selectedTags = {};
-  static const List<String> _allMealTypes = [
-    'breakfast',
-    'lunch',
-    'dinner',
-    'snack'
-  ];
 
   @override
   void initState() {
@@ -102,50 +94,6 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
         ),
         leading: const SizedBox.shrink(),
         actions: [
-          Builder(builder: (context) {
-            final mp = context.watch<MealPlanProvider>();
-            final selected = mp.selectedDaysList;
-            return PopupMenuButton<_TopMenuAction>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) async {
-                final mp = context.read<MealPlanProvider>();
-                final selected = mp.selectedDaysList;
-                switch (value) {
-                  case _TopMenuAction.planSelected:
-                    _openBatchPlanner(context, selected);
-                    break;
-                  case _TopMenuAction.copyFrom:
-                    _copyFrom(context, mp);
-                    break;
-                  case _TopMenuAction.clearSelected:
-                    mp.clearMealsForRange(selected, _allMealTypes);
-                    break;
-                  case _TopMenuAction.templates:
-                    _openTemplates(context);
-                    break;
-                }
-              },
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: _TopMenuAction.planSelected,
-                  enabled: selected.length > 1,
-                  child: const Text('Plan Selected Days'),
-                ),
-                const PopupMenuItem(
-                  value: _TopMenuAction.copyFrom,
-                  child: Text('Copy From…'),
-                ),
-                const PopupMenuItem(
-                  value: _TopMenuAction.clearSelected,
-                  child: Text('Clear Selected'),
-                ),
-                const PopupMenuItem(
-                  value: _TopMenuAction.templates,
-                  child: Text('Templates'),
-                ),
-              ],
-            );
-          }),
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
@@ -380,35 +328,6 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
       Expanded(flex: 45, child: leftPanel),
       Expanded(flex: 55, child: rightPanel)
     ]);
-  }
-
-  void _openBatchPlanner(BuildContext context, List<int> selected) {
-    // Placeholder for future BatchPlanningModal
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Batch planner coming soon')));
-  }
-
-  void _copyFrom(BuildContext context, MealPlanProvider mp) async {
-    final days = List<int>.generate(7, (i) => i);
-    final from = await showDialog<int>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Copy from which day?'),
-        children: days
-            .map((d) => SimpleDialogOption(
-                  onPressed: () => Navigator.pop(ctx, d),
-                  child: Text('Day ${d + 1}'),
-                ))
-            .toList(),
-      ),
-    );
-    if (from == null) return;
-    mp.copyDayMeals(from, mp.selectedDaysList, replace: false);
-  }
-
-  void _openTemplates(BuildContext context) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Templates coming soon')));
   }
 
   String _dayLabel(DateTime weekStart, int dayIndex) {

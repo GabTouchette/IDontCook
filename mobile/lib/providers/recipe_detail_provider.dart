@@ -99,20 +99,40 @@ class RecipeDetailProvider with ChangeNotifier {
       int? newId = await RecipeApi().createRecipe(recipeData);
       bool success = newId != null;
 
-      if (success) {
-        // Fetch the full recipe data to refresh the UI
-        var fullRecipeData = await RecipeApi().getRecipeById(newId);
-        _recipe = Recipe.fromJson(fullRecipeData);
-        notifyListeners();
-
-        InformationToast.show(
-          context: context,
-          message: "Recipe saved successfully!",
-          type: ToastType.success,
-        );
-      } else {
+      if (!success) {
         throw Exception("Failed to save recipe");
       }
+
+      // Fetch the newly created recipe (will not yet have nutrition data)
+      var fullRecipeData = await RecipeApi().getRecipeById(newId);
+      _recipe = Recipe.fromJson(fullRecipeData);
+      notifyListeners();
+
+      // If the original recipe had nutrition OR we want to ensure nutrition, attempt calculation
+      try {
+        var nutritionResult = await RecipeApi().calculateRecipeNutrition(newId);
+        if (nutritionResult != null && nutritionResult['success'] == true) {
+          // Re-fetch to get updated nutrition fields
+          var updatedRecipeData = await RecipeApi().getRecipeById(newId);
+          _recipe = Recipe.fromJson(updatedRecipeData);
+          notifyListeners();
+          // ignore: avoid_print
+          print('✅ Nutrition recalculated for saved recipe (saveRecipeOnly)');
+        } else {
+          // ignore: avoid_print
+          print(
+              '⚠️ Nutrition calculation skipped or failed for saveRecipeOnly');
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('❌ Error calculating nutrition in saveRecipeOnly: $e');
+      }
+
+      InformationToast.show(
+        context: context,
+        message: "Recipe saved successfully!",
+        type: ToastType.success,
+      );
     } catch (e) {
       InformationToast.show(
         context: context,

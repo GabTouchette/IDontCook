@@ -16,15 +16,26 @@ class NutritionInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if nutrition data is available
-    if (!_hasNutritionData()) {
-      return SizedBox.shrink(); // Don't show anything if no nutrition data
+    final hasData = _hasNutritionData();
+    // Debug logging
+    // ignore: avoid_print
+    print(
+        '[NutritionInfo] build: recipeId=${recipe.id} servings=$servings calories=${recipe.calories} protein=${recipe.protein} fat=${recipe.fat} carbs=${recipe.carbs} hasData=$hasData');
+    if (!hasData) {
+      // Return a tiny transparent placeholder so we know build ran
+      return const SizedBox.shrink();
     }
 
-    // Calculate per-serving nutrition
-    final perServingCalories = _getPerServingValue(recipe.calories);
-    final perServingProtein = _getPerServingValue(recipe.protein);
-    final perServingFat = _getPerServingValue(recipe.fat);
-    final perServingCarbs = _getPerServingValue(recipe.carbs);
+    // Model nutrition values are stored PER SINGLE SERVING.
+    // We display totals for the currently selected servings by multiplying.
+    final totalCalories = _scaleForServings(recipe.calories);
+    final totalProtein = _scaleForServings(recipe.protein);
+    final totalFat = _scaleForServings(recipe.fat);
+    final totalCarbs = _scaleForServings(recipe.carbs);
+    final perServingCalories = recipe.calories;
+    final perServingProtein = recipe.protein;
+    final perServingFat = recipe.fat;
+    final perServingCarbs = recipe.carbs;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
@@ -59,7 +70,7 @@ class NutritionInfo extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Calories - Featured prominently
-          if (perServingCalories != null) ...[
+          if (totalCalories != null) ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -79,34 +90,65 @@ class NutritionInfo extends StatelessWidget {
                 ],
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
+                  FaIcon(
+                    FontAwesomeIcons.fire,
+                    color: Theme.of(context).colorScheme.secondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Calories',
+                          style: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (perServingCalories != null && servings > 1)
+                          Text(
+                            '${perServingCalories.round()} per serving',
+                            style: GoogleFonts.nunito(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      FaIcon(
-                        FontAwesomeIcons.fire,
-                        color: Theme.of(context).colorScheme.secondary,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 12),
                       Text(
-                        'Calories',
+                        '${totalCalories.round()}',
                         style: GoogleFonts.nunito(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
                       ),
+                      if (perServingCalories != null && servings <= 1)
+                        Text(
+                          'per serving',
+                          style: GoogleFonts.nunito(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            height: 1.1,
+                          ),
+                        ),
                     ],
-                  ),
-                  Text(
-                    '${perServingCalories.round()}',
-                    style: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
                   ),
                 ],
               ),
@@ -117,41 +159,44 @@ class NutritionInfo extends StatelessWidget {
           // Macronutrients Row
           Row(
             children: [
-              if (perServingProtein != null)
+              if (totalProtein != null)
                 Expanded(
                   child: _buildMacroCard(
                     context,
-                    'Protein',
-                    perServingProtein,
-                    'g',
-                    FontAwesomeIcons.dumbbell,
-                    Theme.of(context).colorScheme.secondary,
+                    label: 'Protein',
+                    totalValue: totalProtein,
+                    perServingValue: perServingProtein,
+                    unit: 'g',
+                    icon: FontAwesomeIcons.dumbbell,
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
-              if (perServingProtein != null && perServingFat != null)
+              if (totalProtein != null && totalFat != null)
                 const SizedBox(width: 12),
-              if (perServingFat != null)
+              if (totalFat != null)
                 Expanded(
                   child: _buildMacroCard(
                     context,
-                    'Fat',
-                    perServingFat,
-                    'g',
-                    FontAwesomeIcons.droplet,
-                    Theme.of(context).colorScheme.primary,
+                    label: 'Fat',
+                    totalValue: totalFat,
+                    perServingValue: perServingFat,
+                    unit: 'g',
+                    icon: FontAwesomeIcons.droplet,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-              if (perServingFat != null && perServingCarbs != null)
+              if (totalFat != null && totalCarbs != null)
                 const SizedBox(width: 12),
-              if (perServingCarbs != null)
+              if (totalCarbs != null)
                 Expanded(
                   child: _buildMacroCard(
                     context,
-                    'Carbs',
-                    perServingCarbs,
-                    'g',
-                    FontAwesomeIcons.wheatAwn,
-                    Theme.of(context).colorScheme.outline,
+                    label: 'Carbs',
+                    totalValue: totalCarbs,
+                    perServingValue: perServingCarbs,
+                    unit: 'g',
+                    icon: FontAwesomeIcons.wheatAwn,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                 ),
             ],
@@ -161,8 +206,15 @@ class NutritionInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildMacroCard(BuildContext context, String label, double value,
-      String unit, IconData icon, Color color) {
+  Widget _buildMacroCard(
+    BuildContext context, {
+    required String label,
+    required double totalValue,
+    required double? perServingValue,
+    required String unit,
+    required IconData icon,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -186,7 +238,7 @@ class NutritionInfo extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${value.toStringAsFixed(1)}$unit',
+            '${totalValue.toStringAsFixed(1)}$unit',
             style: GoogleFonts.nunito(
               color: color,
               fontSize: 18,
@@ -194,6 +246,16 @@ class NutritionInfo extends StatelessWidget {
               letterSpacing: -0.5,
             ),
           ),
+          if (perServingValue != null && servings > 1)
+            Text(
+              '${perServingValue.toStringAsFixed(1)}$unit / serving',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
+            ),
           Text(
             label,
             style: GoogleFonts.nunito(
@@ -214,10 +276,9 @@ class NutritionInfo extends StatelessWidget {
         recipe.carbs != null;
   }
 
-  double? _getPerServingValue(double? totalValue) {
-    if (totalValue == null) return null;
-    final originalServings = recipe.servings ?? 1;
-    // totalValue is total for originalServings; scale linearly by servings
-    return (totalValue / originalServings) * servings;
+  double? _scaleForServings(double? perServingValue) {
+    if (perServingValue == null) return null;
+    return perServingValue *
+        servings; // multiply because stored value is per single serving
   }
 }

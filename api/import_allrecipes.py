@@ -170,23 +170,43 @@ class AllrecipesImporter:
         logger.debug(f"Created ingredient: {ingredient}")
         return ingredient
 
+    def format_tag(self, tag):
+        """Format a tag from kebab-case to Title Case and remove redundant words"""
+        if not tag:
+            return tag
+        
+        # Replace hyphens with spaces
+        formatted = tag.replace('-', ' ')
+        
+        # Remove redundant words like 'recipes', 'recipe'
+        words_to_remove = ['recipes', 'recipe']
+        words = formatted.split()
+        filtered_words = [word for word in words if word.lower() not in words_to_remove]
+        
+        # Join back and capitalize each word
+        result = ' '.join(filtered_words).title()
+        
+        # Handle edge case where removing words results in empty string
+        return result if result.strip() else tag.replace('-', ' ').title()
+
     def parse_tags(self, tags_json):
-        """Parse and normalize tags from JSON"""
+        """Parse and format tags from JSON"""
         try:
             tags = json.loads(tags_json) if tags_json else []
         except json.JSONDecodeError:
             logger.warning(f"Invalid JSON in tags: {tags_json}")
             return []
         
-        # Normalize tags to lowercase and remove duplicates
-        normalized_tags = []
+        # Format tags and remove duplicates
+        formatted_tags = []
         for tag in tags:
             if isinstance(tag, str):
-                normalized_tag = tag.lower().strip().replace(' ', '-')
-                if normalized_tag and normalized_tag not in normalized_tags:
-                    normalized_tags.append(normalized_tag)
+                # Format the tag properly
+                formatted_tag = self.format_tag(tag.strip())
+                if formatted_tag and formatted_tag not in formatted_tags:
+                    formatted_tags.append(formatted_tag)
         
-        return normalized_tags
+        return formatted_tags
 
     def import_recipe_from_row(self, row):
         """Import a single recipe from CSV row"""

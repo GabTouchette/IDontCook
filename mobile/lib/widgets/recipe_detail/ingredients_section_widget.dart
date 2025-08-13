@@ -97,9 +97,6 @@ class _IngredientsSectionState extends State<IngredientsSection> {
             final isCompleted = (index < widget.completedIngredients.length)
                 ? widget.completedIngredients[index]
                 : false;
-            print(
-                "Ingredient: ${ingredient.name}, Quantity: ${ingredient.quantity}, Unit: ${ingredient.unit}");
-            print("calories: ${ingredient.nutrition}");
             double adjustedQuantity = adjustQuantityForServings(
                 ingredient.quantity ?? 0,
                 (widget.recipe.servings ?? 1).toDouble(),

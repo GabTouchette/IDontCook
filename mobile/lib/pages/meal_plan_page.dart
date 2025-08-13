@@ -35,43 +35,6 @@ class MealPlanPage extends StatelessWidget {
           ),
         ),
         actions: [
-          Builder(builder: (context) {
-            final mp = context.watch<MealPlanProvider>();
-            final selected = mp.selectedDaysList;
-            return PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) async {
-                final mp = context.read<MealPlanProvider>();
-                switch (value) {
-                  case 'copy':
-                    _copyFrom(context, mp);
-                    break;
-                  case 'clear':
-                    mp.clearMealsForRange(selected,
-                        const ['breakfast', 'lunch', 'dinner', 'snack']);
-                    break;
-                  case 'templates':
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Templates coming soon')));
-                    break;
-                }
-              },
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: 'copy',
-                  child: const Text('Copy From…'),
-                ),
-                const PopupMenuItem(
-                  value: 'clear',
-                  child: Text('Clear Selected'),
-                ),
-                const PopupMenuItem(
-                  value: 'templates',
-                  child: Text('Templates'),
-                ),
-              ],
-            );
-          }),
           const UserMenuWidget(),
         ],
       ),
