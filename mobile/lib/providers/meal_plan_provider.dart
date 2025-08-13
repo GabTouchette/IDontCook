@@ -73,19 +73,21 @@ class MealPlanProvider with ChangeNotifier {
 
     if (recipes.isEmpty) {
       // Mock a small recipe pool if API not available
-      recipes = List.generate(12, (i) => RecipePreview(
-            id: i + 1,
-            title: 'Sample Recipe ${i + 1}',
-            description: 'Delicious and easy.',
-            preparation_time: 15 + (i % 3) * 10,
-            cooking_time: 10 + (i % 4) * 10,
-            thumbnail_url: null,
-            tags: const [],
-            is_favorite: false,
-            is_saved: true,
-            ingredients_count: 5 + i,
-            last_visited_at: null,
-          ));
+      recipes = List.generate(
+          12,
+          (i) => RecipePreview(
+                id: i + 1,
+                title: 'Sample Recipe ${i + 1}',
+                description: 'Delicious and easy.',
+                preparation_time: 15 + (i % 3) * 10,
+                cooking_time: 10 + (i % 4) * 10,
+                thumbnail_url: null,
+                tags: const [],
+                is_favorite: false,
+                is_saved: true,
+                ingredients_count: 5 + i,
+                last_visited_at: null,
+              ));
     }
 
     // Meal types order
@@ -126,7 +128,7 @@ class MealPlanProvider with ChangeNotifier {
     List<String> cuisines = const [],
     int maxPrepTime = 60,
     String? specialRequests,
-  bool focusOnSaved = true,
+    bool focusOnSaved = true,
   }) async {
     _isGenerating = true;
     notifyListeners();
@@ -170,7 +172,8 @@ class MealPlanProvider with ChangeNotifier {
       }
     } catch (_) {}
 
-  final List<PlannedMeal> planned = _mapAIPlanToMeals(data, previews, focusOnSaved: focusOnSaved);
+    final List<PlannedMeal> planned =
+        _mapAIPlanToMeals(data, previews, focusOnSaved: focusOnSaved);
     _activeMealPlan = MealPlan(
       name: 'AI Meal Plan',
       weekStartDate: ws,
@@ -188,9 +191,12 @@ class MealPlanProvider with ChangeNotifier {
     required int maxPrepTime,
     String? specialRequests,
   }) {
-    final diet = dietaryRestrictions.isEmpty ? 'none' : dietaryRestrictions.join(', ');
+    final diet =
+        dietaryRestrictions.isEmpty ? 'none' : dietaryRestrictions.join(', ');
     final cuis = cuisines.isEmpty ? 'any' : cuisines.join(', ');
-    final req = (specialRequests == null || specialRequests.trim().isEmpty) ? '' : '\nSpecial requests: ${specialRequests.trim()}';
+    final req = (specialRequests == null || specialRequests.trim().isEmpty)
+        ? ''
+        : '\nSpecial requests: ${specialRequests.trim()}';
     final dateStr = weekStart.toIso8601String().split('T').first;
     return '''You are planning meals for a 7-day week starting on $dateStr (Monday=0..Sunday=6).
 Return ONLY a minified JSON object with this exact schema and nothing else:
@@ -208,7 +214,9 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
     return text;
   }
 
-  List<PlannedMeal> _mapAIPlanToMeals(Map<String, dynamic> data, List<RecipePreview> previews, {bool focusOnSaved = false}) {
+  List<PlannedMeal> _mapAIPlanToMeals(
+      Map<String, dynamic> data, List<RecipePreview> previews,
+      {bool focusOnSaved = false}) {
     List<dynamic> days = (data['days'] as List?) ?? [];
     final lowerPreviews = previews
         .map((p) => {
@@ -217,8 +225,10 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
               'obj': p,
             })
         .toList();
-    final savedIds = previews.where((p) => (p.is_saved) == true).map((p) => p.id).toSet();
-    final lowerPreviewsSaved = lowerPreviews.where((p) => savedIds.contains(p['id'] as int)).toList();
+    final savedIds =
+        previews.where((p) => (p.is_saved) == true).map((p) => p.id).toSet();
+    final lowerPreviewsSaved =
+        lowerPreviews.where((p) => savedIds.contains(p['id'] as int)).toList();
     final List<PlannedMeal> out = [];
     int fallbackCursorAll = 0;
     int fallbackCursorSaved = 0;
@@ -231,16 +241,19 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
         final int servings = (m['servings'] as num?)?.toInt() ?? 1;
         int recipeId = -1;
         if (focusOnSaved && lowerPreviewsSaved.isNotEmpty) {
-          recipeId = _matchTitleToPreviewId(title, lowerPreviewsSaved, fallbackCursorSaved);
+          recipeId = _matchTitleToPreviewId(
+              title, lowerPreviewsSaved, fallbackCursorSaved);
         }
         if (recipeId == -1) {
-          recipeId = _matchTitleToPreviewId(title, lowerPreviews, fallbackCursorAll);
+          recipeId =
+              _matchTitleToPreviewId(title, lowerPreviews, fallbackCursorAll);
         }
         if (recipeId == -1 && previews.isNotEmpty) {
           // fallback rotation prefers saved if requested
           RecipePreview p;
           if (focusOnSaved && savedIds.isNotEmpty) {
-            final savedList = previews.where((e) => savedIds.contains(e.id)).toList();
+            final savedList =
+                previews.where((e) => savedIds.contains(e.id)).toList();
             p = savedList[fallbackCursorSaved % savedList.length];
             fallbackCursorSaved++;
           } else {
@@ -256,7 +269,8 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
             servings: servings,
           ));
         } else {
-          final p = previews.firstWhere((e) => e.id == recipeId, orElse: () => previews[(fallbackCursorAll++) % previews.length]);
+          final p = previews.firstWhere((e) => e.id == recipeId,
+              orElse: () => previews[(fallbackCursorAll++) % previews.length]);
           out.add(PlannedMeal(
             dayOfWeek: di.clamp(0, 6),
             mealType: mt,
@@ -271,7 +285,8 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
     return out;
   }
 
-  int _matchTitleToPreviewId(String aiTitle, List<Map<String, dynamic>> lowerPreviews, int seed) {
+  int _matchTitleToPreviewId(
+      String aiTitle, List<Map<String, dynamic>> lowerPreviews, int seed) {
     final t = aiTitle.toLowerCase().trim();
     if (t.isEmpty) return -1;
     int bestId = -1;
@@ -288,8 +303,10 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
   }
 
   double _titleSimilarity(String a, String b) {
-    final aw = a.split(RegExp(r"[^a-z0-9]+")).where((w) => w.isNotEmpty).toSet();
-    final bw = b.split(RegExp(r"[^a-z0-9]+")).where((w) => w.isNotEmpty).toSet();
+    final aw =
+        a.split(RegExp(r"[^a-z0-9]+")).where((w) => w.isNotEmpty).toSet();
+    final bw =
+        b.split(RegExp(r"[^a-z0-9]+")).where((w) => w.isNotEmpty).toSet();
     if (aw.isEmpty || bw.isEmpty) return 0;
     final inter = aw.intersection(bw).length.toDouble();
     final union = aw.union(bw).length.toDouble();
@@ -317,26 +334,34 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
 
   List<PlannedMeal> mealsForDay(int dayIndex) {
     if (_activeMealPlan == null) return [];
-    return _activeMealPlan!.plannedMeals.where((m) => m.dayOfWeek == dayIndex).toList();
+    return _activeMealPlan!.plannedMeals
+        .where((m) => m.dayOfWeek == dayIndex)
+        .toList();
   }
 
   void setMeal(int dayIndex, String mealType, PlannedMeal plannedMeal) {
     if (_activeMealPlan == null) return;
-    final others = _activeMealPlan!.plannedMeals.where((m) => !(m.dayOfWeek == dayIndex && m.mealType == mealType)).toList();
-    _activeMealPlan = _activeMealPlan!.copyWith(plannedMeals: [...others, plannedMeal]);
+    final others = _activeMealPlan!.plannedMeals
+        .where((m) => !(m.dayOfWeek == dayIndex && m.mealType == mealType))
+        .toList();
+    _activeMealPlan =
+        _activeMealPlan!.copyWith(plannedMeals: [...others, plannedMeal]);
     notifyListeners();
   }
 
   void removeMeal(int dayIndex, String mealType) {
     if (_activeMealPlan == null) return;
-    final remaining = _activeMealPlan!.plannedMeals.where((m) => !(m.dayOfWeek == dayIndex && m.mealType == mealType)).toList();
+    final remaining = _activeMealPlan!.plannedMeals
+        .where((m) => !(m.dayOfWeek == dayIndex && m.mealType == mealType))
+        .toList();
     _activeMealPlan = _activeMealPlan!.copyWith(plannedMeals: remaining);
     notifyListeners();
   }
 
   // Manual planning helpers
   Future<void> ensureActivePlanForWeek() async {
-    if (_activeMealPlan == null || _activeMealPlan!.weekStartDate != visibleWeekStart) {
+    if (_activeMealPlan == null ||
+        _activeMealPlan!.weekStartDate != visibleWeekStart) {
       _activeMealPlan = MealPlan(
         name: 'My Meal Plan',
         weekStartDate: visibleWeekStart,
@@ -348,14 +373,18 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
 
   List<int> get selectedDaysList {
     if (_rangeStart != null && _rangeEnd != null) {
-      return List<int>.generate(_rangeEnd! - _rangeStart! + 1, (i) => _rangeStart! + i);
+      return List<int>.generate(
+          _rangeEnd! - _rangeStart! + 1, (i) => _rangeStart! + i);
     }
     return [_selectedDay];
   }
 
   void clearMealsForRange(List<int> days, List<String> mealTypes) {
     if (_activeMealPlan == null) return;
-    final remaining = _activeMealPlan!.plannedMeals.where((m) => !days.contains(m.dayOfWeek) || !mealTypes.contains(m.mealType)).toList();
+    final remaining = _activeMealPlan!.plannedMeals
+        .where((m) =>
+            !days.contains(m.dayOfWeek) || !mealTypes.contains(m.mealType))
+        .toList();
     _activeMealPlan = _activeMealPlan!.copyWith(plannedMeals: remaining);
     notifyListeners();
   }
@@ -370,7 +399,9 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
       }
       for (final fm in fromMeals) {
         // Remove any existing meal in same slot when adding
-        newMeals = newMeals.where((m) => !(m.dayOfWeek == day && m.mealType == fm.mealType)).toList();
+        newMeals = newMeals
+            .where((m) => !(m.dayOfWeek == day && m.mealType == fm.mealType))
+            .toList();
         newMeals.add(PlannedMeal(
           dayOfWeek: day,
           mealType: fm.mealType,
@@ -389,14 +420,17 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
     if (_activeMealPlan == null) return;
     final payload = {
       'name': _activeMealPlan!.name,
-      'week_start_date': _activeMealPlan!.weekStartDate.toIso8601String().split('T').first,
+      'week_start_date':
+          _activeMealPlan!.weekStartDate.toIso8601String().split('T').first,
       'is_active': _activeMealPlan!.isActive,
-      'planned_meals': _activeMealPlan!.plannedMeals.map((m) => {
-            'day_of_week': m.dayOfWeek,
-            'meal_type': m.mealType,
-            'recipe': m.recipeId,
-            'servings': m.servings,
-          }).toList(),
+      'planned_meals': _activeMealPlan!.plannedMeals
+          .map((m) => {
+                'day_of_week': m.dayOfWeek,
+                'meal_type': m.mealType,
+                'recipe': m.recipeId,
+                'servings': m.servings,
+              })
+          .toList(),
     };
     if (_activeMealPlan!.id == null) {
       final res = await _api.create(payload);
@@ -421,20 +455,23 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
       final data = await _api.get(id);
       // Expecting backend to return week_start_date and planned_meals
       final wsStr = (data['week_start_date'] as String?) ?? '';
-      final wsParts = wsStr.split('-').map((e) => int.tryParse(e) ?? 1).toList();
+      final wsParts =
+          wsStr.split('-').map((e) => int.tryParse(e) ?? 1).toList();
       final ws = wsParts.length == 3
           ? DateTime(wsParts[0], wsParts[1], wsParts[2])
           : visibleWeekStart;
-      final meals = List<Map<String, dynamic>>.from(data['planned_meals'] ?? []);
-      final planned = meals.map((m) => PlannedMeal(
-            id: m['id'] as int?,
-            dayOfWeek: (m['day_of_week'] as num?)?.toInt() ?? 0,
-            mealType: (m['meal_type'] as String?)?.toLowerCase() ?? 'lunch',
-            recipeId: (m['recipe'] as num?)?.toInt() ?? -1,
-            title: (m['title'] as String?) ?? 'Recipe',
-            thumbnailUrl: m['thumbnail_url'] as String?,
-            servings: (m['servings'] as num?)?.toInt() ?? 1,
-          ))
+      final meals =
+          List<Map<String, dynamic>>.from(data['planned_meals'] ?? []);
+      final planned = meals
+          .map((m) => PlannedMeal(
+                id: m['id'] as int?,
+                dayOfWeek: (m['day_of_week'] as num?)?.toInt() ?? 0,
+                mealType: (m['meal_type'] as String?)?.toLowerCase() ?? 'lunch',
+                recipeId: (m['recipe'] as num?)?.toInt() ?? -1,
+                title: (m['title'] as String?) ?? 'Recipe',
+                thumbnailUrl: m['thumbnail_url'] as String?,
+                servings: (m['servings'] as num?)?.toInt() ?? 1,
+              ))
           .toList();
       _activeMealPlan = MealPlan(
         id: data['id'] as int?,
@@ -455,7 +492,8 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
     final Map<String, GroceryItem> map = {};
 
     // Fetch full recipe details, consolidate by name+unit
-    final Set<int> recipeIds = _activeMealPlan!.plannedMeals.map((m) => m.recipeId).toSet();
+    final Set<int> recipeIds =
+        _activeMealPlan!.plannedMeals.map((m) => m.recipeId).toSet();
     final Map<int, Recipe> recipeCache = {};
     for (final id in recipeIds) {
       try {
@@ -468,13 +506,18 @@ Titles MUST be common recipe names a typical home cook recognizes.''';
       final recipe = recipeCache[m.recipeId];
       if (recipe == null) continue;
       for (final ing in recipe.ingredients) {
-        final key = '${(ing.name ?? '').trim().toLowerCase()}|${(ing.unit ?? '').trim().toLowerCase()}';
-        final quantity = (ing.quantity ?? 0) * m.servings / (recipe.servings ?? 1);
+        final key =
+            '${(ing.name ?? '').trim().toLowerCase()}|${(ing.unit ?? '').trim().toLowerCase()}';
+        final quantity =
+            (ing.quantity ?? 0) * m.servings / (recipe.servings ?? 1);
         if (map.containsKey(key)) {
           final existing = map[key]!;
           map[key] = existing.copyWith(quantity: existing.quantity + quantity);
         } else {
-          map[key] = GroceryItem(name: (ing.name ?? '').trim().toLowerCase(), unit: ing.unit?.toLowerCase(), quantity: quantity);
+          map[key] = GroceryItem(
+              name: (ing.name ?? '').trim().toLowerCase(),
+              unit: ing.unit?.toLowerCase(),
+              quantity: quantity);
         }
       }
     }

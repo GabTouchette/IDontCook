@@ -13,7 +13,13 @@ class RecipeBrowserList extends StatefulWidget {
   final int? selectedId;
   final List<String>? includeTags;
   final ValueChanged<RecipePreview?> onSelect;
-  const RecipeBrowserList({super.key, required this.query, required this.savedOnly, required this.onSelect, this.selectedId, this.includeTags});
+  const RecipeBrowserList(
+      {super.key,
+      required this.query,
+      required this.savedOnly,
+      required this.onSelect,
+      this.selectedId,
+      this.includeTags});
 
   @override
   State<RecipeBrowserList> createState() => _RecipeBrowserListState();
@@ -27,7 +33,10 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Icon(Icons.image_outlined, size: 20),
@@ -70,7 +79,8 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
 
     if (loading) return const Center(child: CircularProgressIndicator());
 
-    final Set<String> tagFilter = (widget.includeTags ?? const []).map((e) => e.toLowerCase()).toSet();
+    final Set<String> tagFilter =
+        (widget.includeTags ?? const []).map((e) => e.toLowerCase()).toSet();
     final filtered = source.where((e) {
       if (q.isNotEmpty && !e.title.toLowerCase().contains(q)) return false;
       if (tagFilter.isNotEmpty) {
@@ -84,7 +94,8 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
       itemCount: filtered.length,
       itemBuilder: (ctx, i) {
         final r = filtered[i];
-        final isSelected = widget.selectedId != null && widget.selectedId == r.id;
+        final isSelected =
+            widget.selectedId != null && widget.selectedId == r.id;
         return ListTile(
           leading: _thumb(context, r.thumbnail_url),
           title: Text(
@@ -118,7 +129,8 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
                   );
                 },
               ),
-              if (isSelected) const Icon(Icons.check_circle, color: Colors.green),
+              if (isSelected)
+                const Icon(Icons.check_circle, color: Colors.green),
             ],
           ),
           selected: isSelected,

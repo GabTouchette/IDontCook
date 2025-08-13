@@ -89,8 +89,8 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-  centerTitle: false,
-  titleSpacing: 16,
+        centerTitle: false,
+        titleSpacing: 16,
         title: Text(
           'Manual Planning',
           style: GoogleFonts.nunito(
@@ -232,7 +232,8 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
                         _capitalize(t),
                         style: TextStyle(
                           fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                          color: isSel ? scheme.primary : scheme.onSurfaceVariant,
+                          color:
+                              isSel ? scheme.primary : scheme.onSurfaceVariant,
                         ),
                       ),
                       selected: isSel,
@@ -247,9 +248,12 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
                       },
                       shape: const StadiumBorder(),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-                      side: BorderSide(color: scheme.outlineVariant.withOpacity(0.6)),
-                      backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.6),
+                      visualDensity:
+                          const VisualDensity(horizontal: -2, vertical: -2),
+                      side: BorderSide(
+                          color: scheme.outlineVariant.withOpacity(0.6)),
+                      backgroundColor:
+                          scheme.surfaceContainerHighest.withOpacity(0.6),
                       selectedColor: scheme.primary.withOpacity(0.12),
                       pressElevation: 0,
                     );
@@ -437,7 +441,8 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
     return '${names[idx]} • $md';
   }
 
-  String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
 
 // RecipeBrowserList moved to widgets/recipe_browser_list.dart

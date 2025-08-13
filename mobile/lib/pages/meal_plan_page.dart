@@ -46,7 +46,8 @@ class MealPlanPage extends StatelessWidget {
                     _copyFrom(context, mp);
                     break;
                   case 'clear':
-                    mp.clearMealsForRange(selected, const ['breakfast', 'lunch', 'dinner', 'snack']);
+                    mp.clearMealsForRange(selected,
+                        const ['breakfast', 'lunch', 'dinner', 'snack']);
                     break;
                   case 'templates':
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -122,10 +123,13 @@ class MealPlanPage extends StatelessWidget {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: mp.isGenerating ? null : () => _openCreatePlanSheet(context),
+                      onPressed: mp.isGenerating
+                          ? null
+                          : () => _openCreatePlanSheet(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
@@ -136,13 +140,12 @@ class MealPlanPage extends StatelessWidget {
                               height: 18,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimary),
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
                             )
                           : Text('Plan this week',
-                              style:
-                                  GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                              style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ),
@@ -155,57 +158,58 @@ class MealPlanPage extends StatelessWidget {
                   ),
                 if (hasPlan) const SizedBox(height: 8),
                 Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        // Show four slots always; when empty they render as dotted placeholders
-            MealSlot(
-                          label: 'Breakfast',
-                          title: _titleFor(mp, 'breakfast'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'breakfast', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'breakfast'),
-                        ),
-                        const SizedBox(height: 10),
-            MealSlot(
-                          label: 'Lunch',
-                          title: _titleFor(mp, 'lunch'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'lunch', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'lunch'),
-                        ),
-                        const SizedBox(height: 10),
-            MealSlot(
-                          label: 'Dinner',
-                          title: _titleFor(mp, 'dinner'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'dinner', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'dinner'),
-                        ),
-                        const SizedBox(height: 10),
-            MealSlot(
-                          label: 'Snack',
-                          title: _titleFor(mp, 'snack'),
-                          onTap: () {
-                            mp.ensureActivePlanForWeek();
-              _openRecipePicker(context, 'snack', mp.selectedDay);
-                          },
-                          onLongPress: () =>
-                              _showSlotActions(context, mp, 'snack'),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      // Show four slots always; when empty they render as dotted placeholders
+                      MealSlot(
+                        label: 'Breakfast',
+                        title: _titleFor(mp, 'breakfast'),
+                        onTap: () {
+                          mp.ensureActivePlanForWeek();
+                          _openRecipePicker(
+                              context, 'breakfast', mp.selectedDay);
+                        },
+                        onLongPress: () =>
+                            _showSlotActions(context, mp, 'breakfast'),
+                      ),
+                      const SizedBox(height: 10),
+                      MealSlot(
+                        label: 'Lunch',
+                        title: _titleFor(mp, 'lunch'),
+                        onTap: () {
+                          mp.ensureActivePlanForWeek();
+                          _openRecipePicker(context, 'lunch', mp.selectedDay);
+                        },
+                        onLongPress: () =>
+                            _showSlotActions(context, mp, 'lunch'),
+                      ),
+                      const SizedBox(height: 10),
+                      MealSlot(
+                        label: 'Dinner',
+                        title: _titleFor(mp, 'dinner'),
+                        onTap: () {
+                          mp.ensureActivePlanForWeek();
+                          _openRecipePicker(context, 'dinner', mp.selectedDay);
+                        },
+                        onLongPress: () =>
+                            _showSlotActions(context, mp, 'dinner'),
+                      ),
+                      const SizedBox(height: 10),
+                      MealSlot(
+                        label: 'Snack',
+                        title: _titleFor(mp, 'snack'),
+                        onTap: () {
+                          mp.ensureActivePlanForWeek();
+                          _openRecipePicker(context, 'snack', mp.selectedDay);
+                        },
+                        onLongPress: () =>
+                            _showSlotActions(context, mp, 'snack'),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
+                ),
               ],
             ),
           );
@@ -214,14 +218,22 @@ class MealPlanPage extends StatelessWidget {
     );
   }
 
-  String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
-  Future<void> _openRecipePicker(BuildContext context, String mealType, int dayIndex) async {
+  Future<void> _openRecipePicker(
+      BuildContext context, String mealType, int dayIndex) async {
     final scheme = Theme.of(context).colorScheme;
     final controller = TextEditingController();
     bool savedOnly = true;
-    final List<String> tags = ['breakfast','lunch','dinner','dessert','snack'];
-    final Set<String> selected = { mealType.toLowerCase() };
+    final List<String> tags = [
+      'breakfast',
+      'lunch',
+      'dinner',
+      'dessert',
+      'snack'
+    ];
+    final Set<String> selected = {mealType.toLowerCase()};
     RecipePreview? chosen;
     await showModalBottomSheet(
       context: context,
@@ -261,7 +273,8 @@ class MealPlanPage extends StatelessWidget {
                           FilterChip(
                             label: const Text('Saved only'),
                             selected: savedOnly,
-                            onSelected: (v) => setSheetState(() => savedOnly = v),
+                            onSelected: (v) =>
+                                setSheetState(() => savedOnly = v),
                           ),
                         ],
                       ),
@@ -282,8 +295,12 @@ class MealPlanPage extends StatelessWidget {
                                   label: Text(
                                     _capitalize(t),
                                     style: TextStyle(
-                                      fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                                      color: isSel ? scheme.primary : scheme.onSurfaceVariant,
+                                      fontWeight: isSel
+                                          ? FontWeight.w800
+                                          : FontWeight.w600,
+                                      color: isSel
+                                          ? scheme.primary
+                                          : scheme.onSurfaceVariant,
                                     ),
                                   ),
                                   selected: isSel,
@@ -295,11 +312,18 @@ class MealPlanPage extends StatelessWidget {
                                     }
                                   }),
                                   shape: const StadiumBorder(),
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-                                  side: BorderSide(color: scheme.outlineVariant.withOpacity(0.6)),
-                                  backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.6),
-                                  selectedColor: scheme.primary.withOpacity(0.12),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: const VisualDensity(
+                                      horizontal: -2, vertical: -2),
+                                  side: BorderSide(
+                                      color: scheme.outlineVariant
+                                          .withOpacity(0.6)),
+                                  backgroundColor: scheme
+                                      .surfaceContainerHighest
+                                      .withOpacity(0.6),
+                                  selectedColor:
+                                      scheme.primary.withOpacity(0.12),
                                 );
                               }),
                             ],
@@ -402,7 +426,7 @@ class MealPlanPage extends StatelessWidget {
       ),
     );
   }
-  
+
   void _openCreatePlanSheet(BuildContext context) {
     final mp = context.read<MealPlanProvider>();
     showModalBottomSheet(
@@ -420,7 +444,8 @@ class MealPlanPage extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const MealPlanGeneratorPage()),
+                  MaterialPageRoute(
+                      builder: (_) => const MealPlanGeneratorPage()),
                 );
               },
             ),
@@ -434,10 +459,14 @@ class MealPlanPage extends StatelessWidget {
                     initialWeek: mp.visibleWeekStart,
                     preselectedDays: mp.selectedDaysList,
                   ),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    final offsetAnimation = Tween(begin: const Offset(0, 1), end: Offset.zero)
-                        .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-                    return SlideTransition(position: offsetAnimation, child: child);
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    final offsetAnimation =
+                        Tween(begin: const Offset(0, 1), end: Offset.zero)
+                            .animate(CurvedAnimation(
+                                parent: animation, curve: Curves.easeOutCubic));
+                    return SlideTransition(
+                        position: offsetAnimation, child: child);
                   },
                 ));
               },
@@ -488,8 +517,8 @@ class MealPlanPage extends StatelessWidget {
 
   Widget _buildWeekSummary(BuildContext context, MealPlanProvider mp) {
     final scheme = Theme.of(context).colorScheme;
-    final List<PlannedMeal> meals = List<PlannedMeal>.from(
-        mp.activeMealPlan?.plannedMeals ?? const []);
+    final List<PlannedMeal> meals =
+        List<PlannedMeal>.from(mp.activeMealPlan?.plannedMeals ?? const []);
     meals.sort((a, b) => a.dayOfWeek != b.dayOfWeek
         ? a.dayOfWeek.compareTo(b.dayOfWeek)
         : _mealTypeOrder(a.mealType).compareTo(_mealTypeOrder(b.mealType)));
@@ -503,8 +532,8 @@ class MealPlanPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('This Week',
-                style:
-                    GoogleFonts.nunito(fontWeight: FontWeight.w900, fontSize: 18)),
+                style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w900, fontSize: 18)),
             const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -653,5 +682,6 @@ class _WeekChip extends StatelessWidget {
     );
   }
 
-  String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
