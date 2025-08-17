@@ -197,7 +197,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.preparation_time = validated_data.get("preparation_time", instance.preparation_time)  
         instance.tags = validated_data.get("tags", instance.tags)
         instance.description = validated_data.get("description", instance.description)  
-        instance.notes = validated_data.get("notes", instance.notes)  
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.servings = validated_data.get("servings", instance.servings)  
         instance.save()
 
         # Update ingredients if necessary

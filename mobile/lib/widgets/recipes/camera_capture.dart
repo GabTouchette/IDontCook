@@ -114,11 +114,14 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 4,
               ),
-              child: Text(
-                "Take Picture",
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "Take Picture",
+                  style: GoogleFonts.nunito(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             )

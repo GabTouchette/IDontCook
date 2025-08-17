@@ -20,6 +20,7 @@ class PlannedMeal(models.Model):
         ("lunch", "Lunch"),
         ("dinner", "Dinner"),
         ("snack", "Snack"),
+        ("dessert", "Dessert"),
     )
     meal_plan = models.ForeignKey(MealPlan, related_name="planned_meals", on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)

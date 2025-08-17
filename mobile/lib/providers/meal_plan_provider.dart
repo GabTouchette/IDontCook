@@ -126,6 +126,9 @@ class MealPlanProvider with ChangeNotifier {
     int maxPrepTime = 60,
     String? specialRequests,
     bool focusOnSaved = true,
+    List<int> preferredRecipeIds = const [],
+    List<String> mealTypes = const ['breakfast', 'lunch', 'dinner'],
+    int servings = 1,
   }) async {
     _isGenerating = true;
     notifyListeners();
@@ -137,16 +140,20 @@ class MealPlanProvider with ChangeNotifier {
       await saveActivePlan();
     }
 
+    print('Using meal plan ID: ${_activeMealPlan!.id}');
     final selectedDays = selectedDaysList;
     final payload = {
       'id': _activeMealPlan!.id,
       'description': specialRequests ?? '',
       'days': selectedDays,
-      'meal_types': ['breakfast', 'lunch', 'dinner'],
+      'meal_types': mealTypes,
       'focus_on_saved': focusOnSaved,
-      'servings': 1,
+      'servings': servings,
       'replace_existing': true,
+      'preferred_recipes': preferredRecipeIds,
     };
+
+    print('Generate AI meal plan payload: $payload');
 
     try {
       final res = await _api.generate(payload);
@@ -176,7 +183,10 @@ class MealPlanProvider with ChangeNotifier {
         isActive: (res['is_active'] as bool?) ?? true,
         plannedMeals: planned,
       );
-    } catch (_) {}
+    } catch (error) {
+      print('Error generating AI meal plan: $error');
+      // You could also show a snackbar or alert here
+    }
 
     _isGenerating = false;
     notifyListeners();
@@ -289,27 +299,37 @@ class MealPlanProvider with ChangeNotifier {
 
   Future<void> saveActivePlan() async {
     if (_activeMealPlan == null) return;
-    final payload = {
-      'name': _activeMealPlan!.name,
-      'week_start_date':
-          _activeMealPlan!.weekStartDate.toIso8601String().split('T').first,
-      'is_active': _activeMealPlan!.isActive,
-      'planned_meals': _activeMealPlan!.plannedMeals
-          .map((m) => {
-                'day_of_week': m.dayOfWeek,
-                'meal_type': m.mealType,
-                'recipe': m.recipeId,
-                'servings': m.servings,
-              })
-          .toList(),
-    };
-    if (_activeMealPlan!.id == null) {
-      final res = await _api.create(payload);
-      _activeMealPlan = _activeMealPlan!.copyWith(id: res['id'] as int?);
-    } else {
-      await _api.update(_activeMealPlan!.id!, payload);
+
+    try {
+      final payload = {
+        'name': _activeMealPlan!.name,
+        'week_start_date':
+            _activeMealPlan!.weekStartDate.toIso8601String().split('T').first,
+        'is_active': _activeMealPlan!.isActive,
+        'planned_meals': _activeMealPlan!.plannedMeals
+            .map((m) => {
+                  'day_of_week': m.dayOfWeek,
+                  'meal_type': m.mealType,
+                  'recipe': m.recipeId,
+                  'servings': m.servings,
+                })
+            .toList(),
+      };
+
+      if (_activeMealPlan!.id == null) {
+        print('Creating new meal plan with payload: $payload');
+        final res = await _api.create(payload);
+        print('Create meal plan response: $res');
+        _activeMealPlan = _activeMealPlan!.copyWith(id: res['id'] as int?);
+        print('Set meal plan ID to: ${_activeMealPlan!.id}');
+      } else {
+        print('Updating existing meal plan ${_activeMealPlan!.id}');
+        await _api.update(_activeMealPlan!.id!, payload);
+      }
+      notifyListeners();
+    } catch (error) {
+      print('Error saving meal plan: $error');
     }
-    notifyListeners();
   }
 
   Future<List<Map<String, dynamic>>> listPlans() async {

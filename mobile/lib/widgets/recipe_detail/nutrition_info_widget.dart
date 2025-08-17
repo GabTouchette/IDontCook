@@ -246,16 +246,6 @@ class NutritionInfo extends StatelessWidget {
               letterSpacing: -0.5,
             ),
           ),
-          if (perServingValue != null && servings > 1)
-            Text(
-              '${perServingValue.toStringAsFixed(1)}$unit / serving',
-              style: GoogleFonts.nunito(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                height: 1.2,
-              ),
-            ),
           Text(
             label,
             style: GoogleFonts.nunito(

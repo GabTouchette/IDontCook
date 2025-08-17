@@ -57,6 +57,7 @@ class _ExplorePageState extends State<ExplorePage> {
           Column(
             children: [
               _buildSearchBar(context),
+              _buildFilterNotification(context),
               Expanded(
                 child: Consumer<ExploreProvider>(
                   builder: (context, provider, _) {
@@ -173,6 +174,77 @@ class _ExplorePageState extends State<ExplorePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterNotification(BuildContext context) {
+    return Consumer<ExploreProvider>(
+      builder: (context, provider, _) {
+        if (!provider.hasActiveFilters) {
+          return const SizedBox.shrink();
+        }
+
+        final theme = Theme.of(context);
+        final onContainer = theme.colorScheme.onSecondaryContainer;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Material(
+            color: theme.colorScheme.secondaryContainer,
+            shape: const StadiumBorder(),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: () => _openFilterDrawer(context),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 4.0, left: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.filter_alt_rounded,
+                      color: onContainer,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Filters applied',
+                      style: GoogleFonts.nunito(
+                        color: onContainer,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    TextButton.icon(
+                      onPressed: provider.clearFilters,
+                      icon: Icon(Icons.close_rounded,
+                          size: 18, color: onContainer),
+                      label: Text(
+                        'Clear',
+                        style: GoogleFonts.nunito(
+                          color: onContainer,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        minimumSize: const Size(88, 40),
+                        shape: const StadiumBorder(),
+                        foregroundColor: onContainer,
+                        backgroundColor: onContainer.withOpacity(0.08),
+                        overlayColor: onContainer.withOpacity(0.12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

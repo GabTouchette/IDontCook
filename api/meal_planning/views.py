@@ -45,8 +45,9 @@ class MealPlanViewSet(viewsets.ModelViewSet):
             return Response({"detail": "No valid days provided."}, status=status.HTTP_400_BAD_REQUEST)
         valid_types = {"breakfast", "lunch", "dinner", "snack"}
         meal_types = [str(mt).lower() for mt in meal_types if str(mt).lower() in valid_types]
+        # If none selected, treat as no slots to fill (return 400 to prompt selection)
         if not meal_types:
-            meal_types = ['breakfast', 'lunch', 'dinner']
+            return Response({"detail": "Select at least one meal type."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Dietary parsing
         desc_l = description.lower()
@@ -262,9 +263,9 @@ class MealPlanViewSet(viewsets.ModelViewSet):
             return types
 
         def _fits_meal_type(recipe, mt):
-            if _has_tag(recipe, mt):
-                return True
-            return mt in _guess_meal_types(recipe)
+            # Only allow recipes that have the explicit meal type tag
+            # This prevents recipes without proper tags from being assigned to wrong meal slots
+            return _has_tag(recipe, mt)
 
         # Heuristic selection
         used_ids_global = set()
@@ -274,6 +275,7 @@ class MealPlanViewSet(viewsets.ModelViewSet):
         cursor = 0
 
         for day in days:
+            # Only create slots for explicitly selected types
             for mt in meal_types:
                 mt_tag = mt.lower()
                 preferred = [c for c in candidates if _fits_meal_type(c, mt_tag)]

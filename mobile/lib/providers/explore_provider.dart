@@ -123,6 +123,29 @@ class ExploreProvider
     notifyListeners();
   }
 
+  bool get hasActiveFilters {
+    // Default values that indicate no filtering
+    final defaultFilters = {
+      'prepTime': 60.0,
+      'cookTime': 60.0,
+      'cuisine': 'Any',
+      'calories': RangeValues(0, 1000),
+      'excludeAIGenerated': false,
+      'excludeOwnRecipes': true,
+      'selectedTags': [],
+    };
+    
+    // Check if any filter differs from default
+    return _filters['prepTime'] != defaultFilters['prepTime'] ||
+           _filters['cookTime'] != defaultFilters['cookTime'] ||
+           _filters['cuisine'] != defaultFilters['cuisine'] ||
+           _filters['calories'].start != (defaultFilters['calories'] as RangeValues).start ||
+           _filters['calories'].end != (defaultFilters['calories'] as RangeValues).end ||
+           _filters['excludeAIGenerated'] != defaultFilters['excludeAIGenerated'] ||
+           _filters['excludeOwnRecipes'] != defaultFilters['excludeOwnRecipes'] ||
+           (_filters['selectedTags'] as List).isNotEmpty;
+  }
+
   void disposeProvider() {
     disposeScroll();
     disposeSearch();

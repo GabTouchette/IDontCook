@@ -259,7 +259,7 @@ def main():
     )
 
     # Load recipes from CSV
-    load_recipes_from_csv('recipes.csv', created_user=user)
+    load_recipes_from_csv('allrecipes.csv', created_user=user)
 
     print("Recipe creation complete!")
 

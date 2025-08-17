@@ -94,6 +94,11 @@ class RecipeDetailProvider with ChangeNotifier {
         "tags": _recipe!.tags,
         "parent_id": _recipe!.id,
         "web_image_url": _recipe!.image_url,
+        // Preserve existing nutrition on clone so UI doesn't "lose" it before recalculation
+        "calories": _recipe!.calories,
+        "protein": _recipe!.protein,
+        "fat": _recipe!.fat,
+        "carbs": _recipe!.carbs,
       };
 
       int? newId = await RecipeApi().createRecipe(recipeData);
@@ -169,6 +174,11 @@ class RecipeDetailProvider with ChangeNotifier {
         "tags": _recipe!.tags,
         "parent_id": _recipe!.id,
         "web_image_url": _recipe!.image_url,
+        // Preserve existing nutrition so new saved recipe immediately shows values
+        "calories": _recipe!.calories,
+        "protein": _recipe!.protein,
+        "fat": _recipe!.fat,
+        "carbs": _recipe!.carbs,
       };
 
       int? newId = await RecipeApi().createRecipe(recipeData);
