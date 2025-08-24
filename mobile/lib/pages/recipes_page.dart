@@ -135,14 +135,15 @@ class _RecipesPageState extends State<RecipesPage> {
                                         decoration: BoxDecoration(
                                           color: Theme.of(context)
                                               .colorScheme
-                                              .primary,
+                                              .primary
+                                              .withOpacity(0.15),
                                           borderRadius:
                                               BorderRadius.circular(16),
                                           border: Border.all(
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .outline
-                                                .withOpacity(0.2),
+                                                .primary
+                                                .withOpacity(0.6),
                                           ),
                                           boxShadow: [
                                             BoxShadow(
@@ -163,7 +164,7 @@ class _RecipesPageState extends State<RecipesPage> {
                                           style: GoogleFonts.nunito(
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .onPrimary,
+                                                .primary,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 16,
                                             letterSpacing: 1.2,

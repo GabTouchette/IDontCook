@@ -187,6 +187,18 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
         recipe = pm.recipe
         if not recipe:
             continue
+        # Determine scaling factor based on servings selected for this planned meal
+        try:
+            pm_servings = int(getattr(pm, "servings", 1) or 1)
+        except Exception:
+            pm_servings = 1
+        try:
+            base_servings = int(getattr(recipe, "servings", 0) or 0)
+        except Exception:
+            base_servings = 0
+        if base_servings <= 0:
+            base_servings = 1  # assume recipe quantities are for 1 serving when unknown
+        scale = max(1, pm_servings) / float(base_servings)
         for ing in recipe.ingredients.all():
             raw_name = (getattr(ing, "name", None) or "").strip()
             usda_name = getattr(ing, "usda_name", None)
@@ -224,11 +236,11 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
             # Aggregate quantities when possible
             if qty_val is not None:
                 if unit_class in ("mass", "volume"):
-                    entry["quantity"] = (entry["quantity"] or 0.0) + (qty_val * factor)
+                    entry["quantity"] = (entry["quantity"] or 0.0) + (qty_val * scale * factor)
                     entry["unit"] = unit_label  # canonical g/ml
                 else:
                     # count/custom units: only aggregate when unit_label matches
-                    entry["quantity"] = (entry["quantity"] or 0.0) + qty_val
+                    entry["quantity"] = (entry["quantity"] or 0.0) + (qty_val * scale)
             else:
                 # if no numeric quantity, leave as None and keep one line item
                 entry["quantity"] = None

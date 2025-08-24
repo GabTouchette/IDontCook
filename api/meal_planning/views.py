@@ -11,6 +11,7 @@ from recipes.models import Recipe, SavedRecipe
 from recipes.search import RecipeSearchEngine
 from .llm_refiner import LLMRefiner, SlotSpec, RecipeInfo, get_refiner
 from .grocery_builder import build_grocery_list
+from .ga_solver import Slot as GASlot, evolve_plan, FitnessOptions, derive_targets_from_profile, DEFAULT_TARGETS, GAResult
 
 
 class MealPlanViewSet(viewsets.ModelViewSet):
@@ -35,6 +36,21 @@ class MealPlanViewSet(viewsets.ModelViewSet):
         focus_on_saved = bool(request.data.get('focus_on_saved', True))
         servings = int(request.data.get('servings') or 1)
         replace_existing = bool(request.data.get('replace_existing', True))
+        # Optional tunables from UI sliders
+        try:
+            saved_weight = request.data.get('saved_weight', None)
+            saved_weight = float(saved_weight) if saved_weight is not None else None
+            if saved_weight is not None:
+                saved_weight = max(0.0, min(1.0, saved_weight))
+        except Exception:
+            saved_weight = None
+        try:
+            repeat_preference = request.data.get('repeat_preference', None)
+            repeat_preference = float(repeat_preference) if repeat_preference is not None else None
+            if repeat_preference is not None:
+                repeat_preference = max(0.0, min(1.0, repeat_preference))
+        except Exception:
+            repeat_preference = None
 
         # Validate inputs
         try:
@@ -71,6 +87,10 @@ class MealPlanViewSet(viewsets.ModelViewSet):
         _add_excludes_if(['no turkey', 'without turkey'], ['turkey'])
         _add_excludes_if(['no fish', 'without fish'], ['fish'])
         _add_excludes_if(['no seafood', 'without seafood'], ['fish', 'shrimp', 'tuna', 'salmon', 'crab', 'lobster'])
+        
+        # Enhanced dietary exclusions
+        _add_excludes_if(['gluten free', 'gluten-free', 'no gluten'], ['wheat', 'flour', 'bread', 'pasta', 'barley', 'rye', 'oats'])
+        _add_excludes_if(['dairy free', 'dairy-free', 'no dairy'], ['milk', 'cheese', 'butter', 'cream', 'yogurt'])
 
         MEAT_TERMS = {
             'beef', 'boeuf', 'pork', 'porc', 'ham', 'bacon', 'prosciutto', 'salami', 'sausage', 'chicken', 'turkey', 'duck', 'veal', 'lamb', 'mutton', 'chorizo', 'pepperoni'
@@ -81,6 +101,38 @@ class MealPlanViewSet(viewsets.ModelViewSet):
         DAIRY_TERMS = {'milk', 'cheese', 'butter', 'yogurt', 'cream', 'ghee', 'whey', 'casein', 'kefir'}
         EGG_TERMS = {'egg', 'eggs'}
         HONEY_TERMS = {'honey'}
+
+        # Parse high-level goals early so dietary filters can reference them
+        goals = request.data.get('goals') or []  # e.g., ['high-protein','low-carb']
+        if isinstance(goals, str):
+            goals = [goals]
+        try:
+            goals = set(str(g).lower() for g in goals)
+        except Exception:
+            goals = None
+
+        # Enhanced goal processing - add implicit goals from description
+        if goals is None:
+            goals = set()
+        # Extract goals from description text
+        if 'weight loss' in desc_l or 'lose weight' in desc_l:
+            goals.add('weight loss')
+        if 'muscle gain' in desc_l or 'build muscle' in desc_l or 'gain muscle' in desc_l:
+            goals.add('muscle gain')
+        if 'quick' in desc_l or 'fast' in desc_l or 'under 30' in desc_l:
+            goals.add('quick')
+        if 'budget' in desc_l or 'cheap' in desc_l or 'inexpensive' in desc_l:
+            goals.add('budget-friendly')
+        if 'high protein' in desc_l or 'high-protein' in desc_l:
+            goals.add('high-protein')
+        if 'low carb' in desc_l or 'low-carb' in desc_l:
+            goals.add('low-carb')
+        if 'gluten free' in desc_l or 'gluten-free' in desc_l:
+            goals.add('gluten-free')
+        if 'dairy free' in desc_l or 'dairy-free' in desc_l:
+            goals.add('dairy-free')
+        if 'healthy' in desc_l:
+            goals.add('healthy')
 
         def _tokenize(text: str):
             try:
@@ -114,6 +166,18 @@ class MealPlanViewSet(viewsets.ModelViewSet):
             tokens = _recipe_tokens(recipe)
             if explicit_excludes and any(term in tokens for term in explicit_excludes):
                 return True
+            
+            # Enhanced dietary filtering based on goals
+            if goals:
+                if 'gluten-free' in goals and any(term in tokens for term in {'wheat', 'flour', 'bread', 'pasta', 'barley', 'rye'}):
+                    # Allow if recipe is explicitly tagged gluten-free
+                    if not _has_tag_like(recipe, ['gluten-free', 'gluten free']):
+                        return True
+                if 'dairy-free' in goals and any(term in tokens for term in {'milk', 'cheese', 'butter', 'cream', 'yogurt'}):
+                    # Allow if recipe is explicitly tagged dairy-free
+                    if not _has_tag_like(recipe, ['dairy-free', 'dairy free', 'vegan']):
+                        return True
+            
             if diet == 'vegan':
                 if _has_tag_like(recipe, ['vegan']):
                     return False
@@ -267,53 +331,153 @@ class MealPlanViewSet(viewsets.ModelViewSet):
             # This prevents recipes without proper tags from being assigned to wrong meal slots
             return _has_tag(recipe, mt)
 
-        # Heuristic selection
-        used_ids_global = set()
-        used_per_day = {int(d): set() for d in days}
-        last_chosen_by_day = {}
-        new_meals = []
-        cursor = 0
-
+        # Build GA slots per selected meal type/day with strict tag match
+        slots = []
         for day in days:
-            # Only create slots for explicitly selected types
             for mt in meal_types:
                 mt_tag = mt.lower()
-                preferred = [c for c in candidates if _fits_meal_type(c, mt_tag)]
-                pool = preferred if preferred else candidates
+                pool = [c for c in candidates if _fits_meal_type(c, mt_tag)]
                 if not pool:
-                    pool = candidates
-                chosen = None
-                attempts = 0
-                day_used = used_per_day[int(day)]
-                last_id = last_chosen_by_day.get(int(day))
-                limit = max(1, len(pool) * 2)
-                while attempts < limit:
-                    cand = pool[cursor % len(pool)]
-                    cursor += 1
-                    attempts += 1
-                    if cand.id not in day_used and cand.id not in used_ids_global:
-                        chosen = cand
-                        break
-                    if chosen is None and cand.id not in day_used:
-                        chosen = cand
-                    if chosen is None and (last_id is None or cand.id != last_id):
-                        chosen = cand
-                if chosen is None:
-                    chosen = pool[0]
+                    continue  # if no candidates for this slot, let GA skip it
+                slots.append(GASlot(day=int(day), meal_type=mt_tag, candidates=pool))
 
-                used_ids_global.add(chosen.id)
-                day_used.add(chosen.id)
-                last_chosen_by_day[int(day)] = chosen.id
+    # Saved set for scoring boost
+        saved_set = set(SavedRecipe.objects.filter(user=user).values_list('recipe_id', flat=True))
 
-                new_meals.append(PlannedMeal(
-                    meal_plan=meal_plan,
-                    recipe=chosen,
-                    day_of_week=int(day),
-                    meal_type=mt,
-                    servings=servings,
-                ))
+    # Build fitness options from request (goals already parsed above)
 
-        PlannedMeal.objects.bulk_create(new_meals)
+        # Optional per-meal time overrides
+        time_limits = request.data.get('time_limits') or {}
+        if not isinstance(time_limits, dict):
+            time_limits = {}
+        
+        # Auto-adjust time limits for quick goal
+        if 'quick' in goals:
+            quick_limits = {'breakfast': 10, 'lunch': 20, 'dinner': 30, 'snack': 10}
+            time_limits = {**quick_limits, **time_limits}
+            
+        # Budget and difficulty
+        budget_per_meal = request.data.get('budget_per_meal')
+        try:
+            budget_per_meal = float(budget_per_meal) if budget_per_meal is not None else None
+        except Exception:
+            budget_per_meal = None
+        difficulty_max = request.data.get('difficulty_max')
+        try:
+            difficulty_max = int(difficulty_max) if difficulty_max is not None else None
+        except Exception:
+            difficulty_max = None
+
+        # Optional profile to derive targets; otherwise defaults with goal adjustments
+        profile = request.data.get('profile') or None
+        targets = None
+        if isinstance(profile, dict):
+            # Add goals to profile for target calculation
+            profile['goals'] = list(goals) if goals else []
+            targets = derive_targets_from_profile(profile)
+        elif goals:
+            # Apply goal-based adjustments to default targets even without profile
+            targets = derive_targets_from_profile({'goals': list(goals)})
+        
+        if not targets:
+            targets = DEFAULT_TARGETS
+
+        # Adjust weights when certain goals are selected
+        base_weights = FitnessOptions().weights.copy()
+        if 'healthy' in goals:
+            # Emphasize nutrition when user asks for "Healthy"
+            base_weights['nutrition'] = min(0.7, base_weights.get('nutrition', 0.5) + 0.2)
+            # Slightly reduce time/cost emphasis to keep weights balanced
+            base_weights['time'] = max(0.05, base_weights.get('time', 0.15) - 0.03)
+            base_weights['cost'] = max(0.05, base_weights.get('cost', 0.10) - 0.02)
+
+        fit_opts = FitnessOptions(
+            targets=targets,
+            servings=servings,
+            focus_on_saved=focus_on_saved,
+            saved_set=saved_set,
+            goals=goals,
+            time_limits={**FitnessOptions().time_limits, **{k: int(v) for k, v in time_limits.items() if str(k) and str(v).isdigit()}},
+            budget_per_meal=budget_per_meal,
+            difficulty_max=difficulty_max,
+            weights=base_weights,
+            saved_weight=saved_weight,
+            repeat_preference=repeat_preference,
+        )
+
+        ga_result = GAResult(meals=[], fitness_score=0.0, total_slots=0, filled_slots=0, low_quality_slots=[], warnings=[])
+        try:
+            ga_result = evolve_plan(slots, servings=servings, saved_set=saved_set, focus_on_saved=focus_on_saved, fitness_options=fit_opts)
+        except Exception as e:
+            ga_result = GAResult(
+                meals=[], 
+                fitness_score=0.0, 
+                total_slots=len(slots), 
+                filled_slots=0, 
+                low_quality_slots=[], 
+                warnings=[f"Error during meal planning: {str(e)}"]
+            )
+
+        new_meals = []
+        if ga_result.meals:
+            for day, mt_tag, recipe in ga_result.meals:
+                try:
+                    new_meals.append(PlannedMeal(
+                        meal_plan=meal_plan,
+                        recipe=recipe,
+                        day_of_week=int(day),
+                        meal_type=str(mt_tag),
+                        servings=servings,
+                    ))
+                except Exception:
+                    continue
+            if new_meals:
+                PlannedMeal.objects.bulk_create(new_meals)
+        else:
+            # Fallback to previous heuristic if GA returned nothing
+            used_ids_global = set()
+            used_per_day = {int(d): set() for d in days}
+            last_chosen_by_day = {}
+            cursor = 0
+            for day in days:
+                for mt in meal_types:
+                    mt_tag = mt.lower()
+                    preferred = [c for c in candidates if _fits_meal_type(c, mt_tag)]
+                    pool = preferred if preferred else candidates
+                    if not pool:
+                        continue
+                    chosen = None
+                    attempts = 0
+                    day_used = used_per_day[int(day)]
+                    last_id = last_chosen_by_day.get(int(day))
+                    limit = max(1, len(pool) * 2)
+                    while attempts < limit:
+                        cand = pool[cursor % len(pool)]
+                        cursor += 1
+                        attempts += 1
+                        if cand.id not in day_used and cand.id not in used_ids_global:
+                            chosen = cand
+                            break
+                        if chosen is None and cand.id not in day_used:
+                            chosen = cand
+                        if chosen is None and (last_id is None or cand.id != last_id):
+                            chosen = cand
+                    if chosen is None:
+                        chosen = pool[0]
+
+                    used_ids_global.add(chosen.id)
+                    day_used.add(chosen.id)
+                    last_chosen_by_day[int(day)] = chosen.id
+
+                    new_meals.append(PlannedMeal(
+                        meal_plan=meal_plan,
+                        recipe=chosen,
+                        day_of_week=int(day),
+                        meal_type=mt,
+                        servings=servings,
+                    ))
+            if new_meals:
+                PlannedMeal.objects.bulk_create(new_meals)
 
     # Phase 2: optional LLM refinement over safe candidate sets
         try:
@@ -473,7 +637,23 @@ class MealPlanViewSet(viewsets.ModelViewSet):
             pass
 
         serializer = self.get_serializer(meal_plan)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response_data = serializer.data
+        
+        # Add GA result metadata to response
+        response_data['generation_metadata'] = {
+            'fitness_score': ga_result.fitness_score,
+            'total_slots': ga_result.total_slots,
+            'filled_slots': ga_result.filled_slots,
+            'fill_rate': ga_result.filled_slots / max(1, ga_result.total_slots),
+            'low_quality_count': len(ga_result.low_quality_slots),
+            'warnings': ga_result.warnings,
+            'low_quality_slots': [
+                {'day': day, 'meal_type': meal_type, 'fitness': fitness}
+                for day, meal_type, fitness in ga_result.low_quality_slots
+            ]
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'])
     def grocery_list(self, request, pk=None):

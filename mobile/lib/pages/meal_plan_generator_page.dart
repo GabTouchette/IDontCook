@@ -27,8 +27,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
     'Quick (<30m)': false,
     'Meal Prep / Leftovers': false,
     'Budget Friendly': false,
-    'Weight Loss': false,
-    'Muscle Gain': false,
+    'Healthy': false,
   };
   final Map<String, bool> _mealTypes = {
     'Breakfast': false,
@@ -36,9 +35,11 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
     'Dinner': true,
     'Snacks': false,
   };
-  int _people = 2; // servings per recipe
+  // Removed per-page people/servings control; backend uses defaults or profile
   bool _loading = false;
-  bool _focusSaved = true;
+  // Sliders
+  double _focusSavedWeight = 0.6; // 0..1 prioritize saved recipes
+  double _repeatPreference = 0.2; // 0..1 allow repeats
   final Set<int> _preferredRecipeIds = {};
 
   // _dayLabel was removed as unused
@@ -119,9 +120,9 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                                       fontWeight: FontWeight.w800)),
                               const SizedBox(height: 8),
                               Text(
-                                selected.length == 1
-                                    ? _dayLabelPlain(ws, selected.first)
-                                    : '${_dayLabelPlain(ws, selected.first)} - ${_dayLabelPlain(ws, selected.last)}',
+                                selected
+                                    .map((d) => _dayLabelPlain(ws, d))
+                                    .join(', '),
                                 style: GoogleFonts.nunito(
                                     fontWeight: FontWeight.w700),
                               ),
@@ -131,6 +132,46 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                       );
                     }),
                     const SizedBox(height: 12),
+                    // Focus on saved recipes slider
+                    _SectionHeader('Focus on my recipes'),
+                    Slider(
+                      value: _focusSavedWeight,
+                      onChanged: (v) =>
+                          setState(() => _focusSavedWeight = v.clamp(0.0, 1.0)),
+                      min: 0,
+                      max: 1,
+                      divisions: 10,
+                      label: '${(_focusSavedWeight * 100).round()}%',
+                    ),
+                    Text(
+                      'How strongly to prioritize your saved recipes',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Allow repetitions slider
+                    _SectionHeader('Allow repetitions of meals'),
+                    Slider(
+                      value: _repeatPreference,
+                      onChanged: (v) =>
+                          setState(() => _repeatPreference = v.clamp(0.0, 1.0)),
+                      min: 0,
+                      max: 1,
+                      divisions: 10,
+                      label: '${(_repeatPreference * 100).round()}%',
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Never',
+                            style: Theme.of(context).textTheme.bodySmall),
+                        Text('Often',
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     _SectionHeader('Dietary Preferences'),
                     const SizedBox(height: 8),
                     Wrap(
@@ -142,6 +183,29 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                           selected: e.value,
                           onSelected: (v) =>
                               setState(() => _dietPrefs[e.key] = v),
+                          selectedColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.15),
+                          side: BorderSide(
+                            color: e.value
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.6)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .outline
+                                    .withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          labelStyle: TextStyle(
+                            color: e.value
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontWeight:
+                                e.value ? FontWeight.w600 : FontWeight.w500,
+                          ),
                         );
                       }).toList(),
                     ),
@@ -156,6 +220,29 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                           label: Text(e.key),
                           selected: e.value,
                           onSelected: (v) => setState(() => _goals[e.key] = v),
+                          selectedColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.15),
+                          side: BorderSide(
+                            color: e.value
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.6)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .outline
+                                    .withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          labelStyle: TextStyle(
+                            color: e.value
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontWeight:
+                                e.value ? FontWeight.w600 : FontWeight.w500,
+                          ),
                         );
                       }).toList(),
                     ),
@@ -171,171 +258,31 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                           selected: e.value,
                           onSelected: (v) =>
                               setState(() => _mealTypes[e.key] = v),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    _SectionHeader('People'),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .outline
-                                .withOpacity(0.2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.people,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Number of people',
-                            style: GoogleFonts.nunito(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const Spacer(),
-
-                          // People Controls
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Theme.of(context)
+                          selectedColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.15),
+                          side: BorderSide(
+                            color: e.value
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.6)
+                                : Theme.of(context)
                                     .colorScheme
                                     .outline
-                                    .withOpacity(0.2),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.remove,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      size: 22),
-                                  onPressed: _people > 1
-                                      ? () => setState(() =>
-                                          _people = (_people - 1).clamp(1, 12))
-                                      : null,
-                                  constraints: const BoxConstraints(
-                                      minWidth: 36, minHeight: 36),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.1),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14),
-                                  child: Text(
-                                    '$_people',
-                                    style: GoogleFonts.nunito(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -0.5,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.add,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      size: 22),
-                                  onPressed: _people < 12
-                                      ? () => setState(() =>
-                                          _people = (_people + 1).clamp(1, 12))
-                                      : null,
-                                  constraints: const BoxConstraints(
-                                      minWidth: 36, minHeight: 36),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.1),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                                    .withOpacity(0.3),
+                            width: 1.5,
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _SectionHeader('Your Recipes'),
-                    const SizedBox(height: 8),
-
-                    if (_preferredRecipeIds.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text('${_preferredRecipeIds.length} selected',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant)),
-                    ],
-                    const SizedBox(height: 12),
-                    FilterChip(
-                      label: const Text('Focus on my saved recipes'),
-                      selected: _focusSaved,
-                      onSelected: (v) => setState(() => _focusSaved = v),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'We\'ll prioritize your saved recipes when possible.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          labelStyle: TextStyle(
+                            color: e.value
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontWeight:
+                                e.value ? FontWeight.w600 : FontWeight.w500,
                           ),
+                        );
+                      }).toList(),
                     ),
                     const SizedBox(height: 24), // Extra space before button
                   ],
@@ -359,11 +306,11 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                  foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   elevation: 4,
                   shadowColor:
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+                      Theme.of(context).colorScheme.primary.withOpacity(0.4),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -394,10 +341,11 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         await mp.generateAIMealPlan(
                           context,
                           specialRequests: specialRequests,
-                          focusOnSaved: _focusSaved,
+                          focusOnSaved: _focusSavedWeight >= 0.5,
+                          savedWeight: _focusSavedWeight,
+                          repeatPreference: _repeatPreference,
                           preferredRecipeIds: _preferredRecipeIds.toList(),
                           mealTypes: selectedMealTypes,
-                          servings: _people,
                         );
                         // ignore: use_build_context_synchronously
                         Navigator.pop(context);
@@ -407,11 +355,17 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.onSecondary))
-                    : Text('Generate Meal Plan',
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      )
+                    : Text(
+                        'Generate Meal Plan',
                         style: GoogleFonts.nunito(
-                            fontWeight: FontWeight.w800, fontSize: 16)),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.onPrimary),
+                      ),
               ),
             ),
           ),
@@ -446,7 +400,7 @@ extension _MealPlanPrefs on _MealPlanGeneratorPageState {
     if (goals.isNotEmpty) buffer.writeln('Goals: ${goals.join(', ')}');
     if (mealTypes.isNotEmpty)
       buffer.writeln('Meal Types: ${mealTypes.join(', ')}');
-    if (_focusSaved) buffer.writeln('Focus on saved recipes.');
+    // No explicit focus text; sliders are passed as params
     return buffer.toString().trim();
   }
 }

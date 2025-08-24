@@ -26,6 +26,9 @@ class _TagsSectionState extends State<TagsSection> {
     'Dessert'
   ];
 
+  // Track expansion state for each category
+  Map<String, bool> _expansionStates = {};
+
   String _getSelectedMealType() {
     for (String mealType in mealTypes) {
       if (widget.selectedTags
@@ -51,6 +54,13 @@ class _TagsSectionState extends State<TagsSection> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize expansion states - start with meal types always expanded (required), others collapsed
+    _expansionStates = {
+      for (String category in tagOptions.keys.where((k) => k != "Meal Types"))
+        category: false, // Start other categories collapsed
+    };
+
     // Ensure there's always a meal type selected - default to Dinner if none
     if (!mealTypes.any((mealType) => widget.selectedTags
         .any((tag) => tag.toLowerCase() == mealType.toLowerCase()))) {
@@ -98,17 +108,26 @@ class _TagsSectionState extends State<TagsSection> {
             _buildMealTypeSection(),
             const SizedBox(height: 24.0),
 
-            // Other tag categories (existing FilterChips)
+            // Other tag categories (collapsible sections)
             ...tagOptions.entries
                 .where((entry) => entry.key != "Meal Types")
                 .map((entry) {
               final category = entry.key;
               final tags = entry.value;
+              final isExpanded = _expansionStates[category] ?? false;
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16.0),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                  ),
+                ),
+                child: ExpansionTile(
+                  title: Text(
                     category,
                     style: GoogleFonts.nunito(
                       color: Theme.of(context).colorScheme.onSurface,
@@ -116,62 +135,85 @@ class _TagsSectionState extends State<TagsSection> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8.0),
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: tags.map((tag) {
-                      final isSelected = widget.selectedTags.any(
-                          (selectedTag) =>
-                              selectedTag.toLowerCase() == tag.toLowerCase());
-                      return Container(
-                        margin: const EdgeInsets.only(right: 8, bottom: 8),
-                        child: FilterChip(
-                          showCheckmark: false,
-                          label: Text(tag),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                widget.selectedTags.add(tag);
-                              } else {
-                                widget.selectedTags.remove(tag);
-                              }
-                              widget.onTagsChanged(widget.selectedTags);
-                            });
-                          },
-                          selectedColor: Theme.of(context).colorScheme.primary,
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          side: BorderSide(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .outline
-                                    .withOpacity(0.3),
-                            width: 1.5,
-                          ),
-                          elevation: isSelected ? 2 : 0,
-                          shadowColor: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.3),
-                          labelStyle: GoogleFonts.nunito(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurface,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  trailing: AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.expand_more,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                ],
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _expansionStates[category] = expanded;
+                    });
+                  },
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: tags.map((tag) {
+                          final isSelected = widget.selectedTags.any(
+                              (selectedTag) =>
+                                  selectedTag.toLowerCase() ==
+                                  tag.toLowerCase());
+                          return Container(
+                            margin: const EdgeInsets.only(right: 8, bottom: 8),
+                            child: FilterChip(
+                              showCheckmark: false,
+                              label: Text(tag),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    widget.selectedTags.add(tag);
+                                  } else {
+                                    widget.selectedTags.remove(tag);
+                                  }
+                                  widget.onTagsChanged(widget.selectedTags);
+                                });
+                              },
+                              selectedColor:
+                                  Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                              side: BorderSide(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary.withOpacity(0.6)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .outline
+                                        .withOpacity(0.3),
+                                width: 1.5,
+                              ),
+                              elevation: isSelected ? 2 : 0,
+                              shadowColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.3),
+                              labelStyle: GoogleFonts.nunito(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurface,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
               );
             }).toList(),
           ],

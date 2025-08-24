@@ -74,40 +74,104 @@ class MealPlanPage extends StatelessWidget {
               WeeklyCalendar(
                 weekStart: weekStart,
                 selectedDay: mp.selectedDay,
-                rangeStart: mp.rangeStart,
-                rangeEnd: mp.rangeEnd,
+                selectedDays: mp.selectedDays,
                 onDaySelected: mp.tapDay,
                 onSwipeLeft: mp.nextWeek,
                 onSwipeRight: mp.prevWeek,
+                weekOffset: mp.weekOffset,
               ),
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: mp.isGenerating
-                        ? null
-                        : () => _openCreatePlanSheet(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                child: Row(
+                  children: [
+                    // Make a plan button
+                    Expanded(
+                      flex: 3,
+                      child: ElevatedButton(
+                        onPressed: mp.isGenerating
+                            ? null
+                            : () => _openCreatePlanSheet(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: mp.isGenerating
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
+                              )
+                            : Text('Make a plan',
+                                style: GoogleFonts.nunito(
+                                    fontWeight: FontWeight.w800)),
+                      ),
                     ),
-                    child: mp.isGenerating
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.onPrimary),
-                          )
-                        : Text('Make a plan',
-                            style: GoogleFonts.nunito(
-                                fontWeight: FontWeight.w800)),
-                  ),
+                    const SizedBox(width: 12),
+                    // Clear button
+                    Expanded(
+                      flex: 1,
+                      child: OutlinedButton.icon(
+                        onPressed: mp.isGenerating
+                            ? null
+                            : () {
+                                final selectedDays = [...mp.selectedDaysList];
+                                if (selectedDays.isNotEmpty) {
+                                  mp.clearMealsForRange(
+                                    selectedDays,
+                                    ['breakfast', 'lunch', 'dinner', 'snack'],
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Cleared planned meals for selected days'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Please select days to clear'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                        icon: Icon(
+                          Icons.clear_all,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        label: Text(
+                          'Clear',
+                          style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.error,
+                            width: 1.5,
+                          ),
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -419,24 +483,6 @@ class MealPlanPage extends StatelessWidget {
     );
   }
 
-  void _copyFrom(BuildContext context, MealPlanProvider mp) async {
-    final days = List<int>.generate(7, (i) => i);
-    final from = await showDialog<int>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Copy from which day?'),
-        children: days
-            .map((d) => SimpleDialogOption(
-                  onPressed: () => Navigator.pop(ctx, d),
-                  child: Text('Day ${d + 1}'),
-                ))
-            .toList(),
-      ),
-    );
-    if (from == null) return;
-    mp.copyDayMeals(from, mp.selectedDaysList, replace: false);
-  }
-
   // _buildWeekSummary removed per new design
 }
 
@@ -615,25 +661,76 @@ class _GroceryListPage extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           itemBuilder: (_, i) {
             final item = mp.groceryList[i];
-            return ListTile(
-              shape: RoundedRectangleBorder(
+            return Dismissible(
+              key: Key('grocery_${i}_${item.name}'),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.error,
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withOpacity(0.2))),
-              tileColor: Theme.of(context).colorScheme.surface,
-              leading: Checkbox(
-                value: item.purchased,
-                onChanged: (_) => mp.togglePurchased(i),
+                ),
+                child: Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
-              title: Text(
-                '${item.quantity} ${item.unit ?? ''} ${item.name}',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w700,
-                  decoration:
-                      item.purchased ? TextDecoration.lineThrough : null,
+              onDismissed: (_) => mp.removeGroceryItem(i),
+              child: GestureDetector(
+                onTap: () => mp.togglePurchased(i),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      // Quantity container (similar to checkbox positioning)
+                      Container(
+                        width: 60,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            item.quantity.toStringAsFixed(2),
+                            style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Name and unit
+                      Expanded(
+                        child: Text(
+                          '${item.unit?.isNotEmpty == true ? '${item.unit} ' : ''}${item.name}',
+                          style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            decoration: item.purchased ? TextDecoration.lineThrough : null,
+                            color: item.purchased 
+                                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

@@ -11,19 +11,31 @@ class MealPlanProvider with ChangeNotifier {
   MealPlan? _activeMealPlan;
   List<GroceryItem> _groceryList = [];
   bool _isGenerating = false;
-  int _selectedDay = 0;
-  int? _rangeStart;
-  int? _rangeEnd;
+  int _selectedDay = _getTodayIndex();
+  Set<int> _selectedDays = {
+    _getTodayIndex()
+  }; // Changed to Set for multiple selection
   int _weekOffset = 0; // 0 = current week, up to 4 weeks ahead
   final Map<int, RecipePreview> _previewCache = {};
+
+  // Store selections per week (weekOffset -> Set<int>)
+  final Map<int, Set<int>> _weekSelections = {
+    0: {_getTodayIndex()}
+  };
+
+  static int _getTodayIndex() {
+    final today = DateTime.now();
+    final weekday = today.weekday; // Monday = 1, Sunday = 7
+    return weekday - 1; // Convert to 0-based index (Monday = 0, Sunday = 6)
+  }
 
   List<MealPlan> get mealPlans => _mealPlans;
   MealPlan? get activeMealPlan => _activeMealPlan;
   List<GroceryItem> get groceryList => _groceryList;
   bool get isGenerating => _isGenerating;
   int get selectedDay => _selectedDay;
-  int? get rangeStart => _rangeStart;
-  int? get rangeEnd => _rangeEnd;
+  Set<int> get selectedDays => Set.from(
+      _weekSelections[_weekOffset] ?? {}); // Get selections for current week
   int get weekOffset => _weekOffset;
   Map<int, RecipePreview> get previewCache => _previewCache;
 
@@ -34,24 +46,27 @@ class MealPlanProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Handles range selection when a day is tapped in the calendar.
-  // First tap starts a new range, second tap completes it (inclusive),
-  // third tap starts a new range from the tapped day.
+  // Toggle individual day selection for current week
   void tapDay(int dayIndex) {
-    _selectedDay = dayIndex;
-    if (_rangeStart == null || _rangeEnd != null) {
-      // Start new range
-      _rangeStart = dayIndex;
-      _rangeEnd = null;
+    _selectedDay = dayIndex; // Keep track of last tapped day
+
+    // Get or create selections for current week
+    final currentWeekSelections = _weekSelections[_weekOffset] ?? <int>{};
+
+    if (currentWeekSelections.contains(dayIndex)) {
+      currentWeekSelections.remove(dayIndex);
     } else {
-      // Complete range
-      if (dayIndex < _rangeStart!) {
-        _rangeEnd = _rangeStart;
-        _rangeStart = dayIndex;
-      } else {
-        _rangeEnd = dayIndex;
-      }
+      currentWeekSelections.add(dayIndex);
     }
+
+    // Ensure at least one day is always selected
+    if (currentWeekSelections.isEmpty) {
+      currentWeekSelections.add(dayIndex);
+    }
+
+    // Update the selections for this week
+    _weekSelections[_weekOffset] = currentWeekSelections;
+    _selectedDays = Set.from(currentWeekSelections); // Update current view
     notifyListeners();
   }
 
@@ -126,9 +141,10 @@ class MealPlanProvider with ChangeNotifier {
     int maxPrepTime = 60,
     String? specialRequests,
     bool focusOnSaved = true,
+    double? savedWeight,
+    double? repeatPreference,
     List<int> preferredRecipeIds = const [],
     List<String> mealTypes = const ['breakfast', 'lunch', 'dinner'],
-    int servings = 1,
   }) async {
     _isGenerating = true;
     notifyListeners();
@@ -148,7 +164,8 @@ class MealPlanProvider with ChangeNotifier {
       'days': selectedDays,
       'meal_types': mealTypes,
       'focus_on_saved': focusOnSaved,
-      'servings': servings,
+      if (savedWeight != null) 'saved_weight': savedWeight,
+      if (repeatPreference != null) 'repeat_preference': repeatPreference,
       'replace_existing': true,
       'preferred_recipes': preferredRecipeIds,
     };
@@ -183,14 +200,153 @@ class MealPlanProvider with ChangeNotifier {
         isActive: (res['is_active'] as bool?) ?? true,
         plannedMeals: planned,
       );
+
+      // Handle generation metadata and show appropriate feedback
+      final metadata = res['generation_metadata'] as Map<String, dynamic>?;
+      if (metadata != null && context.mounted) {
+        _handleGenerationFeedback(context, metadata);
+      }
     } catch (error) {
       print('Error generating AI meal plan: $error');
-      // You could also show a snackbar or alert here
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate meal plan: ${error.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
 
     _isGenerating = false;
     notifyListeners();
   }
+
+  void _handleGenerationFeedback(
+      BuildContext context, Map<String, dynamic> metadata) {
+    final warnings = List<String>.from(metadata['warnings'] ?? []);
+    final fillRate = (metadata['fill_rate'] as num?)?.toDouble() ?? 1.0;
+    final filledSlots = (metadata['filled_slots'] as num?)?.toInt() ?? 0;
+    final totalSlots = (metadata['total_slots'] as num?)?.toInt() ?? 0;
+    final lowQualityCount =
+        (metadata['low_quality_count'] as num?)?.toInt() ?? 0;
+
+    // Determine feedback type and message
+    Color backgroundColor;
+    String message;
+    IconData icon;
+
+    if (fillRate >= 0.9 && lowQualityCount == 0) {
+      // Great success
+      backgroundColor = Theme.of(context).colorScheme.primary;
+      icon = Icons.check_circle;
+      message = 'Meal plan generated successfully!';
+    } else if (fillRate >= 0.8) {
+      // Good with some warnings
+      backgroundColor = Theme.of(context).colorScheme.secondary;
+      icon = Icons.info;
+      if (lowQualityCount > 0) {
+        message =
+            'Meal plan generated with $lowQualityCount recipe(s) that may not fully match your preferences';
+      } else {
+        message = 'Meal plan generated with some limitations';
+      }
+    } else if (fillRate >= 0.5) {
+      // Partial success with significant issues
+      backgroundColor = Colors.orange;
+      icon = Icons.warning;
+      message =
+          'Only ${filledSlots}/${totalSlots} meal slots could be filled. Consider relaxing dietary restrictions.';
+    } else {
+      // Poor results
+      backgroundColor = Theme.of(context).colorScheme.error;
+      icon = Icons.error;
+      message =
+          'Very few suitable recipes found (${filledSlots}/${totalSlots}). Try different preferences.';
+    }
+
+    // Show appropriate feedback
+    if (fillRate < 0.8 || warnings.isNotEmpty) {
+      // Show detailed dialog for problematic cases
+      _showGenerationWarningDialog(context, message, warnings, metadata);
+    } else {
+      // Simple snackbar for successful cases
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: backgroundColor,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _showGenerationWarningDialog(BuildContext context, String mainMessage,
+      List<String> warnings, Map<String, dynamic> metadata) {
+    final lowQualitySlots =
+        List<Map<String, dynamic>>.from(metadata['low_quality_slots'] ?? []);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.warning_amber,
+          color: Colors.orange,
+          size: 32,
+        ),
+        title: const Text('Meal Plan Generation'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(mainMessage),
+              if (warnings.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('Issues found:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                ...warnings.map((w) => Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 8),
+                      child: Text('• $w'),
+                    )),
+              ],
+              if (lowQualitySlots.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('Low-quality matches:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                ...lowQualitySlots.take(3).map((slot) => Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 8),
+                      child: Text(
+                          '• ${_capitalize(slot['meal_type'])} on day ${slot['day'] + 1}'),
+                    )),
+                if (lowQualitySlots.length > 3)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 8),
+                    child: Text('• ... and ${lowQualitySlots.length - 3} more'),
+                  ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
   // Removed old AI prompt and local mapping helpers; backend now generates directly
 
@@ -253,11 +409,8 @@ class MealPlanProvider with ChangeNotifier {
   }
 
   List<int> get selectedDaysList {
-    if (_rangeStart != null && _rangeEnd != null) {
-      return List<int>.generate(
-          _rangeEnd! - _rangeStart! + 1, (i) => _rangeStart! + i);
-    }
-    return [_selectedDay];
+    final currentWeekSelections = _weekSelections[_weekOffset] ?? <int>{};
+    return currentWeekSelections.toList()..sort();
   }
 
   void clearMealsForRange(List<int> days, List<String> mealTypes) {
@@ -397,18 +550,47 @@ class MealPlanProvider with ChangeNotifier {
       final recipe = recipeCache[m.recipeId];
       if (recipe == null) continue;
       for (final ing in recipe.ingredients) {
-        final key =
-            '${(ing.name ?? '').trim().toLowerCase()}|${(ing.unit ?? '').trim().toLowerCase()}';
+        // Normalize ingredient name and unit for better consolidation
+        final normalizedName = (ing.name ?? '')
+            .trim()
+            .toLowerCase()
+            .replaceAll(RegExp(r'\s+'), ' ') // normalize whitespace
+            .replaceAll(RegExp(r'[^\w\s]'), ''); // remove punctuation
+        final normalizedUnit = (ing.unit ?? '')
+            .trim()
+            .toLowerCase()
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .replaceAll('tablespoons', 'tbsp')
+            .replaceAll('tablespoon', 'tbsp')
+            .replaceAll('teaspoons', 'tsp')
+            .replaceAll('teaspoon', 'tsp')
+            .replaceAll('ounces', 'oz')
+            .replaceAll('ounce', 'oz')
+            .replaceAll('pounds', 'lbs')
+            .replaceAll('pound', 'lb')
+            .replaceAll('cups', 'cup')
+            .replaceAll('grams', 'g')
+            .replaceAll('gram', 'g')
+            .replaceAll('kilograms', 'kg')
+            .replaceAll('kilogram', 'kg')
+            .replaceAll('milliliters', 'ml')
+            .replaceAll('milliliter', 'ml')
+            .replaceAll('liters', 'l')
+            .replaceAll('liter', 'l');
+
+        final key = '${normalizedName}|${normalizedUnit}';
         final quantity =
             (ing.quantity ?? 0) * m.servings / (recipe.servings ?? 1);
+
         if (map.containsKey(key)) {
           final existing = map[key]!;
           map[key] = existing.copyWith(quantity: existing.quantity + quantity);
         } else {
           map[key] = GroceryItem(
-              name: (ing.name ?? '').trim().toLowerCase(),
-              unit: ing.unit?.toLowerCase(),
-              quantity: quantity);
+            name: normalizedName,
+            unit: normalizedUnit.isEmpty ? null : normalizedUnit,
+            quantity: quantity,
+          );
         }
       }
     }
@@ -424,9 +606,27 @@ class MealPlanProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void removeGroceryItem(int index) {
+    if (index < 0 || index >= _groceryList.length) return;
+    _groceryList.removeAt(index);
+    notifyListeners();
+  }
+
   void nextWeek() {
     if (_weekOffset < 4) {
       _weekOffset += 1;
+      // Load or create selections for this week
+      final weekSelections = _weekSelections[_weekOffset];
+      if (weekSelections != null) {
+        _selectedDays = Set.from(weekSelections);
+        _selectedDay = _selectedDays.first;
+      } else {
+        // Initialize new week with smart default
+        final defaultDay = _getTodayIndexForWeek(visibleWeekStart);
+        _weekSelections[_weekOffset] = {defaultDay};
+        _selectedDays = {defaultDay};
+        _selectedDay = defaultDay;
+      }
       notifyListeners();
     }
   }
@@ -434,7 +634,34 @@ class MealPlanProvider with ChangeNotifier {
   void prevWeek() {
     if (_weekOffset > 0) {
       _weekOffset -= 1;
+      // Load or create selections for this week
+      final weekSelections = _weekSelections[_weekOffset];
+      if (weekSelections != null) {
+        _selectedDays = Set.from(weekSelections);
+        _selectedDay = _selectedDays.first;
+      } else {
+        // Initialize new week with smart default
+        final defaultDay = _getTodayIndexForWeek(visibleWeekStart);
+        _weekSelections[_weekOffset] = {defaultDay};
+        _selectedDays = {defaultDay};
+        _selectedDay = defaultDay;
+      }
       notifyListeners();
     }
+  }
+
+  // Helper to get today's index within the visible week, or default to 0 if not in visible week
+  int _getTodayIndexForWeek(DateTime weekStart) {
+    final today = DateTime.now();
+    final weekEnd = weekStart.add(const Duration(days: 6));
+
+    // Check if today falls within the visible week
+    if (today.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+        today.isBefore(weekEnd.add(const Duration(days: 1)))) {
+      return today.difference(weekStart).inDays.clamp(0, 6);
+    }
+
+    // Default to Monday (index 0) if today is not in the visible week
+    return 0;
   }
 }
