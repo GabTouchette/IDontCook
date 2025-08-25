@@ -1,0 +1,9 @@
+# Canonicalization rules (conservative)
+# Left side → canonical form
+scallions: green onion
+scallion: green onion
+spring onion: green onion
+garbanzo bean: chickpea
+garbanzo beans: chickpeas
+powdered sugar: icing sugar
+confectioners sugar: icing sugar

@@ -23,6 +23,22 @@ class NutritionData(models.Model):
     def __str__(self):
         return self.name
 
+class CanonicalIngredient(models.Model):
+    """Catalog entry for a canonical ingredient concept (multilingual)."""
+    canonical_name_en = models.CharField(max_length=255, db_index=True)
+    canonical_name_fr = models.CharField(max_length=255, blank=True, null=True)
+    # category now stores a 2-letter code (e.g., PR, MS, DE, ... HO)
+    category = models.CharField(max_length=2, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["canonical_name_en"]),
+        ]
+
+    def __str__(self):
+        return self.canonical_name_en or (self.canonical_name_fr or "Ingredient")
+
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     substitutes = models.JSONField(default=list, blank=True, null=True)
@@ -33,6 +49,12 @@ class Ingredient(models.Model):
     original_text = models.CharField(max_length=500, blank=True, null=True)  # Full ingredient string
     usda_name = models.CharField(max_length=255, blank=True, null=True)  # Simplified name for USDA lookup
     nutrition_data = models.ForeignKey(NutritionData, on_delete=models.SET_NULL, null=True, blank=True)
+    # New fields for catalog architecture
+    language = models.CharField(max_length=8, blank=True, null=True)  # e.g., 'en', 'fr'
+    normalized_name = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    match_confidence = models.FloatField(blank=True, null=True)
+    canonical = models.ForeignKey(CanonicalIngredient, on_delete=models.SET_NULL, null=True, blank=True, related_name="ingredients")
 
     def __str__(self):
         parts = []

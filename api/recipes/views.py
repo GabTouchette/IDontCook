@@ -17,7 +17,7 @@ from PIL import Image, ExifTags
 from io import BytesIO
 
 from ai_chatbot.api import OpenAIService
-from recipes.models import Recipe, SavedRecipe
+from recipes.models import Recipe, SavedRecipe, CanonicalIngredient
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
 from recommendations.models import MixedRecommendationPagination
@@ -366,4 +366,31 @@ class RecipeTagsAPIView(APIView):
         tags = Recipe.objects.values_list('tags', flat=True).distinct()
         unique_tags = set(tag for sublist in tags for tag in sublist)
         return JsonResponse(list(unique_tags), safe=False, status=status.HTTP_200_OK)
+
+
+class CanonicalIngredientAutocompleteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        q = (request.GET.get('q') or '').strip()
+        limit = int(request.GET.get('limit') or 5)
+        if not q:
+            return JsonResponse([], safe=False)
+
+        # Simple case-insensitive startswith/contains match on English and French names
+        qs = CanonicalIngredient.objects.all()
+        qs = qs.filter(
+            Q(canonical_name_en__icontains=q) | Q(canonical_name_fr__icontains=q)
+        ).order_by('canonical_name_en')[:max(1, min(limit, 25))]
+
+        results = [
+            {
+                'id': ci.id,
+                'canonical_name_en': ci.canonical_name_en,
+                'canonical_name_fr': ci.canonical_name_fr,
+                'category': ci.category,
+            }
+            for ci in qs
+        ]
+        return JsonResponse(results, safe=False)
 

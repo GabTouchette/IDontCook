@@ -5,6 +5,7 @@ from recipes.views import (
     RecipeImageUploadAPIView,
     FilteredRecommendationsAPIView,
     RecipeTagsAPIView,
+    CanonicalIngredientAutocompleteAPIView,
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path("<int:recipe_id>/image", RecipeImageUploadAPIView.as_view(), name="recipe-image"),
     path('global/filter/', FilteredRecommendationsAPIView.as_view(), name='filtered-recommendations'),
     path('tags/', RecipeTagsAPIView.as_view(), name='recipe-tags'),
+    path('ingredients/autocomplete/', CanonicalIngredientAutocompleteAPIView.as_view(), name='canonical-ingredients-autocomplete'),
 ]

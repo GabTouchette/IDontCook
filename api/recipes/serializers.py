@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from .models import Recipe, Ingredient, NutritionData
+from .models import Recipe, Ingredient, NutritionData, CanonicalIngredient
 from accounts.serializers import UserSerializer
 
 class IngredientSerializer(serializers.ModelSerializer):
+    # Allow selecting a canonical ingredient by id for typeahead dropdowns
+    canonical_id = serializers.PrimaryKeyRelatedField(
+        queryset=CanonicalIngredient.objects.all(), source="canonical", required=False, write_only=True
+    )
+    canonical = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'unit', 'quantity', 'substitutes']
+    fields = ['id', 'name', 'unit', 'quantity', 'preparation', 'substitutes', 'canonical_id', 'canonical']
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -18,6 +24,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+    def validate_ingredients(self, value):
+        """Ensure ingredients is a list of objects (never strings)."""
+        if value is None:
+            raise serializers.ValidationError("Ingredients are required")
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Ingredients must be a list of objects")
+        if len(value) == 0:
+            raise serializers.ValidationError("Ingredients list cannot be empty")
+        for idx, item in enumerate(value):
+            if not isinstance(item, dict):
+                raise serializers.ValidationError(f"Ingredient at index {idx} must be an object, not a string")
+        return value
 
     def get_image_url(self, obj):
         if obj.image and hasattr(obj.image, 'url'):
@@ -57,16 +76,26 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         for ingredient_data in ingredients_data:
             # Apply smart unit defaults if unit is missing or empty
-            unit = ingredient_data.get("unit", "").strip()
-            name = ingredient_data.get("name", "").strip()
+            unit = (ingredient_data.get("unit") or "").strip()
+            name = (ingredient_data.get("name") or "").strip()
+            canonical = ingredient_data.get("canonical")
             
             if not unit and name:
                 unit = self._get_smart_unit_default(name)
             
+            # If canonical selected and name not provided, use canonical english name
+            if canonical and not name:
+                try:
+                    name = canonical.canonical_name_en or name
+                except Exception:
+                    pass
+
             ingredient_obj = Ingredient.objects.create(
                 name=name,
                 quantity=ingredient_data.get("quantity"),
                 unit=unit,
+                preparation=ingredient_data.get("preparation"),
+                canonical=canonical if canonical else None,
             )
             recipe.ingredients.add(ingredient_obj)
 
@@ -205,16 +234,26 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.ingredients.clear()
         for ingredient_data in ingredients_data:
             # Apply smart unit defaults if unit is missing or empty
-            unit = ingredient_data.get("unit", "").strip()
-            name = ingredient_data.get("name", "").strip()
+            unit = (ingredient_data.get("unit") or "").strip()
+            name = (ingredient_data.get("name") or "").strip()
+            canonical = ingredient_data.get("canonical")
             
             if not unit and name:
                 unit = self._get_smart_unit_default(name)
             
+            # If canonical selected and name not provided, use canonical english name
+            if canonical and not name:
+                try:
+                    name = canonical.canonical_name_en or name
+                except Exception:
+                    pass
+
             ingredient_obj = Ingredient.objects.create(
                 name=name,
                 quantity=ingredient_data.get("quantity"),
                 unit=unit,
+                preparation=ingredient_data.get("preparation"),
+                canonical=canonical if canonical else None,
             )
             instance.ingredients.add(ingredient_obj)
 

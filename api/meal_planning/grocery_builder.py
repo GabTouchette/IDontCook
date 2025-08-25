@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 import re
 
 from .models import MealPlan
+from recipes.ingredient_normalizer import normalize_name_and_prep
 
 
 # --- Unit normalization maps ---
@@ -209,7 +210,9 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
             except Exception:
                 nut_norm = None
 
-            name = _normalize_name(raw_name, usda_name, nut_norm)
+            # Prefer normalized nutrition name/usda when present; otherwise normalize raw
+            preferred = (nut_norm or usda_name or raw_name)
+            name, _prep = normalize_name_and_prep(preferred)
             unit_class, unit_label, factor = _normalize_unit(getattr(ing, "unit", None))
 
             qty = getattr(ing, "quantity", None)

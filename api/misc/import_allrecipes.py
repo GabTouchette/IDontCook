@@ -7,12 +7,15 @@ from django.db import transaction
 from django.utils import timezone
 import requests
 
-# Setup Django environment
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Setup Django environment: ensure the project root (outer 'api' folder) is on sys.path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
 django.setup()
 
 from recipes.models import Recipe, Ingredient, NutritionData
+from recipes.ingredient_normalizer import normalize_name_and_prep
 from accounts.models import CustomUser
 import logging
 
@@ -122,29 +125,36 @@ class AllrecipesImporter:
         name = ingredient_data.get('name', '').strip()
         preparation = ingredient_data.get('preparation', '').strip()
         original_text = ingredient_data.get('original_text', '').strip()
-        
+
         # Handle both separate quantity/unit fields and combined quantity_unit field
         quantity = ingredient_data.get('quantity', '').strip() if ingredient_data.get('quantity') else None
         unit = ingredient_data.get('unit', '').strip() if ingredient_data.get('unit') else None
         quantity_unit = ingredient_data.get('quantity_unit', '').strip()
-        
+
         # If we don't have quantity_unit but have separate fields, combine them
         if not quantity_unit and quantity:
             quantity_unit = f"{quantity} {unit}".strip() if unit else quantity
-        
+
         if not name:
             return None
-        
+
+        # Normalize name and extract preparation descriptors if not provided
+        canonical_name, prep_from_name = normalize_name_and_prep(name)
+        if canonical_name:
+            name = canonical_name
+        if not preparation and prep_from_name:
+            preparation = prep_from_name
+
         # Try to find existing ingredient with same name and quantity_unit
         existing_ingredient = Ingredient.objects.filter(
             name=name,
             quantity_unit=quantity_unit,
             preparation=preparation
         ).first()
-        
+
         if existing_ingredient:
             return existing_ingredient
-        
+
         # Create new ingredient with separate fields if available
         ingredient_data_to_create = {
             'name': name,
@@ -152,7 +162,7 @@ class AllrecipesImporter:
             'preparation': preparation,
             'original_text': original_text
         }
-        
+
         # Add separate fields if available
         if quantity:
             try:
@@ -161,12 +171,12 @@ class AllrecipesImporter:
                 ingredient_data_to_create['quantity'] = self.convert_quantity_to_float(quantity_to_convert)
             except (ValueError, IndexError):
                 pass  # Keep quantity as None if conversion fails
-                
+
         if unit:
             ingredient_data_to_create['unit'] = unit
-        
+
         ingredient = Ingredient.objects.create(**ingredient_data_to_create)
-        
+
         logger.debug(f"Created ingredient: {ingredient}")
         return ingredient
 
