@@ -9,12 +9,16 @@ class Post with _$Post {
   factory Post({
     required int id,
     required User user,
-    required int user_vote,
-    required bool user_liked,
-    required int upvote_count,
-    required int downvote_count,
+    required int user_vote, // Keep for backward compatibility during migration
+    required bool user_liked, // Keep for backward compatibility during migration
+    required int upvote_count, // Keep for backward compatibility during migration
+    required int downvote_count, // Keep for backward compatibility during migration
     required int comment_count,
-    required int like_count,
+    required int like_count, // Keep for backward compatibility during migration
+    // New recipe rating fields
+    int? recipe_thumbs_up_count,
+    int? recipe_thumbs_down_count,
+    int? user_recipe_vote, // 1 for thumbs up, -1 for thumbs down, 0 for no vote
     int? recipe_id,
     String? recipe_title,
     String? recipe_description,

@@ -139,7 +139,7 @@ ThemeData lightTheme() {
     ),
 
     // Card theme
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: ColorPalette.lightBgLight,
       shadowColor: ColorPalette.lightPrimary.withOpacity(0.1),
       elevation: 3,
@@ -282,7 +282,7 @@ ThemeData darkTheme() {
     ),
 
     // Card theme
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: ColorPalette.darkBgLight,
       shadowColor: Colors.black54,
       elevation: 4,

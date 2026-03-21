@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:i_cant_cook/widgets/recipes/camera_capture.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_extra_section.dart';
-import 'package:i_cant_cook/widgets/recipes/recipe_form_ingredients_section.dart';
+import 'package:i_cant_cook/widgets/meal_planning/meal_ingredients_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_instructions_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_tags_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
@@ -26,10 +26,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   final TextEditingController _cooktimeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-
-  List<IngredientField> _ingredients = [
-    IngredientField(controller: TextEditingController(), focusNode: FocusNode())
-  ];
+  // Drawer-style meal ingredient UI entries
+  List<MealIngredient> _mealIngredients = [];
 
   List<InstructionField> _instructions = [
     InstructionField(
@@ -40,11 +38,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
 
   @override
   void dispose() {
-    for (var ingredient in _ingredients) {
-      ingredient.controller.dispose();
-      ingredient.focusNode.dispose();
-    }
-
+    // No controllers to dispose for MealIngredients list
     for (var instruction in _instructions) {
       instruction.controller.dispose();
       instruction.focusNode.dispose();
@@ -61,17 +55,35 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   }
 
   void _submitRecipe() {
-    final recipeData = buildRecipeDataFromForm(
-      titleController: _titleController,
-      instructionControllers: _instructions.map((f) => f.controller).toList(),
-      ingredientFields: _ingredients,
-      prepTimeController: _preptimeController,
-      cookTimeController: _cooktimeController,
-      descriptionController: _descriptionController,
-      notesController: _notesController,
-      selectedTags: _selectedTags,
-    );
-    
+    // Build payload using MealIngredientsSection state
+    final ingredients = _mealIngredients.map((ing) {
+      final m = <String, dynamic>{
+        if (ing.quantity.trim().isNotEmpty) 'quantity': ing.quantity.trim(),
+        'unit': ing.unit,
+        'name': ing.name,
+        if (ing.description.trim().isNotEmpty)
+          'preparation': ing.description.trim(),
+      };
+      if (ing.canonicalId != null) m['canonical_id'] = ing.canonicalId;
+      return m;
+    }).toList();
+
+    final instructions = _instructions
+        .map((f) => f.controller.text.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+
+    final recipeData = {
+      'title': _titleController.text.trim(),
+      'ingredients': ingredients,
+      'instructions': instructions,
+      'preparation_time': int.tryParse(_preptimeController.text) ?? 0,
+      'cooking_time': int.tryParse(_cooktimeController.text) ?? 0,
+      'description': _descriptionController.text.trim(),
+      'notes': _notesController.text.trim(),
+      'tags': _selectedTags,
+    };
+
     submitRecipe(
       context: context,
       recipeData: recipeData,
@@ -79,12 +91,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     );
   }
 
-  void _onIngredientsChanged(List<IngredientField> ingredients) {
-    setState(() {
-      _ingredients = ingredients;
-    });
-
-    // Removed nutrition preview calculation - handled on backend after save
+  void _onMealIngredientsChanged(List<MealIngredient> ingredients) {
+    setState(() => _mealIngredients = List.of(ingredients));
   }
 
   void _onInstructionsChanged(List<InstructionField> instructions) {
@@ -159,9 +167,29 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                 child: Column(
                   children: [
                     TitleSection(titleController: _titleController),
-                    IngredientsSection(
-                      ingredients: _ingredients,
-                      onIngredientsChanged: _onIngredientsChanged,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 8.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Ingredients',
+                          style: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: MealIngredientsSection(
+                        label: 'Ingredient',
+                        ingredients: _mealIngredients,
+                        onChanged: _onMealIngredientsChanged,
+                      ),
                     ),
                     InstructionsSection(
                       instructions: _instructions,

@@ -26,12 +26,8 @@ mixin _$Vote {
   int get value => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
 
-  /// Serializes this Vote to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $VoteCopyWith<Vote> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -56,8 +52,6 @@ class _$VoteCopyWithImpl<$Res, $Val extends Vote>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -91,8 +85,6 @@ class _$VoteCopyWithImpl<$Res, $Val extends Vote>
     ) as $Val);
   }
 
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserCopyWith<$Res> get user {
@@ -101,8 +93,6 @@ class _$VoteCopyWithImpl<$Res, $Val extends Vote>
     });
   }
 
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $PostCopyWith<$Res> get post {
@@ -134,8 +124,6 @@ class __$$VoteImplCopyWithImpl<$Res>
   __$$VoteImplCopyWithImpl(_$VoteImpl _value, $Res Function(_$VoteImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -212,14 +200,12 @@ class _$VoteImpl implements _Vote {
                 other.created_at == created_at));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, user, post, value, created_at);
 
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$VoteImplCopyWith<_$VoteImpl> get copyWith =>
@@ -253,11 +239,8 @@ abstract class _Vote implements Vote {
   int get value;
   @override
   DateTime? get created_at;
-
-  /// Create a copy of Vote
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$VoteImplCopyWith<_$VoteImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

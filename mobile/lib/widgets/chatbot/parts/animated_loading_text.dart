@@ -11,6 +11,7 @@ class _AnimatedLoadingTextState extends State<AnimatedLoadingText>
   int _loadingDots = 0;
   late AnimationController _controller;
   late Animation<double> _animation;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -23,15 +24,18 @@ class _AnimatedLoadingTextState extends State<AnimatedLoadingText>
 
     _animation = Tween<double>(begin: 0.5, end: 1.0).animate(_controller);
 
-    Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      setState(() {
-        _loadingDots = (_loadingDots + 1) % 4;
-      });
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {
+          _loadingDots = (_loadingDots + 1) % 4;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }

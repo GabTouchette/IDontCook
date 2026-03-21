@@ -25,12 +25,8 @@ mixin _$Follow {
   User get followed => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
 
-  /// Serializes this Follow to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $FollowCopyWith<Follow> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -55,8 +51,6 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -85,8 +79,6 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
     ) as $Val);
   }
 
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserCopyWith<$Res> get follower {
@@ -95,8 +87,6 @@ class _$FollowCopyWithImpl<$Res, $Val extends Follow>
     });
   }
 
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserCopyWith<$Res> get followed {
@@ -129,8 +119,6 @@ class __$$FollowImplCopyWithImpl<$Res>
       _$FollowImpl _value, $Res Function(_$FollowImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -200,14 +188,12 @@ class _$FollowImpl implements _Follow {
                 other.created_at == created_at));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, follower, followed, created_at);
 
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$FollowImplCopyWith<_$FollowImpl> get copyWith =>
@@ -238,11 +224,8 @@ abstract class _Follow implements Follow {
   User get followed;
   @override
   DateTime? get created_at;
-
-  /// Create a copy of Follow
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$FollowImplCopyWith<_$FollowImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

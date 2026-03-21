@@ -10,6 +10,7 @@ import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/mixins/post_mixin.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/widgets/dialogs/post_comments_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
@@ -183,20 +184,26 @@ class _UserPostCardState extends State<UserPostCard>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildVoteButtons(provider),
           _buildRecipeImage(),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.post.recipe_title ??
-                      "${widget.post.user.username}'s Recipe",
-                  style: GoogleFonts.nunito(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
-                      color: Theme.of(context).colorScheme.onSurface),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.post.recipe_title ??
+                            "${widget.post.user.username}'s Recipe",
+                        style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            color: Theme.of(context).colorScheme.onSurface),
+                      ),
+                    ),
+                    _buildRecipeRatingButtons(provider),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -217,36 +224,56 @@ class _UserPostCardState extends State<UserPostCard>
     );
   }
 
-  Widget _buildVoteButtons(PostMixin provider) {
+  Widget _buildRecipeRatingButtons(PostMixin provider) {
     final post = widget.post;
-    final isUpvoted = post.user_vote == 1;
-    final isDownvoted = post.user_vote == -1;
-    final voteCount = post.upvote_count - post.downvote_count;
+    final userVote = post.user_recipe_vote ?? 0;
+    final isThumbsUp = userVote == 1;
+    final isThumbsDown = userVote == -1;
+    final thumbsUpCount = post.recipe_thumbs_up_count ?? 0;
+    final thumbsDownCount = post.recipe_thumbs_down_count ?? 0;
+    final netRating = thumbsUpCount - thumbsDownCount;
 
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.keyboard_arrow_up,
-              color: isUpvoted
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline),
-          iconSize: 50,
-          onPressed: () => provider.handleVote(post.id, 1),
+          icon: FaIcon(
+            isThumbsUp ? FontAwesomeIcons.solidThumbsUp : FontAwesomeIcons.thumbsUp,
+            color: isThumbsUp
+                ? Theme.of(context).colorScheme.success
+                : Theme.of(context).colorScheme.outline,
+            size: 20,
+          ),
+          onPressed: () {
+            if (post.recipe_id != null) {
+              provider.handleRecipeVote(post.id, post.recipe_id!, 1);
+            }
+          },
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          padding: EdgeInsets.zero,
         ),
         Text(
-          "$voteCount",
+          "$netRating",
           style: GoogleFonts.nunito(
-              fontSize: 24,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: Theme.of(context).colorScheme.onSurface),
         ),
         IconButton(
-          icon: Icon(Icons.keyboard_arrow_down,
-              color: isDownvoted
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.outline),
-          iconSize: 50,
-          onPressed: () => provider.handleVote(post.id, -1),
+          icon: FaIcon(
+            isThumbsDown ? FontAwesomeIcons.solidThumbsDown : FontAwesomeIcons.thumbsDown,
+            color: isThumbsDown
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.outline,
+            size: 20,
+          ),
+          onPressed: () {
+            if (post.recipe_id != null) {
+              provider.handleRecipeVote(post.id, post.recipe_id!, -1);
+            }
+          },
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          padding: EdgeInsets.zero,
         ),
       ],
     );
@@ -254,36 +281,11 @@ class _UserPostCardState extends State<UserPostCard>
 
   Widget _buildActionButtons(PostMixin provider) {
     final post = widget.post;
-    final isLiked = post.user_liked;
-    final likeCount = post.like_count;
     final commentCount = post.comment_count;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () => provider.toggleLike(post.user.id, post.id),
-              icon: FaIcon(
-                isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
-                color: isLiked
-                    ? Theme.of(context).colorScheme.error
-                    : Theme.of(context).colorScheme.onSurface,
-                size: 28,
-              ),
-            ),
-            Text(
-              "$likeCount",
-              style: GoogleFonts.nunito(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -23,12 +23,8 @@ mixin _$MediaType {
   String get mimeType => throw _privateConstructorUsedError;
   String get extension => throw _privateConstructorUsedError;
 
-  /// Serializes this MediaType to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of MediaType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $MediaTypeCopyWith<MediaType> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -51,8 +47,6 @@ class _$MediaTypeCopyWithImpl<$Res, $Val extends MediaType>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of MediaType
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -91,8 +85,6 @@ class __$$MediaTypeImplCopyWithImpl<$Res>
       _$MediaTypeImpl _value, $Res Function(_$MediaTypeImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of MediaType
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -141,13 +133,11 @@ class _$MediaTypeImpl implements _MediaType {
                 other.extension == extension));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, mimeType, extension);
 
-  /// Create a copy of MediaType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$MediaTypeImplCopyWith<_$MediaTypeImpl> get copyWith =>
@@ -173,11 +163,8 @@ abstract class _MediaType implements MediaType {
   String get mimeType;
   @override
   String get extension;
-
-  /// Create a copy of MediaType
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$MediaTypeImplCopyWith<_$MediaTypeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

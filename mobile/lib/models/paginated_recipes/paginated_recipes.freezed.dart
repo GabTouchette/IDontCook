@@ -24,12 +24,8 @@ mixin _$PaginatedRecipes {
   List<RecipePreview> get results => throw _privateConstructorUsedError;
   String? get next => throw _privateConstructorUsedError;
 
-  /// Serializes this PaginatedRecipes to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of PaginatedRecipes
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $PaginatedRecipesCopyWith<PaginatedRecipes> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -53,8 +49,6 @@ class _$PaginatedRecipesCopyWithImpl<$Res, $Val extends PaginatedRecipes>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of PaginatedRecipes
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -98,8 +92,6 @@ class __$$PaginatedRecipesImplCopyWithImpl<$Res>
       $Res Function(_$PaginatedRecipesImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of PaginatedRecipes
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -164,14 +156,12 @@ class _$PaginatedRecipesImpl implements _PaginatedRecipes {
             (identical(other.next, next) || other.next == next));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType, count, const DeepCollectionEquality().hash(_results), next);
 
-  /// Create a copy of PaginatedRecipes
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$PaginatedRecipesImplCopyWith<_$PaginatedRecipesImpl> get copyWith =>
@@ -201,11 +191,8 @@ abstract class _PaginatedRecipes implements PaginatedRecipes {
   List<RecipePreview> get results;
   @override
   String? get next;
-
-  /// Create a copy of PaginatedRecipes
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$PaginatedRecipesImplCopyWith<_$PaginatedRecipesImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
