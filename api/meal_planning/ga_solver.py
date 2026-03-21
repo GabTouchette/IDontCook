@@ -2,6 +2,7 @@ import math
 import random
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple, Optional, Callable, NamedTuple
+from functools import lru_cache
 
 # Meal-type nutrition targets (per meal, per person). Adjust as needed.
 DEFAULT_TARGETS = {
@@ -20,6 +21,14 @@ class GAResult(NamedTuple):
     filled_slots: int
     low_quality_slots: List[Tuple[int, str, float]]  # slots with fitness < threshold
     warnings: List[str]  # human-readable warnings
+
+    # Back-compat: behave like a list of (day, meal_type, recipe) when iterated/len()
+    # This allows older callers/tests that expect evolve_plan to return a list to keep working.
+    def __iter__(self):  # type: ignore[override]
+        return iter(self.meals)
+
+    def __len__(self):  # type: ignore[override]
+        return len(self.meals)
 
 
 @dataclass
@@ -62,10 +71,15 @@ class FitnessOptions:
         'difficulty': 0.05,
         'goals': 0.15,  # Increased for stronger preference adherence
         'saved': 0.05,
+        'meal_type': 0.05,  # small guardrail to avoid mismatched meal types
     })
     # Tunables
     saved_weight: Optional[float] = None   # 0..1 override for saved weight influence
     repeat_preference: Optional[float] = None  # 0 (no repeats) .. 1 (allow repeats)
+    # Variety controls
+    variety_strength: float = 0.5  # 0..1 scale for how strongly to penalize repeating protein categories
+    same_day_category_allowance: int = 1  # allow this many occurrences of same primary protein per day before penalizing
+    weekly_category_soft_limit: int = 5   # soft cap for how often a protein category can repeat in a week before small penalties
 
 
 def derive_targets_from_profile(profile: Dict) -> Dict[str, Dict[str, float]]:
@@ -185,23 +199,40 @@ def comp_nutrition(recipe, meal_type: str, ctx: FitnessOptions) -> float:
     calories = _safe(getattr(recipe, 'calories', None), 0.0)
     protein = _safe(getattr(recipe, 'protein', None), 0.0)
     carbs = _safe(getattr(recipe, 'carbs', None), 0.0)
-    
-    cal_score = 1.0 - min(1.0, abs(calories - cal_target) / (cal_target or 1.0)) if calories > 0 else 0.0
-    pro_score = 1.0 - min(1.0, max(0.0, pro_target - protein) / (pro_target or 1.0)) if protein > 0 else 0.0
-    
+
+    # Calorie closeness with a smooth (gaussian-like) falloff; tolerant to modest deviations
+    if calories > 0 and cal_target > 0:
+        sigma = 0.35 * cal_target  # ~70% band gets high scores
+        cal_score = math.exp(-((calories - cal_target) ** 2) / (2.0 * (sigma ** 2)))
+    else:
+        cal_score = 0.0
+
+    # Protein: reward meeting target, light penalty for small overshoot, stronger for shortfall
+    if protein > 0 and pro_target > 0:
+        if protein >= pro_target:
+            # up to +30% overshoot mostly fine; beyond that taper
+            overshoot = (protein - pro_target) / pro_target
+            pro_score = max(0.6, 1.0 - max(0.0, overshoot - 0.3))
+        else:
+            shortfall = (pro_target - protein) / pro_target
+            pro_score = max(0.0, 1.0 - min(1.0, shortfall))
+    else:
+        pro_score = 0.0
+
     # Add carb penalty for low-carb goals
     carb_score = 1.0
     try:
         if ctx.goals and any('low' in str(g).lower() and 'carb' in str(g).lower() for g in ctx.goals):
             # Penalty for high carbs when low-carb is a goal
             if carbs > 0:
-                # More than 30g carbs per serving gets penalized
-                carb_penalty = max(0.0, (carbs - 30) / 50.0)  
+                # Threshold scales lightly by meal type (snacks stricter)
+                base = 25 if meal_type.lower() == 'snack' else 30
+                carb_penalty = max(0.0, (carbs - base) / 50.0)
                 carb_score = max(0.0, 1.0 - min(1.0, carb_penalty))
     except Exception:
         pass
-    
-    return max(0.0, 0.6 * cal_score + 0.25 * pro_score + 0.15 * carb_score)
+
+    return max(0.0, 0.6 * cal_score + 0.3 * pro_score + 0.1 * carb_score)
 
 
 def comp_time(recipe, meal_type: str, ctx: FitnessOptions) -> float:
@@ -324,6 +355,102 @@ def _estimate_cost_per_serving(recipe) -> Optional[float]:
     return max(0.5, total / max(1, servings))  # Higher minimum cost
 
 
+def comp_meal_type(recipe, meal_type: str, ctx: FitnessOptions) -> float:
+    """Guardrail: ensure recipe tags include the slot meal type (case-insensitive).
+    Returns 1.0 for match, else 0.0. Keeps flexibility if upstream pre-filter missed something.
+    """
+    try:
+        tags = [str(t).lower() for t in (getattr(recipe, 'tags', []) or [])]
+        return 1.0 if meal_type.lower() in tags else 0.0
+    except Exception:
+        return 0.0
+
+
+# Cache for primary protein category detection by recipe id
+_RECIPE_CAT_CACHE: Dict[int, str] = {}
+
+
+def _primary_protein_category(recipe) -> str:
+    """Heuristic to infer the primary protein/anchor category of a recipe from ingredients.
+    Used for variety penalties. Returns one of: seafood, red_meat, pork, poultry, legumes,
+    tofu, eggs, cheese, grains, veg, unknown.
+    """
+    try:
+        rid = getattr(recipe, 'id', None)
+        if isinstance(rid, int) and rid in _RECIPE_CAT_CACHE:
+            return _RECIPE_CAT_CACHE[rid]
+    except Exception:
+        rid = None
+
+    # Buckets (aligned loosely with cost estimator terminology)
+    SEAFOOD = {'salmon', 'shrimp', 'prawn', 'lobster', 'crab', 'scallop', 'tuna', 'cod', 'halibut', 'mackerel', 'sardine'}
+    RED_MEAT = {'beef', 'steak', 'lamb', 'veal', 'short rib', 'ribs'}
+    PORK = {'pork', 'bacon', 'ham', 'prosciutto', 'sausage'}
+    POULTRY = {'chicken', 'turkey', 'duck'}
+    LEGUMES = {'bean', 'beans', 'lentil', 'lentils', 'chickpea', 'chickpeas', 'peanut', 'peanuts'}
+    TOFU = {'tofu', 'tempeh'}
+    EGGS = {'egg', 'eggs'}
+    CHEESE = {'cheese', 'parmesan', 'cheddar', 'mozzarella', 'feta', 'goat cheese', 'ricotta'}
+    GRAINS = {'rice', 'pasta', 'noodle', 'noodles', 'spaghetti', 'quinoa', 'couscous'}
+    VEG = {'broccoli', 'zucchini', 'spinach', 'kale', 'cauliflower', 'eggplant', 'pepper', 'carrot', 'tomato', 'tomatoes'}
+
+    def cat_for_name(name: str) -> Optional[str]:
+        n = (name or '').lower()
+        if any(k in n for k in SEAFOOD):
+            return 'seafood'
+        if any(k in n for k in RED_MEAT):
+            return 'red_meat'
+        if any(k in n for k in PORK):
+            return 'pork'
+        if any(k in n for k in POULTRY):
+            return 'poultry'
+        if any(k in n for k in LEGUMES):
+            return 'legumes'
+        if any(k in n for k in TOFU):
+            return 'tofu'
+        if any(k in n for k in EGGS):
+            return 'eggs'
+        if any(k in n for k in CHEESE):
+            return 'cheese'
+        if any(k in n for k in GRAINS):
+            return 'grains'
+        if any(k in n for k in VEG):
+            return 'veg'
+        return None
+
+    # Prefer ingredient scan; fall back to title
+    try:
+        ings = list(getattr(recipe, 'ingredients', None).all()) if getattr(recipe, 'ingredients', None) else []
+    except Exception:
+        ings = []
+
+    for ing in ings:
+        try:
+            nm = (getattr(ing, 'usda_name', None) or getattr(ing, 'name', None) or '').strip()
+        except Exception:
+            nm = ''
+        c = cat_for_name(nm)
+        if c:
+            if isinstance(rid, int):
+                _RECIPE_CAT_CACHE[rid] = c
+            return c
+
+    # Fallback: title-based
+    try:
+        title = str(getattr(recipe, 'title', '')).lower()
+    except Exception:
+        title = ''
+    c = cat_for_name(title)
+    if c:
+        if isinstance(rid, int):
+            _RECIPE_CAT_CACHE[rid] = c
+        return c
+
+    if isinstance(rid, int):
+        _RECIPE_CAT_CACHE[rid] = 'unknown'
+    return 'unknown'
+
+
 def comp_difficulty(recipe, meal_type: str, ctx: FitnessOptions) -> Optional[float]:
     if ctx.difficulty_max is None:
         return None
@@ -371,6 +498,7 @@ def _slot_score(recipe, meal_type: str, ctx: FitnessOptions) -> float:
         'difficulty': comp_difficulty,
         'goals': comp_goals,
         'saved': comp_saved,
+    'meal_type': comp_meal_type,
     }
     total = 0.0
     wsum = 0.0
@@ -413,6 +541,9 @@ def _fitness(chrom: List[int], slots: List[Slot], ctx: FitnessOptions) -> float:
     filled = 0
     used_ids = set()
     duplicate_penalty = 0.0
+    # Track variety by primary protein category
+    by_day_counts: Dict[int, Dict[str, int]] = {}
+    weekly_counts: Dict[str, int] = {}
     for gene, s in zip(chrom, slots):
         if gene is None or gene < 0 or gene >= len(s.candidates):
             continue
@@ -427,12 +558,40 @@ def _fitness(chrom: List[int], slots: List[Slot], ctx: FitnessOptions) -> float:
             duplicate_penalty += penalty
         else:
             used_ids.add(rid)
+        # Variety tracking
+        cat = _primary_protein_category(r)
+        day_map = by_day_counts.setdefault(int(getattr(s, 'day', 0)), {})
+        day_map[cat] = day_map.get(cat, 0) + 1
+        weekly_counts[cat] = weekly_counts.get(cat, 0) + 1
         total += _slot_score(r, s.meal_type, ctx)
         filled += 1
     if filled == 0:
         return 0.0
     base = total / filled
-    return max(0.0, base - duplicate_penalty)
+    # Apply variety penalties (modest, tunable)
+    vs = max(0.0, min(1.0, getattr(ctx, 'variety_strength', 0.5)))
+    day_allow = max(0, int(getattr(ctx, 'same_day_category_allowance', 1)))
+    week_soft = max(0, int(getattr(ctx, 'weekly_category_soft_limit', 5)))
+
+    day_over = 0
+    for day, counts in by_day_counts.items():
+        for c, n in counts.items():
+            if c == 'unknown':
+                continue
+            if n > day_allow:
+                day_over += (n - day_allow)
+    # Each overage reduces score slightly
+    day_var_penalty = 0.2 * vs * day_over
+
+    week_over = 0
+    for c, n in weekly_counts.items():
+        if c == 'unknown':
+            continue
+        if n > week_soft:
+            week_over += (n - week_soft)
+    week_var_penalty = 0.1 * vs * week_over
+
+    return max(0.0, base - duplicate_penalty - day_var_penalty - week_var_penalty)
 
 
 def _tournament(pop, fits, k=3):
@@ -605,6 +764,29 @@ def evolve_plan(slots: List[Slot], servings: int, saved_set: Optional[set], focu
         warnings.append("Very few suitable recipes found - consider relaxing dietary restrictions")
     elif fill_rate < 0.8:
         warnings.append("Limited recipe options found - some preferences may not be fully satisfied")
+
+    # Variety diagnostics
+    try:
+        # compute categories across the selection
+        per_day: Dict[int, Dict[str, int]] = {}
+        weekly: Dict[str, int] = {}
+        for day, mt, rec in result_meals:
+            c = _primary_protein_category(rec)
+            per_day.setdefault(day, {})[c] = per_day.get(day, {}).get(c, 0) + 1
+            weekly[c] = weekly.get(c, 0) + 1
+        day_allow = fitness_options.same_day_category_allowance
+        over_days = sum(
+            sum(max(0, n - day_allow) for cat, n in counts.items() if cat != 'unknown')
+            for counts in per_day.values()
+        )
+        week_soft = fitness_options.weekly_category_soft_limit
+        over_week = sum(max(0, n - week_soft) for cat, n in weekly.items() if cat != 'unknown')
+        if over_days > 0:
+            warnings.append("Some days repeat similar mains; consider increasing variety settings")
+        if over_week > 0:
+            warnings.append("Weekly plan repeats a main category often; consider broadening preferences")
+    except Exception:
+        pass
     
     return GAResult(
         meals=result_meals,

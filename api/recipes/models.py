@@ -178,10 +178,63 @@ class Recipe(models.Model):
         return False
     
     def calculate_nutrition(self):
-        """Placeholder for nutrition calculation - preserves existing nutrition data"""
-        # This method is called by the serializer but currently does nothing
-        # to preserve existing nutrition data and serving sizes
-        pass
+        """Calculate nutrition from ingredients"""
+        from .nutrition_service import NutritionService
+        service = NutritionService()
+        
+        print(f"🥦 [CALC] Nutrition for: {self.title} (ID: {self.id})")
+        
+        total_calories = 0.0
+        total_protein = 0.0
+        total_fat = 0.0
+        total_carbs = 0.0
+        ingredients_found = 0
+        ingredients_missed = 0
+        
+        for ingredient in self.ingredients.all():
+            qty = ingredient.quantity
+            if not qty:
+                continue
+                
+            # Strategy: Canonical -> USDA Name -> Name
+            search_name = ingredient.name
+            if ingredient.canonical:
+                search_name = ingredient.canonical.canonical_name_en
+            elif ingredient.usda_name:
+                search_name = ingredient.usda_name
+
+            data = service.get_nutrition_for_parsed_ingredient(
+                ingredient_name=search_name,
+                quantity=qty,
+                unit=ingredient.unit,
+                usda_name=ingredient.usda_name
+            )
+            
+            if data:
+                cal = data.get('calories', 0)
+                total_calories += cal
+                total_protein += data.get('protein', 0)
+                total_fat += data.get('fat', 0)
+                total_carbs += data.get('carbs', 0)
+                ingredients_found += 1
+                print(f"   + {ingredient.name} ({qty} {ingredient.unit}): {cal:.1f} cal")
+            else:
+                ingredients_missed += 1
+                print(f"   ? {ingredient.name}: No data found")
+
+        # Per serving calculation
+        serv_count = self.servings
+        if not serv_count or serv_count < 1:
+            serv_count = 1
+            
+        self.calories = round(total_calories / serv_count, 1)
+        self.protein = round(total_protein / serv_count, 1)
+        self.fat = round(total_fat / serv_count, 1)
+        self.carbs = round(total_carbs / serv_count, 1)
+        self.is_nutrition_calculated = True
+        self.save() # Persist to DB
+        
+        print(f"✅ SAVED: {self.calories} cal/serving (Servings: {serv_count}) | Found: {ingredients_found}, Missed: {ingredients_missed}")
     
     def save(self, *args, **kwargs):
         """Auto-assign meal type if missing before save (except for drinks/cocktails)"""
