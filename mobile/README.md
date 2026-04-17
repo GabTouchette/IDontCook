@@ -1,16 +1,25 @@
 # mobile
 
-A new Flutter project.
+## API configuration
 
-## Getting Started
+The app now uses a single compile-time API origin setting.
 
-This project is a starting point for a Flutter application.
+### Local development
 
-A few resources to get you started if this is your first Flutter project:
+- iOS simulator and desktop default to `http://127.0.0.1:8000`
+- Android emulator defaults to `http://10.0.2.2:8000`
+- Physical devices should pass an explicit backend URL:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.0.198:8000
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Release builds
+
+Release builds require an explicit backend URL and should point at the Railway deployment:
+
+```bash
+flutter build ios --release --dart-define=API_BASE_URL=https://your-railway-api-domain
+```
+
+The value should be the backend origin without `/api`. The app appends `/api` internally.

@@ -3,6 +3,7 @@ import base64
 import json
 import re
 from typing import List
+from django.conf import settings
 from recipes.models import Ingredient, Recipe
 from openai import OpenAI, OpenAIError
 
@@ -15,7 +16,7 @@ def encode_image(image_path):
 class OpenAIService:
     def __init__(self):
         """Initialize the OpenAI client with the API key."""
-        self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+        self.client = OpenAI(api_key=getattr(settings, "OPENAI_API_KEY", None))
 
     def ask_openai_ocr(self, image_path):
         """

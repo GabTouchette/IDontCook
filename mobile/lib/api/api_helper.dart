@@ -4,11 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'auth_api.dart';
+import 'api_config.dart';
 
 class ApiHelper {
-  final String baseUrl = 'http://192.168.0.198:8000/api';
-  // final String baseUrl = 'https://i-cant-cook-1500fc1d933c.herokuapp.com/api';
-
   Future<dynamic> getRequest(
     String endpoint, {
     bool requiresAuth = true,
@@ -19,7 +17,8 @@ class ApiHelper {
           ? await AuthApi.getAuthHeader()
           : {'Content-Type': 'application/json'};
 
-      final uri = Uri.parse('$baseUrl/$endpoint').replace(
+      final uri = ApiConfig.buildApiUri(
+        endpoint,
         queryParameters: queryParams,
       );
 
@@ -42,7 +41,7 @@ class ApiHelper {
           : {'Content-Type': 'application/json'};
 
       final response = await http.post(
-        Uri.parse('$baseUrl/$endpoint'),
+        ApiConfig.buildApiUri(endpoint),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -61,7 +60,7 @@ class ApiHelper {
           : {'Content-Type': 'application/json'};
 
       final response = await http.put(
-        Uri.parse('$baseUrl/$endpoint'),
+        ApiConfig.buildApiUri(endpoint),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -80,7 +79,7 @@ class ApiHelper {
           : {'Content-Type': 'application/json'};
 
       final response = await http.patch(
-        Uri.parse('$baseUrl/$endpoint'),
+        ApiConfig.buildApiUri(endpoint),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -99,7 +98,7 @@ class ApiHelper {
           : {'Content-Type': 'application/json'};
 
       final response = await http.delete(
-        Uri.parse('$baseUrl/$endpoint'),
+        ApiConfig.buildApiUri(endpoint),
         headers: headers,
       );
       return response.statusCode == 204;
@@ -112,7 +111,7 @@ class ApiHelper {
   Future<dynamic> uploadFile(String endpoint, File file,
       {bool requiresAuth = true}) async {
     try {
-      var uri = Uri.parse('$baseUrl/$endpoint');
+      var uri = ApiConfig.buildApiUri(endpoint);
       var request = http.MultipartRequest('POST', uri);
 
       if (requiresAuth) {
@@ -135,7 +134,7 @@ class ApiHelper {
   Future<String> imageRequest(String endpoint, File imageFile,
       {bool requiresAuth = true}) async {
     try {
-      Uri url = Uri.parse('$baseUrl/$endpoint');
+      Uri url = ApiConfig.buildApiUri(endpoint);
       final Map<String, String> headers = requiresAuth
           ? (await AuthApi.getAuthHeader()).cast<String, String>()
           : {};
@@ -168,7 +167,7 @@ class ApiHelper {
 
   Stream<String> streamResponse(
       String endpoint, String data, Map<String, String> headers) async* {
-    Uri url = Uri.parse('$baseUrl/$endpoint');
+    Uri url = ApiConfig.buildApiUri(endpoint);
 
     var request = http.Request("POST", url)
       ..headers.addAll(headers)

@@ -64,6 +64,7 @@ pytz==2025.1
 RapidFuzz==3.13.0
 requests==2.32.3
 requests-oauthlib==2.0.0
+redis==5.2.1
 rsa==4.9
 scikit-learn==1.6.1
 scipy==1.15.1
@@ -80,3 +81,4 @@ urllib3==2.3.0
 vine==5.1.0
 wcwidth==0.2.13
 wheel==0.45.1
+whitenoise==6.9.0

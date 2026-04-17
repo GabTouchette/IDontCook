@@ -1,7 +1,6 @@
 from django.db import models
 from accounts.models import CustomUser
 from rest_framework.pagination import PageNumberPagination
-from storages.backends.gcloud import GoogleCloudStorage
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 
@@ -79,9 +78,8 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(blank=True, null=True)
 
     # Images
-    image = models.ImageField(upload_to="recipe_images/", storage=GoogleCloudStorage(), blank=True, null=True)
+    image = models.ImageField(upload_to="recipe_images/", blank=True, null=True)
     thumbnail = ProcessedImageField(
-        storage=GoogleCloudStorage(),
         upload_to='recipe_images/thumbnails/',
         processors=[ResizeToFill(200, 200)],
         format='JPEG',

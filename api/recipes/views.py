@@ -128,11 +128,19 @@ class RecipeDetailAPIView(APIView):
 
 
 class RecipeImageUploadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, recipe_id):
         try:
             recipe = Recipe.objects.get(id=recipe_id)
+
+            if recipe.created_by != request.user:
+                return JsonResponse(
+                    {"error": "You do not have permission to upload an image for this recipe."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
             image = request.FILES.get('image')
 
             if image:

@@ -3,20 +3,16 @@ import 'package:http/http.dart' as http;
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'api_config.dart';
+
 class AuthApi {
-  static const bool useProd = false;
-
-  final String _baseUrl = useProd
-      ? 'https://i-cant-cook-1500fc1d933c.herokuapp.com'
-      : 'http://192.168.0.198:8000';
-
   static const _userKey = 'user_data';
   static const _tokenKey = 'auth_token';
 
   /// LOGIN
   Future<User> login(String username, String password) async {
     try {
-      final url = Uri.parse('$_baseUrl/api/accounts/login/');
+      final url = ApiConfig.buildApiUri('accounts/login/');
       final response = await http.post(
         url,
         body: {
@@ -54,7 +50,7 @@ class AuthApi {
   /// REGISTER
   Future<User> register(String username, String email, String password) async {
     try {
-      final url = Uri.parse('$_baseUrl/api/accounts/register/');
+      final url = ApiConfig.buildApiUri('accounts/register/');
       final response = await http.post(
         url,
         headers: {
