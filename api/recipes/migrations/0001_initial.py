@@ -2,7 +2,6 @@
 
 import django.db.models.deletion
 import imagekit.models.fields
-import storages.backends.gcloud
 from django.conf import settings
 from django.db import migrations, models
 
@@ -37,8 +36,8 @@ class Migration(migrations.Migration):
                 ('servings', models.IntegerField(blank=True, null=True)),
                 ('tags', models.JSONField(blank=True, default=list, null=True)),
                 ('description', models.TextField(blank=True, null=True)),
-                ('image', models.ImageField(blank=True, null=True, storage=storages.backends.gcloud.GoogleCloudStorage(), upload_to='recipe_images/')),
-                ('thumbnail', imagekit.models.fields.ProcessedImageField(blank=True, null=True, storage=storages.backends.gcloud.GoogleCloudStorage(), upload_to='recipe_images/thumbnails/')),
+                ('image', models.ImageField(blank=True, null=True, upload_to='recipe_images/')),
+                ('thumbnail', imagekit.models.fields.ProcessedImageField(blank=True, null=True, upload_to='recipe_images/thumbnails/')),
                 ('notes', models.TextField(blank=True, null=True)),
                 ('is_favorite', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True, null=True)),

@@ -2,28 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/network_service.dart';
+import 'api_config.dart';
 
 class AuthApi {
-  String? _cachedBaseUrl;
-  
-  Future<String> get _baseUrl async {
-    if (_cachedBaseUrl != null) {
-      return _cachedBaseUrl!;
-    }
-    
-    _cachedBaseUrl = await NetworkService.getBaseUrl();
-    return _cachedBaseUrl!;
-  }
-
   static const _userKey = 'user_data';
   static const _tokenKey = 'auth_token';
 
   /// LOGIN
   Future<User> login(String username, String password) async {
     try {
-      final base = await _baseUrl;
-      final url = Uri.parse('$base/api/accounts/login/');
+      final url = ApiConfig.buildApiUri('accounts/login/');
       final response = await http.post(
         url,
         body: {
@@ -61,8 +49,7 @@ class AuthApi {
   /// REGISTER
   Future<User> register(String username, String email, String password) async {
     try {
-      final base = await _baseUrl;
-      final url = Uri.parse('$base/api/accounts/register/');
+      final url = ApiConfig.buildApiUri('accounts/register/');
       final response = await http.post(
         url,
         headers: {
