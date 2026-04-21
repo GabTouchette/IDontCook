@@ -26,12 +26,8 @@ mixin _$Like {
   Comment? get comment => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
 
-  /// Serializes this Like to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $LikeCopyWith<Like> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -58,8 +54,6 @@ class _$LikeCopyWithImpl<$Res, $Val extends Like>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -93,8 +87,6 @@ class _$LikeCopyWithImpl<$Res, $Val extends Like>
     ) as $Val);
   }
 
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserCopyWith<$Res> get user {
@@ -103,8 +95,6 @@ class _$LikeCopyWithImpl<$Res, $Val extends Like>
     });
   }
 
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $PostCopyWith<$Res>? get post {
@@ -117,8 +107,6 @@ class _$LikeCopyWithImpl<$Res, $Val extends Like>
     });
   }
 
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $CommentCopyWith<$Res>? get comment {
@@ -157,8 +145,6 @@ class __$$LikeImplCopyWithImpl<$Res>
   __$$LikeImplCopyWithImpl(_$LikeImpl _value, $Res Function(_$LikeImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -235,14 +221,12 @@ class _$LikeImpl implements _Like {
                 other.created_at == created_at));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, user, post, comment, created_at);
 
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$LikeImplCopyWith<_$LikeImpl> get copyWith =>
@@ -276,11 +260,8 @@ abstract class _Like implements Like {
   Comment? get comment;
   @override
   DateTime? get created_at;
-
-  /// Create a copy of Like
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$LikeImplCopyWith<_$LikeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

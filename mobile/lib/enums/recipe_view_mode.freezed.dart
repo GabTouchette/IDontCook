@@ -72,9 +72,6 @@ class _$RecipeViewModeCopyWithImpl<$Res, $Val extends RecipeViewMode>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
-
-  /// Create a copy of RecipeViewMode
-  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -91,9 +88,6 @@ class __$$NormalImplCopyWithImpl<$Res>
   __$$NormalImplCopyWithImpl(
       _$NormalImpl _value, $Res Function(_$NormalImpl) _then)
       : super(_value, _then);
-
-  /// Create a copy of RecipeViewMode
-  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -196,9 +190,6 @@ class __$$PreviewImplCopyWithImpl<$Res>
   __$$PreviewImplCopyWithImpl(
       _$PreviewImpl _value, $Res Function(_$PreviewImpl) _then)
       : super(_value, _then);
-
-  /// Create a copy of RecipeViewMode
-  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc

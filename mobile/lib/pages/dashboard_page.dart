@@ -4,6 +4,7 @@ import 'package:i_cant_cook/pages/explore_page.dart';
 import 'package:i_cant_cook/widgets/navbar.dart';
 import 'package:i_cant_cook/pages/ai_chatbot_page.dart';
 import 'package:i_cant_cook/pages/recipes_page.dart';
+import 'package:i_cant_cook/pages/meal_plan_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -39,6 +40,8 @@ class _DashboardPageState extends State<DashboardPage> {
       case 2:
         return ExplorePage();
       case 3:
+        return const MealPlanPage();
+      case 4:
         return const SocialPage();
       default:
         return const Center(child: Text('Page Not Found'));

@@ -32,12 +32,8 @@ mixin _$RecipePreview {
   int? get ingredients_count => throw _privateConstructorUsedError;
   DateTime? get last_visited_at => throw _privateConstructorUsedError;
 
-  /// Serializes this RecipePreview to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of RecipePreview
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $RecipePreviewCopyWith<RecipePreview> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -72,8 +68,6 @@ class _$RecipePreviewCopyWithImpl<$Res, $Val extends RecipePreview>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of RecipePreview
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -168,8 +162,6 @@ class __$$RecipePreviewImplCopyWithImpl<$Res>
       _$RecipePreviewImpl _value, $Res Function(_$RecipePreviewImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of RecipePreview
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -316,7 +308,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
                 other.last_visited_at == last_visited_at));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -332,9 +324,7 @@ class _$RecipePreviewImpl implements _RecipePreview {
       ingredients_count,
       last_visited_at);
 
-  /// Create a copy of RecipePreview
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$RecipePreviewImplCopyWith<_$RecipePreviewImpl> get copyWith =>
@@ -387,11 +377,8 @@ abstract class _RecipePreview implements RecipePreview {
   int? get ingredients_count;
   @override
   DateTime? get last_visited_at;
-
-  /// Create a copy of RecipePreview
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$RecipePreviewImplCopyWith<_$RecipePreviewImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

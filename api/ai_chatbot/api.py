@@ -71,7 +71,6 @@ class OpenAIService:
             else:
                 final_prompt = prompt
 
-            print(f"Final Prompt: {final_prompt}")
             messages.append({"role": "user", "content": final_prompt})
 
             completion = self.client.chat.completions.create(
@@ -94,17 +93,15 @@ class OpenAIService:
         # STEP 1 – Turn list of raw ingredient strings into a single string
         if not recipe.ingredients:
             raise ValueError("Recipe must have ingredients to format.")
-        
-        raw_ingredient_text = "\n".join(str(ingredient) for ingredient in recipe.ingredients.all())  # or recipe.ingredients_raw if available
 
+        raw_ingredient_text = "\n".join(f"{str(ingredient.quantity)} {str(ingredient.name)}" for ingredient in recipe.ingredients.all())  # or recipe.ingredients_raw if available
         completion = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": PromptTemplates.format_ingredients_with_llm_prompt(raw_ingredient_text)}
                 ]
             )
-
+        
         response_content = completion.choices[0].message.content
         response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
         try:
@@ -119,17 +116,100 @@ class OpenAIService:
                 name=item.get("name"),
                 quantity=item.get("quantity"),
                 unit=item.get("unit"),
+                usda_name=item.get("usda_name"),
                 substitutes=item.get("substitutes", [])
             )
             ingredient.save()
 
             ingredients.append(ingredient)
 
-        print(f"Formatted ingredients: {ingredients}")
-
         # STEP 5 – Replace recipe.ingredients
         recipe.ingredients.set(ingredients)
         return recipe
+
+    @staticmethod
+    def validate_recipe_format(recipe_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validates and normalizes recipe data format to ensure consistency.
+        Returns the validated/corrected recipe data.
+        """
+        if not isinstance(recipe_data, dict):
+            raise ValueError("Recipe data must be a dictionary")
+        
+        # Required fields with default values
+        validated_recipe = {
+            "title": recipe_data.get("title", "Untitled Recipe"),
+            "ingredients": [],
+            "instructions": recipe_data.get("instructions", []),
+            "preparation_time": recipe_data.get("preparation_time"),
+            "cooking_time": recipe_data.get("cooking_time"), 
+            "servings": recipe_data.get("servings"),
+            "tags": recipe_data.get("tags", []),
+            "description": recipe_data.get("description"),
+            "notes": recipe_data.get("notes")
+        }
+        
+        # Validate title
+        if not validated_recipe["title"] or not isinstance(validated_recipe["title"], str):
+            raise ValueError("Recipe must have a valid title")
+        
+        # Validate and normalize ingredients
+        ingredients = recipe_data.get("ingredients", [])
+        if not ingredients:
+            raise ValueError("Recipe must have at least one ingredient")
+        
+        for i, ingredient in enumerate(ingredients):
+            if not isinstance(ingredient, dict):
+                raise ValueError(f"Ingredient {i+1} must be an object")
+            
+            if not ingredient.get("name"):
+                raise ValueError(f"Ingredient {i+1} must have a name")
+            
+            # Ensure quantity is present and numeric
+            quantity = ingredient.get("quantity")
+            if quantity is None:
+                raise ValueError(f"Ingredient {i+1} ({ingredient.get('name')}) must have a quantity")
+            
+            try:
+                quantity = float(quantity)
+            except (TypeError, ValueError):
+                raise ValueError(f"Ingredient {i+1} ({ingredient.get('name')}) quantity must be a number")
+            
+            validated_ingredient = {
+                "name": str(ingredient["name"]).strip(),
+                "quantity": quantity,
+                "unit": str(ingredient.get("unit", "")).strip()
+            }
+            
+            validated_recipe["ingredients"].append(validated_ingredient)
+        
+        # Validate instructions
+        if not validated_recipe["instructions"]:
+            raise ValueError("Recipe must have at least one instruction")
+        
+        if not isinstance(validated_recipe["instructions"], list):
+            raise ValueError("Instructions must be a list")
+        
+        # Ensure all instructions are strings
+        validated_recipe["instructions"] = [str(inst).strip() for inst in validated_recipe["instructions"] if str(inst).strip()]
+        
+        if not validated_recipe["instructions"]:
+            raise ValueError("Recipe must have at least one non-empty instruction")
+        
+        # Validate numeric fields
+        for field in ["preparation_time", "cooking_time", "servings"]:
+            value = validated_recipe[field]
+            if value is not None:
+                try:
+                    validated_recipe[field] = int(value)
+                except (TypeError, ValueError):
+                    validated_recipe[field] = None
+        
+        # Ensure tags is a list
+        if not isinstance(validated_recipe["tags"], list):
+            validated_recipe["tags"] = []
+        
+        return validated_recipe
 
 
 class PromptTemplates:
@@ -162,6 +242,11 @@ class PromptTemplates:
             "- For new recipes, use this format: $$ { ... } $$ with valid JSON.\n"
             "- Use decimal format for ingredient quantities (e.g. 0.75, 1.0).\n"
             "- When answering general questions, you may remind the user you can generate or suggest recipes.\n\n"
+            "**IMPORTANT: Recipe Format Requirements:**\n"
+            "- ALL numeric values must be decimals (use 1.0, not 1)\n"
+            "- quantity field is REQUIRED for every ingredient\n"
+            "- unit field can be empty string \"\" if not applicable\n"
+            "- ALL fields must be present, use null or empty values if unknown\n\n"
             "**Example of a new recipe (inside $$ ... $$):**\n"
             "$$ {\n"
             "  \"title\": \"Spaghetti Bolognese\",\n"
@@ -215,10 +300,21 @@ class PromptTemplates:
             You are a recipe assistant that transforms unstructured ingredient lists into a structured JSON list of Ingredient objects.
 
             Each ingredient must follow this format:
-            - name: string (e.g. "all-purpose flour")
+            - name: string
             - quantity: float (e.g. 2.5)
-            - unit: string (e.g. "cups", "tbsp", "g", "ml", "cloves", "oz", etc.) ** Can be empty if not applicable
-            - substitutes: optional list of strings (or empty list)
+            - unit: string (e.g. "cup(s)", "tbsp", "g", "ml", "clove(s)", "oz", etc.) ** Can be empty if not applicable (e.g. "2 eggs" → "" **)
+            - usda_name: string (simplified name for USDA nutrition lookup, e.g. "flour" for "all-purpose flour, sifted")
+
+            Important formatting rules:
+            1. Units should be in format: "cup(s)", "clove(s)", "piece(s)", etc. with (s) suffix
+            2. usda_name should be the core food item without qualifiers (sifted, chopped, etc.)
+            3. Translate French ingredients in usda_name: "porc" → "pork", "boeuf" → "beef", etc.
+            4. Make sure the unit is not contained in the name and in the unit field
+
+            Examples:
+            - "2 cups all-purpose flour, sifted" → name: "all-purpose flour, sifted", quantity: 2, unit: "cup(s)", usda_name: "flour"
+            - "3 large eggs" → name: "large eggs", quantity: 3, unit: "piece(s)", usda_name: "egg"
+            - "1 lb porc haché" → name: "porc haché", quantity: 1, unit: "lb", usda_name: "pork ground"
 
             Here is the ingredient list:
 

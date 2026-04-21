@@ -9,7 +9,6 @@ class RecipeApi {
   Future<List<RecipePreview>> fetchRecipes() async {
     var data = await _apiHelper.getRequest('recipes/');
     if (data != null) {
-      print(data);
       return (data as List)
           .map((recipe) => RecipePreview.fromJson(recipe))
           .toList();
@@ -54,5 +53,21 @@ class RecipeApi {
       return List<String>.from(data);
     }
     return [];
+  }
+
+  Future<List<Map<String, dynamic>>> autocompleteCanonicalIngredients(
+      String query,
+      {int limit = 5}) async {
+    final params = {'q': query, 'limit': '$limit'};
+    final data = await _apiHelper
+        .getRequest('recipes/ingredients/autocomplete/', queryParams: params);
+    if (data is List) {
+      return data.cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> calculateRecipeNutrition(int recipeId) async {
+    return await _apiHelper.postRequest('recipes/$recipeId/nutrition/', {});
   }
 }

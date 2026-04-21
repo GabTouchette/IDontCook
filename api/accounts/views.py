@@ -21,14 +21,12 @@ class RegisterView(APIView):
         password = request.data.get('password')
 
         if not username or not email or not password:
-            print("Please provide all fields (username, email, password)")
             return JsonResponse(
                 {'error': 'Please provide all fields (username, email, password)'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if CustomUser.objects.filter(username=username).exists():
-            print("Username already exists")
             return JsonResponse(
                 {'error': 'Username already exists'},
                 status=status.HTTP_400_BAD_REQUEST,

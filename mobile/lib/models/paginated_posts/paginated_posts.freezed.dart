@@ -24,12 +24,8 @@ mixin _$PaginatedPosts {
   List<Post> get results => throw _privateConstructorUsedError;
   String? get next => throw _privateConstructorUsedError;
 
-  /// Serializes this PaginatedPosts to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of PaginatedPosts
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $PaginatedPostsCopyWith<PaginatedPosts> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -53,8 +49,6 @@ class _$PaginatedPostsCopyWithImpl<$Res, $Val extends PaginatedPosts>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of PaginatedPosts
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -98,8 +92,6 @@ class __$$PaginatedPostsImplCopyWithImpl<$Res>
       _$PaginatedPostsImpl _value, $Res Function(_$PaginatedPostsImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of PaginatedPosts
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -162,14 +154,12 @@ class _$PaginatedPostsImpl implements _PaginatedPosts {
             (identical(other.next, next) || other.next == next));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType, count, const DeepCollectionEquality().hash(_results), next);
 
-  /// Create a copy of PaginatedPosts
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$PaginatedPostsImplCopyWith<_$PaginatedPostsImpl> get copyWith =>
@@ -199,11 +189,8 @@ abstract class _PaginatedPosts implements PaginatedPosts {
   List<Post> get results;
   @override
   String? get next;
-
-  /// Create a copy of PaginatedPosts
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$PaginatedPostsImplCopyWith<_$PaginatedPostsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

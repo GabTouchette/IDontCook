@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
+// Removed nutrition_service import - no longer needed
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:i_cant_cook/widgets/recipes/camera_capture.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_extra_section.dart';
-import 'package:i_cant_cook/widgets/recipes/recipe_form_ingredients_section.dart';
+import 'package:i_cant_cook/widgets/meal_planning/meal_ingredients_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_instructions_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_tags_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_title_section.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
+// Removed provider import - no longer using NutritionProvider
 
 class CreateRecipePage extends StatefulWidget {
   const CreateRecipePage({super.key});
@@ -24,10 +26,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   final TextEditingController _cooktimeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-
-  List<IngredientField> _ingredients = [
-    IngredientField(controller: TextEditingController(), focusNode: FocusNode())
-  ];
+  // Drawer-style meal ingredient UI entries
+  List<MealIngredient> _mealIngredients = [];
 
   List<InstructionField> _instructions = [
     InstructionField(
@@ -38,11 +38,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
 
   @override
   void dispose() {
-    for (var ingredient in _ingredients) {
-      ingredient.controller.dispose();
-      ingredient.focusNode.dispose();
-    }
-
+    // No controllers to dispose for MealIngredients list
     for (var instruction in _instructions) {
       instruction.controller.dispose();
       instruction.focusNode.dispose();
@@ -59,16 +55,34 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   }
 
   void _submitRecipe() {
-    final recipeData = buildRecipeDataFromForm(
-      titleController: _titleController,
-      instructionControllers: _instructions.map((f) => f.controller).toList(),
-      ingredientFields: _ingredients,
-      prepTimeController: _preptimeController,
-      cookTimeController: _cooktimeController,
-      descriptionController: _descriptionController,
-      notesController: _notesController,
-      selectedTags: _selectedTags,
-    );
+    // Build payload using MealIngredientsSection state
+    final ingredients = _mealIngredients.map((ing) {
+      final m = <String, dynamic>{
+        if (ing.quantity.trim().isNotEmpty) 'quantity': ing.quantity.trim(),
+        'unit': ing.unit,
+        'name': ing.name,
+        if (ing.description.trim().isNotEmpty)
+          'preparation': ing.description.trim(),
+      };
+      if (ing.canonicalId != null) m['canonical_id'] = ing.canonicalId;
+      return m;
+    }).toList();
+
+    final instructions = _instructions
+        .map((f) => f.controller.text.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+
+    final recipeData = {
+      'title': _titleController.text.trim(),
+      'ingredients': ingredients,
+      'instructions': instructions,
+      'preparation_time': int.tryParse(_preptimeController.text) ?? 0,
+      'cooking_time': int.tryParse(_cooktimeController.text) ?? 0,
+      'description': _descriptionController.text.trim(),
+      'notes': _notesController.text.trim(),
+      'tags': _selectedTags,
+    };
 
     submitRecipe(
       context: context,
@@ -77,10 +91,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     );
   }
 
-  void _onIngredientsChanged(List<IngredientField> ingredients) {
-    setState(() {
-      _ingredients = ingredients;
-    });
+  void _onMealIngredientsChanged(List<MealIngredient> ingredients) {
+    setState(() => _mealIngredients = List.of(ingredients));
   }
 
   void _onInstructionsChanged(List<InstructionField> instructions) {
@@ -102,36 +114,41 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Create Recipe',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            fontSize: 32,
-            color: ColorPalette.offWhite,
+          style: GoogleFonts.nunito(
+            fontWeight: FontWeight.w900,
+            fontSize: 24,
+            color: Theme.of(context).colorScheme.onSurface,
+            letterSpacing: -0.5,
           ),
         ),
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: const Icon(
+          icon: Icon(
             Icons.chevron_left,
-            size: 32,
-            color: ColorPalette.offWhite,
+            size: 36,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () => _openCamera(context),
-            icon: const FaIcon(
-              FontAwesomeIcons.camera,
-              color: ColorPalette.offWhite,
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Container(
+              padding: const EdgeInsets.all(6.0),
+              child: IconButton(
+                onPressed: () => _openCamera(context),
+                icon: FaIcon(
+                  FontAwesomeIcons.camera,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -139,10 +156,8 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
         return Stack(
           children: [
             Positioned.fill(
-              child: Image.asset(
-                'assets/images/create_recipe_page_background.png',
-                fit: BoxFit.cover,
-              ),
+              child:
+                  Container(color: Theme.of(context).scaffoldBackgroundColor),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 120.0),
@@ -152,9 +167,29 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                 child: Column(
                   children: [
                     TitleSection(titleController: _titleController),
-                    IngredientsSection(
-                      ingredients: _ingredients,
-                      onIngredientsChanged: _onIngredientsChanged,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 8.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Ingredients',
+                          style: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: MealIngredientsSection(
+                        label: 'Ingredient',
+                        ingredients: _mealIngredients,
+                        onChanged: _onMealIngredientsChanged,
+                      ),
                     ),
                     InstructionsSection(
                       instructions: _instructions,
@@ -164,6 +199,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                       prepTimeController: _preptimeController,
                       cookTimeController: _cooktimeController,
                     ),
+                    // Removed nutrition preview section - nutrition calculated on backend after save
                     TagsSection(
                       selectedTags: _selectedTags,
                       onTagsChanged: _onTagsChanged,
@@ -184,19 +220,33 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
     );
   }
 
+  // Removed _buildNutritionPreviewSection - nutrition calculated on backend after save
+
   Widget _buildCreateButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Container(
         width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: ElevatedButton(
           onPressed: _submitRecipe,
           style: ElevatedButton.styleFrom(
-            backgroundColor: ColorPalette.darkgray,
-            padding: EdgeInsets.symmetric(vertical: 12.0),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 18.0),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(16),
             ),
+            elevation: 0,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -204,15 +254,17 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
             children: [
               Icon(
                 Icons.add,
-                color: ColorPalette.offWhite,
+                color: Theme.of(context).colorScheme.onPrimary,
                 size: 24,
               ),
-              SizedBox(width: 8.0),
+              const SizedBox(width: 12.0),
               Text(
-                "Create",
-                style: TextStyle(
-                  color: ColorPalette.offWhite,
-                  fontSize: 20,
+                "Create Recipe",
+                style: GoogleFonts.nunito(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
             ],

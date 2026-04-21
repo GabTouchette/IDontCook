@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CameraPreviewScreen extends StatefulWidget {
@@ -82,15 +81,14 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.chevron_left,
-            size: 32,
-            color: ColorPalette.offWhite,
-          ),
-        ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(
+              Icons.chevron_left,
+              size: 32,
+              color: Theme.of(context).colorScheme.onSurface,
+            )),
       ),
       body: FutureBuilder<void>(
         future: _initializeControllerFuture,
@@ -128,8 +126,9 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
           }
           return Center(
             child: CircularProgressIndicator(
-              backgroundColor: ColorPalette.offBlack,
-              color: ColorPalette.offWhite,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           );
         },

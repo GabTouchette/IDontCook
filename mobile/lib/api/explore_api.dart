@@ -21,7 +21,6 @@ class ExploreApi {
     );
 
     if (data != null) {
-      print(data);
       return PaginatedRecipes.fromJson(data);
     }
 

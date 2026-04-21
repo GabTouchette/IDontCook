@@ -1,4 +1,5 @@
 import random
+from recipes.tasks import format_recipe_ingredients
 from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
@@ -6,18 +7,19 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.utils.timezone import now
+# Removed timezone import - no longer needed
 from django.core.files.base import ContentFile
 from django.db.models import Case, When, Q
+from django.db import connection
 from django.db.models.functions import Random
 
 from PIL import Image, ExifTags
 from io import BytesIO
 
 from ai_chatbot.api import OpenAIService
-from recipes.models import Recipe, SavedRecipe
+from recipes.models import Recipe, SavedRecipe, CanonicalIngredient
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
-from recipes.tasks import format_recipe_ingredients, get_recipe_nutrition_info
 from recommendations.models import MixedRecommendationPagination
 from recommendations.api import get_similar_recipes
 
@@ -51,10 +53,21 @@ class RecipeListAPIView(APIView):
         serializer = RecipeSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             new_recipe = serializer.save(created_by=user, parent=parent)
-
-            format_recipe_ingredients.delay(new_recipe.id)
-
-            get_recipe_nutrition_info.delay(new_recipe.id)
+            
+            # Format ingredients asynchronously in background
+            print(f"📤 DISPATCHING CELERY TASK: format_recipe_ingredients for recipe_id={new_recipe.id} ('{new_recipe.title}')")
+            try:
+                task = format_recipe_ingredients.delay(new_recipe.id)
+                print(f"📤 CELERY TASK DISPATCHED: task_id={task.id}")
+            except Exception as e:
+                print(f"⚠️ CELERY TASK DISPATCH FAILED: {e}")
+                print(f"🔄 FALLING BACK TO SYNCHRONOUS EXECUTION")
+                # Fallback to synchronous execution if Celery is not available
+                try:
+                    result = format_recipe_ingredients(new_recipe.id)
+                    print(f"✅ SYNCHRONOUS EXECUTION COMPLETED: {result}")
+                except Exception as sync_error:
+                    print(f"❌ SYNCHRONOUS EXECUTION FAILED: {sync_error}")
             
             SavedRecipe.objects.create(
                 user=user,
@@ -207,13 +220,33 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
 
         recipes = Recipe.objects.filter(parent__isnull=True).prefetch_related('ingredients')
 
-        # Tags filter
+        # Tags filter (SQLite-friendly using JSON1; PostgreSQL uses JSON contains; fallback to string matching)
         if tags:
-            query = Q()
-            # TODO: Switch to PostgreSQL to use this.
-            # for tag in tags:
-            #     query |= Q(tags__contains=tag)
-            # recipes = recipes.filter(query)
+            db_vendor = connection.vendor
+            # Normalize tags (trim + lower) for case-insensitive match
+            norm_tags = [t.strip() for t in tags if t and t.strip()]
+            if norm_tags:
+                if db_vendor == 'sqlite':
+                    # Use json_each to test membership in the JSON array (OR semantics across provided tags)
+                    table = Recipe._meta.db_table
+                    clause_parts = [
+                        f"EXISTS (SELECT 1 FROM json_each({table}.\"tags\") AS je WHERE lower(je.value) = lower(%s))"
+                        for _ in norm_tags
+                    ]
+                    or_clause = " OR ".join(clause_parts)
+                    recipes = recipes.extra(where=[f"({or_clause})"], params=norm_tags)
+                elif db_vendor == 'postgresql':
+                    or_q = Q()
+                    for t in norm_tags:
+                        # JSON array contains the single tag
+                        or_q |= Q(tags__contains=[t])
+                    recipes = recipes.filter(or_q)
+                else:
+                    # Fallback: string contains on JSON text, match quotes to reduce false positives
+                    or_q = Q()
+                    for t in norm_tags:
+                        or_q |= Q(tags__icontains=f'"{t}"')
+                    recipes = recipes.filter(or_q)
 
         # Time filters
         if prep_time < 60:
@@ -341,3 +374,31 @@ class RecipeTagsAPIView(APIView):
         tags = Recipe.objects.values_list('tags', flat=True).distinct()
         unique_tags = set(tag for sublist in tags for tag in sublist)
         return JsonResponse(list(unique_tags), safe=False, status=status.HTTP_200_OK)
+
+
+class CanonicalIngredientAutocompleteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        q = (request.GET.get('q') or '').strip()
+        limit = int(request.GET.get('limit') or 5)
+        if not q:
+            return JsonResponse([], safe=False)
+
+        # Simple case-insensitive startswith/contains match on English and French names
+        qs = CanonicalIngredient.objects.all()
+        qs = qs.filter(
+            Q(canonical_name_en__icontains=q) | Q(canonical_name_fr__icontains=q)
+        ).order_by('canonical_name_en')[:max(1, min(limit, 25))]
+
+        results = [
+            {
+                'id': ci.id,
+                'canonical_name_en': ci.canonical_name_en,
+                'canonical_name_fr': ci.canonical_name_fr,
+                'category': ci.category,
+            }
+            for ci in qs
+        ]
+        return JsonResponse(results, safe=False)
+

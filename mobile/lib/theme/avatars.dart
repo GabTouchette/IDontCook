@@ -77,10 +77,12 @@ class Avatars {
           color: hotdogColor,
         );
       default:
-        return FaIcon(
-          FontAwesomeIcons.utensils,
-          size: size,
-          color: Colors.grey,
+        return Builder(
+          builder: (context) => FaIcon(
+            FontAwesomeIcons.utensils,
+            size: size,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         );
     }
   }

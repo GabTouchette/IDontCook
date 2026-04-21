@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/settings_api.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
 
 class PersonalInfoDialog extends StatelessWidget {
@@ -10,7 +11,7 @@ class PersonalInfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: ColorPalette.darkgray,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
@@ -36,10 +37,14 @@ class PersonalInfoDialog extends StatelessWidget {
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: ColorPalette.darkgray.withOpacity(0.7),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surface
+                                  .withOpacity(0.7),
                             ),
-                            child: const Icon(Icons.close,
-                                color: ColorPalette.offWhite, size: 32),
+                            child: Icon(Icons.close,
+                                color: Theme.of(context).colorScheme.onSurface,
+                                size: 32),
                           ),
                           onPressed: () => Navigator.of(context).pop(),
                           splashRadius: 32,
@@ -50,7 +55,7 @@ class PersonalInfoDialog extends StatelessWidget {
                             child: Text(
                               "Personal Info",
                               style: TextStyle(
-                                color: ColorPalette.offWhite,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -63,10 +68,14 @@ class PersonalInfoDialog extends StatelessWidget {
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: ColorPalette.green.withOpacity(0.2),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.2),
                             ),
-                            child: const Icon(Icons.check,
-                                color: ColorPalette.green, size: 32),
+                            child: Icon(Icons.check,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 32),
                           ),
                           onPressed: () async {
                             final success = await SettingsApi()
@@ -74,9 +83,10 @@ class PersonalInfoDialog extends StatelessWidget {
                             if (success && context.mounted) {
                               Navigator.of(context).pop();
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("Failed to save settings")),
+                              InformationToast.show(
+                                context: context,
+                                message: "Failed to save settings",
+                                type: ToastType.error,
                               );
                             }
                           },
@@ -98,8 +108,10 @@ class PersonalInfoDialog extends StatelessWidget {
                                 child: Text(
                                   "GENERAL INFORMATION",
                                   style: TextStyle(
-                                    color:
-                                        ColorPalette.offWhite.withOpacity(0.8),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.8),
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1.2,
@@ -107,19 +119,36 @@ class PersonalInfoDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: Text(
+                                "We collect this optional information to help guide the AI Cookbot in providing more personalized recipe suggestions and cooking advice tailored to your preferences and needs.",
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.7),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
                             _buildNumberField(
-                                "Age", provider.age, provider.setAge),
+                                context, "Age", provider.age, provider.setAge),
                             _buildDropdown(
+                                context,
                                 "Gender",
                                 provider.gender,
                                 (val) => provider.setGender(val ?? ''),
                                 ['Male', 'Female', 'Non-Binary', 'Other']),
-                            _buildTextField(
-                                "City", provider.city, provider.setCity),
-                            _buildTextField("Country", provider.country,
-                                provider.setCountry),
-                            _buildTextField("Ethnicity", provider.ethnicity,
-                                provider.setEthnicity),
+                            _buildTextField(context, "City", provider.city,
+                                provider.setCity),
+                            _buildTextField(context, "Country",
+                                provider.country, provider.setCountry),
+                            _buildTextField(context, "Ethnicity",
+                                provider.ethnicity, provider.setEthnicity),
 
                             // Dietary Preferences Section
                             Padding(
@@ -130,8 +159,10 @@ class PersonalInfoDialog extends StatelessWidget {
                                 child: Text(
                                   "DIETARY PREFERENCES",
                                   style: TextStyle(
-                                    color:
-                                        ColorPalette.offWhite.withOpacity(0.8),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.8),
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1.2,
@@ -139,13 +170,20 @@ class PersonalInfoDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            _buildSwitch("Vegan", provider.isVegan,
+                            _buildSwitch(context, "Vegan", provider.isVegan,
                                 provider.toggleVegan),
-                            _buildSwitch("Vegetarian", provider.isVegetarian,
+                            _buildSwitch(
+                                context,
+                                "Vegetarian",
+                                provider.isVegetarian,
                                 provider.toggleVegetarian),
-                            _buildSwitch("Gluten Free", provider.isGlutenFree,
+                            _buildSwitch(
+                                context,
+                                "Gluten Free",
+                                provider.isGlutenFree,
                                 provider.toggleGlutenFree),
                             _buildSwitch(
+                                context,
                                 "Lactose Intolerant",
                                 provider.isLactoseIntolerant,
                                 provider.toggleLactoseIntolerant),
@@ -159,8 +197,10 @@ class PersonalInfoDialog extends StatelessWidget {
                                 child: Text(
                                   "ALLERGIES",
                                   style: TextStyle(
-                                    color:
-                                        ColorPalette.offWhite.withOpacity(0.8),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.8),
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1.2,
@@ -168,25 +208,42 @@ class PersonalInfoDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            _buildSwitch("Peanut", provider.hasPeanutAllergy,
+                            _buildSwitch(
+                                context,
+                                "Peanut",
+                                provider.hasPeanutAllergy,
                                 provider.togglePeanutAllergy),
                             _buildSwitch(
+                                context,
                                 "Tree Nuts",
                                 provider.hasTreeNutAllergy,
                                 provider.toggleTreeNutAllergy),
                             _buildSwitch(
+                                context,
                                 "Shellfish",
                                 provider.hasShellfishAllergy,
                                 provider.toggleShellfishAllergy),
-                            _buildSwitch("Eggs", provider.hasEggAllergy,
+                            _buildSwitch(
+                                context,
+                                "Eggs",
+                                provider.hasEggAllergy,
                                 provider.toggleEggAllergy),
-                            _buildSwitch("Milk", provider.hasMilkAllergy,
+                            _buildSwitch(
+                                context,
+                                "Milk",
+                                provider.hasMilkAllergy,
                                 provider.toggleMilkAllergy),
-                            _buildSwitch("Soy", provider.hasSoyAllergy,
+                            _buildSwitch(context, "Soy", provider.hasSoyAllergy,
                                 provider.toggleSoyAllergy),
-                            _buildSwitch("Wheat", provider.hasWheatAllergy,
+                            _buildSwitch(
+                                context,
+                                "Wheat",
+                                provider.hasWheatAllergy,
                                 provider.toggleWheatAllergy),
-                            _buildSwitch("Fish", provider.hasFishAllergy,
+                            _buildSwitch(
+                                context,
+                                "Fish",
+                                provider.hasFishAllergy,
                                 provider.toggleFishAllergy),
                             const SizedBox(height: 32),
                             // Clear all button
@@ -198,9 +255,11 @@ class PersonalInfoDialog extends StatelessWidget {
                                   // No need to call setState, Consumer will rebuild
                                 },
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: ColorPalette.red,
-                                  side:
-                                      const BorderSide(color: ColorPalette.red),
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.error,
+                                  side: BorderSide(
+                                      color:
+                                          Theme.of(context).colorScheme.error),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -231,35 +290,42 @@ class PersonalInfoDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(
-      String label, String value, Function(String) onChanged) {
+  Widget _buildTextField(BuildContext context, String label, String value,
+      Function(String) onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         initialValue: value,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: ColorPalette.placeholdergray),
+          labelStyle:
+              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           floatingLabelBehavior: FloatingLabelBehavior.always,
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
-                color: ColorPalette.placeholdergray.withOpacity(0.5)),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.5)),
             borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: ColorPalette.blue),
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.primary),
             borderRadius: BorderRadius.circular(10),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        style: const TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+        style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
         onChanged: onChanged,
       ),
     );
   }
 
-  Widget _buildNumberField(String label, int? value, Function(int?) onChanged) {
+  Widget _buildNumberField(BuildContext context, String label, int? value,
+      Function(int?) onChanged) {
     final controller = TextEditingController(text: value?.toString() ?? '');
     controller.selection = TextSelection.fromPosition(
         TextPosition(offset: controller.text.length));
@@ -269,28 +335,34 @@ class PersonalInfoDialog extends StatelessWidget {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: ColorPalette.placeholdergray),
+          labelStyle:
+              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           floatingLabelBehavior: FloatingLabelBehavior.always,
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
-                color: ColorPalette.placeholdergray.withOpacity(0.5)),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.5)),
             borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: ColorPalette.blue),
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.primary),
             borderRadius: BorderRadius.circular(10),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         keyboardType: TextInputType.number,
-        style: const TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+        style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
         onChanged: (val) => onChanged(int.tryParse(val)),
       ),
     );
   }
 
-  Widget _buildDropdown(String label, String selected,
+  Widget _buildDropdown(BuildContext context, String label, String selected,
       ValueChanged<String?> onChanged, List<String> items) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -298,32 +370,43 @@ class PersonalInfoDialog extends StatelessWidget {
         value: selected.isEmpty ? null : selected,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: ColorPalette.placeholdergray),
+          labelStyle:
+              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(
-                color: ColorPalette.placeholdergray.withOpacity(0.5)),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.5)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(
-                color: ColorPalette.placeholdergray.withOpacity(0.5)),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.5)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: ColorPalette.blue),
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.primary),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        dropdownColor: ColorPalette.darkgray,
-        style: const TextStyle(color: ColorPalette.offWhite, fontSize: 16),
-        icon: const Icon(Icons.arrow_drop_down, color: ColorPalette.offWhite),
+        dropdownColor: Theme.of(context).colorScheme.surface,
+        style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
+        icon: Icon(Icons.arrow_drop_down,
+            color: Theme.of(context).colorScheme.onSurface),
         items: items
             .map((item) => DropdownMenuItem(
                   value: item,
                   child: Text(item,
-                      style: const TextStyle(color: ColorPalette.offWhite)),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface)),
                 ))
             .toList(),
         onChanged: onChanged,
@@ -331,26 +414,28 @@ class PersonalInfoDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildSwitch(String label, bool value, Function(bool) onChanged) {
+  Widget _buildSwitch(BuildContext context, String label, bool value,
+      Function(bool) onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: ColorPalette.darkgray.withOpacity(0.8),
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
         ),
         child: SwitchListTile(
           value: value,
           onChanged: onChanged,
           title: Text(
             label,
-            style: const TextStyle(
-              color: ColorPalette.offWhite,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
             ),
           ),
-          activeColor: ColorPalette.blue,
-          inactiveTrackColor: ColorPalette.placeholdergray.withOpacity(0.5),
+          activeColor: Theme.of(context).colorScheme.primary,
+          inactiveTrackColor:
+              Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),

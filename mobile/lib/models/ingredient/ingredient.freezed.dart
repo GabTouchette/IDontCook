@@ -26,13 +26,10 @@ mixin _$Ingredient {
   String? get unit => throw _privateConstructorUsedError;
   List<String>? get substitutes => throw _privateConstructorUsedError;
   Map<String, dynamic>? get nutrition => throw _privateConstructorUsedError;
+  int? get canonical => throw _privateConstructorUsedError;
 
-  /// Serializes this Ingredient to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Ingredient
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $IngredientCopyWith<Ingredient> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -49,7 +46,8 @@ abstract class $IngredientCopyWith<$Res> {
       double? quantity,
       String? unit,
       List<String>? substitutes,
-      Map<String, dynamic>? nutrition});
+      Map<String, dynamic>? nutrition,
+      int? canonical});
 }
 
 /// @nodoc
@@ -62,8 +60,6 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Ingredient
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -73,6 +69,7 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
     Object? unit = freezed,
     Object? substitutes = freezed,
     Object? nutrition = freezed,
+    Object? canonical = freezed,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -99,6 +96,10 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
           ? _value.nutrition
           : nutrition // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>?,
+      canonical: freezed == canonical
+          ? _value.canonical
+          : canonical // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -117,7 +118,8 @@ abstract class _$$IngredientImplCopyWith<$Res>
       double? quantity,
       String? unit,
       List<String>? substitutes,
-      Map<String, dynamic>? nutrition});
+      Map<String, dynamic>? nutrition,
+      int? canonical});
 }
 
 /// @nodoc
@@ -128,8 +130,6 @@ class __$$IngredientImplCopyWithImpl<$Res>
       _$IngredientImpl _value, $Res Function(_$IngredientImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Ingredient
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -139,6 +139,7 @@ class __$$IngredientImplCopyWithImpl<$Res>
     Object? unit = freezed,
     Object? substitutes = freezed,
     Object? nutrition = freezed,
+    Object? canonical = freezed,
   }) {
     return _then(_$IngredientImpl(
       id: freezed == id
@@ -165,6 +166,10 @@ class __$$IngredientImplCopyWithImpl<$Res>
           ? _value._nutrition
           : nutrition // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>?,
+      canonical: freezed == canonical
+          ? _value.canonical
+          : canonical // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -178,7 +183,8 @@ class _$IngredientImpl implements _Ingredient {
       this.quantity,
       this.unit,
       final List<String>? substitutes,
-      final Map<String, dynamic>? nutrition})
+      final Map<String, dynamic>? nutrition,
+      this.canonical})
       : _substitutes = substitutes,
         _nutrition = nutrition;
 
@@ -214,8 +220,11 @@ class _$IngredientImpl implements _Ingredient {
   }
 
   @override
+  final int? canonical;
+
+  @override
   String toString() {
-    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, substitutes: $substitutes, nutrition: $nutrition)';
+    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, substitutes: $substitutes, nutrition: $nutrition, canonical: $canonical)';
   }
 
   @override
@@ -231,10 +240,12 @@ class _$IngredientImpl implements _Ingredient {
             const DeepCollectionEquality()
                 .equals(other._substitutes, _substitutes) &&
             const DeepCollectionEquality()
-                .equals(other._nutrition, _nutrition));
+                .equals(other._nutrition, _nutrition) &&
+            (identical(other.canonical, canonical) ||
+                other.canonical == canonical));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -243,11 +254,10 @@ class _$IngredientImpl implements _Ingredient {
       quantity,
       unit,
       const DeepCollectionEquality().hash(_substitutes),
-      const DeepCollectionEquality().hash(_nutrition));
+      const DeepCollectionEquality().hash(_nutrition),
+      canonical);
 
-  /// Create a copy of Ingredient
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$IngredientImplCopyWith<_$IngredientImpl> get copyWith =>
@@ -268,7 +278,8 @@ abstract class _Ingredient implements Ingredient {
       final double? quantity,
       final String? unit,
       final List<String>? substitutes,
-      final Map<String, dynamic>? nutrition}) = _$IngredientImpl;
+      final Map<String, dynamic>? nutrition,
+      final int? canonical}) = _$IngredientImpl;
 
   factory _Ingredient.fromJson(Map<String, dynamic> json) =
       _$IngredientImpl.fromJson;
@@ -285,11 +296,10 @@ abstract class _Ingredient implements Ingredient {
   List<String>? get substitutes;
   @override
   Map<String, dynamic>? get nutrition;
-
-  /// Create a copy of Ingredient
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  int? get canonical;
+  @override
+  @JsonKey(ignore: true)
   _$$IngredientImplCopyWith<_$IngredientImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

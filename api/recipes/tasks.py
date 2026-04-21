@@ -1,43 +1,79 @@
-import os
-import requests
+import logging
 from celery import shared_task
 
 from recipes.models import Recipe
 from ai_chatbot.api import OpenAIService
 
-USDA_API_KEY = os.getenv('USDA_API_KEY')
-SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
+logger = logging.getLogger(__name__)
 
 @shared_task
 def format_recipe_ingredients(recipe_id):
-    recipe = Recipe.objects.get(id=recipe_id)
-    if not recipe.is_formatted:
-        recipe = OpenAIService().llm_format_ingredients(recipe)
-        recipe.is_formatted = True
-        recipe.save()
-
-@shared_task
-def get_recipe_nutrition_info(recipe_id):
-    """Calculate nutrition for a recipe using the nutrition service."""
+    """
+    Format recipe ingredients using LLM.
+    Also formats parent recipe if it exists and is not already formatted.
+    """
+    logger.info(f"🚀 CELERY TASK STARTED: format_recipe_ingredients for recipe_id={recipe_id}")
+    print(f"🚀 CELERY TASK STARTED: format_recipe_ingredients for recipe_id={recipe_id}")
+    
     try:
         recipe = Recipe.objects.get(id=recipe_id)
+        logger.info(f"📖 Found recipe: '{recipe.title}' (is_formatted: {recipe.is_formatted})")
+        print(f"📖 Found recipe: '{recipe.title}' (is_formatted: {recipe.is_formatted})")
         
-        # Import here to avoid circular imports
-        from recipes.nutrition_service import NutritionService
+        formatted_recipes = []
         
-        service = NutritionService()
-        nutrition = service.calculate_recipe_nutrition(recipe)
+        # Format the main recipe
+        if not recipe.is_formatted:
+            logger.info(f"🔄 Starting LLM formatting for recipe '{recipe.title}'")
+            print(f"🔄 Starting LLM formatting for recipe '{recipe.title}'")
+            
+            recipe = OpenAIService().llm_format_ingredients(recipe)
+            recipe.is_formatted = True
+            recipe.save()
+            formatted_recipes.append(recipe.title)
+            
+            logger.info(f"✅ Successfully formatted ingredients for recipe '{recipe.title}'")
+            print(f"✅ Successfully formatted ingredients for recipe '{recipe.title}'")
+        else:
+            logger.info(f"ℹ️ Recipe '{recipe.title}' already formatted - skipping")
+            print(f"ℹ️ Recipe '{recipe.title}' already formatted - skipping")
         
-        # Update recipe with calculated nutrition
-        recipe.calories = nutrition.get('calories')
-        recipe.protein = nutrition.get('protein')
-        recipe.fat = nutrition.get('fat')
-        recipe.carbs = nutrition.get('carbs')
-        recipe.save()
+        # Format parent recipe if it exists and is not formatted
+        if recipe.parent:
+            logger.info(f"👥 Found parent recipe: '{recipe.parent.title}' (is_formatted: {recipe.parent.is_formatted})")
+            print(f"👥 Found parent recipe: '{recipe.parent.title}' (is_formatted: {recipe.parent.is_formatted})")
+            
+            if not recipe.parent.is_formatted:
+                logger.info(f"🔄 Starting LLM formatting for parent recipe '{recipe.parent.title}'")
+                print(f"🔄 Starting LLM formatting for parent recipe '{recipe.parent.title}'")
+                
+                parent = recipe.parent
+                parent = OpenAIService().llm_format_ingredients(parent)
+                parent.is_formatted = True
+                parent.save()
+                formatted_recipes.append(parent.title)
+                
+                logger.info(f"✅ Successfully formatted ingredients for parent recipe '{parent.title}'")
+                print(f"✅ Successfully formatted ingredients for parent recipe '{parent.title}'")
+            else:
+                logger.info(f"ℹ️ Parent recipe '{recipe.parent.title}' already formatted - skipping")
+                print(f"ℹ️ Parent recipe '{recipe.parent.title}' already formatted - skipping")
+        else:
+            logger.info("👥 No parent recipe found")
+            print("👥 No parent recipe found")
         
-        return f"Updated nutrition for recipe {recipe.title}: {nutrition.get('calories', 0):.1f} calories"
+        result_message = f"Processed ingredients for recipe '{recipe.title}'"
+        if formatted_recipes:
+            result_message += f". Formatted: {', '.join(formatted_recipes)}"
         
-    except Recipe.DoesNotExist:
-        return f"Recipe with ID {recipe_id} not found"
+        logger.info(f"🎉 CELERY TASK COMPLETED: {result_message}")
+        print(f"🎉 CELERY TASK COMPLETED: {result_message}")
+        
+        return result_message
+        
     except Exception as e:
-        return f"Error calculating nutrition for recipe {recipe_id}: {str(e)}"
+        error_msg = f"❌ CELERY TASK FAILED for recipe_id={recipe_id}: {str(e)}"
+        logger.error(error_msg)
+        print(error_msg)
+        raise
+

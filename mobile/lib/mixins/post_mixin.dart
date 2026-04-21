@@ -7,6 +7,35 @@ mixin PostMixin on ChangeNotifier {
 
   List<Post> get posts => _posts;
 
+  Future<void> handleRecipeVote(int postId, int recipeId, int voteValue) async {
+    final postIndex = _posts.indexWhere((post) => post.id == postId);
+    if (postIndex == -1) return;
+
+    final post = _posts[postIndex];
+    final currentVote = post.user_recipe_vote ?? 0;
+    final newVote = currentVote == voteValue ? 0 : voteValue;
+
+    final success = await SocialApi().createRecipeRating(recipeId, {"value": newVote});
+    if (success) {
+      final currentThumbsUp = post.recipe_thumbs_up_count ?? 0;
+      final currentThumbsDown = post.recipe_thumbs_down_count ?? 0;
+      
+      final updatedPost = post.copyWith(
+        user_recipe_vote: newVote,
+        recipe_thumbs_up_count: currentThumbsUp +
+            (newVote == 1 ? 1 : 0) -
+            (currentVote == 1 ? 1 : 0),
+        recipe_thumbs_down_count: currentThumbsDown +
+            (newVote == -1 ? 1 : 0) -
+            (currentVote == -1 ? 1 : 0),
+      );
+
+      _posts[postIndex] = updatedPost;
+      notifyListeners();
+    }
+  }
+
+  // Keep old method for backward compatibility during migration
   Future<void> handleVote(int postId, int voteValue) async {
     final postIndex = _posts.indexWhere((post) => post.id == postId);
     if (postIndex == -1) return;

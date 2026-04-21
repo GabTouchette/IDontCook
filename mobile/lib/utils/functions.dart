@@ -5,7 +5,7 @@ double roundToNearestEighth(double quantity) {
 
 // Helper function to adjust the ingredient quantities based on new servings
 double adjustQuantityForServings(
-    double quantity, int baseServings, int newServings) {
+    double quantity, double baseServings, double newServings) {
   double adjustedQuantity = quantity * (newServings / baseServings);
   return roundToNearestEighth(adjustedQuantity);
 }

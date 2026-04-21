@@ -1,17 +1,17 @@
 from rest_framework import serializers
-from .models import Recipe, Ingredient, NutritionData
+from .models import Recipe, Ingredient, NutritionData, CanonicalIngredient
 from accounts.serializers import UserSerializer
 
 class IngredientSerializer(serializers.ModelSerializer):
-    nutrition = serializers.SerializerMethodField()
-    
+    # Allow selecting a canonical ingredient by id for typeahead dropdowns
+    canonical_id = serializers.PrimaryKeyRelatedField(
+        queryset=CanonicalIngredient.objects.all(), source="canonical", required=False, write_only=True
+    )
+    canonical = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'unit', 'quantity', 'substitutes', 'nutrition']
-    
-    def get_nutrition(self, obj):
-        """Get nutrition data for this ingredient's quantity."""
-        return obj.get_nutrition_per_quantity()
+        fields = ['id', 'name', 'unit', 'quantity', 'preparation', 'substitutes', 'canonical_id', 'canonical']
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -24,6 +24,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+    def validate_ingredients(self, value):
+        """Ensure ingredients is a list of objects (never strings)."""
+        if value is None:
+            raise serializers.ValidationError("Ingredients are required")
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Ingredients must be a list of objects")
+        if len(value) == 0:
+            raise serializers.ValidationError("Ingredients list cannot be empty")
+        for idx, item in enumerate(value):
+            if not isinstance(item, dict):
+                raise serializers.ValidationError(f"Ingredient at index {idx} must be an object, not a string")
+        return value
 
     def get_image_url(self, obj):
         if obj.image and hasattr(obj.image, 'url'):
@@ -62,10 +75,27 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
 
         for ingredient_data in ingredients_data:
+            # Apply smart unit defaults if unit is missing or empty
+            unit = (ingredient_data.get("unit") or "").strip()
+            name = (ingredient_data.get("name") or "").strip()
+            canonical = ingredient_data.get("canonical")
+            
+            if not unit and name:
+                unit = self._get_smart_unit_default(name)
+            
+            # If canonical selected and name not provided, use canonical english name
+            if canonical and not name:
+                try:
+                    name = canonical.canonical_name_en or name
+                except Exception:
+                    pass
+
             ingredient_obj = Ingredient.objects.create(
-                name=ingredient_data["name"],
+                name=name,
                 quantity=ingredient_data.get("quantity"),
-                unit=ingredient_data.get("unit"),
+                unit=unit,
+                preparation=ingredient_data.get("preparation"),
+                canonical=canonical if canonical else None,
             )
             recipe.ingredients.add(ingredient_obj)
 
@@ -76,6 +106,108 @@ class RecipeSerializer(serializers.ModelSerializer):
             pass  # Don't fail recipe creation if nutrition calculation fails
 
         return recipe
+
+    def _get_smart_unit_default(self, ingredient_name):
+        """
+        Assign smart default units based on ingredient name patterns.
+        Mirrors the logic from the Flutter frontend for consistency.
+        """
+        if not ingredient_name:
+            return "piece"
+        
+        name_lower = ingredient_name.lower()
+        
+        # Smart ingredient defaults based on ingredient type
+        ingredient_defaults = {
+            # Fruits & Vegetables (pieces)
+            'avocado': 'piece', 'avocados': 'piece', 'ripe avocado': 'piece', 'ripe avocados': 'piece',
+            'onion': 'piece', 'onions': 'piece', 'large onion': 'piece', 'medium onion': 'piece', 'small onion': 'piece',
+            'tomato': 'piece', 'tomatoes': 'piece', 'large tomato': 'piece', 'cherry tomatoes': 'cup',
+            'apple': 'piece', 'apples': 'piece', 'green apple': 'piece', 'red apple': 'piece',
+            'banana': 'piece', 'bananas': 'piece', 'ripe banana': 'piece', 'ripe bananas': 'piece',
+            'lemon': 'piece', 'lemons': 'piece', 'large lemon': 'piece',
+            'lime': 'piece', 'limes': 'piece', 'fresh lime': 'piece',
+            'potato': 'piece', 'potatoes': 'piece', 'large potato': 'piece', 'medium potato': 'piece',
+            'carrot': 'piece', 'carrots': 'piece', 'large carrot': 'piece', 'baby carrots': 'cup',
+            'bell pepper': 'piece', 'peppers': 'piece', 'red bell pepper': 'piece', 'green pepper': 'piece',
+            'cucumber': 'piece', 'cucumbers': 'piece', 'large cucumber': 'piece',
+            'garlic': 'clove', 'garlic clove': 'clove', 'garlic cloves': 'clove', 'fresh garlic': 'clove',
+            
+            # Proteins (pieces/lbs for larger cuts, pieces for individual items)
+            'chicken breast': 'piece', 'chicken breasts': 'piece', 'boneless chicken breast': 'piece',
+            'boneless chicken breasts': 'piece', 'skinless chicken breast': 'piece', 'skinless chicken breasts': 'piece',
+            'boneless skinless chicken breast': 'piece', 'boneless skinless chicken breasts': 'piece',
+            'chicken thigh': 'piece', 'chicken thighs': 'piece', 'boneless chicken thigh': 'piece', 'boneless chicken thighs': 'piece',
+            'chicken wing': 'piece', 'chicken wings': 'piece',
+            'ground chicken': 'lb', 'ground beef': 'lb', 'ground turkey': 'lb', 'ground pork': 'lb',
+            'beef': 'lb', 'pork': 'lb', 'lamb': 'lb',
+            'steak': 'piece', 'steaks': 'piece', 'ribeye': 'piece', 'sirloin': 'piece',
+            'egg': 'piece', 'eggs': 'piece', 'large egg': 'piece', 'large eggs': 'piece',
+            'salmon fillet': 'piece', 'salmon fillets': 'piece', 'cod fillet': 'piece', 'tilapia fillet': 'piece',
+            'pork chop': 'piece', 'pork chops': 'piece', 'lamb chop': 'piece', 'lamb chops': 'piece',
+            'bacon': 'slice', 'bacon strips': 'slice', 'ham': 'slice',
+            'shrimp': 'lb', 'prawns': 'lb', 'scallops': 'piece',
+            
+            # Dairy & Cheese
+            'cheese': 'cup', 'cheddar cheese': 'cup', 'mozzarella cheese': 'cup', 'parmesan cheese': 'cup',
+            'cream cheese': 'oz', 'butter': 'tbsp', 'unsalted butter': 'tbsp', 'salted butter': 'tbsp',
+            'heavy cream': 'cup', 'sour cream': 'cup', 'greek yogurt': 'cup', 'yogurt': 'cup',
+            
+            # Liquids (cups/tbsp)
+            'olive oil': 'tbsp', 'extra virgin olive oil': 'tbsp',
+            'vegetable oil': 'tbsp', 'canola oil': 'tbsp', 'coconut oil': 'tbsp',
+            'water': 'cup', 'warm water': 'cup', 'cold water': 'cup',
+            'milk': 'cup', 'whole milk': 'cup', 'skim milk': 'cup', 'almond milk': 'cup',
+            'broth': 'cup', 'chicken broth': 'cup', 'beef broth': 'cup', 'vegetable broth': 'cup',
+            'stock': 'cup', 'chicken stock': 'cup', 'beef stock': 'cup', 'vegetable stock': 'cup',
+            'juice': 'cup', 'lemon juice': 'tbsp', 'lime juice': 'tbsp', 'orange juice': 'cup',
+            'vinegar': 'tbsp', 'apple cider vinegar': 'tbsp', 'white vinegar': 'tbsp', 'balsamic vinegar': 'tbsp',
+            'soy sauce': 'tbsp', 'worcestershire sauce': 'tbsp', 'hot sauce': 'tsp',
+            'wine': 'cup', 'white wine': 'cup', 'red wine': 'cup',
+            
+            # Spices & Small Items (tsp)
+            'salt': 'tsp', 'sea salt': 'tsp', 'kosher salt': 'tsp', 'table salt': 'tsp',
+            'pepper': 'tsp', 'black pepper': 'tsp', 'white pepper': 'tsp', 'ground black pepper': 'tsp',
+            'garlic powder': 'tsp', 'onion powder': 'tsp', 'paprika': 'tsp', 'smoked paprika': 'tsp',
+            'cumin': 'tsp', 'ground cumin': 'tsp', 'oregano': 'tsp', 'dried oregano': 'tsp',
+            'thyme': 'tsp', 'dried thyme': 'tsp', 'fresh thyme': 'tbsp',
+            'basil': 'tsp', 'dried basil': 'tsp', 'fresh basil': 'tbsp', 'basil leaves': 'tbsp',
+            'rosemary': 'tsp', 'dried rosemary': 'tsp', 'fresh rosemary': 'tbsp',
+            'parsley': 'tbsp', 'fresh parsley': 'tbsp', 'dried parsley': 'tsp',
+            'cilantro': 'tbsp', 'fresh cilantro': 'tbsp',
+            'chili powder': 'tsp', 'cayenne pepper': 'tsp', 'red pepper flakes': 'tsp',
+            'cinnamon': 'tsp', 'ground cinnamon': 'tsp', 'nutmeg': 'tsp', 'vanilla extract': 'tsp',
+            
+            # Pantry Items (cups)
+            'flour': 'cup', 'all-purpose flour': 'cup', 'bread flour': 'cup', 'wheat flour': 'cup',
+            'sugar': 'cup', 'white sugar': 'cup', 'brown sugar': 'cup', 'granulated sugar': 'cup',
+            'powdered sugar': 'cup', 'confectioners sugar': 'cup',
+            'rice': 'cup', 'white rice': 'cup', 'brown rice': 'cup', 'jasmine rice': 'cup',
+            'pasta': 'cup', 'spaghetti': 'cup', 'penne': 'cup', 'fettuccine': 'cup',
+            'breadcrumbs': 'cup', 'panko breadcrumbs': 'cup',
+            'oats': 'cup', 'rolled oats': 'cup', 'quick oats': 'cup',
+            'quinoa': 'cup', 'barley': 'cup', 'lentils': 'cup', 'black beans': 'cup',
+            'chickpeas': 'cup', 'kidney beans': 'cup',
+        }
+        
+        # Check for exact matches first
+        if name_lower in ingredient_defaults:
+            return ingredient_defaults[name_lower]
+        
+        # Check for partial matches
+        for key, unit in ingredient_defaults.items():
+            if key in name_lower:
+                return unit
+        
+        # Final fallback based on common patterns
+        if any(word in name_lower for word in ['oil', 'sauce', 'vinegar', 'syrup']):
+            return 'tbsp'
+        elif any(word in name_lower for word in ['powder', 'spice', 'herb', 'seasoning']):
+            return 'tsp'
+        elif any(word in name_lower for word in ['flour', 'sugar', 'rice', 'pasta']):
+            return 'cup'
+        else:
+            return 'piece'  # Default fallback
 
     def update(self, instance, validated_data):
         """ Handle regular updates (PUT) """
@@ -94,16 +226,34 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.preparation_time = validated_data.get("preparation_time", instance.preparation_time)  
         instance.tags = validated_data.get("tags", instance.tags)
         instance.description = validated_data.get("description", instance.description)  
-        instance.notes = validated_data.get("notes", instance.notes)  
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.servings = validated_data.get("servings", instance.servings)  
         instance.save()
 
         # Update ingredients if necessary
         instance.ingredients.clear()
         for ingredient_data in ingredients_data:
+            # Apply smart unit defaults if unit is missing or empty
+            unit = (ingredient_data.get("unit") or "").strip()
+            name = (ingredient_data.get("name") or "").strip()
+            canonical = ingredient_data.get("canonical")
+            
+            if not unit and name:
+                unit = self._get_smart_unit_default(name)
+            
+            # If canonical selected and name not provided, use canonical english name
+            if canonical and not name:
+                try:
+                    name = canonical.canonical_name_en or name
+                except Exception:
+                    pass
+
             ingredient_obj = Ingredient.objects.create(
-                name=ingredient_data["name"],
+                name=name,
                 quantity=ingredient_data.get("quantity"),
-                unit=ingredient_data.get("unit"),
+                unit=unit,
+                preparation=ingredient_data.get("preparation"),
+                canonical=canonical if canonical else None,
             )
             instance.ingredients.add(ingredient_obj)
 

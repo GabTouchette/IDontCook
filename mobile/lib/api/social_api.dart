@@ -157,4 +157,19 @@ class SocialApi {
     }
     return false;
   }
+
+  // Recipe rating methods
+  Future<bool> createRecipeRating(int recipeId, Map<String, dynamic> ratingData) async {
+    var response = await _apiHelper.postRequest('recipes/$recipeId/rating/', ratingData);
+    return response != null;
+  }
+
+  Future<bool> deleteRecipeRating(int recipeId) async {
+    return await _apiHelper.deleteRequest('recipes/$recipeId/rating/delete/');
+  }
+
+  Future<Map<String, dynamic>?> fetchRecipeRating(int recipeId) async {
+    var data = await _apiHelper.getRequest('recipes/$recipeId/rating/');
+    return data;
+  }
 }

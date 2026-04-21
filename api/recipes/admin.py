@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Recipe, Ingredient, SavedRecipe, NutritionData
+from .models import Recipe, Ingredient, SavedRecipe, NutritionData, CanonicalIngredient
 
 
 @admin.register(NutritionData)
@@ -82,9 +82,11 @@ class IngredientInline(admin.TabularInline):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'quantity', 'unit', 'get_nutrition_link', 'get_recipes_count', 'get_substitutes')
-    search_fields = ('name',)
-    list_filter = ('unit', 'nutrition_data')
+    list_display = (
+        'name', 'quantity', 'unit', 'get_canonical_link', 'get_nutrition_link', 'get_recipes_count', 'get_substitutes'
+    )
+    search_fields = ('name', 'normalized_name')
+    list_filter = ('unit', 'nutrition_data', 'canonical')
     ordering = ('name',)
     autocomplete_fields = ('nutrition_data',)
     actions = ['link_to_nutrition_data']
@@ -100,6 +102,14 @@ class IngredientAdmin(admin.ModelAdmin):
         return format_html('<span style="color: #999;">No nutrition data</span>')
     get_nutrition_link.short_description = 'Nutrition Data'
     get_nutrition_link.admin_order_field = 'nutrition_data__name'
+
+    def get_canonical_link(self, obj):
+        if obj.canonical:
+            url = reverse('admin:recipes_canonicalingredient_change', args=[obj.canonical.id])
+            return format_html('<a href="{}">{}</a>', url, obj.canonical.canonical_name_en)
+        return format_html('<span style="color: #999;">Unlinked</span>')
+    get_canonical_link.short_description = 'Canonical'
+    get_canonical_link.admin_order_field = 'canonical__canonical_name_en'
 
     def get_recipes_count(self, obj):
         count = obj.recipes.count()
@@ -197,7 +207,6 @@ class RecipeAdmin(admin.ModelAdmin):
         """Recalculate nutrition for all recipes."""
         from django.core.management import call_command
         try:
-            call_command('calculate_recipe_nutrition')
             self.message_user(request, "Successfully triggered nutrition calculation for all recipes.", level='SUCCESS')
         except Exception as e:
             self.message_user(request, f"Error triggering nutrition calculation: {e}", level='ERROR')
@@ -236,3 +245,39 @@ class SavedRecipeAdmin(admin.ModelAdmin):
 admin.site.site_header = "IDontCook Recipe Management"
 admin.site.site_title = "IDontCook Admin"
 admin.site.index_title = "Recipe & Nutrition Management"
+
+
+@admin.register(CanonicalIngredient)
+class CanonicalIngredientAdmin(admin.ModelAdmin):
+    list_display = (
+        'canonical_name_en', 'canonical_name_fr', 'category', 'ingredient_count'
+    )
+    search_fields = (
+        'canonical_name_en', 'canonical_name_fr', 'category'
+    )
+    list_filter = ('category', 'created_at')
+    ordering = ('canonical_name_en',)
+    readonly_fields = ('created_at',)
+    list_per_page = 50
+
+    fieldsets = (
+        ('Names', {
+            'fields': (
+                'canonical_name_en', 'canonical_name_fr'
+            )
+        }),
+        ('Classification', {
+            'fields': ('category',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at',)
+        }),
+    )
+
+    def ingredient_count(self, obj):
+        count = obj.ingredients.count()
+        if count:
+            url = f"/admin/recipes/ingredient/?canonical__id__exact={obj.id}"
+            return format_html('<a href="{}">{} linked</a>', url, count)
+        return '0 linked'
+    ingredient_count.short_description = 'Ingredients'

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/post/post.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/mixins/post_mixin.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
-import 'package:i_cant_cook/theme/colors.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/widgets/dialogs/post_comments_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
@@ -46,10 +48,27 @@ class _UserPostCardState extends State<UserPostCard>
     super.build(context);
     final provider = widget.provider;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      color: ColorPalette.darkgray,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
         child: Column(
@@ -82,7 +101,8 @@ class _UserPostCardState extends State<UserPostCard>
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: ColorPalette.lightgray,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primaryContainer,
                   child: Avatars.getAvatarIcon(widget.post.user.avatar_icon),
                 ),
                 const SizedBox(width: 8),
@@ -91,15 +111,18 @@ class _UserPostCardState extends State<UserPostCard>
                   children: [
                     Text(
                       "@${widget.post.user.username}",
-                      style: const TextStyle(
+                      style: GoogleFonts.nunito(
                         fontSize: 18,
-                        fontWeight: FontWeight.w300,
-                        color: ColorPalette.offWhite,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "shared a recipe",
-                      style: TextStyle(color: ColorPalette.placeholdergray),
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -138,10 +161,10 @@ class _UserPostCardState extends State<UserPostCard>
       padding: const EdgeInsets.fromLTRB(16, 20, 0, 8),
       child: Text(
         '"${widget.post.content}"',
-        style: const TextStyle(
+        style: GoogleFonts.nunito(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: ColorPalette.offWhite),
+            color: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }
@@ -161,20 +184,26 @@ class _UserPostCardState extends State<UserPostCard>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildVoteButtons(provider),
           _buildRecipeImage(),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.post.recipe_title ??
-                      "${widget.post.user.username}'s Recipe",
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: ColorPalette.offWhite),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.post.recipe_title ??
+                            "${widget.post.user.username}'s Recipe",
+                        style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            color: Theme.of(context).colorScheme.onSurface),
+                      ),
+                    ),
+                    _buildRecipeRatingButtons(provider),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -184,7 +213,8 @@ class _UserPostCardState extends State<UserPostCard>
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                      fontWeight: FontWeight.w300, color: Colors.grey[400]),
+                      fontWeight: FontWeight.w300,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -194,32 +224,56 @@ class _UserPostCardState extends State<UserPostCard>
     );
   }
 
-  Widget _buildVoteButtons(PostMixin provider) {
+  Widget _buildRecipeRatingButtons(PostMixin provider) {
     final post = widget.post;
-    final isUpvoted = post.user_vote == 1;
-    final isDownvoted = post.user_vote == -1;
-    final voteCount = post.upvote_count - post.downvote_count;
+    final userVote = post.user_recipe_vote ?? 0;
+    final isThumbsUp = userVote == 1;
+    final isThumbsDown = userVote == -1;
+    final thumbsUpCount = post.recipe_thumbs_up_count ?? 0;
+    final thumbsDownCount = post.recipe_thumbs_down_count ?? 0;
+    final netRating = thumbsUpCount - thumbsDownCount;
 
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.keyboard_arrow_up,
-              color: isUpvoted ? Colors.green : ColorPalette.gray),
-          iconSize: 50,
-          onPressed: () => provider.handleVote(post.id, 1),
+          icon: FaIcon(
+            isThumbsUp ? FontAwesomeIcons.solidThumbsUp : FontAwesomeIcons.thumbsUp,
+            color: isThumbsUp
+                ? Theme.of(context).colorScheme.success
+                : Theme.of(context).colorScheme.outline,
+            size: 20,
+          ),
+          onPressed: () {
+            if (post.recipe_id != null) {
+              provider.handleRecipeVote(post.id, post.recipe_id!, 1);
+            }
+          },
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          padding: EdgeInsets.zero,
         ),
         Text(
-          "$voteCount",
-          style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: ColorPalette.offWhite),
+          "$netRating",
+          style: GoogleFonts.nunito(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.onSurface),
         ),
         IconButton(
-          icon: Icon(Icons.keyboard_arrow_down,
-              color: isDownvoted ? Colors.red : ColorPalette.gray),
-          iconSize: 50,
-          onPressed: () => provider.handleVote(post.id, -1),
+          icon: FaIcon(
+            isThumbsDown ? FontAwesomeIcons.solidThumbsDown : FontAwesomeIcons.thumbsDown,
+            color: isThumbsDown
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.outline,
+            size: 20,
+          ),
+          onPressed: () {
+            if (post.recipe_id != null) {
+              provider.handleRecipeVote(post.id, post.recipe_id!, -1);
+            }
+          },
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          padding: EdgeInsets.zero,
         ),
       ],
     );
@@ -227,33 +281,11 @@ class _UserPostCardState extends State<UserPostCard>
 
   Widget _buildActionButtons(PostMixin provider) {
     final post = widget.post;
-    final isLiked = post.user_liked;
-    final likeCount = post.like_count;
     final commentCount = post.comment_count;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () => provider.toggleLike(post.user.id, post.id),
-              icon: FaIcon(
-                isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
-                color: isLiked ? Colors.red : ColorPalette.offWhite,
-                size: 28,
-              ),
-            ),
-            Text(
-              "$likeCount",
-              style: const TextStyle(
-                color: ColorPalette.offWhite,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -270,17 +302,18 @@ class _UserPostCardState extends State<UserPostCard>
                       }),
                 );
               },
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.comment,
-                color: ColorPalette.offWhite,
+                color: Theme.of(context).colorScheme.onSurface,
                 size: 28,
               ),
             ),
             Text(
               "$commentCount",
-              style: const TextStyle(
-                color: ColorPalette.offWhite,
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -330,7 +363,7 @@ class _UserPostCardState extends State<UserPostCard>
     InformationToast.show(
       context: context,
       message: result ? "Post deleted successfully!" : "Failed to delete post.",
-      textColor: result ? ColorPalette.green : ColorPalette.red,
+      type: result ? ToastType.success : ToastType.error,
     );
   }
 }

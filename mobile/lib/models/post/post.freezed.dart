@@ -22,12 +22,22 @@ Post _$PostFromJson(Map<String, dynamic> json) {
 mixin _$Post {
   int get id => throw _privateConstructorUsedError;
   User get user => throw _privateConstructorUsedError;
-  int get user_vote => throw _privateConstructorUsedError;
-  bool get user_liked => throw _privateConstructorUsedError;
-  int get upvote_count => throw _privateConstructorUsedError;
-  int get downvote_count => throw _privateConstructorUsedError;
+  int get user_vote =>
+      throw _privateConstructorUsedError; // Keep for backward compatibility during migration
+  bool get user_liked =>
+      throw _privateConstructorUsedError; // Keep for backward compatibility during migration
+  int get upvote_count =>
+      throw _privateConstructorUsedError; // Keep for backward compatibility during migration
+  int get downvote_count =>
+      throw _privateConstructorUsedError; // Keep for backward compatibility during migration
   int get comment_count => throw _privateConstructorUsedError;
-  int get like_count => throw _privateConstructorUsedError;
+  int get like_count =>
+      throw _privateConstructorUsedError; // Keep for backward compatibility during migration
+// New recipe rating fields
+  int? get recipe_thumbs_up_count => throw _privateConstructorUsedError;
+  int? get recipe_thumbs_down_count => throw _privateConstructorUsedError;
+  int? get user_recipe_vote =>
+      throw _privateConstructorUsedError; // 1 for thumbs up, -1 for thumbs down, 0 for no vote
   int? get recipe_id => throw _privateConstructorUsedError;
   String? get recipe_title => throw _privateConstructorUsedError;
   String? get recipe_description => throw _privateConstructorUsedError;
@@ -36,12 +46,8 @@ mixin _$Post {
   DateTime? get created_at => throw _privateConstructorUsedError;
   DateTime? get updated_at => throw _privateConstructorUsedError;
 
-  /// Serializes this Post to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Post
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $PostCopyWith<Post> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -59,6 +65,9 @@ abstract class $PostCopyWith<$Res> {
       int downvote_count,
       int comment_count,
       int like_count,
+      int? recipe_thumbs_up_count,
+      int? recipe_thumbs_down_count,
+      int? user_recipe_vote,
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
@@ -80,8 +89,6 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Post
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -93,6 +100,9 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
     Object? downvote_count = null,
     Object? comment_count = null,
     Object? like_count = null,
+    Object? recipe_thumbs_up_count = freezed,
+    Object? recipe_thumbs_down_count = freezed,
+    Object? user_recipe_vote = freezed,
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
@@ -134,6 +144,18 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
           ? _value.like_count
           : like_count // ignore: cast_nullable_to_non_nullable
               as int,
+      recipe_thumbs_up_count: freezed == recipe_thumbs_up_count
+          ? _value.recipe_thumbs_up_count
+          : recipe_thumbs_up_count // ignore: cast_nullable_to_non_nullable
+              as int?,
+      recipe_thumbs_down_count: freezed == recipe_thumbs_down_count
+          ? _value.recipe_thumbs_down_count
+          : recipe_thumbs_down_count // ignore: cast_nullable_to_non_nullable
+              as int?,
+      user_recipe_vote: freezed == user_recipe_vote
+          ? _value.user_recipe_vote
+          : user_recipe_vote // ignore: cast_nullable_to_non_nullable
+              as int?,
       recipe_id: freezed == recipe_id
           ? _value.recipe_id
           : recipe_id // ignore: cast_nullable_to_non_nullable
@@ -165,8 +187,6 @@ class _$PostCopyWithImpl<$Res, $Val extends Post>
     ) as $Val);
   }
 
-  /// Create a copy of Post
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserCopyWith<$Res> get user {
@@ -192,6 +212,9 @@ abstract class _$$PostImplCopyWith<$Res> implements $PostCopyWith<$Res> {
       int downvote_count,
       int comment_count,
       int like_count,
+      int? recipe_thumbs_up_count,
+      int? recipe_thumbs_down_count,
+      int? user_recipe_vote,
       int? recipe_id,
       String? recipe_title,
       String? recipe_description,
@@ -211,8 +234,6 @@ class __$$PostImplCopyWithImpl<$Res>
   __$$PostImplCopyWithImpl(_$PostImpl _value, $Res Function(_$PostImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Post
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -224,6 +245,9 @@ class __$$PostImplCopyWithImpl<$Res>
     Object? downvote_count = null,
     Object? comment_count = null,
     Object? like_count = null,
+    Object? recipe_thumbs_up_count = freezed,
+    Object? recipe_thumbs_down_count = freezed,
+    Object? user_recipe_vote = freezed,
     Object? recipe_id = freezed,
     Object? recipe_title = freezed,
     Object? recipe_description = freezed,
@@ -265,6 +289,18 @@ class __$$PostImplCopyWithImpl<$Res>
           ? _value.like_count
           : like_count // ignore: cast_nullable_to_non_nullable
               as int,
+      recipe_thumbs_up_count: freezed == recipe_thumbs_up_count
+          ? _value.recipe_thumbs_up_count
+          : recipe_thumbs_up_count // ignore: cast_nullable_to_non_nullable
+              as int?,
+      recipe_thumbs_down_count: freezed == recipe_thumbs_down_count
+          ? _value.recipe_thumbs_down_count
+          : recipe_thumbs_down_count // ignore: cast_nullable_to_non_nullable
+              as int?,
+      user_recipe_vote: freezed == user_recipe_vote
+          ? _value.user_recipe_vote
+          : user_recipe_vote // ignore: cast_nullable_to_non_nullable
+              as int?,
       recipe_id: freezed == recipe_id
           ? _value.recipe_id
           : recipe_id // ignore: cast_nullable_to_non_nullable
@@ -309,6 +345,9 @@ class _$PostImpl implements _Post {
       required this.downvote_count,
       required this.comment_count,
       required this.like_count,
+      this.recipe_thumbs_up_count,
+      this.recipe_thumbs_down_count,
+      this.user_recipe_vote,
       this.recipe_id,
       this.recipe_title,
       this.recipe_description,
@@ -326,16 +365,29 @@ class _$PostImpl implements _Post {
   final User user;
   @override
   final int user_vote;
+// Keep for backward compatibility during migration
   @override
   final bool user_liked;
+// Keep for backward compatibility during migration
   @override
   final int upvote_count;
+// Keep for backward compatibility during migration
   @override
   final int downvote_count;
+// Keep for backward compatibility during migration
   @override
   final int comment_count;
   @override
   final int like_count;
+// Keep for backward compatibility during migration
+// New recipe rating fields
+  @override
+  final int? recipe_thumbs_up_count;
+  @override
+  final int? recipe_thumbs_down_count;
+  @override
+  final int? user_recipe_vote;
+// 1 for thumbs up, -1 for thumbs down, 0 for no vote
   @override
   final int? recipe_id;
   @override
@@ -353,7 +405,7 @@ class _$PostImpl implements _Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, comment_count: $comment_count, like_count: $like_count, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_thumbnail_url: $recipe_thumbnail_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
+    return 'Post(id: $id, user: $user, user_vote: $user_vote, user_liked: $user_liked, upvote_count: $upvote_count, downvote_count: $downvote_count, comment_count: $comment_count, like_count: $like_count, recipe_thumbs_up_count: $recipe_thumbs_up_count, recipe_thumbs_down_count: $recipe_thumbs_down_count, user_recipe_vote: $user_recipe_vote, recipe_id: $recipe_id, recipe_title: $recipe_title, recipe_description: $recipe_description, recipe_thumbnail_url: $recipe_thumbnail_url, content: $content, created_at: $created_at, updated_at: $updated_at)';
   }
 
   @override
@@ -375,6 +427,13 @@ class _$PostImpl implements _Post {
                 other.comment_count == comment_count) &&
             (identical(other.like_count, like_count) ||
                 other.like_count == like_count) &&
+            (identical(other.recipe_thumbs_up_count, recipe_thumbs_up_count) ||
+                other.recipe_thumbs_up_count == recipe_thumbs_up_count) &&
+            (identical(
+                    other.recipe_thumbs_down_count, recipe_thumbs_down_count) ||
+                other.recipe_thumbs_down_count == recipe_thumbs_down_count) &&
+            (identical(other.user_recipe_vote, user_recipe_vote) ||
+                other.user_recipe_vote == user_recipe_vote) &&
             (identical(other.recipe_id, recipe_id) ||
                 other.recipe_id == recipe_id) &&
             (identical(other.recipe_title, recipe_title) ||
@@ -390,7 +449,7 @@ class _$PostImpl implements _Post {
                 other.updated_at == updated_at));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -402,6 +461,9 @@ class _$PostImpl implements _Post {
       downvote_count,
       comment_count,
       like_count,
+      recipe_thumbs_up_count,
+      recipe_thumbs_down_count,
+      user_recipe_vote,
       recipe_id,
       recipe_title,
       recipe_description,
@@ -410,9 +472,7 @@ class _$PostImpl implements _Post {
       created_at,
       updated_at);
 
-  /// Create a copy of Post
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$PostImplCopyWith<_$PostImpl> get copyWith =>
@@ -436,6 +496,9 @@ abstract class _Post implements Post {
       required final int downvote_count,
       required final int comment_count,
       required final int like_count,
+      final int? recipe_thumbs_up_count,
+      final int? recipe_thumbs_down_count,
+      final int? user_recipe_vote,
       final int? recipe_id,
       final String? recipe_title,
       final String? recipe_description,
@@ -452,17 +515,24 @@ abstract class _Post implements Post {
   User get user;
   @override
   int get user_vote;
-  @override
+  @override // Keep for backward compatibility during migration
   bool get user_liked;
-  @override
+  @override // Keep for backward compatibility during migration
   int get upvote_count;
-  @override
+  @override // Keep for backward compatibility during migration
   int get downvote_count;
-  @override
+  @override // Keep for backward compatibility during migration
   int get comment_count;
   @override
   int get like_count;
+  @override // Keep for backward compatibility during migration
+// New recipe rating fields
+  int? get recipe_thumbs_up_count;
   @override
+  int? get recipe_thumbs_down_count;
+  @override
+  int? get user_recipe_vote;
+  @override // 1 for thumbs up, -1 for thumbs down, 0 for no vote
   int? get recipe_id;
   @override
   String? get recipe_title;
@@ -476,11 +546,8 @@ abstract class _Post implements Post {
   DateTime? get created_at;
   @override
   DateTime? get updated_at;
-
-  /// Create a copy of Post
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$PostImplCopyWith<_$PostImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

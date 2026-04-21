@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class RecipeDetailSkeleton extends StatefulWidget {
   const RecipeDetailSkeleton({Key? key}) : super(key: key);
@@ -34,7 +33,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: ColorPalette.darkergray,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -46,7 +45,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                 width: double.infinity,
                 height: 200,
                 decoration: BoxDecoration(
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
@@ -59,7 +58,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                 height: 30,
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const SizedBox.expand(),
@@ -74,7 +73,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                     width: 80,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: ColorPalette.darkgray,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     margin: const EdgeInsets.only(right: 16),
@@ -86,7 +85,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                     width: 80,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: ColorPalette.darkgray,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -100,7 +99,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                 width: double.infinity,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 margin: const EdgeInsets.only(bottom: 8),
@@ -113,7 +112,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                 width: double.infinity,
                 height: 150,
                 decoration: BoxDecoration(
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -127,7 +126,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                         height: 20,
                         width: 100,
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 77, 77, 77),
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         margin: const EdgeInsets.only(bottom: 8),
@@ -141,7 +140,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                           height: 20,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: ColorPalette.darkgray,
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           margin: const EdgeInsets.only(bottom: 4),
@@ -157,7 +156,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                 width: double.infinity,
                 height: 200,
                 decoration: BoxDecoration(
-                  color: ColorPalette.darkgray,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -171,7 +170,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                         height: 20,
                         width: 100,
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 77, 77, 77),
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         margin: const EdgeInsets.only(bottom: 8),
@@ -185,7 +184,7 @@ class _RecipeDetailSkeletonState extends State<RecipeDetailSkeleton>
                           height: 20,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: ColorPalette.darkgray,
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           margin: const EdgeInsets.only(bottom: 4),

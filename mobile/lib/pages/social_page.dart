@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 
 import 'package:i_cant_cook/providers/social_provider.dart';
@@ -17,14 +17,13 @@ class SocialPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
         centerTitle: true,
-        elevation: 0,
         leading: IconButton(
-          padding: const EdgeInsets.only(left: 16),
+          padding: const EdgeInsets.only(left: 16.0),
           onPressed: () {
             showDialog(
               context: context,
@@ -39,37 +38,37 @@ class SocialPage extends StatelessWidget {
               },
             );
           },
-          icon: const FaIcon(
-            FontAwesomeIcons.squarePlus,
-            color: ColorPalette.offWhite,
-            size: 28,
+          icon: Container(
+            padding: const EdgeInsets.all(16),
+            child: FaIcon(
+              FontAwesomeIcons.squarePlus,
+              color: Theme.of(context).colorScheme.primary,
+              size: 26,
+            ),
           ),
         ),
-        title: Text(
-          'News',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            fontSize: 32,
-            color: ColorPalette.offWhite,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'News',
+            style: GoogleFonts.nunito(
+              fontWeight: FontWeight.w900,
+              fontSize: 28,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
-        actions: [
-          UserMenuWidget(),
-        ],
+        actions: [UserMenuWidget()],
       ),
       body: Consumer<SocialProvider>(
         builder: (context, provider, child) {
           return Stack(
             children: [
               Positioned.fill(
-                child: Image.asset(
-                  'assets/images/explore_page_background.png',
-                  fit: BoxFit.cover,
-                ),
+                child: Container(color: Theme.of(context).scaffoldBackgroundColor),
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 100.0),
+                padding: const EdgeInsets.only(top: 0.0),
                 child: Column(
                   children: [
                     Padding(
@@ -77,19 +76,35 @@ class SocialPage extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         decoration: BoxDecoration(
-                          color: ColorPalette.darkergray,
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: ColorPalette.darkgray),
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: TextField(
                           controller: provider.searchController,
-                          style: const TextStyle(color: ColorPalette.offWhite),
+                          style: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                           decoration: InputDecoration(
-                            icon: const Icon(Icons.search,
-                                color: ColorPalette.offWhite),
+                            icon: Icon(Icons.search,
+                                color: Theme.of(context).colorScheme.primary),
                             hintText: 'Search for a user',
-                            hintStyle: const TextStyle(
-                                color: ColorPalette.placeholdergray),
+                            hintStyle: GoogleFonts.nunito(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 16.0, horizontal: 8.0),
@@ -102,24 +117,30 @@ class SocialPage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildTab('All', 0, provider),
-                        _buildTab('Trending', 1, provider),
-                        _buildTab('Following', 2, provider),
+                        _buildTab(context, 'All', 0, provider),
+                        _buildTab(context, 'Trending', 1, provider),
+                        _buildTab(context, 'Following', 2, provider),
                       ],
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Container(
                         height: 1,
-                        color: ColorPalette.placeholdergray,
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                       ),
                     ),
                     Expanded(
                       child: provider.posts.isEmpty
-                          ? const Center(
-                              child: Text('No posts available at the moment.',
-                                  style:
-                                      TextStyle(color: ColorPalette.offWhite)))
+                          ? Center(
+                              child: Text(
+                                'No posts available at the moment.',
+                                style: GoogleFonts.nunito(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            )
                           : ListView.builder(
                               controller: provider.scrollController,
                               padding: EdgeInsets.zero,
@@ -131,9 +152,7 @@ class SocialPage extends StatelessWidget {
                                           height: 100,
                                           child: Center(
                                               child: CircularProgressIndicator(
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    ColorPalette.offWhite),
+                                            color: Theme.of(context).colorScheme.primary,
                                           )))
                                       : SizedBox(height: 100);
                                 }
@@ -156,9 +175,23 @@ class SocialPage extends StatelessWidget {
                     color: Colors.transparent,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: ColorPalette.darkergray,
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: ColorPalette.darkgray),
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
                       ),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(
@@ -172,13 +205,16 @@ class SocialPage extends StatelessWidget {
                             final user = provider.searchResults[index];
                             return ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: ColorPalette.lightgray,
+                                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                                 child: Avatars.getAvatarIcon(user.avatar_icon),
                               ),
                               title: Text(
                                 "@${user.username}",
-                                style: const TextStyle(
-                                    color: ColorPalette.offWhite),
+                                style: GoogleFonts.nunito(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
                               ),
                               onTap: () {
                                 User selectedUser =
@@ -206,7 +242,7 @@ class SocialPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTab(String title, int index, SocialProvider provider) {
+  Widget _buildTab(BuildContext context, String title, int index, SocialProvider provider) {
     bool isSelected = provider.tabIndex == index;
     return Expanded(
       child: GestureDetector(
@@ -214,7 +250,10 @@ class SocialPage extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             border: isSelected
-                ? Border(bottom: BorderSide(color: Colors.white, width: 1.0))
+                ? Border(bottom: BorderSide(
+                    color: Theme.of(context).colorScheme.primary, 
+                    width: 2.0
+                  ))
                 : null,
           ),
           child: Padding(
@@ -224,11 +263,11 @@ class SocialPage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: GoogleFonts.nunito(
                     color: isSelected
-                        ? ColorPalette.offWhite
-                        : ColorPalette.placeholdergray,
-                    fontWeight: FontWeight.bold,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
                 ),

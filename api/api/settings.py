@@ -138,6 +138,7 @@ INSTALLED_APPS = [
     'accounts',
     'storages',
     'recommendations',
+    'meal_planning',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -291,6 +292,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # API Keys for nutrition services
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY') or os.getenv('OPENAI_KEY')
 USDA_API_KEY = os.getenv('USDA_API_KEY')
+MEAL_PLAN_REFINER_OPENAI_ENABLED = os.getenv("MEAL_PLAN_REFINER_OPENAI_ENABLED", "False").lower() == "true"
+MEAL_PLAN_REFINER_OPENAI_MODEL = os.getenv("MEAL_PLAN_REFINER_OPENAI_MODEL", "gpt-3.5-turbo")
 
 # Cache configuration for nutrition lookups
 CACHES = {

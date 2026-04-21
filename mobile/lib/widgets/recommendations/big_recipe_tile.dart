@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 
 class BigRecipeTile extends StatelessWidget {
@@ -40,8 +40,23 @@ class BigRecipeTile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
         decoration: BoxDecoration(
-          color: ColorPalette.lightgray,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -51,10 +66,11 @@ class BigRecipeTile extends StatelessWidget {
               // Big Title
               Text(
                 recipe.title,
-                style: const TextStyle(
-                  color: ColorPalette.offBlack,
+                style: GoogleFonts.nunito(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -71,10 +87,10 @@ class BigRecipeTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       recipe.description ?? 'No description available.',
-                      style: const TextStyle(
-                        color: ColorPalette.offBlack,
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
-                        fontWeight: FontWeight.w300,
+                        fontWeight: FontWeight.w500,
                       ),
                       maxLines: 8,
                       overflow: TextOverflow.ellipsis,
@@ -88,24 +104,30 @@ class BigRecipeTile extends StatelessWidget {
               Row(
                 children: [
                   if (recipe.preparation_time != null) ...[
-                    const Icon(Icons.timer,
-                        size: 20, color: ColorPalette.offBlack),
+                    Icon(Icons.timer,
+                        size: 20, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 4),
                     Text(
                       '${recipe.preparation_time} min',
-                      style: TextStyle(color: ColorPalette.offBlack),
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                   if (recipe.preparation_time != null &&
                       recipe.cooking_time != null)
                     const SizedBox(width: 12),
                   if (recipe.cooking_time != null) ...[
-                    const Icon(Icons.local_fire_department,
-                        size: 20, color: ColorPalette.offBlack),
+                    Icon(Icons.local_fire_department,
+                        size: 20, color: Theme.of(context).colorScheme.error),
                     const SizedBox(width: 4),
                     Text(
                       '${recipe.cooking_time} min',
-                      style: TextStyle(color: ColorPalette.offBlack),
+                      style: GoogleFonts.nunito(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ],
@@ -126,17 +148,25 @@ class BigRecipeTile extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                             horizontal: 12.0, vertical: 6.0),
                         decoration: BoxDecoration(
-                          color: ColorPalette.darkgray,
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               recipe.tags![i],
-                              style: TextStyle(
-                                color: Colors.white,
+                              style: GoogleFonts.nunito(
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             SizedBox(width: 6.0),
@@ -149,17 +179,25 @@ class BigRecipeTile extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                             horizontal: 12.0, vertical: 6.0),
                         decoration: BoxDecoration(
-                          color: ColorPalette.darkgray,
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               '+ ${recipe.tags!.length - 5} others',
-                              style: TextStyle(
-                                color: Colors.white,
+                              style: GoogleFonts.nunito(
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             SizedBox(width: 6.0),

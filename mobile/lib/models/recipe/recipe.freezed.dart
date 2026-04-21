@@ -43,12 +43,8 @@ mixin _$Recipe {
   double? get fat => throw _privateConstructorUsedError;
   double? get carbs => throw _privateConstructorUsedError;
 
-  /// Serializes this Recipe to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Recipe
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $RecipeCopyWith<Recipe> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -94,8 +90,6 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Recipe
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -214,8 +208,6 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     ) as $Val);
   }
 
-  /// Create a copy of Recipe
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserCopyWith<$Res>? get created_by {
@@ -272,8 +264,6 @@ class __$$RecipeImplCopyWithImpl<$Res>
       _$RecipeImpl _value, $Res Function(_$RecipeImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Recipe
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -544,7 +534,7 @@ class _$RecipeImpl implements _Recipe {
             (identical(other.carbs, carbs) || other.carbs == carbs));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hashAll([
         runtimeType,
@@ -572,9 +562,7 @@ class _$RecipeImpl implements _Recipe {
         carbs
       ]);
 
-  /// Create a copy of Recipe
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$RecipeImplCopyWith<_$RecipeImpl> get copyWith =>
@@ -659,11 +647,8 @@ abstract class _Recipe implements Recipe {
   double? get fat;
   @override
   double? get carbs;
-
-  /// Create a copy of Recipe
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$RecipeImplCopyWith<_$RecipeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

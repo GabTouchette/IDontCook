@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
-import 'package:i_cant_cook/widgets/recipe_detail/nutrition_info_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_header_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/servings_section_widget.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/nutrition_info_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/ingredients_section_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/instructions_section_widget.dart';
 
 class RecipeInfo extends StatelessWidget {
   final Recipe recipe;
-  final int servings;
+  final double servings;
   final List<bool> completedInstructions;
+  final List<bool> completedIngredients;
   final Function incrementServings;
   final Function decrementServings;
   final Function onCompletedInstructions;
+  final Function onCompletedIngredient;
   final Set<String> updatedFields;
 
   const RecipeInfo({
@@ -22,7 +24,9 @@ class RecipeInfo extends StatelessWidget {
     required this.incrementServings,
     required this.decrementServings,
     required this.completedInstructions,
+    required this.completedIngredients,
     required this.onCompletedInstructions,
+    required this.onCompletedIngredient,
     required this.updatedFields,
   }) : super(key: key);
 
@@ -39,7 +43,7 @@ class RecipeInfo extends StatelessWidget {
           decrementServings: decrementServings,
           updatedFields: updatedFields,
         ),
-        
+
         // Servings Section
         ServingsSection(
           servings: servings,
@@ -47,20 +51,22 @@ class RecipeInfo extends StatelessWidget {
           decrementServings: decrementServings,
           updatedFields: updatedFields,
         ),
-        
-        // Nutrition Information
+
+        // Nutrition Info (moved here to appear right after servings)
         NutritionInfo(
           recipe: recipe,
           servings: servings,
         ),
-        
+
         // Ingredients Section
         IngredientsSection(
           recipe: recipe,
           servings: servings,
+          completedIngredients: completedIngredients,
+          onCompletedIngredient: onCompletedIngredient,
           updatedFields: updatedFields,
         ),
-        
+
         // Instructions Section
         InstructionsSection(
           recipe: recipe,

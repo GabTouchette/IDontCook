@@ -16,6 +16,7 @@ _$IngredientImpl _$$IngredientImplFromJson(Map<String, dynamic> json) =>
           ?.map((e) => e as String)
           .toList(),
       nutrition: json['nutrition'] as Map<String, dynamic>?,
+      canonical: (json['canonical'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$IngredientImplToJson(_$IngredientImpl instance) =>
@@ -26,4 +27,5 @@ Map<String, dynamic> _$$IngredientImplToJson(_$IngredientImpl instance) =>
       'unit': instance.unit,
       'substitutes': instance.substitutes,
       'nutrition': instance.nutrition,
+      'canonical': instance.canonical,
     };

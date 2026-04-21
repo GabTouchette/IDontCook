@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
-
-import 'package:i_cant_cook/theme/colors.dart';
 import 'package:i_cant_cook/widgets/explore/ai_generated_filter.dart';
 import 'package:i_cant_cook/widgets/explore/calories_filter.dart';
 import 'package:i_cant_cook/widgets/explore/cook_time_filter.dart';
@@ -23,7 +22,16 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            color: ColorPalette.darkergray,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+                  blurRadius: 16,
+                  offset: const Offset(-4, 0),
+                ),
+              ],
+            ),
             child: Column(
               children: [
                 Padding(
@@ -32,27 +40,28 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Filters',
-                        style: TextStyle(
-                          color: ColorPalette.offWhite,
+                        style: GoogleFonts.nunito(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       Row(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.check,
-                                color: Colors.green, size: 32),
+                            icon: Icon(Icons.check,
+                                color: Theme.of(context).colorScheme.primary, size: 32),
                             onPressed: () {
                               provider.refresh();
                               Navigator.pop(context);
                             },
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close,
-                                color: Colors.red, size: 32),
+                            icon: Icon(Icons.close,
+                                color: Theme.of(context).colorScheme.error, size: 32),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -60,24 +69,24 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Divider(color: ColorPalette.lightgray, thickness: 1),
+                Divider(color: Theme.of(context).colorScheme.outline.withOpacity(0.3), thickness: 1),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                     child: Column(
                       children: [
                         _buildClearFiltersButton(context),
                         SizedBox(height: 20),
                         AIGeneratedFilter(),
-                        SizedBox(height: 15),
+                        SizedBox(height: 12),
                         OwnRecipesFilter(),
-                        SizedBox(height: 30),
+                        SizedBox(height: 20),
                         PrepTimeFilter(),
-                        SizedBox(height: 40),
+                        SizedBox(height: 20),
                         CookTimeFilter(),
-                        SizedBox(height: 40),
+                        SizedBox(height: 20),
                         CaloriesFilter(),
-                        SizedBox(height: 40),
+                        SizedBox(height: 20),
                         TagFilters(),
                       ],
                     ),
@@ -96,32 +105,34 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
 
     return Row(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: ColorPalette.lightgray),
+        TextButton(
+          onPressed: provider.clearFilters,
+          style: TextButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: TextButton(
-            onPressed: provider.clearFilters,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.clear, color: ColorPalette.offWhite, size: 20),
+                Icon(Icons.clear, color: Theme.of(context).colorScheme.onErrorContainer, size: 20),
                 SizedBox(width: 4),
                 Text(
                   'Clear Filters',
-                  style: TextStyle(color: ColorPalette.offWhite, fontSize: 16),
+                  style: GoogleFonts.nunito(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
-          ),
         ),
       ],
     );
   }
+
 }

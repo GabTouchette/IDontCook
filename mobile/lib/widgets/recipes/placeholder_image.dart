@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class PlaceholderImageWidget extends StatelessWidget {
   final int recipeId;
@@ -14,32 +13,33 @@ class PlaceholderImageWidget extends StatelessWidget {
     int imageNumber = (recipeId % 11) + 1;
 
     return Container(
-      color: ColorPalette.offWhite,
+      color: Theme.of(context).colorScheme.surface,
       height: height.toDouble(),
       width: height.toDouble(),
-      child: Stack(
-        children: [
-          Image.asset(
-            'assets/images/stock_food_$imageNumber.jpg',
-            fit: BoxFit.cover,
-            height: height.toDouble(),
-            width: height.toDouble(),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-              child: Container(),
+      child: Stack(children: [
+        Image.asset(
+          'assets/images/stock_food_$imageNumber.jpg',
+          fit: BoxFit.cover,
+          height: height.toDouble(),
+          width: height.toDouble(),
+        ),
+        Positioned.fill(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+            child: Container(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
             ),
           ),
-          const Center(
-            child: Icon(
-              Icons.image,
-              color: ColorPalette.lightgray,
-              size: 50,
-            ),
+        ),
+        Center(
+          child: Icon(
+            Icons.image,
+            color:
+                Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.9),
+            size: 50,
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 }

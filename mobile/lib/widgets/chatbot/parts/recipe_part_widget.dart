@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/chatbot/parts/markdown_style.dart';
 import 'package:provider/provider.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
@@ -8,7 +9,6 @@ import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/widgets/chatbot/recipe_card.dart';
 import 'package:i_cant_cook/widgets/chatbot/user_recipe_card.dart';
 import 'package:i_cant_cook/widgets/chatbot/recipe_modification_suggestion.dart';
-import 'package:i_cant_cook/theme/colors.dart';
 
 class RecipePartWidget extends StatelessWidget {
   final String part;
@@ -27,14 +27,14 @@ class RecipePartWidget extends StatelessWidget {
         final recipeJson = json.decode(part.substring(2, part.length - 2));
         return RecipeCard(recipe: Recipe.fromJson(recipeJson));
       } catch (_) {
-        return _buildError("Failed to decode new recipe.");
+        return _buildError(context, "Failed to decode new recipe.");
       }
     } else if (part.startsWith("&&") && part.endsWith("&&")) {
       try {
         final userRecipeJson = json.decode(part.substring(2, part.length - 2));
         return UserRecipeCard(recipeId: userRecipeJson['id']);
       } catch (_) {
-        return _buildError("Failed to decode existing recipe.");
+        return _buildError(context, "Failed to decode existing recipe.");
       }
     } else if (part.startsWith("@@") && part.endsWith("@@")) {
       return Consumer<RecipeDetailProvider>(
@@ -72,7 +72,8 @@ class RecipePartWidget extends StatelessWidget {
             );
             return RecipeModificationSuggestion(recipe: filled);
           } catch (_) {
-            return _buildError("Failed to decode recipe modification.");
+            return _buildError(
+                context, "Failed to decode recipe modification.");
           }
         },
       );
@@ -80,7 +81,7 @@ class RecipePartWidget extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         decoration: BoxDecoration(
-          color: ColorPalette.darkgray,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
         ),
         child: MarkdownBody(
@@ -91,12 +92,13 @@ class RecipePartWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildError(String msg) => Container(
+  Widget _buildError(BuildContext context, String msg) => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: ColorPalette.darkgray,
+          color: Theme.of(context).colorScheme.borderMuted,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(msg, style: const TextStyle(color: Colors.red)),
+        child: Text(msg,
+            style: TextStyle(color: Theme.of(context).colorScheme.error)),
       );
 }

@@ -40,8 +40,8 @@ class ApiHelper {
           ? await AuthApi.getAuthHeader()
           : {'Content-Type': 'application/json'};
 
-      final response = await http.post(
-        ApiConfig.buildApiUri(endpoint),
+        final response = await http.post(
+          ApiConfig.buildApiUri(endpoint),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -59,8 +59,8 @@ class ApiHelper {
           ? await AuthApi.getAuthHeader()
           : {'Content-Type': 'application/json'};
 
-      final response = await http.put(
-        ApiConfig.buildApiUri(endpoint),
+        final response = await http.put(
+          ApiConfig.buildApiUri(endpoint),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -78,8 +78,8 @@ class ApiHelper {
           ? await AuthApi.getAuthHeader()
           : {'Content-Type': 'application/json'};
 
-      final response = await http.patch(
-        ApiConfig.buildApiUri(endpoint),
+        final response = await http.patch(
+          ApiConfig.buildApiUri(endpoint),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -97,8 +97,8 @@ class ApiHelper {
           ? await AuthApi.getAuthHeader()
           : {'Content-Type': 'application/json'};
 
-      final response = await http.delete(
-        ApiConfig.buildApiUri(endpoint),
+        final response = await http.delete(
+          ApiConfig.buildApiUri(endpoint),
         headers: headers,
       );
       return response.statusCode == 204;
