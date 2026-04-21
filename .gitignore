@@ -9,6 +9,12 @@ __pycache__/
 /api/.env
 .env
 
+# Virtual environments
+api/.venv/
+api/venv/
+.venv/
+venv/
+
 # Ignore SQLite database
 db.sqlite3
 recipes.csv
