@@ -321,6 +321,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                         provider.toggleInstructionCompletion,
                     onCompletedIngredient: provider.toggleIngredientCompletion,
                     updatedFields: updatedFields,
+                    ingredientCalories: provider.ingredientCalories,
                   ),
                   AdditionalSections(
                     tags: recipe.tags,

@@ -10,6 +10,7 @@ class IngredientsSection extends StatefulWidget {
   final Set<String> updatedFields;
   final List<bool> completedIngredients;
   final Function onCompletedIngredient;
+  final Map<int, double> ingredientCalories;
 
   const IngredientsSection({
     Key? key,
@@ -18,6 +19,7 @@ class IngredientsSection extends StatefulWidget {
     required this.completedIngredients,
     required this.onCompletedIngredient,
     required this.updatedFields,
+    this.ingredientCalories = const {},
   }) : super(key: key);
 
   @override
@@ -198,6 +200,35 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                         ],
                       ),
                     ),
+                    // Per-ingredient calorie badge (shown once nutrition is available)
+                    if (ingredient.id != null &&
+                        widget.ingredientCalories.containsKey(ingredient.id))
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.25),
+                          ),
+                        ),
+                        child: Text(
+                          '${widget.ingredientCalories[ingredient.id]!.round()} cal',
+                          style: GoogleFonts.nunito(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

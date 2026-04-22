@@ -406,3 +406,69 @@ class CanonicalIngredientAutocompleteAPIView(APIView):
         ]
         return JsonResponse(results, safe=False)
 
+
+class RecipeNutritionAPIView(APIView):
+    """GET /api/recipes/<pk>/nutrition/
+
+    Returns cached per-serving macros plus a per-ingredient breakdown.
+    If nutrition has not been calculated yet, triggers a background calculation
+    and returns is_calculated=false so the client can poll.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        # Security: only the owner (or admins) may query nutrition
+        if recipe.created_by != request.user and not request.user.is_staff:
+            return JsonResponse({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+        if not recipe.is_nutrition_calculated:
+            # Kick off calculation in background (idempotent — safe to fire multiple times)
+            def _calc():
+                try:
+                    recipe.calculate_nutrition()
+                except Exception as exc:
+                    import traceback
+                    print(f"Background nutrition calc failed for recipe {pk}: {exc}")
+                    traceback.print_exc()
+
+            t = threading.Thread(target=_calc, daemon=True)
+            t.start()
+
+            return JsonResponse({'is_calculated': False}, status=status.HTTP_202_ACCEPTED)
+
+        # Build per-ingredient breakdown from cached FKs
+        per_ingredient = []
+        from recipes.nutrition_service import NutritionService
+        service = NutritionService()
+        for ing in recipe.ingredients.select_related('nutrition_data').all():
+            if ing.nutrition_data and ing.quantity:
+                nd = ing.nutrition_data
+                scaled = service._scale_nutrition(
+                    service._nutrition_to_dict(nd),
+                    ing.quantity,
+                    ing.unit or '',
+                    ing.usda_name or ing.name or '',
+                )
+                per_ingredient.append({
+                    'ingredient_id': ing.id,
+                    'name': ing.name,
+                    'quantity': ing.quantity,
+                    'unit': ing.unit,
+                    'calories': round(scaled.get('calories', 0), 1),
+                    'protein': round(scaled.get('protein', 0), 1),
+                    'fat': round(scaled.get('fat', 0), 1),
+                    'carbs': round(scaled.get('carbs', 0), 1),
+                })
+
+        return JsonResponse({
+            'is_calculated': True,
+            'calories': recipe.calories,
+            'protein': recipe.protein,
+            'fat': recipe.fat,
+            'carbs': recipe.carbs,
+            'servings': recipe.servings,
+            'per_ingredient': per_ingredient,
+        })
+

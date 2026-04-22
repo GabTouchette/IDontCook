@@ -70,4 +70,16 @@ class RecipeApi {
   Future<Map<String, dynamic>?> calculateRecipeNutrition(int recipeId) async {
     return await _apiHelper.postRequest('recipes/$recipeId/nutrition/', {});
   }
+
+  /// GET /api/recipes/<id>/nutrition/ — returns cached per-serving macros +
+  /// per-ingredient breakdown.  Returns null on network error.
+  Future<Map<String, dynamic>?> fetchNutrition(int recipeId) async {
+    try {
+      final data = await _apiHelper.getRequest('recipes/$recipeId/nutrition/');
+      if (data is Map<String, dynamic>) return data;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
 }

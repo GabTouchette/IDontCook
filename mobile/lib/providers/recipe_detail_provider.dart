@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
@@ -7,17 +8,22 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 class RecipeDetailProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
+  bool _isNutritionCalculating = false;
   Recipe? _recipe;
   double _servings = 1.0;
   List<bool> _completedInstructions = [];
   List<bool> _completedIngredients = [];
+  // ingredientId → scaled calories for that ingredient (based on recipe servings)
+  Map<int, double> _ingredientCalories = {};
 
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
+  bool get isNutritionCalculating => _isNutritionCalculating;
   Recipe? get recipe => _recipe;
   double get servings => _servings;
   List<bool> get completedInstructions => _completedInstructions;
   List<bool> get completedIngredients => _completedIngredients;
+  Map<int, double> get ingredientCalories => _ingredientCalories;
 
   set image_url(String? newImageUrl) {
     if (_recipe != null) {
@@ -115,25 +121,8 @@ class RecipeDetailProvider with ChangeNotifier {
       _recipe = Recipe.fromJson(fullRecipeData);
       notifyListeners();
 
-      // If the original recipe had nutrition OR we want to ensure nutrition, attempt calculation
-      try {
-        var nutritionResult = await RecipeApi().calculateRecipeNutrition(newId);
-        if (nutritionResult != null && nutritionResult['success'] == true) {
-          // Re-fetch to get updated nutrition fields
-          var updatedRecipeData = await RecipeApi().getRecipeById(newId);
-          _recipe = Recipe.fromJson(updatedRecipeData);
-          notifyListeners();
-          // ignore: avoid_print
-          print('✅ Nutrition recalculated for saved recipe (saveRecipeOnly)');
-        } else {
-          // ignore: avoid_print
-          print(
-              '⚠️ Nutrition calculation skipped or failed for saveRecipeOnly');
-        }
-      } catch (e) {
-        // ignore: avoid_print
-        print('❌ Error calculating nutrition in saveRecipeOnly: $e');
-      }
+      // Start background polling for nutrition (non-blocking)
+      pollNutritionUntilReady(newId);
 
       InformationToast.show(
         context: context,
@@ -194,24 +183,8 @@ class RecipeDetailProvider with ChangeNotifier {
         _recipe = Recipe.fromJson(fullRecipeData);
         notifyListeners();
 
-        // Calculate nutrition after recipe is saved and formatted
-        try {
-          var nutritionResult =
-              await RecipeApi().calculateRecipeNutrition(newId);
-          if (nutritionResult != null && nutritionResult['success'] == true) {
-            print(
-                "✅ Nutrition calculated successfully: ${nutritionResult['nutrition']}");
-            // Refresh recipe data again to get the updated nutrition
-            var updatedRecipeData = await RecipeApi().getRecipeById(newId);
-            _recipe = Recipe.fromJson(updatedRecipeData);
-            notifyListeners();
-          } else {
-            print("⚠️ Nutrition calculation failed or returned no data");
-          }
-        } catch (e) {
-          print("❌ Error calculating nutrition: $e");
-          // Don't show error to user - nutrition calculation is optional
-        }
+        // Start background polling for nutrition (non-blocking)
+        pollNutritionUntilReady(newId);
       }
 
       InformationToast.show(
@@ -232,8 +205,61 @@ class RecipeDetailProvider with ChangeNotifier {
     }
   }
 
+  /// Poll `/api/recipes/<id>/nutrition/` until `is_calculated: true` or max attempts
+  /// reached.  Updates [_ingredientCalories] and recipe macros on success.
+  Future<void> pollNutritionUntilReady(int recipeId) async {
+    if (_isNutritionCalculating) return;
+    _isNutritionCalculating = true;
+    notifyListeners();
+
+    const maxAttempts = 8;
+    const pollInterval = Duration(seconds: 4);
+
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      await Future.delayed(pollInterval);
+      try {
+        final data = await RecipeApi().fetchNutrition(recipeId);
+        if (data == null) continue;
+
+        if (data['is_calculated'] == true) {
+          // Update recipe macros
+          if (_recipe != null) {
+            _recipe = _recipe!.copyWith(
+              calories: (data['calories'] as num?)?.toDouble(),
+              protein: (data['protein'] as num?)?.toDouble(),
+              fat: (data['fat'] as num?)?.toDouble(),
+              carbs: (data['carbs'] as num?)?.toDouble(),
+            );
+          }
+
+          // Store per-ingredient calorie map
+          final perIngredient = data['per_ingredient'] as List<dynamic>?;
+          if (perIngredient != null) {
+            final map = <int, double>{};
+            for (final entry in perIngredient) {
+              final id = entry['ingredient_id'] as int?;
+              final cal = (entry['calories'] as num?)?.toDouble();
+              if (id != null && cal != null) map[id] = cal;
+            }
+            _ingredientCalories = map;
+          }
+
+          _isNutritionCalculating = false;
+          notifyListeners();
+          return;
+        }
+        // is_calculated == false: keep polling
+      } catch (e) {
+        print('Nutrition poll error (attempt ${attempt + 1}): $e');
+      }
+    }
+
+    // Timed out — stop spinner but don't show an error (nutrition is optional)
+    _isNutritionCalculating = false;
+    notifyListeners();
+  }
+
   void toggleFavorite(BuildContext context) async {
-    if (_recipe == null) return;
 
     final updatedFavoriteStatus = !(_recipe!.is_favorite ?? true);
 

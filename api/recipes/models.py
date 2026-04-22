@@ -201,12 +201,17 @@ class Recipe(models.Model):
             elif ingredient.usda_name:
                 search_name = ingredient.usda_name
 
-            data = service.get_nutrition_for_parsed_ingredient(
+            data, nutrition_obj = service._lookup_ingredient(
                 ingredient_name=search_name,
                 quantity=qty,
                 unit=ingredient.unit,
                 usda_name=ingredient.usda_name
             )
+
+            # Cache the FK so future calls skip USDA entirely
+            if nutrition_obj and ingredient.nutrition_data_id != nutrition_obj.pk:
+                ingredient.nutrition_data = nutrition_obj
+                ingredient.save(update_fields=['nutrition_data'])
             
             if data:
                 cal = data.get('calories', 0)
@@ -224,14 +229,33 @@ class Recipe(models.Model):
         serv_count = self.servings
         if not serv_count or serv_count < 1:
             serv_count = 1
-            
+
+        cal_per_serving = total_calories / serv_count
+
+        # --- Anomaly detection: trigger LLM fallback when USDA results look wrong ---
+        usda_coverage = ingredients_found / max(ingredients_found + ingredients_missed, 1)
+        anomaly = (
+            total_calories == 0 and ingredients_found < 2
+            or cal_per_serving > 3000
+            or (ingredients_found > 0 and cal_per_serving < 10)
+        )
+        if anomaly:
+            print(f"⚠️  Anomaly detected (cal/serving={cal_per_serving:.0f}, coverage={usda_coverage:.0%}), trying LLM fallback…")
+            llm_totals = service.estimate_nutrition_with_llm(self)
+            if llm_totals:
+                total_calories = llm_totals['calories']
+                total_protein = llm_totals['protein']
+                total_fat = llm_totals['fat']
+                total_carbs = llm_totals['carbs']
+                print(f"✅ LLM fallback returned: {total_calories:.0f} cal total")
+
         self.calories = round(total_calories / serv_count, 1)
         self.protein = round(total_protein / serv_count, 1)
         self.fat = round(total_fat / serv_count, 1)
         self.carbs = round(total_carbs / serv_count, 1)
         self.is_nutrition_calculated = True
-        self.save() # Persist to DB
-        
+        self.save()  # Persist to DB
+
         print(f"✅ SAVED: {self.calories} cal/serving (Servings: {serv_count}) | Found: {ingredients_found}, Missed: {ingredients_missed}")
     
     def save(self, *args, **kwargs):
