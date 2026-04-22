@@ -177,8 +177,12 @@ class MealSlot extends StatelessWidget {
                     child: thumbnailUrl != null && thumbnailUrl!.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child:
-                                Image.network(thumbnailUrl!, fit: BoxFit.cover),
+                            child: Image.network(
+                              thumbnailUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  Icon(iconData, color: iconColor),
+                            ),
                           )
                         : Icon(iconData, color: iconColor),
                   ),

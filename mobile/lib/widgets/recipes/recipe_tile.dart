@@ -150,6 +150,8 @@ class RecipeTile extends StatelessWidget {
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => PlaceholderImageWidget(
+                            recipeId: recipe.id, height: 200),
                       )
                     : PlaceholderImageWidget(recipeId: recipe.id, height: 200),
               ),
@@ -291,6 +293,8 @@ class RecipeTile extends StatelessWidget {
               height: 100,
               width: 100,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  PlaceholderImageWidget(recipeId: recipe.id, height: 100),
             )
           : PlaceholderImageWidget(recipeId: recipe.id, height: 100),
     );

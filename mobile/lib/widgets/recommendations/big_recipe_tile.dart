@@ -21,6 +21,8 @@ class BigRecipeTile extends StatelessWidget {
               height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  PlaceholderImageWidget(recipeId: recipe.id, height: 200),
             )
           : PlaceholderImageWidget(recipeId: recipe.id, height: 160),
     );

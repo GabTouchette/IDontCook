@@ -6,23 +6,71 @@ import 'package:i_cant_cook/models/recipe/recipe.dart';
 class NutritionInfo extends StatelessWidget {
   final Recipe recipe;
   final double servings;
+  final bool isCalculating;
 
   const NutritionInfo({
     Key? key,
     required this.recipe,
     required this.servings,
+    this.isCalculating = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Check if nutrition data is available
     final hasData = _hasNutritionData();
-    // Debug logging
-    // ignore: avoid_print
-    print(
-        '[NutritionInfo] build: recipeId=${recipe.id} servings=$servings calories=${recipe.calories} protein=${recipe.protein} fat=${recipe.fat} carbs=${recipe.carbs} hasData=$hasData');
+
+    // Show calculating placeholder when data is not yet ready but calculation is in progress
+    if (!hasData && isCalculating) {
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            FaIcon(
+              FontAwesomeIcons.chartPie,
+              color: Theme.of(context).colorScheme.secondary,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Nutrition Data',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Calculating…',
+              style: GoogleFonts.nunito(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (!hasData) {
-      // Return a tiny transparent placeholder so we know build ran
       return const SizedBox.shrink();
     }
 

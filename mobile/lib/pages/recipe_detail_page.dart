@@ -322,6 +322,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     onCompletedIngredient: provider.toggleIngredientCompletion,
                     updatedFields: updatedFields,
                     ingredientCalories: provider.ingredientCalories,
+                    isNutritionCalculating: provider.isNutritionCalculating,
                   ),
                   AdditionalSections(
                     tags: recipe.tags,
@@ -455,14 +456,41 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     }
   }
 
-  Widget getRecipeImage(String? imageUrl) {
+  Widget _buildImagePlaceholder() {
     final provider = context.read<RecipeDetailProvider>();
-    int imageNumber = ((provider.recipe?.id) ?? 0 % 11) + 1;
+    final int imageNumber = ((provider.recipe?.id) ?? 0) % 11 + 1;
+    return Container(
+      height: 250,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/stock_food_$imageNumber.jpg',
+            fit: BoxFit.cover,
+            height: 250,
+            width: double.infinity,
+          ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+              child: Container(),
+            ),
+          ),
+          Center(
+            child: Icon(
+              Icons.image,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              size: 80,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget getRecipeImage(String? imageUrl) {
     return GestureDetector(
-      onTap: () {
-        _pickImage();
-      },
+      onTap: _pickImage,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
         child: imageUrl != null && imageUrl.isNotEmpty
@@ -471,36 +499,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 height: 250,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
               )
-            : Container(
-                height: 250,
-                child: Stack(
-                  children: [
-                    Image.asset(
-                      'assets/images/stock_food_$imageNumber.jpg',
-                      fit: BoxFit.cover,
-                      height: 250,
-                      width: double.infinity,
-                    ),
-                    Positioned.fill(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                        child: Container(),
-                      ),
-                    ),
-                    Center(
-                      child: Icon(
-                        Icons.image,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.5),
-                        size: 80,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            : _buildImagePlaceholder(),
       ),
     );
   }

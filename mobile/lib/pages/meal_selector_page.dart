@@ -61,8 +61,16 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
                   leading: r.thumbnail_url != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(r.thumbnail_url!,
-                              width: 56, height: 56, fit: BoxFit.cover))
+                          child: Image.network(
+                              r.thumbnail_url!,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const SizedBox(
+                                width: 56,
+                                height: 56,
+                                child: Icon(Icons.image_not_supported_outlined),
+                              )))
                       : const Icon(Icons.image_outlined),
                   title: Text(r.title,
                       style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),

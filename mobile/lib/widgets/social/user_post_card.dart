@@ -332,6 +332,8 @@ class _UserPostCardState extends State<UserPostCard>
               height: 120,
               width: 120,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
             )
           : PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
     );

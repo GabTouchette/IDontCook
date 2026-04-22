@@ -17,6 +17,7 @@ class RecipeInfo extends StatelessWidget {
   final Function onCompletedIngredient;
   final Set<String> updatedFields;
   final Map<int, double> ingredientCalories;
+  final bool isNutritionCalculating;
 
   const RecipeInfo({
     Key? key,
@@ -30,6 +31,7 @@ class RecipeInfo extends StatelessWidget {
     required this.onCompletedIngredient,
     required this.updatedFields,
     this.ingredientCalories = const {},
+    this.isNutritionCalculating = false,
   }) : super(key: key);
 
   @override
@@ -58,6 +60,7 @@ class RecipeInfo extends StatelessWidget {
         NutritionInfo(
           recipe: recipe,
           servings: servings,
+          isCalculating: isNutritionCalculating,
         ),
 
         // Ingredients Section

@@ -24,6 +24,37 @@ class RecipeImage extends StatelessWidget {
                 height: 250,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  final int imageNumber = (imageUrl.hashCode % 11) + 1;
+                  return Container(
+                    height: 250,
+                    child: Stack(
+                      children: [
+                        Image.asset(
+                          'assets/images/stock_food_$imageNumber.jpg',
+                          fit: BoxFit.cover,
+                          height: 250,
+                          width: double.infinity,
+                        ),
+                        Positioned.fill(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                            child: Container(
+                              color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: Icon(
+                            Icons.image,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            size: 80,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               )
             : Container(
                 height: 250,

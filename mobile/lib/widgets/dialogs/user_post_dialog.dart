@@ -201,6 +201,13 @@ class _PostDialogState extends State<PostDialog> {
                                                     width: 32,
                                                     height: 32,
                                                     fit: BoxFit.cover,
+                                                    errorBuilder: (_, __, ___) =>
+                                                        Container(
+                                                          width: 32,
+                                                          height: 32,
+                                                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                                          child: Icon(Icons.image_not_supported_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                        ),
                                                   )
                                                 : Container(
                                                     width: 32,
@@ -323,6 +330,20 @@ class _PostDialogState extends State<PostDialog> {
               height: 150,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.image_not_supported_outlined,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 60,
+                  ),
+                ),
+              ),
             )
           : Container(
               height: 150,
