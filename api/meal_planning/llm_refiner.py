@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, Any
 import json
 import os
 
-from ai_chatbot.api import OpenAIService
+from ai_chatbot.api import AnthropicService
 
 
 @dataclass(frozen=True)
@@ -97,9 +97,9 @@ class LLMRefiner:
         return out
 
 
-class OpenAIRefiner:
+class AnthropicRefiner:
     """
-    OpenAI-backed refiner producing a list of safe operations:
+    Anthropic-backed refiner producing a list of safe operations:
     - {"op": "replace", "day": int, "meal_type": str, "recipe_id": int}
     - {"op": "remove", "day": int, "meal_type": str}
     - {"op": "swap", "a": {"day": int, "meal_type": str}, "b": {"day": int, "meal_type": str}}
@@ -110,10 +110,10 @@ class OpenAIRefiner:
 
     def __init__(self, *, model: Optional[str] = None, temperature: float = 0.1, timeout_s: int = 12):
         # Prefer specific env var, fall back to a default small model
-        self.model = model or os.getenv('MEAL_PLAN_REFINER_OPENAI_MODEL', os.getenv('MEAL_PLAN_REFINER_MODEL', 'gpt-4o-mini'))
+        self.model = model or os.getenv('MEAL_PLAN_REFINER_MODEL', 'claude-haiku-4-5')
         self.temperature = temperature
         self.timeout_s = timeout_s
-        self._svc = OpenAIService()
+        self._svc = AnthropicService()
 
     def refine_ops(
         self,
@@ -167,19 +167,18 @@ class OpenAIRefiner:
             " {\"op\":\"swap\",\"a\":{\"day\":1,\"meal_type\":\"lunch\"},\"b\":{\"day\":2,\"meal_type\":\"dinner\"}}]"\
         )
 
-        # Call OpenAI chat completions (non-streaming)
+        # Call Anthropic messages (non-streaming)
         print(system)
         try:
-            completion = self._svc.client.chat.completions.create(
+            response = self._svc.client.messages.create(
                 model=self.model,
-                temperature=self.temperature,
+                max_tokens=2048,
+                system=system,
                 messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": json.dumps(payload)},
-                    {"role": "user", "content": user},
+                    {"role": "user", "content": json.dumps(payload) + "\n\n" + user},
                 ],
             )
-            content = completion.choices[0].message.content.strip()
+            content = response.content[0].text.strip()
             # Strip accidental fences
             content = content.strip().removeprefix("```json").removesuffix("```").strip()
             ops = json.loads(content)
@@ -213,12 +212,12 @@ class OpenAIRefiner:
 
 
 def get_refiner() -> object:
-    """Factory returning an OpenAI-backed refiner when enabled, else the stub."""
-    use_openai = os.getenv('MEAL_PLAN_REFINER_OPENAI_ENABLED', 'false').lower() in ('1', 'true', 'yes', 'on')
-    api_key_present = os.getenv('OPENAI_API_KEY') or os.getenv('OPENAI_KEY')
-    if use_openai and api_key_present:
+    """Factory returning an Anthropic-backed refiner when enabled, else the stub."""
+    use_llm = os.getenv('MEAL_PLAN_REFINER_ENABLED', 'false').lower() in ('1', 'true', 'yes', 'on')
+    api_key_present = os.getenv('ANTHROPIC_API_KEY')
+    if use_llm and api_key_present:
         try:
-            return OpenAIRefiner()
+            return AnthropicRefiner()
         except Exception:
             return LLMRefiner()
     return LLMRefiner()

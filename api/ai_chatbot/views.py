@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse, StreamingHttpResponse
-from .api import OpenAIService, PromptTemplates
+from .api import AnthropicService, PromptTemplates
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
 import json
@@ -99,9 +99,9 @@ class ChatbotView(APIView):
         ) if recipe_context is None else query
 
         def event_stream():
-            openai_service = OpenAIService()
+            anthropic_service = AnthropicService()
             full_response = ""
-            for chunk in openai_service.ask_openai_stream(prompt, chat_history, recipe_context):
+            for chunk in anthropic_service.ask_stream(prompt, chat_history, recipe_context):
                 full_response += chunk
                 yield f"data: {json.dumps({'token': chunk})}\n\n"
 
@@ -139,6 +139,6 @@ class RecipeOCRView(APIView):
         """
         Processes an image for OCR and returns a JSON response.
         """
-        openai_service = OpenAIService()
-        response = openai_service.ask_openai_ocr(image_path)
+        anthropic_service = AnthropicService()
+        response = anthropic_service.ask_ocr(image_path)
         return JsonResponse({"response": response}, status=status.HTTP_200_OK)

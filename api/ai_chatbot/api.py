@@ -2,10 +2,10 @@ import os
 import base64
 import json
 import re
-from typing import List
+from typing import List, Dict, Any
 from django.conf import settings
 from recipes.models import Ingredient, Recipe
-from openai import OpenAI, OpenAIError
+import anthropic
 
 
 def encode_image(image_path):
@@ -13,33 +13,39 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
-class OpenAIService:
+class AnthropicService:
     def __init__(self):
-        """Initialize the OpenAI client with the API key."""
-        self.client = OpenAI(api_key=getattr(settings, "OPENAI_API_KEY", None))
+        """Initialize the Anthropic client with the API key."""
+        self.client = anthropic.Anthropic(api_key=getattr(settings, "ANTHROPIC_API_KEY", None))
 
-    def ask_openai_ocr(self, image_path):
+    def ask_ocr(self, image_path):
         """
-        Processes an image for OCR using OpenAI and returns a JSON response.
+        Processes an image for OCR using Anthropic and returns a JSON response.
         """
         try:
-            messages = []
             base64_image = encode_image(image_path)
             ocr_prompt = PromptTemplates.ocr_prompt()
 
-            messages.append({
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": ocr_prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                ]
-            })
-            completion = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages
+            response = self.client.messages.create(
+                model="claude-sonnet-4-5",
+                max_tokens=2048,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": base64_image,
+                            },
+                        },
+                        {"type": "text", "text": ocr_prompt},
+                    ],
+                }]
             )
 
-            response_content = completion.choices[0].message.content
+            response_content = response.content[0].text
             response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
 
             try:
@@ -48,14 +54,18 @@ class OpenAIService:
             except json.JSONDecodeError:
                 return "Error: The response was not valid JSON."
 
-        except OpenAIError as e:
-            return f"Error communicating with OpenAI: {e}"
+        except anthropic.APIError as e:
+            return f"Error communicating with Anthropic: {e}"
         except Exception as e:
             return f"An unexpected error occurred: {e}"
 
-    def ask_openai_stream(self, prompt, chat_history=None, recipe_context=None):
+    # Keep backward-compat alias
+    def ask_openai_ocr(self, image_path):
+        return self.ask_ocr(image_path)
+
+    def ask_stream(self, prompt, chat_history=None, recipe_context=None):
         """
-        Handles chatbot conversation with streaming response. 
+        Handles chatbot conversation with streaming response.
         If a recipe_context is provided, it uses a recipe-editing prompt.
         """
         try:
@@ -73,20 +83,22 @@ class OpenAIService:
 
             messages.append({"role": "user", "content": final_prompt})
 
-            completion = self.client.chat.completions.create(
-                model="gpt-4o",
+            with self.client.messages.stream(
+                model="claude-sonnet-4-5",
+                max_tokens=2048,
                 messages=messages,
-                stream=True
-            )
+            ) as stream:
+                for text in stream.text_stream:
+                    yield text
 
-            for chunk in completion:
-                if chunk.choices and chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
-
-        except OpenAIError as e:
-            yield f"Error communicating with OpenAI: {e}"
+        except anthropic.APIError as e:
+            yield f"Error communicating with Anthropic: {e}"
         except Exception as e:
             yield f"An unexpected error occurred: {e}"
+
+    # Keep backward-compat alias
+    def ask_openai_stream(self, prompt, chat_history=None, recipe_context=None):
+        yield from self.ask_stream(prompt, chat_history, recipe_context)
 
 
     def llm_format_ingredients(self, recipe) -> Recipe:
@@ -94,15 +106,16 @@ class OpenAIService:
         if not recipe.ingredients:
             raise ValueError("Recipe must have ingredients to format.")
 
-        raw_ingredient_text = "\n".join(f"{str(ingredient.quantity)} {str(ingredient.name)}" for ingredient in recipe.ingredients.all())  # or recipe.ingredients_raw if available
-        completion = self.client.chat.completions.create(
-                model="gpt-4",
+        raw_ingredient_text = "\n".join(f"{str(ingredient.quantity)} {str(ingredient.name)}" for ingredient in recipe.ingredients.all())
+        response = self.client.messages.create(
+                model="claude-haiku-4-5",
+                max_tokens=2048,
                 messages=[
                     {"role": "user", "content": PromptTemplates.format_ingredients_with_llm_prompt(raw_ingredient_text)}
                 ]
             )
         
-        response_content = completion.choices[0].message.content
+        response_content = response.content[0].text
         response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
         try:
             ingredient_data = json.loads(response_content)

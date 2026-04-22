@@ -101,9 +101,9 @@ class _IngredientsSectionState extends State<IngredientsSection> {
                 ingredient.quantity ?? 0,
                 (widget.recipe.servings ?? 1).toDouble(),
                 widget.servings);
-            String formattedIngredient =
+            String formattedIngredient = sanitizeIngredientLine(
                 "${formatQuantity(adjustedQuantity)}${ingredient.unit != null && ingredient.unit!.isNotEmpty ? ' ${ingredient.unit?.toLowerCase()}' : ''} ${ingredient.name?.toLowerCase() ?? ''}"
-                    .trim();
+                    .trim());
 
             return GestureDetector(
               onTap: () => widget.onCompletedIngredient(index),

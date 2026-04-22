@@ -1,3 +1,29 @@
+/// Cleans a fully-assembled ingredient display line:
+/// 1. Collapses consecutive duplicate tokens  ("1 cup cup milk" → "1 cup milk")
+/// 2. Prepends "1" when the line starts with a non-numeric token ("tbsp salt" → "1 tbsp salt")
+String sanitizeIngredientLine(String line) {
+  final tokens = line.trim().split(RegExp(r'\s+'));
+  if (tokens.isEmpty) return line;
+
+  // Collapse consecutive duplicates (case-insensitive)
+  final deduped = <String>[];
+  for (final token in tokens) {
+    if (deduped.isEmpty || token.toLowerCase() != deduped.last.toLowerCase()) {
+      deduped.add(token);
+    }
+  }
+
+  final result = deduped.join(' ');
+
+  // If first token is not a number/fraction, prepend "1"
+  if (result.isNotEmpty &&
+      !RegExp(r'^[\d½¼¾⅓⅔⅛⅜⅝⅞]').hasMatch(result)) {
+    return '1 $result';
+  }
+
+  return result;
+}
+
 // Helper function to round the quantity to the nearest 0.125
 double roundToNearestEighth(double quantity) {
   return (quantity / 0.125).round() * 0.125;

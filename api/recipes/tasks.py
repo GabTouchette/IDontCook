@@ -2,7 +2,7 @@ import logging
 from celery import shared_task
 
 from recipes.models import Recipe
-from ai_chatbot.api import OpenAIService
+from ai_chatbot.api import AnthropicService
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def format_recipe_ingredients(recipe_id):
             logger.info(f"🔄 Starting LLM formatting for recipe '{recipe.title}'")
             print(f"🔄 Starting LLM formatting for recipe '{recipe.title}'")
             
-            recipe = OpenAIService().llm_format_ingredients(recipe)
+            recipe = AnthropicService().llm_format_ingredients(recipe)
             recipe.is_formatted = True
             recipe.save()
             formatted_recipes.append(recipe.title)
@@ -48,7 +48,7 @@ def format_recipe_ingredients(recipe_id):
                 print(f"🔄 Starting LLM formatting for parent recipe '{recipe.parent.title}'")
                 
                 parent = recipe.parent
-                parent = OpenAIService().llm_format_ingredients(parent)
+                parent = AnthropicService().llm_format_ingredients(parent)
                 parent.is_formatted = True
                 parent.save()
                 formatted_recipes.append(parent.title)

@@ -1,4 +1,5 @@
 import random
+import threading
 from recipes.tasks import format_recipe_ingredients
 from rest_framework.views import APIView
 from rest_framework import status, generics
@@ -16,7 +17,7 @@ from django.db.models.functions import Random
 from PIL import Image, ExifTags
 from io import BytesIO
 
-from ai_chatbot.api import OpenAIService
+from ai_chatbot.api import AnthropicService
 from recipes.models import Recipe, SavedRecipe, CanonicalIngredient
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
@@ -54,20 +55,23 @@ class RecipeListAPIView(APIView):
         if serializer.is_valid():
             new_recipe = serializer.save(created_by=user, parent=parent)
             
-            # Format ingredients asynchronously in background
-            print(f"📤 DISPATCHING CELERY TASK: format_recipe_ingredients for recipe_id={new_recipe.id} ('{new_recipe.title}')")
-            try:
-                task = format_recipe_ingredients.delay(new_recipe.id)
-                print(f"📤 CELERY TASK DISPATCHED: task_id={task.id}")
-            except Exception as e:
-                print(f"⚠️ CELERY TASK DISPATCH FAILED: {e}")
-                print(f"🔄 FALLING BACK TO SYNCHRONOUS EXECUTION")
-                # Fallback to synchronous execution if Celery is not available
+            # Format ingredients in background only if not already formatted by LLM
+            if not new_recipe.is_formatted:
+                print(f"📤 DISPATCHING format_recipe_ingredients for recipe_id={new_recipe.id} ('{new_recipe.title}')")
                 try:
-                    result = format_recipe_ingredients(new_recipe.id)
-                    print(f"✅ SYNCHRONOUS EXECUTION COMPLETED: {result}")
-                except Exception as sync_error:
-                    print(f"❌ SYNCHRONOUS EXECUTION FAILED: {sync_error}")
+                    task = format_recipe_ingredients.delay(new_recipe.id)
+                    print(f"📤 CELERY TASK DISPATCHED: task_id={task.id}")
+                except Exception as e:
+                    print(f"⚠️ CELERY TASK DISPATCH FAILED: {e}")
+                    print(f"🔄 FALLING BACK TO BACKGROUND THREAD")
+                    # Fallback: run in a background thread so the response is not blocked
+                    threading.Thread(
+                        target=format_recipe_ingredients,
+                        args=(new_recipe.id,),
+                        daemon=True,
+                    ).start()
+            else:
+                print(f"⏭️ Skipping LLM formatting — recipe already formatted (is_formatted=True)")
             
             SavedRecipe.objects.create(
                 user=user,

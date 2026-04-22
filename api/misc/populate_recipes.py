@@ -255,7 +255,7 @@ def main():
     # Create a fake user for recipe creation
     user, created = CustomUser.objects.get_or_create(
         username='recipe_scraper',
-        password=make_password('password123'),
+        defaults={'password': make_password('password123')},
     )
 
     # Load recipes from CSV

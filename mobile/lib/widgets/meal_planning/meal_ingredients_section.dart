@@ -22,14 +22,31 @@ class MealIngredient {
   @override
   String toString() {
     final q = quantity.trim();
-    final u = unit.trim();
+    final u = unit.trim().toLowerCase();
+    final n = name.trim().toLowerCase();
     final d = description.trim();
     final parts = <String>[];
     if (q.isNotEmpty) parts.add(q);
     if (u.isNotEmpty) parts.add(u);
-    parts.add(name);
-    final main = parts.join(' ');
+    if (n.isNotEmpty) parts.add(n);
+    final main = _sanitize(parts.join(' '));
     return d.isNotEmpty ? '$main — $d' : main;
+  }
+
+  static String _sanitize(String line) {
+    final tokens = line.trim().split(RegExp(r'\s+'));
+    if (tokens.isEmpty) return line;
+    final deduped = <String>[];
+    for (final token in tokens) {
+      if (deduped.isEmpty || token.toLowerCase() != deduped.last.toLowerCase()) {
+        deduped.add(token);
+      }
+    }
+    final result = deduped.join(' ');
+    if (result.isNotEmpty && !RegExp(r'^[\d½¼¾⅓⅔⅛⅜⅝⅞]').hasMatch(result)) {
+      return '1 $result';
+    }
+    return result;
   }
 }
 

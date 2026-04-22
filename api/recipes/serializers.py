@@ -1,3 +1,4 @@
+import threading
 from rest_framework import serializers
 from .models import Recipe, Ingredient, NutritionData, CanonicalIngredient
 from accounts.serializers import UserSerializer
@@ -99,9 +100,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             recipe.ingredients.add(ingredient_obj)
 
-        # Calculate nutrition after ingredients are added
+        # Calculate nutrition in background so create() returns immediately
         try:
-            recipe.calculate_nutrition()
+            threading.Thread(target=recipe.calculate_nutrition, daemon=True).start()
         except Exception:
             pass  # Don't fail recipe creation if nutrition calculation fails
 
@@ -257,9 +258,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             instance.ingredients.add(ingredient_obj)
 
-        # Recalculate nutrition after ingredients are updated
+        # Recalculate nutrition in background so update() returns immediately
         try:
-            instance.calculate_nutrition()
+            threading.Thread(target=instance.calculate_nutrition, daemon=True).start()
         except Exception:
             pass  # Don't fail update if nutrition calculation fails
 
