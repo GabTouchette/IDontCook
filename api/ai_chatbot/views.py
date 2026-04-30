@@ -99,15 +99,24 @@ class ChatbotView(APIView):
         ) if recipe_context is None else query
 
         def event_stream():
-            anthropic_service = AnthropicService()
-            full_response = ""
-            for chunk in anthropic_service.ask_stream(prompt, chat_history, recipe_context):
-                full_response += chunk
-                yield f"data: {json.dumps({'token': chunk})}\n\n"
+            try:
+                anthropic_service = AnthropicService()
+                full_response = ""
+                for chunk in anthropic_service.ask_stream(prompt, chat_history, recipe_context):
+                    full_response += chunk
+                    yield f"data: {json.dumps({'token': chunk})}\n\n"
 
-            conversation.ai_response = full_response
-            conversation.save()
-            ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=full_response)
+                try:
+                    conversation.ai_response = full_response
+                    conversation.save()
+                    ChatHistory.objects.create(user=user, conversation=conversation, sender="ai", message=full_response)
+                except Exception as db_err:
+                    import logging
+                    logging.getLogger(__name__).error("Failed to save chat history: %s", db_err)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error("event_stream error: %s", e, exc_info=True)
+                yield f"data: {json.dumps({'token': f'Error: {e}'})}\n\n"
 
         return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 

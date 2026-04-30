@@ -256,7 +256,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                         child: FadeTransition(
                           opacity: _textController,
                           child: Text(
-                            'Pantry Pal',
+                            "I can't cook",
                             style: GoogleFonts.nunito(
                               fontSize: 56,
                               fontWeight: FontWeight.w700,

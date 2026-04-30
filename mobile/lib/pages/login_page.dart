@@ -81,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              'Pantry Pal',
+              "I can't cook",
               style: GoogleFonts.nunito(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 48,
