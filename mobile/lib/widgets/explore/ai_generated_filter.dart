@@ -10,32 +10,31 @@ class AIGeneratedFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ExploreProvider>(
       builder: (context, provider, child) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Exclude AI-Generated Recipes',
-                  style: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+        return Row(
+          children: [
+            Expanded(
+              child: Text(
+                'EXCLUDE AI-GENERATED',
+                style: GoogleFonts.spaceGrotesk(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(width: 12),
-              Switch(
-                value: provider.filters['excludeAIGenerated'] ?? false,
-                onChanged: (value) =>
-                    provider.updateFilter('excludeAIGenerated', value),
-                activeColor: Theme.of(context).colorScheme.primary,
-                inactiveThumbColor: Theme.of(context).colorScheme.outline,
-                inactiveTrackColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ],
-          ),
+            ),
+            Switch(
+              value: provider.filters['excludeAIGenerated'] ?? false,
+              onChanged: (value) =>
+                  provider.updateFilter('excludeAIGenerated', value),
+              activeColor: const Color(0xFF0A0A0A),
+              activeTrackColor: const Color(0xFFCAFF00),
+              inactiveThumbColor: Theme.of(context).colorScheme.outline,
+              inactiveTrackColor:
+                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
         );
       },
     );

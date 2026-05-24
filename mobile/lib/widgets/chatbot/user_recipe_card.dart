@@ -34,17 +34,18 @@ class _UserRecipeCardState extends State<UserRecipeCard> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1.5,
               ),
             ),
             child: Center(
               child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
+                color: Theme.of(context).colorScheme.onSurface,
+                strokeWidth: 2,
               ),
             ),
           );
@@ -52,19 +53,18 @@ class _UserRecipeCardState extends State<UserRecipeCard> {
 
         if (snapshot.hasError) {
           return Container(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+                width: 1.5,
               ),
             ),
             child: Center(
               child: Text(
                 'Failed to load recipe.',
-                style: GoogleFonts.nunito(
-                  color: Theme.of(context).colorScheme.onErrorContainer,
+                style: GoogleFonts.spaceGrotesk(
+                  color: Theme.of(context).colorScheme.error,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -74,18 +74,18 @@ class _UserRecipeCardState extends State<UserRecipeCard> {
 
         if (!snapshot.hasData) {
           return Container(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1.5,
               ),
             ),
             child: Center(
               child: Text(
                 'Recipe not found.',
-                style: GoogleFonts.nunito(
+                style: GoogleFonts.spaceGrotesk(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
                 ),
@@ -106,58 +106,36 @@ class _UserRecipeCardState extends State<UserRecipeCard> {
             );
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
             decoration: BoxDecoration(
-              color: widget.isUser
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
+              color: Theme.of(context).colorScheme.surface,
               border: Border.all(
-                color: widget.isUser
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                    : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
                 width: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.isUser
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                      : Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     recipe.title,
-                    style: GoogleFonts.nunito(
-                      color: widget.isUser
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      height: 1.3,
+                    style: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: widget.isUser
-                        ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.2)
-                        : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
+                  width: 34,
+                  height: 34,
+                  color: const Color(0xFFCAFF00),
+                  child: const Icon(
                     Icons.restaurant_menu,
-                    color: widget.isUser
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.primary,
-                    size: 20,
+                    color: Color(0xFF0A0A0A),
+                    size: 16,
                   ),
                 ),
               ],

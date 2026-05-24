@@ -22,72 +22,107 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-                  blurRadius: 16,
-                  offset: const Offset(-4, 0),
-                ),
-              ],
-            ),
+            color: Theme.of(context).colorScheme.surface,
             child: Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.only(
-                      top: 50.0, left: 16.0, right: 16.0, bottom: 10.0),
+                      top: 56.0, left: 16.0, right: 16.0, bottom: 12.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Filters',
-                        style: GoogleFonts.nunito(
+                        'FILTERS',
+                        style: GoogleFonts.spaceGrotesk(
                           color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2.5,
                         ),
                       ),
                       Row(
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.check,
-                                color: Theme.of(context).colorScheme.primary, size: 32),
-                            onPressed: () {
+                          GestureDetector(
+                            onTap: () {
                               provider.refresh();
                               Navigator.pop(context);
                             },
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              child: Icon(
+                                Icons.check,
+                                color: Theme.of(context).colorScheme.surface,
+                                size: 18,
+                              ),
+                            ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.close,
-                                color: Theme.of(context).colorScheme.error, size: 32),
-                            onPressed: () => Navigator.pop(context),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outline
+                                      .withOpacity(0.25),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.close,
+                                color: Theme.of(context).colorScheme.onSurface,
+                                size: 18,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Divider(color: Theme.of(context).colorScheme.outline.withOpacity(0.3), thickness: 1),
+                Divider(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withOpacity(0.12),
+                    thickness: 1,
+                    height: 1),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
                     child: Column(
                       children: [
                         _buildClearFiltersButton(context),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 14),
+                        _buildSectionDivider(context),
+                        const SizedBox(height: 10),
                         AIGeneratedFilter(),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 2),
+                        _buildSectionDivider(context),
+                        const SizedBox(height: 2),
                         OwnRecipesFilter(),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 10),
+                        _buildSectionDivider(context),
+                        const SizedBox(height: 10),
                         PrepTimeFilter(),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 10),
+                        _buildSectionDivider(context),
+                        const SizedBox(height: 10),
                         CookTimeFilter(),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 10),
+                        _buildSectionDivider(context),
+                        const SizedBox(height: 10),
                         CaloriesFilter(),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 10),
+                        _buildSectionDivider(context),
+                        const SizedBox(height: 4),
                         TagFilters(),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -100,39 +135,48 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
     });
   }
 
-  _buildClearFiltersButton(BuildContext context) {
-    final provider = Provider.of<ExploreProvider>(context, listen: false);
-
-    return Row(
-      children: [
-        TextButton(
-          onPressed: provider.clearFilters,
-          style: TextButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.errorContainer,
-            foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.clear, color: Theme.of(context).colorScheme.onErrorContainer, size: 20),
-                SizedBox(width: 4),
-                Text(
-                  'Clear Filters',
-                  style: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-        ),
-      ],
+  Widget _buildSectionDivider(BuildContext context) {
+    return Divider(
+      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+      thickness: 1,
+      height: 1,
     );
   }
 
+  Widget _buildClearFiltersButton(BuildContext context) {
+    final provider = Provider.of<ExploreProvider>(context, listen: false);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: provider.clearFilters,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.clear,
+                  color: Theme.of(context).colorScheme.onSurface, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                'CLEAR FILTERS',
+                style: GoogleFonts.spaceGrotesk(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ServingsSection extends StatelessWidget {
@@ -18,120 +17,114 @@ class ServingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          FaIcon(
-            FontAwesomeIcons.users,
-            color: Theme.of(context).colorScheme.primary,
-            size: 22,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Servings',
-            style: GoogleFonts.nunito(
-              color: updatedFields.contains("servings")
-                  ? Theme.of(context).colorScheme.secondary
-                  : Theme.of(context).colorScheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const Spacer(),
+    final isUpdated = updatedFields.contains('servings');
+    const lime = Color(0xFFCAFF00);
+    final labelColor = isUpdated
+        ? lime
+        : Theme.of(context).colorScheme.onSurface;
+    final outlineColor = Theme.of(context).colorScheme.outline;
 
-          // Servings Controls
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
-                  .withOpacity(0.5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.remove,
-                      color: Theme.of(context).colorScheme.onSurface, size: 22),
-                  onPressed: () => decrementServings(),
-                  constraints:
-                      const BoxConstraints(minWidth: 44, minHeight: 44),
-                  style: IconButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+    return Column(
+      children: [
+        _Divider(context),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SERVINGS',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.4),
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
+                  Text(
                     _formatServings(servings),
-                    style: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 42,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1.5,
+                      color: labelColor,
+                      height: 1.0,
                     ),
                   ),
+                ],
+              ),
+              const Spacer(),
+              // Sharp +/- control
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: outlineColor, width: 1.5),
                 ),
-                IconButton(
-                  icon: Icon(Icons.add,
-                      color: Theme.of(context).colorScheme.onSurface, size: 22),
-                  onPressed: () => incrementServings(),
-                  constraints:
-                      const BoxConstraints(minWidth: 44, minHeight: 44),
-                  style: IconButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _CtrlBtn(
+                      icon: Icons.remove,
+                      onTap: () => decrementServings(),
                     ),
-                  ),
+                    Container(
+                      width: 1.5,
+                      height: 44,
+                      color: outlineColor,
+                    ),
+                    _CtrlBtn(
+                      icon: Icons.add,
+                      onTap: () => incrementServings(),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        _Divider(context),
+      ],
     );
   }
 
   String _formatServings(double value) {
-    // Show 1/2 or 1/4 for fractional servings
-    if ((value - value.floor()).abs() < 1e-9) {
-      return value.toInt().toString();
-    }
-    if ((value - 0.5).abs() < 1e-9) return '1/2';
-    if ((value - 0.25).abs() < 1e-9) return '1/4';
-    // Fallback: trim to at most one decimal
-    return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
+    if ((value - value.floor()).abs() < 1e-9) return value.toInt().toString();
+    if ((value - 0.5).abs() < 1e-9) return '½';
+    if ((value - 0.25).abs() < 1e-9) return '¼';
+    return value.toStringAsFixed(1);
   }
 }
+
+class _CtrlBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CtrlBtn({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        width: 48,
+        height: 44,
+        child: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+}
+
+Widget _Divider(BuildContext context) => Divider(
+      height: 1,
+      thickness: 1,
+      color: Theme.of(context).colorScheme.outline.withOpacity(0.12),
+    );

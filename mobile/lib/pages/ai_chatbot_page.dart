@@ -1,8 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
+import 'package:i_cant_cook/services/quick_options_service.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
@@ -15,438 +14,406 @@ class AiChatBotPage extends StatefulWidget {
   AiChatBotPageState createState() => AiChatBotPageState();
 }
 
-class AiChatBotPageState extends State<AiChatBotPage> {
-  // Pool of quick questions with associated icons
-  final List<Map<String, dynamic>> _allQuickQuestions = [
+class AiChatBotPageState extends State<AiChatBotPage>
+    with SingleTickerProviderStateMixin {
+  static const List<Map<String, dynamic>> _allQuickQuestions = [
     {
-      'text': 'Suggest a 15-minute dinner',
-      'icon': FontAwesomeIcons.clock,
-      'query': 'Suggest a 15-minute dinner.'
+      'text': 'INVENT RECIPE',
+      'query': 'Invent a creative and unique recipe for me.',
+      'icon': Icons.auto_fix_high,
     },
     {
-      'text': 'Low-calorie meal ideas',
-      'icon': FontAwesomeIcons.heart,
-      'query': 'Give me low-calorie meal ideas.'
+      'text': 'MY RECIPES',
+      'query': 'I want to cook one of my saved recipes. Can you help me pick one and suggest how to make it even better?',
+      'icon': Icons.book_outlined,
     },
     {
-      'text': 'Vegetarian with broccoli',
-      'icon': FontAwesomeIcons.carrot,
-      'query': 'Suggest a vegetarian recipe that uses broccoli.'
+      'text': 'LOW-CAL OPTION',
+      'query': 'Suggest a delicious low-calorie meal option.',
+      'icon': Icons.monitor_weight_outlined,
     },
     {
-      'text': 'Gluten-free dessert',
-      'icon': FontAwesomeIcons.cakeCandles,
-      'query': 'Recommend a gluten-free dessert.'
+      'text': 'LUNCH IDEAS',
+      'query': 'Give me some great lunch ideas.',
+      'icon': Icons.lunch_dining,
     },
     {
-      'text': 'Chicken and rice ideas',
-      'icon': FontAwesomeIcons.bowlFood,
-      'query': 'What can I cook with chicken and rice?'
+      'text': 'DINNER IDEAS',
+      'query': 'Suggest something tasty for dinner tonight.',
+      'icon': Icons.dinner_dining,
     },
     {
-      'text': 'High-protein lunch',
-      'icon': FontAwesomeIcons.dumbbell,
-      'query': 'Suggest a high-protein lunch.'
+      'text': 'MEAL PREP',
+      'query': 'Help me plan a simple and efficient meal prep for the week.',
+      'icon': Icons.calendar_month,
     },
     {
-      'text': 'One-pot dinner',
-      'icon': FontAwesomeIcons.utensils,
-      'query': 'Give me a one-pot dinner idea.'
+      'text': '15-MINUTE MEAL',
+      'query': 'Suggest a quick meal I can make in 15 minutes.',
+      'icon': Icons.timer,
     },
     {
-      'text': 'Budget-friendly meals',
-      'icon': FontAwesomeIcons.dollarSign,
-      'query': 'Suggest budget-friendly meal ideas.'
+      'text': 'HIGH-PROTEIN',
+      'query': 'Suggest a high-protein meal.',
+      'icon': Icons.fitness_center,
     },
     {
-      'text': 'Kid-friendly dinner',
-      'icon': FontAwesomeIcons.faceSmile,
-      'query': 'Recommend a kid-friendly dinner.'
+      'text': 'VEGETARIAN',
+      'query': 'Recommend a delicious vegetarian recipe.',
+      'icon': Icons.eco,
     },
     {
-      'text': 'Meal prep for the week',
-      'icon': FontAwesomeIcons.calendarDays,
-      'query': 'Plan a simple meal prep for the week.'
+      'text': 'ONE-POT DINNER',
+      'query': 'Give me a hearty one-pot dinner idea.',
+      'icon': Icons.soup_kitchen,
     },
     {
-      'text': 'Spicy recipes',
-      'icon': FontAwesomeIcons.pepperHot,
-      'query': 'Suggest some spicy recipes.'
+      'text': 'BUDGET-FRIENDLY',
+      'query': 'Suggest budget-friendly meal ideas.',
+      'icon': Icons.savings,
     },
     {
-      'text': 'Breakfast ideas',
-      'icon': FontAwesomeIcons.egg,
-      'query': 'Give me some breakfast ideas.'
+      'text': 'GLUTEN-FREE',
+      'query': 'Recommend a tasty gluten-free recipe.',
+      'icon': Icons.no_food,
     },
     {
-      'text': 'Dairy-free options',
-      'icon': FontAwesomeIcons.ban,
-      'query': 'Recommend dairy-free recipe options.'
+      'text': 'SPICY RECIPES',
+      'query': 'Suggest some bold and spicy recipes.',
+      'icon': Icons.whatshot,
     },
     {
-      'text': 'Under 500 calories',
-      'icon': FontAwesomeIcons.scaleBalanced,
-      'query': 'Suggest meals under 500 calories.'
+      'text': 'BREAKFAST IDEAS',
+      'query': 'Give me some creative breakfast ideas.',
+      'icon': Icons.free_breakfast,
     },
     {
-      'text': 'Popular right now',
-      'icon': FontAwesomeIcons.fire,
-      'query': 'What are popular recipes right now?'
+      'text': 'KID-FRIENDLY',
+      'query': 'Recommend a kid-friendly meal the whole family will enjoy.',
+      'icon': Icons.child_care,
     },
   ];
 
   List<Map<String, dynamic>> _visibleQuickQuestions = [];
 
+  late final AnimationController _menuController;
+  late final Animation<double> _menuAnimation;
+  bool _menuOpen = false;
+
   @override
   void initState() {
     super.initState();
-    // Ensure we're in global chat mode when this page loads
+    _menuController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _menuAnimation = CurvedAnimation(
+      parent: _menuController,
+      curve: Curves.easeInOutCubic,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChatProvider>().setGlobalChat();
     });
     _refreshQuickQuestions();
   }
 
-  void _refreshQuickQuestions() {
-    final rng = Random();
-    final count = 2 + rng.nextInt(3); // 2..4
-    final pool = List<Map<String, dynamic>>.from(_allQuickQuestions);
-    pool.shuffle(rng);
-    setState(() {
-      _visibleQuickQuestions = pool.take(count).toList();
+  @override
+  void dispose() {
+    _menuController.dispose();
+    super.dispose();
+  }
+
+  void _openMenu() {
+    setState(() => _menuOpen = true);
+    _menuController.forward();
+  }
+
+  void _closeMenu() {
+    _menuController.reverse().then((_) {
+      if (mounted) setState(() => _menuOpen = false);
     });
+  }
+
+  Future<void> _refreshQuickQuestions() async {
+    final options = await QuickOptionsService.getSmartOptions(
+      _allQuickQuestions,
+      5,
+    );
+    if (mounted) {
+      setState(() {
+        _visibleQuickQuestions = options;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ChatProvider>(builder: (context, provider, child) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading: false,
-          centerTitle: true,
-          leading: IconButton(
-            padding: const EdgeInsets.only(left: 16.0),
-            onPressed: () {
-              provider.clearMessages(isRecipeChat: false);
-            },
-            icon: Container(
-              padding: const EdgeInsets.all(16),
-              child: FaIcon(
-                Icons.assignment_add,
-                color: Theme.of(context).colorScheme.primary,
-                size: 36,
-              ),
-            ),
+      final double menuWidth = MediaQuery.of(context).size.width * 0.5;
+      return Stack(
+        children: [
+          // ── Side menu (always rendered, behind the page) ──────────────
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: menuWidth,
+            child: _buildSideMenu(context, provider, menuWidth),
           ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'CookBot',
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w900,
-                fontSize: 28,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
-          actions: [UserMenuWidget()],
-        ),
-        body: GestureDetector(
-          onTap: () {
-            FocusScope.of(context).unfocus();
-          },
-          child: LayoutBuilder(builder: (context, constraints) {
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: Container(
-                      color: Theme.of(context).scaffoldBackgroundColor),
-                ),
-                Column(
-                  children: [
-                    if (provider.currentMessages.isEmpty) ...[
-                      Expanded(
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .outline
-                                          .withOpacity(0.3),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.1),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: TextField(
-                                    controller: provider.chatController,
-                                    style: GoogleFonts.nunito(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    decoration: InputDecoration(
-                                      icon: Icon(
-                                        Icons.search,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                      hintText: 'Ask a question...',
-                                      hintStyle: GoogleFonts.nunito(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                          vertical: 16.0, horizontal: 8.0),
-                                    ),
-                                    onSubmitted: (query) =>
-                                        provider.sendMessage(query: query),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Wrap(
-                                    spacing: 16.0,
-                                    runSpacing: 12.0,
-                                    children: _visibleQuickQuestions
-                                        .map((q) => _buildBreadcrumb(
-                                              q['text'] as String,
-                                              q['icon'] as IconData,
-                                              () => provider.sendMessage(
-                                                  query: q['query'] as String),
-                                            ))
-                                        .toList(),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (provider.currentMessages.isNotEmpty) ...[
-                      Expanded(
-                        child: ListView.builder(
-                          controller: provider.scrollController,
-                          padding: EdgeInsets.zero,
-                          itemCount: provider.currentMessages.length,
-                          itemBuilder: (context, index) {
-                            final message = provider.currentMessages[index];
-                            final bool isUser = message['sender'] == 'user';
 
-                            return Align(
-                              alignment: isUser
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24.0),
-                                child: message['sender'] == 'ai'
-                                    ? AiResponseBubble(
-                                        message: message['text'],
-                                        isLoading: message['isLoading'] == true,
-                                        isRecipeLoading:
-                                            message['isRecipeLoading'] == true,
-                                      )
-                                    : MessageWidget(
-                                        messageText: message['text']!,
-                                        isUser: isUser,
-                                      ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withOpacity(0.3),
+          // ── Main page content (slides right to reveal menu) ───────────
+          AnimatedBuilder(
+            animation: _menuAnimation,
+            builder: (context, _) {
+              final slide = _menuAnimation.value * menuWidth;
+              return Transform.translate(
+                offset: Offset(slide, 0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: _menuAnimation.value > 0
+                        ? [
+                            BoxShadow(
+                              color: Colors.black
+                                  .withOpacity(0.35 * _menuAnimation.value),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                              offset: const Offset(-8, 0),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.1),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
+                          ]
+                        : const [],
+                  ),
+                  child: Stack(
+                    children: [
+                      Scaffold(
+                        appBar: AppBar(
+                          backgroundColor:
+                              Theme.of(context).scaffoldBackgroundColor,
+                          surfaceTintColor: Colors.transparent,
+                          automaticallyImplyLeading: false,
+                          elevation: 0,
+                          leading: IconButton(
+                            padding: const EdgeInsets.only(left: 16.0),
+                            onPressed: _openMenu,
+                            icon: Icon(
+                              Icons.menu,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 26,
+                            ),
+                          ),
+                          title: Text(
+                            'COOKBOT',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 22,
+                              letterSpacing: 2.5,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          centerTitle: true,
+                          actions: [UserMenuWidget()],
+                        ),
+                        body: GestureDetector(
+                          onTap: () => FocusScope.of(context).unfocus(),
+                          child: Column(
+                            children: [
+                              if (provider.currentMessages.isEmpty) ...[
+                                Expanded(
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'WHAT ARE\nWE COOKING?',
+                                            style: GoogleFonts.spaceGrotesk(
+                                              fontSize: 36,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: -0.5,
+                                              height: 1.05,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 28),
+                                          _buildInput(context, provider),
+                                          const SizedBox(height: 16),
+                                          Wrap(
+                                            spacing: 8.0,
+                                            runSpacing: 8.0,
+                                            children: _visibleQuickQuestions
+                                                .map((q) => _buildChip(
+                                                      context,
+                                                      q['text']! as String,
+                                                      q['icon'] as IconData?,
+                                                      () {
+                                                        QuickOptionsService
+                                                            .trackUsage(q['text']!
+                                                                as String);
+                                                        provider.sendMessage(
+                                                            query: q['query']!
+                                                                as String);
+                                                      },
+                                                    ))
+                                                .toList(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                Expanded(
+                                  child: ListView.builder(
+                                    controller: provider.scrollController,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8),
+                                    itemCount: provider.currentMessages.length,
+                                    itemBuilder: (context, index) {
+                                      final message =
+                                          provider.currentMessages[index];
+                                      final bool isUser =
+                                          message['sender'] == 'user';
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16.0),
+                                        child: Align(
+                                          alignment: isUser
+                                              ? Alignment.centerRight
+                                              : Alignment.centerLeft,
+                                          child: message['sender'] == 'ai'
+                                              ? AiResponseBubble(
+                                                  message: message['text'],
+                                                  isLoading:
+                                                      message['isLoading'] ==
+                                                          true,
+                                                  isRecipeLoading:
+                                                      message['isRecipeLoading'] ==
+                                                          true,
+                                                )
+                                              : MessageWidget(
+                                                  messageText: message['text']!,
+                                                  isUser: isUser,
+                                                ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  child: _buildInput(context, provider),
+                                ),
+                              ],
                             ],
                           ),
-                          child: TextField(
-                            controller: provider.chatController,
-                            style: GoogleFonts.nunito(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: InputDecoration(
-                              icon: Icon(
-                                Icons.search,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              hintText: 'Ask a question...',
-                              hintStyle: GoogleFonts.nunito(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 16.0, horizontal: 8.0),
-                            ),
-                            onSubmitted: (query) =>
-                                provider.sendMessage(query: query),
-                          ),
                         ),
                       ),
+                      // Tap-to-close overlay when menu is open
+                      if (_menuOpen)
+                        Positioned.fill(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: _closeMenu,
+                          ),
+                        ),
                     ],
-                  ],
+                  ),
                 ),
-              ],
-            );
-          }),
-        ),
+              );
+            },
+          ),
+        ],
       );
     });
   }
 
-  Widget _buildBreadcrumb(String title, IconData icon, VoidCallback onTap) {
-    // Define accent colors for each type
-    Color iconColor;
-    switch (icon) {
-      case FontAwesomeIcons.lightbulb:
-        iconColor = Colors.amber;
-        break;
-      case FontAwesomeIcons.file:
-        iconColor = Colors.green;
-        break;
-      case FontAwesomeIcons.fire:
-        iconColor = Colors.orange;
-        break;
-      case FontAwesomeIcons.clock:
-        iconColor = Colors.blue;
-        break;
-      case FontAwesomeIcons.heart:
-        iconColor = Colors.pink;
-        break;
-      case FontAwesomeIcons.carrot:
-        iconColor = Colors.deepOrange;
-        break;
-      case FontAwesomeIcons.cakeCandles:
-        iconColor = Colors.purple;
-        break;
-      case FontAwesomeIcons.bowlFood:
-        iconColor = Colors.teal;
-        break;
-      case FontAwesomeIcons.dumbbell:
-        iconColor = Colors.indigo;
-        break;
-      case FontAwesomeIcons.utensils:
-        iconColor = Colors.brown;
-        break;
-      case FontAwesomeIcons.dollarSign:
-        iconColor = Colors.green;
-        break;
-      case FontAwesomeIcons.faceSmile:
-        iconColor = Colors.amber;
-        break;
-      case FontAwesomeIcons.calendarDays:
-        iconColor = Colors.cyan;
-        break;
-      case FontAwesomeIcons.pepperHot:
-        iconColor = Colors.red;
-        break;
-      case FontAwesomeIcons.egg:
-        iconColor = Colors.orange;
-        break;
-      case FontAwesomeIcons.ban:
-        iconColor = Colors.grey;
-        break;
-      case FontAwesomeIcons.scaleBalanced:
-        iconColor = Colors.lightGreen;
-        break;
-      default:
-        iconColor = Theme.of(context).colorScheme.primary;
-    }
+  Widget _buildInput(BuildContext context, ChatProvider provider) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: provider.chatController,
+              style: GoogleFonts.spaceGrotesk(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Ask anything…',
+                hintStyle: GoogleFonts.spaceGrotesk(
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                  fontSize: 15,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0, horizontal: 16.0),
+              ),
+              onSubmitted: (query) => provider.sendMessage(query: query),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              final query = provider.chatController.text.trim();
+              if (query.isNotEmpty) provider.sendMessage(query: query);
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              color: Theme.of(context).colorScheme.onSurface,
+              child: Icon(
+                Icons.arrow_forward,
+                color: Theme.of(context).colorScheme.surface,
+                size: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildChip(
+      BuildContext context, String label, IconData? icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            width: 1,
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+            width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FaIcon(
-              icon,
-              color: iconColor,
-              size: 16,
-            ),
-            const SizedBox(width: 6.0),
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface),
+              const SizedBox(width: 6),
+            ],
             Text(
-              title,
-              style: GoogleFonts.nunito(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              label,
+              style: GoogleFonts.spaceGrotesk(
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
               ),
             ),
           ],
@@ -454,4 +421,173 @@ class AiChatBotPageState extends State<AiChatBotPage> {
       ),
     );
   }
+
+  // ── Side-menu helpers ─────────────────────────────────────────────────
+
+  Widget _buildSideMenu(BuildContext context, ChatProvider provider, double menuWidth) {
+    return Container(
+      width: menuWidth,
+      height: double.infinity,
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+              child: Text(
+                'COOKBOT',
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.spaceGrotesk(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  letterSpacing: 1.5,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.35),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // New chat button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: GestureDetector(
+                onTap: () {
+                  provider.startNewChat();
+                  _closeMenu();
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  color: const Color(0xFFCAFF00),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add, size: 16, color: Colors.black),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'NEW CHAT',
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            letterSpacing: 0.8,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (provider.savedChats.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+                child: Text(
+                  'RECENT',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.4),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: provider.savedChats.length,
+                  itemBuilder: (context, index) => _buildChatHistoryItem(
+                    context,
+                    provider,
+                    provider.savedChats[index],
+                    index,
+                  ),
+                ),
+              ),
+            ] else
+              const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatHistoryItem(
+    BuildContext context,
+    ChatProvider provider,
+    ChatSession session,
+    int index,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        provider.restoreSession(index);
+        _closeMenu();
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              session.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              _formatSessionDate(session.createdAt),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withOpacity(0.4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatSessionDate(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(dt.year, dt.month, dt.day);
+    final diff = today.difference(date).inDays;
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final period = dt.hour >= 12 ? 'PM' : 'AM';
+    final min = dt.minute.toString().padLeft(2, '0');
+    final timeStr = '$hour:$min $period';
+    if (diff == 0) return 'Today · $timeStr';
+    if (diff == 1) return 'Yesterday · $timeStr';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[dt.month - 1]} ${dt.day} · $timeStr';
+  }
 }
+

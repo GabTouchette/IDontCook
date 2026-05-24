@@ -76,13 +76,12 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
                   }
                 }
               },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
               ),
               color: Theme.of(context).colorScheme.surface,
               position: PopupMenuPosition.under,
-              elevation: 8,
-              shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.2),
+              elevation: 2,
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 0,
@@ -122,16 +121,15 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Container(
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                      width: 1,
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.35),
+                      width: 1.5,
                     ),
                   ),
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 20,
+                  child: Center(
                     child: Avatars.getAvatarIcon(currentUser.avatar_icon),
                   ),
                 ),
@@ -149,39 +147,28 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
     required BuildContext context,
     bool isDestructive = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDestructive
-                  ? Theme.of(context).colorScheme.error.withOpacity(0.1)
-                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              color: isDestructive
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
-              size: 20,
-            ),
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: isDestructive
+              ? Theme.of(context).colorScheme.error
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: GoogleFonts.spaceGrotesk(
+            color: isDestructive
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.onSurface,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
           ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: GoogleFonts.nunito(
-              color: isDestructive
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

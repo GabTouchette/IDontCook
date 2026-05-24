@@ -10,7 +10,6 @@ import 'package:i_cant_cook/widgets/recipes/recipe_form_tags_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_title_section.dart';
 import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 
 class UpdateRecipePage extends StatefulWidget {
   final int recipeId;
@@ -150,39 +149,41 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          'Update Recipe',
-          style: GoogleFonts.nunito(
-            fontWeight: FontWeight.w900,
-            fontSize: 24,
-            color: Theme.of(context).colorScheme.onSurface,
-            letterSpacing: -0.5,
-          ),
-        ),
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           icon: Icon(
             Icons.chevron_left,
-            size: 36,
-            color: Theme.of(context).colorScheme.onSurface,
+            size: 32,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        title: Text(
+          'UPDATE RECIPE',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            letterSpacing: 2,
           ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              onPressed: _submitUpdatedRecipe,
-              icon: Icon(
-                Icons.check_box_outlined,
-                size: 36,
-                color: Theme.of(context).colorScheme.success,
+            padding: const EdgeInsets.only(right: 12.0),
+            child: GestureDetector(
+              onTap: _submitUpdatedRecipe,
+              child: Container(
+                width: 36,
+                height: 36,
+                color: const Color(0xFFCAFF00),
+                child: const Icon(
+                  Icons.check,
+                  size: 18,
+                  color: Color(0xFF0A0A0A),
+                ),
               ),
-              tooltip: 'Save',
             ),
           ),
         ],
@@ -195,24 +196,38 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
           child: Column(
             children: [
               TitleSection(titleController: _titleController),
+              Divider(
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.12),
+                thickness: 1,
+                height: 1,
+              ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Ingredients',
-                    style: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                      letterSpacing: -0.3,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'INGREDIENTS',
+                      style: GoogleFonts.spaceGrotesk(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Container(
+                        width: 20,
+                        height: 2,
+                        color: const Color(0xFFCAFF00)),
+                  ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: MealIngredientsSection(
                   label: 'Ingredient',
                   ingredients: _mealIngredients,

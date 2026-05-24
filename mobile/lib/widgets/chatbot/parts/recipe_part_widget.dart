@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/chatbot/parts/markdown_style.dart';
 import 'package:provider/provider.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
@@ -78,12 +77,8 @@ class RecipePartWidget extends StatelessWidget {
         },
       );
     } else {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2.0),
         child: MarkdownBody(
           data: part,
           styleSheet: markdownStyle,
@@ -95,10 +90,15 @@ class RecipePartWidget extends StatelessWidget {
   Widget _buildError(BuildContext context, String msg) => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.borderMuted,
-          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+            width: 1.5,
+          ),
         ),
         child: Text(msg,
-            style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 13,
+            )),
       );
 }

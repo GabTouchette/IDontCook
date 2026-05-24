@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/utils/functions.dart';
@@ -29,213 +28,180 @@ class IngredientsSection extends StatefulWidget {
 class _IngredientsSectionState extends State<IngredientsSection> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
+    final isUpdated = widget.updatedFields.contains('ingredients');
+    const lime = Color(0xFFCAFF00);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FaIcon(
-                FontAwesomeIcons.listUl,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Ingredients',
-                style: GoogleFonts.nunito(
-                  color: widget.updatedFields.contains("ingredients")
-                      ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.onSurface,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    'INGREDIENTS',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2.0,
+                      color: isUpdated
+                          ? lime
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${widget.recipe.ingredients.length}',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: Theme.of(context)
                           .colorScheme
-                          .primary
-                          .withOpacity(0.3)),
-                ),
-                child: Text(
-                  '${widget.recipe.ingredients.length} items',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                          .onSurface
+                          .withOpacity(0.35),
+                    ),
                   ),
-                ),
+                ],
               ),
+              const SizedBox(height: 6),
+              Container(width: 28, height: 3, color: lime),
             ],
           ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 12),
+        Divider(
+          height: 1,
+          thickness: 1.5,
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+        ),
 
-          // Ingredients List
-          ...widget.recipe.ingredients.asMap().entries.map((entry) {
-            final index = entry.key;
-            final ingredient = entry.value;
-            final isCompleted = (index < widget.completedIngredients.length)
-                ? widget.completedIngredients[index]
-                : false;
-            double adjustedQuantity = adjustQuantityForServings(
-                ingredient.quantity ?? 0,
-                (widget.recipe.servings ?? 1).toDouble(),
-                widget.servings);
-            String formattedIngredient = sanitizeIngredientLine(
-                "${formatQuantity(adjustedQuantity)}${ingredient.unit != null && ingredient.unit!.isNotEmpty ? ' ${ingredient.unit?.toLowerCase()}' : ''} ${ingredient.name?.toLowerCase() ?? ''}"
-                    .trim());
+        // Ingredients list
+        ...widget.recipe.ingredients.asMap().entries.map((entry) {
+          final index = entry.key;
+          final ingredient = entry.value;
+          final isCompleted = index < widget.completedIngredients.length
+              ? widget.completedIngredients[index]
+              : false;
+          final display = resolveIngredientDisplay(
+            dbQuantity: ingredient.quantity ?? 0,
+            dbUnit: ingredient.unit ?? '',
+            dbName: ingredient.name ?? '',
+            servings: widget.servings,
+            baseServings: (widget.recipe.servings ?? 1).toDouble(),
+          );
+          final calStr = (ingredient.id != null &&
+                  widget.ingredientCalories.containsKey(ingredient.id))
+              ? '${widget.ingredientCalories[ingredient.id]!.round()} cal'
+              : null;
 
-            return GestureDetector(
-              onTap: () => widget.onCompletedIngredient(index),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isCompleted
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-                      : Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isCompleted
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.35)
-                        : widget.updatedFields.contains("ingredients")
-                            ? Theme.of(context)
-                                .colorScheme
-                                .secondary
-                                .withOpacity(0.3)
-                            : Theme.of(context)
-                                .colorScheme
-                                .outline
-                                .withOpacity(0.1),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isCompleted
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.12)
-                          : Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.05),
-                      blurRadius: isCompleted ? 8 : 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: isCompleted
-                            ? Theme.of(context).colorScheme.primary
-                            : widget.updatedFields.contains("ingredients")
-                                ? Theme.of(context).colorScheme.secondary
-                                : Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.3),
-                            blurRadius: 3,
-                            offset: const Offset(0, 1),
+          return GestureDetector(
+            onTap: () => widget.onCompletedIngredient(index),
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Quantity + unit block
+                      SizedBox(
+                        width: 72,
+                        child: Text(
+                          '${display.qty}${display.unit.isNotEmpty ? ' ${display.unit}' : ''}',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isCompleted
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.3)
+                                : isUpdated
+                                    ? lime
+                                    : Theme.of(context).colorScheme.onSurface,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
-                        ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            formattedIngredient,
-                            style: GoogleFonts.nunito(
-                              color: isCompleted
-                                  ? Theme.of(context).colorScheme.primary
-                                  : widget.updatedFields.contains("ingredients")
-                                      ? Theme.of(context).colorScheme.secondary
-                                      : Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
+                      // Ingredient name
+                      Expanded(
+                        child: Text(
+                          display.name,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: isCompleted
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.3)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.8),
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Calorie badge
+                      if (calStr != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(
+                            calStr,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              height: 1.3,
-                              decoration: isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : null,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.35),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    // Per-ingredient calorie badge (shown once nutrition is available)
-                    if (ingredient.id != null &&
-                        widget.ingredientCalories.containsKey(ingredient.id))
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
+                        ),
+                      // Checkmark
+                      if (isCompleted)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Icon(
+                            Icons.check,
+                            size: 16,
                             color: Theme.of(context)
                                 .colorScheme
-                                .primary
-                                .withOpacity(0.25),
+                                .onSurface
+                                .withOpacity(0.3),
                           ),
                         ),
-                        child: Text(
-                          '${widget.ingredientCalories[ingredient.id]!.round()} cal',
-                          style: GoogleFonts.nunito(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-        ],
-      ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.08),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 }

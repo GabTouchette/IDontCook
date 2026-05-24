@@ -47,15 +47,13 @@ class SocialPage extends StatelessWidget {
             ),
           ),
         ),
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            'News',
-            style: GoogleFonts.nunito(
-              fontWeight: FontWeight.w900,
-              fontSize: 28,
-              letterSpacing: -0.5,
-            ),
+        title: Text(
+          'SOCIAL',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [UserMenuWidget()],
@@ -77,37 +75,30 @@ class SocialPage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+                            width: 1.5,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
                         child: TextField(
                           controller: provider.searchController,
-                          style: GoogleFonts.nunito(
+                          style: GoogleFonts.spaceGrotesk(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
                             icon: Icon(Icons.search,
-                                color: Theme.of(context).colorScheme.primary),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                size: 20),
                             hintText: 'Search for a user',
-                            hintStyle: GoogleFonts.nunito(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                            hintStyle: GoogleFonts.spaceGrotesk(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                              fontSize: 15,
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 16.0, horizontal: 8.0),
+                                vertical: 14.0, horizontal: 8.0),
                           ),
                           onChanged: (query) => provider.onSearchChanged(
                               query, provider.fetchUsers),
@@ -134,10 +125,10 @@ class SocialPage extends StatelessWidget {
                           ? Center(
                               child: Text(
                                 'No posts available at the moment.',
-                                style: GoogleFonts.nunito(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
+                                style: GoogleFonts.spaceGrotesk(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             )
@@ -176,22 +167,10 @@ class SocialPage extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                          width: 1.5,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
-                            blurRadius: 24,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
                       ),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(
@@ -210,10 +189,10 @@ class SocialPage extends StatelessWidget {
                               ),
                               title: Text(
                                 "@${user.username}",
-                                style: GoogleFonts.nunito(
+                                style: GoogleFonts.spaceGrotesk(
                                   color: Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                 ),
                               ),
                               onTap: () {
@@ -247,34 +226,36 @@ class SocialPage extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () => provider.onTabTapped(index),
-        child: Container(
-          decoration: BoxDecoration(
-            border: isSelected
-                ? Border(bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.primary, 
-                    width: 2.0
-                  ))
-                : null,
-          ),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-            child: Column(
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.nunito(
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: isSelected
+              ? Container(
+                  color: const Color(0xFFCAFF00),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Text(
+                    title.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.spaceGrotesk(
+                      color: const Color(0xFF0A0A0A),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Text(
+                    title.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
         ),
       ),
     );

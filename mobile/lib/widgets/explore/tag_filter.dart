@@ -70,14 +70,21 @@ class TagFiltersState extends State<TagFilters> {
   }
 
   Widget _buildTagFilters(Map<String, List<String>> tagsByCategory) {
+    final entries = tagsByCategory.entries.toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: tagsByCategory.entries
-          .map((entry) => _CategoryFilter(
-                category: entry.key,
-                tags: entry.value,
-              ))
-          .toList(),
+      children: [
+        for (int i = 0; i < entries.length; i++) ...
+          [
+            _CategoryFilter(category: entries[i].key, tags: entries[i].value),
+            if (i < entries.length - 1)
+              Divider(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+                thickness: 1,
+                height: 1,
+              ),
+          ],
+      ],
     );
   }
 }
@@ -95,56 +102,69 @@ class _CategoryFilter extends StatelessWidget {
       builder: (context, provider, child) {
         final selectedTags = provider.filters['selectedTags'] ?? [];
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          margin: const EdgeInsets.only(bottom: 12),
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                category,
-                style: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.toUpperCase(),
+                    style: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(width: 18, height: 2, color: const Color(0xFFCAFF00)),
+                ],
               ),
-              const SizedBox(height: 12.0),
+              const SizedBox(height: 8),
               Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
+                spacing: 6.0,
+                runSpacing: 6.0,
                 children: tags.map((tag) {
                   final isSelected = selectedTags.contains(tag);
-                  return Container(
-                    child: GestureDetector(
-                      onTap: () {
-                        final updatedTags = List<String>.from(selectedTags);
-                        isSelected ? updatedTags.remove(tag) : updatedTags.add(tag);
-                        provider.updateFilter('selectedTags', updatedTags);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected 
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected 
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                            width: 1,
-                          ),
+                  return GestureDetector(
+                    onTap: () {
+                      final updatedTags = List<String>.from(selectedTags);
+                      isSelected ? updatedTags.remove(tag) : updatedTags.add(tag);
+                      provider.updateFilter('selectedTags', updatedTags);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFCAFF00)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFFCAFF00)
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.3),
+                          width: 1,
                         ),
-                        child: Text(
-                          tag,
-                          style: GoogleFonts.nunito(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurface,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                      ),
+                      child: Text(
+                        tag,
+                        style: GoogleFonts.spaceGrotesk(
+                          color: isSelected
+                              ? const Color(0xFF0A0A0A)
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),

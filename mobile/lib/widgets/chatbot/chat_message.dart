@@ -13,42 +13,36 @@ class MessageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String finalMessageText = messageText;
-    
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: isUser ? 24.0 : 12.0),
+      padding: EdgeInsets.only(
+        top: isUser ? 16.0 : 8.0,
+        bottom: isUser ? 16.0 : 8.0,
+      ),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         decoration: BoxDecoration(
-          color: isUser 
-              ? Theme.of(context).colorScheme.primary
+          color: isUser
+              ? Theme.of(context).colorScheme.onSurface
               : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isUser
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                : Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isUser
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                  : Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: isUser
+              ? null
+              : Border.all(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withOpacity(0.15),
+                  width: 1.5,
+                ),
         ),
         child: Text(
-          finalMessageText,
-          style: GoogleFonts.nunito(
-            color: isUser 
-                ? Theme.of(context).colorScheme.onPrimary
+          messageText,
+          style: GoogleFonts.spaceGrotesk(
+            color: isUser
+                ? Theme.of(context).colorScheme.surface
                 : Theme.of(context).colorScheme.onSurface,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            height: 1.4,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            height: 1.5,
           ),
         ),
       ),

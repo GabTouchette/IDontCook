@@ -6,6 +6,7 @@ mixin SearchMixin on ChangeNotifier {
   final TextEditingController searchController = TextEditingController();
   Timer? _debounceTimer;
   String _searchQuery = '';
+  String _lastDebouncedQuery = '';
 
   String get searchQuery => _searchQuery;
 
@@ -14,7 +15,10 @@ mixin SearchMixin on ChangeNotifier {
 
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      onDebouncedSearch(query);
+      if (query != _lastDebouncedQuery) {
+        _lastDebouncedQuery = query;
+        onDebouncedSearch(query);
+      }
     });
   }
 

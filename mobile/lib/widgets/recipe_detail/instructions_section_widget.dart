@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 
@@ -19,187 +18,142 @@ class InstructionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
+    final isUpdated = updatedFields.contains('instructions');
+    const lime = Color(0xFFCAFF00);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FaIcon(
-                FontAwesomeIcons.clipboardList,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Instructions',
-                style: GoogleFonts.nunito(
-                  color: updatedFields.contains("instructions")
-                      ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.onSurface,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-                ),
-                child: Text(
-                  '${recipe.instructions.length} steps',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    'INSTRUCTIONS',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2.0,
+                      color: isUpdated
+                          ? lime
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${recipe.instructions.length}',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.35),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 6),
+              Container(width: 28, height: 3, color: lime),
             ],
           ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 12),
+        Divider(
+          height: 1,
+          thickness: 1.5,
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+        ),
 
-          // Instructions List
-          ...List.generate(
-            recipe.instructions.length,
-            (index) {
-              final isCompleted = (index < completedInstructions.length)
-                  ? completedInstructions[index]
-                  : false;
+        // Steps
+        ...List.generate(recipe.instructions.length, (index) {
+          final isCompleted = index < completedInstructions.length
+              ? completedInstructions[index]
+              : false;
+          final stepNum = (index + 1).toString().padLeft(2, '0');
 
-              return GestureDetector(
-                onTap: () => onCompletedInstructions(index),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: isCompleted
-                        ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isCompleted
-                          ? Theme.of(context).colorScheme.primary.withOpacity(0.4)
-                          : Theme.of(context).colorScheme.outline.withOpacity(0.15),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isCompleted
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                            : Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                        blurRadius: isCompleted ? 8 : 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
+          return GestureDetector(
+            onTap: () => onCompletedInstructions(index),
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Step Number/Checkmark
+                      // Step number badge
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: isCompleted
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline.withOpacity(0.4),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                              blurRadius: isCompleted ? 8 : 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
+                        color: isCompleted
+                            ? Theme.of(context).colorScheme.onSurface
+                            : lime,
                         child: Center(
                           child: isCompleted
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check,
-                                  color: Colors.white,
                                   size: 18,
+                                  color:
+                                      Theme.of(context).colorScheme.surface,
                                 )
                               : Text(
-                                  '${index + 1}',
-                                  style: GoogleFonts.nunito(
-                                    color: isCompleted
-                                        ? Colors.white
-                                        : Theme.of(context).colorScheme.onSurface,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
+                                  stepNum,
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
                         ),
                       ),
                       const SizedBox(width: 16),
-
-                      // Instruction Text
+                      // Instruction text
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Step ${index + 1}',
-                              style: GoogleFonts.nunito(
-                                color: isCompleted
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                              ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            recipe.instructions[index],
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              height: 1.55,
+                              color: isCompleted
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.3)
+                                  : Theme.of(context).colorScheme.onSurface,
+                              decoration: isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              recipe.instructions[index],
-                              style: GoogleFonts.nunito(
-                                color: isCompleted
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onSurface,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                height: 1.4,
-                                decoration: isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
-          ),
-        ],
-      ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color:
+                      Theme.of(context).colorScheme.outline.withOpacity(0.08),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 }

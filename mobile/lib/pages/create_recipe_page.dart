@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 // Removed nutrition_service import - no longer needed
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
@@ -110,42 +109,49 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          'Create Recipe',
-          style: GoogleFonts.nunito(
-            fontWeight: FontWeight.w900,
-            fontSize: 24,
-            color: Theme.of(context).colorScheme.onSurface,
-            letterSpacing: -0.5,
-          ),
-        ),
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           icon: Icon(
             Icons.chevron_left,
-            size: 36,
-            color: Theme.of(context).colorScheme.onSurface,
+            size: 32,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        title: Text(
+          'CREATE RECIPE',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            letterSpacing: 2,
           ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Container(
-              padding: const EdgeInsets.all(6.0),
-              child: IconButton(
-                onPressed: () => _openCamera(context),
-                icon: FaIcon(
-                  FontAwesomeIcons.camera,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
+            padding: const EdgeInsets.only(right: 12.0),
+            child: GestureDetector(
+              onTap: () => _openCamera(context),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.25),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  Icons.camera_alt_outlined,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -160,31 +166,47 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                   Container(color: Theme.of(context).scaffoldBackgroundColor),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 120.0),
+              padding: const EdgeInsets.only(top: 8.0),
               child: SingleChildScrollView(
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(
                   children: [
                     TitleSection(titleController: _titleController),
+                    Divider(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withValues(alpha: 0.12),
+                      thickness: 1,
+                      height: 1,
+                    ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 8.0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Ingredients',
-                          style: GoogleFonts.nunito(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                            letterSpacing: -0.3,
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'INGREDIENTS',
+                            style: GoogleFonts.spaceGrotesk(
+                              color:
+                                  Theme.of(context).colorScheme.onSurface,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.5,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Container(
+                              width: 20,
+                              height: 2,
+                              color: const Color(0xFFCAFF00)),
+                        ],
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16.0),
                       child: MealIngredientsSection(
                         label: 'Ingredient',
                         ingredients: _mealIngredients,
@@ -224,47 +246,25 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
 
   Widget _buildCreateButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: _submitRecipe,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 18.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-          ),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: GestureDetector(
+        onTap: _submitRecipe,
+        child: Container(
+          width: double.infinity,
+          height: 52,
+          color: const Color(0xFFCAFF00),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.add,
-                color: Theme.of(context).colorScheme.onPrimary,
-                size: 24,
-              ),
-              const SizedBox(width: 12.0),
+              const Icon(Icons.check, color: Color(0xFF0A0A0A), size: 20),
+              const SizedBox(width: 10),
               Text(
-                "Create Recipe",
-                style: GoogleFonts.nunito(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 18,
+                'CREATE RECIPE',
+                style: GoogleFonts.spaceGrotesk(
+                  color: const Color(0xFF0A0A0A),
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
+                  letterSpacing: 1.5,
                 ),
               ),
             ],

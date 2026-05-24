@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
@@ -6,7 +7,6 @@ import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
-import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/recipe_preview_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
@@ -30,210 +30,296 @@ class RecipeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (small) {
-      return _buildSmallTile(context);
-    } else if (large) {
-      return _buildLargeTile(context);
-    } else {
-      return _buildMediumTile(context);
-    }
+    if (small) return _buildSmallTile(context);
+    if (large) return _buildLargeTile(context);
+    return _buildMediumTile(context);
   }
 
+  // ─── SMALL (list mode) ────────────────────────────────────────────────────
   Widget _buildSmallTile(BuildContext context) {
     return GestureDetector(
       onTap: () => _openDetailPage(context),
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        padding: const EdgeInsets.all(12.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+      child: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        recipe.title,
+                        style: GoogleFonts.spaceGrotesk(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      _buildTimeText(context, fontSize: 12),
+                    ],
+                  ),
+                ),
+                if (recipe.is_favorite ?? false)
+                  Icon(Icons.favorite,
+                      size: 14,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.4)),
+              ],
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              recipe.title,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 6),
-            _buildTimeRow(context, iconSize: 14, fontSize: 13),
-            const SizedBox(height: 4),
-            _buildNutritionSummary(context, compact: true),
-          ],
-        ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 16,
+            endIndent: 16,
+            color:
+                Theme.of(context).colorScheme.outline.withOpacity(0.08),
+          ),
+        ],
       ),
     );
   }
 
+  // ─── MEDIUM (default) ─────────────────────────────────────────────────────
   Widget _buildMediumTile(BuildContext context) {
     return GestureDetector(
       onTap: () => _openDetailPage(context),
       onLongPress: () => _showPreview(context),
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        padding: const EdgeInsets.all(14.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            getSmallRecipeImage(recipe.thumbnail_url),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recipe.title,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+      child: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Square thumbnail — ClipRect contains placeholder BackdropFilter
+                ClipRect(child: _squareImage(recipe.thumbnail_url, 80)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        recipe.title,
+                        style: GoogleFonts.spaceGrotesk(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      _buildTimeText(context, fontSize: 12),
+                      if (recipe.ingredients_count != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          '${recipe.ingredients_count} ingredients',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.35),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 6.0),
-                  _buildTimeRow(context, iconSize: 16, fontSize: 14),
-                  const SizedBox(height: 6.0),
-                  _buildNutritionSummary(context, compact: false),
-                ],
-              ),
+                ),
+                if (recipe.is_favorite ?? false)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 2),
+                    child: Icon(Icons.favorite,
+                        size: 14,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.35)),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 16,
+            endIndent: 16,
+            color:
+                Theme.of(context).colorScheme.outline.withOpacity(0.08),
+          ),
+        ],
       ),
     );
   }
 
+  // ─── LARGE (card mode) ────────────────────────────────────────────────────
   Widget _buildLargeTile(BuildContext context) {
     return GestureDetector(
       onTap: () => _openDetailPage(context),
       onLongPress: () => _showPreview(context),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Full-bleed image — ClipRect contains placeholder BackdropFilter
+          ClipRect(
+            child: SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: recipe.thumbnail_url != null &&
+                      recipe.thumbnail_url!.isNotEmpty
+                  ? Image.network(
+                      recipe.thumbnail_url!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => PlaceholderImageWidget(
+                          recipeId: recipe.id, height: 200),
+                    )
+                  : PlaceholderImageWidget(recipeId: recipe.id, height: 200),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: recipe.thumbnail_url != null &&
-                        recipe.thumbnail_url!.isNotEmpty
-                    ? Image.network(
-                        recipe.thumbnail_url!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => PlaceholderImageWidget(
-                            recipeId: recipe.id, height: 200),
-                      )
-                    : PlaceholderImageWidget(recipeId: recipe.id, height: 200),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                recipe.title,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
+          // Content
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  recipe.title,
+                  style: GoogleFonts.spaceGrotesk(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              _buildTimeRow(context, iconSize: 18, fontSize: 15),
-              const SizedBox(height: 8),
-              Text(
-                '${recipe.ingredients_count ?? 'N/A'} ingredients',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildNutritionSummary(context, compact: false),
-              const SizedBox(height: 8),
-              if (recipe.tags != null && recipe.tags!.isNotEmpty)
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 4.0,
+                const SizedBox(height: 8),
+                // Stats row
+                Row(
                   children: [
-                    for (int i = 0;
-                        i < (recipe.tags!.length > 5 ? 5 : recipe.tags!.length);
-                        i++)
-                      _buildTagChip(context, recipe.tags![i]),
-                    if (recipe.tags!.length > 5)
-                      _buildTagChip(
-                          context, '+ ${recipe.tags!.length - 5} others'),
+                    _buildTimeText(context, fontSize: 12),
+                    if (recipe.ingredients_count != null) ...[
+                      const SizedBox(width: 16),
+                      Text(
+                        '${recipe.ingredients_count} ITEMS',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.2,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.35),
+                        ),
+                      ),
+                    ],
+                    if (recipe.is_favorite ?? false) ...[
+                      const SizedBox(width: 12),
+                      Icon(Icons.favorite,
+                          size: 13,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.35)),
+                    ],
                   ],
                 ),
-            ],
+                // Tags
+                if (recipe.tags != null && recipe.tags!.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (int i = 0;
+                          i < (recipe.tags!.length > 4 ? 4 : recipe.tags!.length);
+                          i++)
+                        _tagChip(context, recipe.tags![i]),
+                      if (recipe.tags!.length > 4)
+                        _tagChip(context, '+${recipe.tags!.length - 4}'),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
-        ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.10),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTimeRow(BuildContext context,
-      {double iconSize = 16, double fontSize = 14}) {
-    return Row(
-      children: [
-        if (recipe.preparation_time != null) ...[
-          Icon(Icons.timer,
-              size: iconSize, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 4),
-          Text(
-            '${recipe.preparation_time} min',
-            style: TextStyle(
-                fontSize: fontSize,
-                color: Theme.of(context).colorScheme.onSurface),
-          ),
-        ],
-        if (recipe.preparation_time != null && recipe.cooking_time != null)
-          const SizedBox(width: 12),
-        if (recipe.cooking_time != null) ...[
-          Icon(Icons.local_fire_department,
-              size: iconSize, color: Theme.of(context).colorScheme.error),
-          const SizedBox(width: 4),
-          Text(
-            '${recipe.cooking_time} min',
-            style: TextStyle(
-                fontSize: fontSize,
-                color: Theme.of(context).colorScheme.onSurface),
-          ),
-        ],
-        const SizedBox(width: 16),
-        if (recipe.is_favorite ?? false) ...[
-          Icon(Icons.favorite,
-              size: iconSize, color: Theme.of(context).colorScheme.error),
-        ],
-      ],
+  // ─── Shared helpers ───────────────────────────────────────────────────────
+  Widget _buildTimeText(BuildContext context, {double fontSize = 12}) {
+    final parts = <String>[];
+    if (recipe.preparation_time != null)
+      parts.add('${recipe.preparation_time}m prep');
+    if (recipe.cooking_time != null) parts.add('${recipe.cooking_time}m cook');
+    if (parts.isEmpty) return const SizedBox.shrink();
+
+    return Text(
+      parts.join('  ·  '),
+      style: GoogleFonts.spaceGrotesk(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+      ),
+    );
+  }
+
+  Widget _squareImage(String? imageUrl, int size) {
+    return SizedBox(
+      width: size.toDouble(),
+      height: size.toDouble(),
+      child: imageUrl != null && imageUrl.isNotEmpty
+          ? Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  PlaceholderImageWidget(recipeId: recipe.id, height: size),
+            )
+          : PlaceholderImageWidget(recipeId: recipe.id, height: size),
+    );
+  }
+
+  Widget _tagChip(BuildContext context, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+          width: 1.5,
+        ),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: GoogleFonts.spaceGrotesk(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.0,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55),
+        ),
+      ),
     );
   }
 
@@ -264,44 +350,9 @@ class RecipeTile extends StatelessWidget {
     } catch (e) {
       InformationToast.show(
         context: context,
-        message: "Could not load preview",
+        message: 'Could not load preview',
         type: ToastType.error,
       );
     }
-  }
-
-  Widget _buildTagChip(BuildContext context, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.borderMuted,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
-      ),
-    );
-  }
-
-  Widget getSmallRecipeImage(String? imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: imageUrl != null && imageUrl.isNotEmpty
-          ? Image.network(
-              imageUrl,
-              height: 100,
-              width: 100,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  PlaceholderImageWidget(recipeId: recipe.id, height: 100),
-            )
-          : PlaceholderImageWidget(recipeId: recipe.id, height: 100),
-    );
-  }
-
-  Widget _buildNutritionSummary(BuildContext context, {bool compact = false}) {
-    // Nutrition removed from recipe tiles - shown only in recipe detail
-    return const SizedBox.shrink();
   }
 }

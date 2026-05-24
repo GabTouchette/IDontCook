@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/providers/social_provider.dart';
@@ -16,6 +18,8 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final User? user = await AuthApi.getUser();
+  final String initialRoute = user != null ? '/recipes' : '/';
 
   runApp(
     MultiProvider(
@@ -31,13 +35,14 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
         ChangeNotifierProvider(create: (_) => MealPlanProvider()),
       ],
-      child: ICantCook(),
+      child: ICantCook(initialRoute: initialRoute),
     ),
   );
 }
 
 class ICantCook extends StatelessWidget {
-  const ICantCook({super.key});
+  final String initialRoute;
+  const ICantCook({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +53,7 @@ class ICantCook extends StatelessWidget {
           theme: lightTheme(),
           darkTheme: darkTheme(),
           themeMode: themeProvider.themeMode,
-          initialRoute: '/',
+          initialRoute: initialRoute,
           onGenerateRoute: generateRoute,
         );
       },

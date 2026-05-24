@@ -96,8 +96,8 @@ class _PostDialogState extends State<PostDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      surfaceTintColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -111,10 +111,11 @@ class _PostDialogState extends State<PostDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Share Recipe',
-                  style: GoogleFonts.nunito(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
+                  'SHARE RECIPE',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -124,9 +125,9 @@ class _PostDialogState extends State<PostDialog> {
                   const SizedBox(height: 8),
                   Text(
                     widget.recipe!.title,
-                    style: GoogleFonts.nunito(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -143,23 +144,13 @@ class _PostDialogState extends State<PostDialog> {
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: Theme.of(context)
                                     .colorScheme
                                     .outline
-                                    .withOpacity(0.2),
+                                    .withOpacity(0.25),
+                                width: 1.5,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.06),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
                             ),
                             child: DropdownButton<RecipePreview>(
                               isExpanded: true,
@@ -172,11 +163,13 @@ class _PostDialogState extends State<PostDialog> {
                               ),
                               hint: Text(
                                 'Select a recipe',
-                                style: GoogleFonts.nunito(
+                                style: GoogleFonts.spaceGrotesk(
                                   color: Theme.of(context)
                                       .colorScheme
-                                      .onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
+                                      .onSurface
+                                      .withOpacity(0.4),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               onChanged: (RecipePreview? newValue) {
@@ -206,7 +199,7 @@ class _PostDialogState extends State<PostDialog> {
                                                           width: 32,
                                                           height: 32,
                                                           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                                          child: Icon(Icons.image_not_supported_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                          child: Icon(Icons.image_not_supported_outlined, size: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                                                         ),
                                                   )
                                                 : Container(
@@ -220,7 +213,8 @@ class _PostDialogState extends State<PostDialog> {
                                                       size: 18,
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onSurfaceVariant,
+                                                          .onSurface
+                                                          .withOpacity(0.4),
                                                     ),
                                                   ),
                                           ),
@@ -230,7 +224,8 @@ class _PostDialogState extends State<PostDialog> {
                                               recipe.title,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.nunito(
+                                              style: GoogleFonts.spaceGrotesk(
+                                                fontSize: 13,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -249,9 +244,9 @@ class _PostDialogState extends State<PostDialog> {
                     const SizedBox(height: 8),
                     Text(
                       _selectedRecipe!.title,
-                      style: GoogleFonts.nunito(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -261,14 +256,22 @@ class _PostDialogState extends State<PostDialog> {
                   controller: _commentController,
                   maxLines: 5,
                   minLines: 3,
+                  style: GoogleFonts.spaceGrotesk(fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Add a comment to your post...',
-                    hintStyle: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                    hintStyle: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                      fontSize: 14,
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.zero,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.zero,
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        width: 1.5,
+                      ),
                     ),
                     errorText: _errorMessage,
                   ),
@@ -277,37 +280,42 @@ class _PostDialogState extends State<PostDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.nunito(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        child: Text(
+                          'CANCEL',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: handlePost,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.primary,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onPrimary,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.send_rounded, size: 18),
-                      label: Text(
-                        'Post',
-                        style: GoogleFonts.nunito(
-                          fontWeight: FontWeight.w800,
+                    GestureDetector(
+                      onTap: handlePost,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        color: const Color(0xFFCAFF00),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.send_rounded, size: 16, color: Color(0xFF0A0A0A)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'POST',
+                              style: GoogleFonts.spaceGrotesk(
+                                color: const Color(0xFF0A0A0A),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

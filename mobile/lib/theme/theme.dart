@@ -44,38 +44,42 @@ ThemeData lightTheme() {
     scaffoldBackgroundColor: ColorPalette.lightBg,
     primaryColor: ColorPalette.lightPrimary,
 
-    // Typography - elegant and readable
-    textTheme: GoogleFonts.sourceSans3TextTheme(
+    // Typography - bold editorial
+    textTheme: GoogleFonts.spaceGroteskTextTheme(
       TextTheme(
         displayLarge: TextStyle(
           fontSize: 57,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.lightText,
-          letterSpacing: -0.25,
+          letterSpacing: -1.5,
         ),
         displayMedium: TextStyle(
           fontSize: 45,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.lightText,
+          letterSpacing: -1.0,
         ),
         headlineLarge: TextStyle(
           fontSize: 32,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.lightText,
+          letterSpacing: -0.5,
         ),
         headlineMedium: TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.lightText,
+          letterSpacing: -0.5,
         ),
         titleLarge: TextStyle(
           fontSize: 22,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.lightText,
+          letterSpacing: -0.3,
         ),
         titleMedium: TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: ColorPalette.lightText,
         ),
         bodyLarge: TextStyle(
@@ -103,15 +107,16 @@ ThemeData lightTheme() {
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorPalette.lightPrimary,
         foregroundColor: ColorPalette.lightBgLight,
-        elevation: 2,
-        shadowColor: ColorPalette.lightPrimary.withOpacity(0.3),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        textStyle: GoogleFonts.sourceSans3(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        textStyle: GoogleFonts.spaceGrotesk(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
         ),
       ),
     ),
@@ -120,31 +125,33 @@ ThemeData lightTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: ColorPalette.lightSecondary,
         foregroundColor: ColorPalette.lightText,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       ),
     ),
 
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: ColorPalette.lightPrimary,
-        side: BorderSide(color: ColorPalette.lightPrimary, width: 1.5),
+        side: const BorderSide(color: ColorPalette.lightPrimary, width: 1.5),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       ),
     ),
 
     // Card theme
     cardTheme: CardThemeData(
       color: ColorPalette.lightBgLight,
-      shadowColor: ColorPalette.lightPrimary.withOpacity(0.1),
-      elevation: 3,
+      shadowColor: Colors.transparent,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(4),
+        side: const BorderSide(color: ColorPalette.lightBorderMuted, width: 1),
       ),
     ),
 
@@ -153,10 +160,11 @@ ThemeData lightTheme() {
       backgroundColor: ColorPalette.lightBg,
       foregroundColor: ColorPalette.lightText,
       elevation: 0,
-      scrolledUnderElevation: 1,
-      titleTextStyle: GoogleFonts.sourceSans3(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
+      scrolledUnderElevation: 0,
+      titleTextStyle: GoogleFonts.spaceGrotesk(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
         color: ColorPalette.lightText,
       ),
     ),
@@ -187,38 +195,42 @@ ThemeData darkTheme() {
     scaffoldBackgroundColor: ColorPalette.darkBg,
     primaryColor: ColorPalette.darkPrimary,
 
-    // Typography
-    textTheme: GoogleFonts.sourceSans3TextTheme(
+    // Typography - bold editorial
+    textTheme: GoogleFonts.spaceGroteskTextTheme(
       TextTheme(
         displayLarge: TextStyle(
           fontSize: 57,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.darkText,
-          letterSpacing: -0.25,
+          letterSpacing: -1.5,
         ),
         displayMedium: TextStyle(
           fontSize: 45,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.darkText,
+          letterSpacing: -1.0,
         ),
         headlineLarge: TextStyle(
           fontSize: 32,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.darkText,
+          letterSpacing: -0.5,
         ),
         headlineMedium: TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.darkText,
+          letterSpacing: -0.5,
         ),
         titleLarge: TextStyle(
           fontSize: 22,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: ColorPalette.darkText,
+          letterSpacing: -0.3,
         ),
         titleMedium: TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: ColorPalette.darkText,
         ),
         bodyLarge: TextStyle(
@@ -246,15 +258,16 @@ ThemeData darkTheme() {
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorPalette.darkPrimary,
         foregroundColor: ColorPalette.darkBgDark,
-        elevation: 3,
-        shadowColor: ColorPalette.darkPrimary.withOpacity(0.4),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        textStyle: GoogleFonts.sourceSans3(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        textStyle: GoogleFonts.spaceGrotesk(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
         ),
       ),
     ),
@@ -263,31 +276,33 @@ ThemeData darkTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: ColorPalette.darkSecondary,
         foregroundColor: ColorPalette.darkBgDark,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       ),
     ),
 
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: ColorPalette.darkPrimary,
-        side: BorderSide(color: ColorPalette.darkPrimary, width: 1.5),
+        side: const BorderSide(color: ColorPalette.darkPrimary, width: 1.5),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       ),
     ),
 
     // Card theme
     cardTheme: CardThemeData(
       color: ColorPalette.darkBgLight,
-      shadowColor: Colors.black54,
-      elevation: 4,
+      shadowColor: Colors.transparent,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(4),
+        side: const BorderSide(color: ColorPalette.darkBorderMuted, width: 1),
       ),
     ),
 
@@ -296,10 +311,11 @@ ThemeData darkTheme() {
       backgroundColor: ColorPalette.darkBg,
       foregroundColor: ColorPalette.darkText,
       elevation: 0,
-      scrolledUnderElevation: 1,
-      titleTextStyle: GoogleFonts.sourceSans3(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
+      scrolledUnderElevation: 0,
+      titleTextStyle: GoogleFonts.spaceGrotesk(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
         color: ColorPalette.darkText,
       ),
     ),

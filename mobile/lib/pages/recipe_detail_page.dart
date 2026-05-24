@@ -98,35 +98,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       final recipe = provider.recipe!;
 
       return Scaffold(
+        extendBodyBehindAppBar: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
-          centerTitle: true,
+          elevation: 0,
           leading: IconButton(
-            padding: const EdgeInsets.only(left: 16.0),
+            padding: const EdgeInsets.only(left: 8.0),
             onPressed: () => Navigator.pop(context),
-            icon: Icon(
-              Icons.chevron_left,
-              color: Theme.of(context).colorScheme.primary,
-              size: 40,
-            ),
-          ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              widget.viewMode.when(
-                normal: () => "Recipe Details",
-                preview: () => "Recipe Preview",
+            icon: Container(
+              width: 36,
+              height: 36,
+              color: Colors.black.withOpacity(0.55),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 20,
               ),
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w900,
-                fontSize: 28,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           actions: [
@@ -134,14 +124,23 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               widget.viewMode.when(
                 // CASE: NORMAL
                 normal: () => PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 32,
+                  icon: Container(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      color: const Color(0xFFCAFF00),
+                      child: const Icon(
+                        Icons.more_vert,
+                        color: Color(0xFF0A0A0A),
+                        size: 22,
+                      ),
+                    ),
                   ),
                   color: Theme.of(context).colorScheme.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  elevation: 2,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
                   ),
                   onSelected: (value) {
                     switch (value) {
@@ -230,19 +229,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ),
                   ],
                 ),
-                // CASE: PREVIEW
+                // Preview mode save button
                 preview: () => PopupMenuButton<String>(
                   icon: Container(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: FaIcon(
-                      FontAwesomeIcons.floppyDisk,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      color: const Color(0xFFCAFF00),
+                      child: const Icon(
+                        Icons.save,
+                        color: Color(0xFF0A0A0A),
+                        size: 18,
+                      ),
                     ),
                   ),
                   color: Theme.of(context).colorScheme.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  elevation: 2,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
                   ),
                   onSelected: (value) {
                     switch (value) {
@@ -275,20 +280,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   return IconButton(
                     onPressed: provider.isSaving ? null : _showSaveDialog,
                     icon: Container(
-                      padding: const EdgeInsets.only(right: 16),
+                      padding: const EdgeInsets.only(right: 12),
                       child: provider.isSaving
                           ? SizedBox(
                               width: 32,
                               height: 32,
                               child: CircularProgressIndicator(
-                                color: Theme.of(context).colorScheme.primary,
+                                color: const Color(0xFFCAFF00),
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : FaIcon(
-                              FontAwesomeIcons.floppyDisk,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 32,
+                          : Container(
+                              width: 36,
+                              height: 36,
+                              color: const Color(0xFFCAFF00),
+                              child: const Icon(
+                                Icons.save,
+                                color: Color(0xFF0A0A0A),
+                                size: 18,
+                              ),
                             ),
                     ),
                   );
@@ -305,11 +315,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 children: [
                   RecipeImage(
                     imageUrl: recipe.image_url ?? "",
+                    title: recipe.title,
                     onImagePick: widget.viewMode == RecipeViewMode.preview()
                         ? () {}
                         : _pickImage,
                   ),
-                  const SizedBox(height: 16),
                   RecipeInfo(
                     recipe: recipe,
                     servings: provider.servings,
@@ -341,23 +351,28 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               Positioned(
                 bottom: 24,
                 right: 24,
-                child: FloatingActionButton(
-                  onPressed: () {
+                child: GestureDetector(
+                  onTap: () {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (_) => Container(
+                      builder: (_) => SizedBox(
                         height: MediaQuery.of(context).size.height,
                         child: RecipeChatDialog(recipe: recipe),
                       ),
                     );
                   },
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Icon(Icons.chat,
-                      color: Theme.of(context).colorScheme.onPrimary, size: 28),
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    color: const Color(0xFFCAFF00),
+                    child: const Icon(
+                      Icons.chat_bubble_outline,
+                      color: Color(0xFF0A0A0A),
+                      size: 24,
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -391,7 +406,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   PopupMenuItem<String> _popupItem({
     required String value,
-    required IconData icon,
+    required FaIconData icon,
     required String label,
     Color? iconColor,
     Color? textColor,
@@ -406,9 +421,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           const SizedBox(width: 12),
           Text(
             label,
-            style: GoogleFonts.nunito(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
               color: textColor ?? Theme.of(context).colorScheme.onSurface,
             ),
           ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 
@@ -31,10 +30,10 @@ class _RecipesPageState extends State<RecipesPage> {
       builder: (context, provider, child) {
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             surfaceTintColor: Colors.transparent,
             automaticallyImplyLeading: false,
-            centerTitle: true,
+            elevation: 0,
             leading: IconButton(
               padding: const EdgeInsets.only(left: 16.0),
               onPressed: () {
@@ -47,270 +46,70 @@ class _RecipesPageState extends State<RecipesPage> {
                   recipesProvider.fetchRecipes();
                 });
               },
-              icon: FaIcon(
-                FontAwesomeIcons.plus,
+              icon: Icon(
+                Icons.add,
                 color: Theme.of(context).colorScheme.primary,
                 size: 28,
               ),
             ),
-            title: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Recipes',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 28,
-                  letterSpacing: -0.5,
-                ),
+            title: Text(
+              'RECIPES',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w700,
+                fontSize: 22,
+                letterSpacing: 2.5,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
+            centerTitle: true,
             actions: [UserMenuWidget()],
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(120), // reduced height
+              preferredSize: const Size.fromHeight(116),
               child: Column(
                 children: [
                   _buildSearchBar(context),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildFlexTab('All', 0, provider),
-                        _buildFlexTab('Recent', 1, provider),
-                        _buildFlexTab('Favorites', 2, provider),
-                        _buildFlexTab('Tags', 3, provider),
-                      ],
-                    ),
-                  ),
+                  _buildTabRow(context, provider),
                 ],
               ),
             ),
           ),
-          body: Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        if (provider.tabIndex == 3 &&
-                            provider.selectedTag == null) {
-                          // Show tags grid only when on Tags tab and no tag selected
-                          final tags = provider.userTags;
-                          if (tags.isEmpty) {
-                            return Center(
-                              child: Text('No tags found.',
-                                  style: GoogleFonts.nunito(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: GridView.count(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 16,
-                              crossAxisSpacing: 16,
-                              childAspectRatio: 1,
-                              padding: const EdgeInsets.only(top: 16.0),
-                              children: tags.map((tag) {
-                                return GestureDetector(
-                                  onTap: () => provider.setSelectedTag(tag),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(16),
-                                      onTap: () => provider.setSelectedTag(tag),
-                                      splashColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.1),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withOpacity(0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withOpacity(0.6),
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withOpacity(0.3),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        alignment: Alignment.center,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 12),
-                                        child: Text(
-                                          tag.toUpperCase(),
-                                          style: GoogleFonts.nunito(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 16,
-                                            letterSpacing: 1.2,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          );
-                        } else {
-                          // Show recipe list (filteredRecipes) for all other cases
-                          if (provider.filteredRecipes.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'No recipes were found.',
-                                style: GoogleFonts.nunito(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            );
-                          }
-                          return ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: provider.filteredRecipes.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == 0) {
-                                // — the scrollable header row
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8.0, horizontal: 16.0),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      // “Showing X recipes” or tag‑back button
-                                      provider.tabIndex == 3 &&
-                                              provider.selectedTag != null
-                                          ? GestureDetector(
-                                              onTap: () =>
-                                                  provider.setSelectedTag(null),
-                                              child: Row(
-                                                children: [
-                                                  Icon(Icons.chevron_left,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface,
-                                                      size: 24),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    provider.selectedTag!,
-                                                    style: GoogleFonts.nunito(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            )
-                                          : Text(
-                                              'Showing ${provider.filteredRecipes.length} recipes',
-                                              style: GoogleFonts.nunito(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-
-                                      // layout‑mode buttons
-                                      Row(
-                                        children: List.generate(3, (i) {
-                                          const icons = [
-                                            Icons.view_list,
-                                            Icons.view_module,
-                                            Icons.view_comfy
-                                          ];
-                                          const tooltips = [
-                                            'Small view',
-                                            'Medium view',
-                                            'Large view'
-                                          ];
-                                          return Container(
-                                            margin: const EdgeInsets.symmetric(
-                                                horizontal: 2),
-                                            decoration: BoxDecoration(
-                                              color: provider.tileMode == i
-                                                  ? Theme.of(context)
-                                                      .colorScheme
-                                                      .primary
-                                                      .withOpacity(0.1)
-                                                  : Colors.transparent,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                width: 2,
-                                                color: provider.tileMode == i
-                                                    ? Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withOpacity(0.3)
-                                                    : Theme.of(context)
-                                                        .colorScheme
-                                                        .outline
-                                                        .withOpacity(0.2),
-                                              ),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(icons[i],
-                                                  size: 20,
-                                                  color: provider.tileMode == i
-                                                      ? Theme.of(context)
-                                                          .colorScheme
-                                                          .primary
-                                                      : Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurfaceVariant),
-                                              onPressed: () =>
-                                                  provider.setTileMode(i),
-                                              tooltip: tooltips[i],
-                                            ),
-                                          );
-                                        }),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-
-                              // — your recipe items
-                              final recipe =
-                                  provider.filteredRecipes[index - 1];
-                              return _buildRecipeTile(recipe);
-                            },
-                          );
-                        }
+          body: Column(
+            children: [
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (provider.tabIndex == 3 &&
+                        provider.selectedTag == null) {
+                      return _buildTagsGrid(context, provider);
+                    }
+                    if (provider.filteredRecipes.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No recipes found.',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.4),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: provider.filteredRecipes.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) return _buildListHeader(context, provider);
+                        final recipe = provider.filteredRecipes[index - 1];
+                        return _buildRecipeTile(recipe);
                       },
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-            ),
+            ],
           ),
         );
       },
@@ -321,47 +120,220 @@ class _RecipesPageState extends State<RecipesPage> {
     final provider = Provider.of<UserRecipesProvider>(context, listen: false);
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+            width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: TextField(
-          style: GoogleFonts.nunito(
+          style: GoogleFonts.spaceGrotesk(
             color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
           ),
           decoration: InputDecoration(
-            icon: Icon(
+            prefixIcon: Icon(
               Icons.search,
-              color: Theme.of(context).colorScheme.primary,
-              size: 24,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              size: 20,
             ),
-            hintText: 'Search for a recipe',
-            hintStyle: GoogleFonts.nunito(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            hintText: 'Search recipes…',
+            hintStyle: GoogleFonts.spaceGrotesk(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+              fontSize: 15,
             ),
             border: InputBorder.none,
             contentPadding:
-                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
           ),
           onChanged: provider.onSearchTextChanged,
         ),
+      ),
+    );
+  }
+
+  Widget _buildTabRow(BuildContext context, UserRecipesProvider provider) {
+    const tabs = ['ALL', 'RECENT', 'FAVORITES', 'TAGS'];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        children: List.generate(tabs.length, (i) {
+          final isSelected = provider.tabIndex == i;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (i == 3) {
+                  if (provider.tabIndex == 3 && provider.selectedTag != null) {
+                    provider.setSelectedTag(null);
+                  } else {
+                    provider.setTabIndex(3);
+                  }
+                } else {
+                  provider.setTabIndex(i);
+                  provider.setSelectedTag(null);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+                child: isSelected
+                    ? Container(
+                        color: const Color(0xFFCAFF00),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        child: Text(
+                          tabs[i],
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                            color: const Color(0xFF0A0A0A),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        tabs[i],
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.2,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.35),
+                        ),
+                      ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTagsGrid(BuildContext context, UserRecipesProvider provider) {
+    final tags = provider.userTags;
+    if (tags.isEmpty) {
+      return Center(
+        child: Text(
+          'No tags found.',
+          style: GoogleFonts.spaceGrotesk(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            fontSize: 15,
+          ),
+        ),
+      );
+    }
+    return GridView.count(
+      crossAxisCount: 2,
+      mainAxisSpacing: 0,
+      crossAxisSpacing: 0,
+      childAspectRatio: 1.4,
+      padding: EdgeInsets.zero,
+      children: tags.map((tag) {
+        return GestureDetector(
+          onTap: () => provider.setSelectedTag(tag),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color:
+                    Theme.of(context).colorScheme.outline.withOpacity(0.12),
+                width: 0.5,
+              ),
+            ),
+            alignment: Alignment.center,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Text(
+              tag.toUpperCase(),
+              style: GoogleFonts.spaceGrotesk(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                letterSpacing: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildListHeader(
+      BuildContext context, UserRecipesProvider provider) {
+    const icons = [Icons.view_list, Icons.view_module, Icons.view_comfy];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      child: Row(
+        children: [
+          if (provider.tabIndex == 3 && provider.selectedTag != null)
+            GestureDetector(
+              onTap: () => provider.setSelectedTag(null),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_back,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurface),
+                  const SizedBox(width: 6),
+                  Text(
+                    provider.selectedTag!.toUpperCase(),
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Text(
+              '${provider.filteredRecipes.length} RECIPES',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withOpacity(0.4),
+              ),
+            ),
+          const Spacer(),
+          // Layout toggles — flat squares
+          Row(
+            children: List.generate(3, (i) {
+              final isActive = provider.tileMode == i;
+              return GestureDetector(
+                onTap: () => provider.setTileMode(i),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  margin: const EdgeInsets.only(left: 6),
+                  color: isActive
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Colors.transparent,
+                  child: Icon(
+                    icons[i],
+                    size: 20,
+                    color: isActive
+                        ? Theme.of(context).colorScheme.surface
+                        : Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.3),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -370,76 +342,11 @@ class _RecipesPageState extends State<RecipesPage> {
     final provider = Provider.of<UserRecipesProvider>(context, listen: false);
     final tileMode = provider.tileMode;
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      switchInCurve: Curves.easeInOut,
-      switchOutCurve: Curves.easeInOut,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SizeTransition(
-            sizeFactor: animation,
-            axis: Axis.vertical,
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        key: ValueKey('tile-${recipe.id}-mode-$tileMode'),
-        child: RecipeTile(
-          recipe: recipe,
-          small: tileMode == 0,
-          medium: tileMode == 1,
-          large: tileMode == 2,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFlexTab(
-    String title,
-    int index,
-    UserRecipesProvider provider,
-  ) {
-    final isSelected = provider.tabIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        if (index == 3) {
-          // Re-tapping the Tags tab when a tag is selected should go back to the grid (clear selection)
-          if (provider.tabIndex == 3 && provider.selectedTag != null) {
-            provider.setSelectedTag(null);
-          } else {
-            provider.setTabIndex(3);
-          }
-        } else {
-          provider.setTabIndex(index);
-          provider.setSelectedTag(null);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-        decoration: isSelected
-            ? BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-              )
-            : null,
-        child: Text(
-          title,
-          style: GoogleFonts.nunito(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
+    return RecipeTile(
+      recipe: recipe,
+      small: tileMode == 0,
+      medium: tileMode == 1,
+      large: tileMode == 2,
     );
   }
 }

@@ -10,74 +10,68 @@ class TitleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-      child: Container(
-        padding: const EdgeInsets.all(18.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'RECIPE TITLE',
+            style: GoogleFonts.spaceGrotesk(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+          const SizedBox(height: 4),
+          Container(width: 20, height: 2, color: const Color(0xFFCAFF00)),
+          const SizedBox(height: 10),
+          TextField(
+            controller: titleController,
+            style: GoogleFonts.spaceGrotesk(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.title,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "Recipe Title",
-                  style: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14.0),
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+            decoration: InputDecoration(
+              hintText: 'Name your recipe...',
+              hintStyle: GoogleFonts.spaceGrotesk(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.3),
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(
+                  color: Color(0x40808080),
+                  width: 1.5,
                 ),
               ),
-              child: TextField(
-                controller: titleController,
-                style: GoogleFonts.nunito(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.25),
+                  width: 1.5,
                 ),
-                decoration: InputDecoration(
-                  hintText: 'Enter a descriptive title for your recipe',
-                  hintStyle: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
-                    fontSize: 15,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 14.0),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(
+                  color: Color(0xFFCAFF00),
+                  width: 1.5,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

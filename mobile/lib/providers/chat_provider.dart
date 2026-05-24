@@ -2,12 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
 import 'package:i_cant_cook/mixins/scroll_mixin.dart';
 
+class ChatSession {
+  final String id;
+  final String title;
+  final DateTime createdAt;
+  final List<Map<String, dynamic>> messages;
+
+  ChatSession({
+    required this.id,
+    required this.title,
+    required this.createdAt,
+    required this.messages,
+  });
+}
+
 class ChatProvider extends ChangeNotifier with ScrollMixin {
   final TextEditingController chatController = TextEditingController();
 
   List<Map<String, dynamic>> _globalMessages = [];
   Map<int, List<Map<String, dynamic>>> _recipeChats = {};
   int? _currentRecipeId;
+  final List<ChatSession> _savedChats = [];
 
   List<Map<String, dynamic>> get globalMessages => _globalMessages;
   
@@ -18,6 +33,8 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
 
   List<Map<String, dynamic>> get currentMessages =>
       _currentRecipeId != null ? recipeMessages : _globalMessages;
+
+  List<ChatSession> get savedChats => List.unmodifiable(_savedChats);
 
   void setCurrentRecipe(int recipeId) {
     if (_currentRecipeId != recipeId) {
@@ -68,34 +85,64 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
       final stream =
           AiChatbotApi().chatWithBotStream(query, history, recipeId: recipeId);
 
-      bool recipeTagOpen = false;
-      String recipeBuffer = "";
+      const delimiters = [r'$$', '&&', '@@'];
+      String accumulated = "";
+      bool inRecipe = false;
+      String openDelim = "";
 
       await for (String token in stream) {
-        if (recipeTagOpen) {
-          recipeBuffer += token;
-          if (token.trim() == "\$\$" ||
-              token.trim() == "&&" ||
-              token.trim() == "@@") {
-            addMessage(isRecipeChat: isRecipeChat);
-            recipeTagOpen = false;
-            updateLastMessage(recipeBuffer, isRecipeChat: isRecipeChat);
-            recipeBuffer = "";
+        accumulated += token;
+
+        if (!inRecipe) {
+          // Scan for the earliest opening delimiter
+          String? found;
+          int foundIdx = -1;
+          for (final d in delimiters) {
+            final idx = accumulated.indexOf(d);
+            if (idx != -1 && (foundIdx == -1 || idx < foundIdx)) {
+              found = d;
+              foundIdx = idx;
+            }
+          }
+
+          if (found != null) {
+            // Transition to recipe buffering mode
+            final beforeText = accumulated.substring(0, foundIdx);
+            if (beforeText.trim().isNotEmpty) {
+              updateLastMessage(beforeText, isRecipeChat: isRecipeChat);
+              addMessage(isRecipeLoading: true, isRecipeChat: isRecipeChat);
+            }
+            // If no text before, the initial isRecipeLoading bubble remains
+            inRecipe = true;
+            openDelim = found;
+            accumulated = accumulated.substring(foundIdx);
+            scrollToBottom();
+          } else {
+            // Plain text — update bubble in real-time
+            updateLastMessage(accumulated, isRecipeChat: isRecipeChat);
+            scrollToBottom();
           }
         } else {
-          if (token.trim() == "\$\$" ||
-              token.trim() == "&&" ||
-              token.trim() == "@@") {
-            recipeTagOpen = true;
-            recipeBuffer += token;
-            addMessage(isRecipeLoading: true, isRecipeChat: isRecipeChat);
-          } else {
-            final currentText = (isRecipeChat
-                    ? recipeMessages.last['text']
-                    : _globalMessages.last['text']) ??
-                '';
-            updateLastMessage(currentText + token, isRecipeChat: isRecipeChat);
+          // Inside recipe block — wait for closing delimiter
+          final closeIdx = accumulated.indexOf(openDelim, openDelim.length);
+          if (closeIdx != -1) {
+            final delimLen = openDelim.length;
+            final recipeBlock =
+                accumulated.substring(0, closeIdx + delimLen);
+            updateLastMessage(recipeBlock, isRecipeChat: isRecipeChat);
+
+            inRecipe = false;
+            openDelim = "";
+            accumulated =
+                accumulated.substring(closeIdx + delimLen).trim();
+
+            if (accumulated.isNotEmpty) {
+              addMessage(isRecipeChat: isRecipeChat);
+              updateLastMessage(accumulated, isRecipeChat: isRecipeChat);
+            }
+            scrollToBottom();
           }
+          // Still buffering — keep isRecipeLoading animation visible, no update
         }
       }
     } catch (e) {
@@ -185,6 +232,43 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
       _globalMessages.last["isRecipeLoading"] = isRecipeLoading;
       notifyListeners();
     }
+  }
+
+  void _saveCurrentToHistory() {
+    if (_globalMessages.isEmpty) return;
+    final firstUserMsg = _globalMessages.firstWhere(
+      (m) => m['sender'] == 'user',
+      orElse: () => {'text': 'New chat'},
+    );
+    final rawTitle = (firstUserMsg['text'] as String?)?.trim() ?? 'New chat';
+    final title =
+        rawTitle.length > 40 ? '${rawTitle.substring(0, 40)}\u2026' : rawTitle;
+    final session = ChatSession(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      createdAt: DateTime.now(),
+      messages: List<Map<String, dynamic>>.from(
+        _globalMessages.map((m) => Map<String, dynamic>.from(m)),
+      ),
+    );
+    _savedChats.insert(0, session);
+    if (_savedChats.length > 5) _savedChats.removeLast();
+  }
+
+  void startNewChat() {
+    _saveCurrentToHistory();
+    _globalMessages.clear();
+    notifyListeners();
+  }
+
+  void restoreSession(int index) {
+    if (index < 0 || index >= _savedChats.length) return;
+    _saveCurrentToHistory();
+    final session = _savedChats.removeAt(index);
+    _globalMessages = List<Map<String, dynamic>>.from(
+      session.messages.map((m) => Map<String, dynamic>.from(m)),
+    );
+    notifyListeners();
   }
 
   void clearMessages({bool isRecipeChat = false}) {

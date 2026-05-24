@@ -15,180 +15,142 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(0),
+      margin: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 12.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 130),
-                  child: Text(
-                    recipe.title,
-                    style: GoogleFonts.nunito(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      letterSpacing: -0.5,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            Text(
+              recipe.title,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+                letterSpacing: -0.3,
+                height: 1.1,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             recipe.description != null
                 ? Text(
                     recipe.description!,
-                    maxLines: 3,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.nunito(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.5),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
                     ),
                   )
                 : const SizedBox.shrink(),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.timer,
-                    color: Theme.of(context).colorScheme.primary, size: 16),
-                const SizedBox(width: 5),
-                Text(
-                  "${recipe.preparation_time} min",
-                  style: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Icon(Icons.local_fire_department,
-                    color: Theme.of(context).colorScheme.error, size: 16),
-                const SizedBox(width: 5),
-                Text(
-                  "${recipe.cooking_time} min",
-                  style: GoogleFonts.nunito(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-              ],
+            Text(
+              [
+                if (recipe.preparation_time != null)
+                  '${recipe.preparation_time}m prep',
+                if (recipe.cooking_time != null)
+                  '${recipe.cooking_time}m cook',
+              ].join('  ·  '),
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withOpacity(0.4),
+              ),
             ),
             const SizedBox(height: 12),
             Text(
-              "Ingredients",
-              style: GoogleFonts.nunito(
-                fontSize: 18,
+              'INGREDIENTS',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                letterSpacing: 1.5,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withOpacity(0.4),
               ),
             ),
-            const SizedBox(height: 5),
-            Stack(
-              children: [
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 80),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: recipe.ingredients
-                        .take(3)
-                        .map((ingredient) => Text(
-                              "- ${_formatIngredientText(ingredient)}",
-                              style: GoogleFonts.nunito(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ))
-                        .toList(),
+            const SizedBox(height: 6),
+            ...recipe.ingredients.take(3).map((ingredient) => Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '– ${_formatIngredientText(ingredient)}',
+                    style: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
+                )),
+            if (recipe.ingredients.length > 3)
+              Text(
+                '+ ${recipe.ingredients.length - 3} more',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.4),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 90,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.surface.withOpacity(0),
-                          Theme.of(context).colorScheme.surface.withOpacity(1),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+              ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RecipeDetailPage(
+                      recipe: Recipe(
+                        id: -1,
+                        image_url: '',
+                        title: recipe.title,
+                        preparation_time: recipe.preparation_time,
+                        cooking_time: recipe.cooking_time,
+                        ingredients: recipe.ingredients,
+                        instructions: recipe.instructions,
+                        description: recipe.description,
+                        notes: recipe.notes,
+                        tags: recipe.tags,
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Container(
-              color: Theme.of(context).colorScheme.surface,
-              child: Center(
-                child: Column(
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14),
+                color: const Color(0xFFCAFF00),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RecipeDetailPage(
-                              recipe: Recipe(
-                                id: -1,
-                                image_url: "",
-                                title: recipe.title,
-                                preparation_time: recipe.preparation_time,
-                                cooking_time: recipe.cooking_time,
-                                ingredients: recipe.ingredients,
-                                instructions: recipe.instructions,
-                                description: recipe.description,
-                                notes: recipe.notes,
-                                tags: recipe.tags,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.menu_book_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 18,
-                      ),
-                      label: Text(
-                        "Full recipe",
-                        style: GoogleFonts.nunito(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                          decorationColor:
-                              Theme.of(context).colorScheme.primary,
-                        ),
+                    Icon(Icons.menu_book_rounded,
+                        color: const Color(0xFF0A0A0A), size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      'FULL RECIPE',
+                      style: GoogleFonts.spaceGrotesk(
+                        color: const Color(0xFF0A0A0A),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
                       ),
                     ),
                   ],
@@ -203,27 +165,17 @@ class RecipeCard extends StatelessWidget {
 
   String _formatIngredientText(Ingredient ingredient) {
     final parts = <String>[];
-
-    // Add quantity if available
     if (ingredient.quantity != null && ingredient.quantity! > 0) {
-      // Format quantity to avoid unnecessary decimals
       if (ingredient.quantity! == ingredient.quantity!.truncateToDouble()) {
         parts.add(ingredient.quantity!.toInt().toString());
       } else {
         parts.add(ingredient.quantity!.toString());
       }
     }
-
-    // Add unit if available
     if (ingredient.unit != null && ingredient.unit!.isNotEmpty) {
       parts.add(ingredient.unit!);
     }
-
-    // Add name
-    if (ingredient.name != null && ingredient.name!.isNotEmpty) {
-      parts.add(ingredient.name!);
-    }
-
-    return parts.isNotEmpty ? parts.join(' ') : 'Unknown ingredient';
+    parts.add(ingredient.name ?? '');
+    return parts.join(' ');
   }
 }

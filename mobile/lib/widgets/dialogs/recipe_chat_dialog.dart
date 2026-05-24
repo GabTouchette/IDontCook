@@ -51,14 +51,7 @@ class _RecipeChatDialogState extends State<RecipeChatDialog> {
           child: Container(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-                  blurRadius: 16,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+              borderRadius: BorderRadius.zero,
             ),
             child: Consumer<ChatProvider>(
               builder: (context, provider, _) => Column(
@@ -73,19 +66,17 @@ class _RecipeChatDialogState extends State<RecipeChatDialog> {
                           Align(
                             alignment: Alignment.center,
                             child: Container(
-                              width: 40,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.outline,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                              width: 36,
+                              height: 2,
+                              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                             ),
                           ),
                           Align(
                             alignment: Alignment.centerRight,
                             child: IconButton(
                               icon: Icon(Icons.close,
-                                  color: Theme.of(context).colorScheme.onSurface),
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  size: 20),
                               onPressed: () => Navigator.pop(context),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
@@ -136,37 +127,30 @@ class _RecipeChatDialogState extends State<RecipeChatDialog> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+                            width: 1.5,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
                         child: TextField(
                           controller: provider.chatController,
-                          style: GoogleFonts.nunito(
+                          style: GoogleFonts.spaceGrotesk(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
                           ),
                           onSubmitted: (query) => provider.sendMessage(
                               query: query,
                               recipeId: widget.recipe.id,
                               isRecipeChat: true),
                           decoration: InputDecoration(
-                            icon: Icon(Icons.search,
-                                color: Theme.of(context).colorScheme.primary),
+                            icon: Icon(Icons.chat_bubble_outline,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                size: 18),
                             hintText: 'Ask something about this recipe...',
-                            hintStyle: GoogleFonts.nunito(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                            hintStyle: GoogleFonts.spaceGrotesk(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                              fontSize: 15,
                             ),
                             border: InputBorder.none,
                           ),

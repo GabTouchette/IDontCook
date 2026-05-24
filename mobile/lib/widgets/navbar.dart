@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;
@@ -11,95 +10,77 @@ class Navbar extends StatelessWidget {
     required this.onTabChanged,
   });
 
+  static const _lime = Color(0xFFCAFF00);
+
+  static const _iconsOutlined = [
+    Icons.menu_book_outlined,
+    Icons.chat_bubble_outline,
+    Icons.explore_outlined,
+    Icons.calendar_today_outlined,
+    Icons.people_outline,
+  ];
+
+  static const _iconsFilled = [
+    Icons.menu_book,
+    Icons.chat_bubble,
+    Icons.explore,
+    Icons.calendar_today,
+    Icons.people,
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final navItems = [
-      {'icon': FontAwesomeIcons.book},
-      {'icon': FontAwesomeIcons.message},
-      {'icon': FontAwesomeIcons.compass},
-      {'icon': FontAwesomeIcons.calendarDays},
-      {'icon': FontAwesomeIcons.users},
-    ];
+    final bg = Theme.of(context).colorScheme.surface;
+    final outline = Theme.of(context).colorScheme.outline;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -8),
+      color: bg,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Divider(height: 1, thickness: 1, color: outline.withOpacity(0.15)),
+          SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 68,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(_iconsOutlined.length, (index) {
+                  final isSelected = selectedIndex == index;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => onTabChanged(index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Lime top-bar accent
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            height: 3,
+                            width: isSelected ? 32 : 0,
+                            color: _lime,
+                          ),
+                          const SizedBox(height: 14),
+                          Icon(
+                            isSelected
+                                ? _iconsFilled[index]
+                                : _iconsOutlined[index],
+                            size: isSelected ? 30 : 24,
+                            color: isSelected
+                                ? onSurface
+                                : onSurface.withOpacity(0.35),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
           ),
         ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(navItems.length, (index) {
-              final isSelected = selectedIndex == index;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => onTabChanged(index),
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                        padding: EdgeInsets.symmetric(
-                            horizontal: isSelected ? 20 : 16,
-                            vertical: isSelected ? 16 : 12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.3),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            FaIcon(
-                              navItems[index]['icon'] as IconData,
-                              size: isSelected ? 26 : 24,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.onPrimary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
       ),
     );
   }

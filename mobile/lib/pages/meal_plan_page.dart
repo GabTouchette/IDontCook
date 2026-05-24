@@ -7,20 +7,23 @@ class MealPlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const lime = Color(0xFFCAFF00);
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
         leading: const SizedBox.shrink(),
         title: Text(
-          'Meal Plans',
-          style: GoogleFonts.nunito(
-            fontWeight: FontWeight.w900,
-            fontSize: 28,
-            letterSpacing: -0.5,
+          'MEAL PLANS',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: scheme.onSurface,
           ),
         ),
         actions: const [UserMenuWidget()],
@@ -31,28 +34,43 @@ class MealPlanPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.calendar_month_outlined,
-                size: 80,
-                color: scheme.primary.withOpacity(0.4),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Coming Soon',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 32,
-                  letterSpacing: -0.5,
+              // Lime icon block
+              Container(
+                width: 72,
+                height: 72,
+                color: lime,
+                child: const Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFF0A0A0A),
+                  size: 30,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 28),
+              // Title + underline
+              Column(
+                children: [
+                  Text(
+                    'COMING SOON',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 26,
+                      letterSpacing: 3.0,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(width: 40, height: 3, color: lime),
+                ],
+              ),
+              const SizedBox(height: 20),
               Text(
                 'AI-powered meal planning is on its way. Stay tuned!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: scheme.onSurface.withOpacity(0.6),
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.6,
+                  color: scheme.onSurface.withOpacity(0.45),
                 ),
               ),
             ],

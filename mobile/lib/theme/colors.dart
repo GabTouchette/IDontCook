@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
 
 class ColorPalette {
-  // === LIGHT THEME === oklch(0.92 0.08 46) to oklch(0.5 0.16 260)
-  static const lightBgDark = Color(0xFFFFD7BF);
-  static const lightBg = Color(0xFFFFE9D9);
-  static const lightBgLight = Color(0xFFFFFFFF);
-  static const lightText = Color(0xFF200000);
-  static const lightTextMuted = Color(0xFF7F2400);
-  static const lightHighlight = Color(0xFFFFFDF8);
-  static const lightBorder = Color(0xFFCA5A15);
-  static const lightBorderMuted = Color(0xFFED7A3D);
-  static const lightPrimary = Color(0xFF7F2400);
-  static const lightSecondary = Color(0xFF005170);
-  static const lightDanger = Color(0xFFAC3225);
-  static const lightWarning = Color(0xFF746300);
-  static const lightSuccess = Color(0xFF007A46);
-  static const lightInfo = Color(0xFF255EBC);
+  // === LIGHT THEME — Bold Editorial ===
+  static const lightBgDark = Color(0xFFE0DFD9);      // warm gray
+  static const lightBg = Color(0xFFF5F4EF);           // off-white paper
+  static const lightBgLight = Color(0xFFFFFFFF);      // pure white
+  static const lightText = Color(0xFF0A0A0A);         // near black
+  static const lightTextMuted = Color(0xFF555550);    // mid gray
+  static const lightHighlight = Color(0xFFCAFF00);    // neon lime accent
+  static const lightBorder = Color(0xFF0A0A0A);       // black border
+  static const lightBorderMuted = Color(0xFFCCCBC5);  // light warm border
+  static const lightPrimary = Color(0xFF0A0A0A);      // black
+  static const lightSecondary = Color(0xFFCAFF00);    // neon lime
+  static const lightDanger = Color(0xFFFF3B30);
+  static const lightWarning = Color(0xFFFF9500);
+  static const lightSuccess = Color(0xFF34C759);
+  static const lightInfo = Color(0xFF007AFF);
 
-  // === DARK THEME ===
-  static const darkBgDark = Color(0xFF100000);
-  static const darkBg = Color(0xFF200000);
-  static const darkBgLight = Color(0xFF300400);
-  static const darkText = Color(0xFFFFE9D9);
-  static const darkTextMuted = Color(0xFFE69D7A);
-  static const darkHighlight = Color(0xFFA83B00);
-  static const darkBorder = Color(0xFF7F2400);
-  static const darkBorderMuted = Color(0xFF571200);
-  static const darkPrimary = Color(0xFFFF8D51);
-  static const darkSecondary = Color(0xFF00C4FE);
-  static const darkDanger = Color(0xFFF17260);
-  static const darkWarning = Color(0xFFB69F00);
-  static const darkSuccess = Color(0xFF00BC7B);
-  static const darkInfo = Color(0xFF619DFF);
+  // === DARK THEME — Bold Editorial ===
+  static const darkBgDark = Color(0xFF000000);        // pure black
+  static const darkBg = Color(0xFF0A0A0A);            // near black
+  static const darkBgLight = Color(0xFF1C1C1C);       // dark gray surface
+  static const darkText = Color(0xFFF5F4EF);          // off-white
+  static const darkTextMuted = Color(0xFF888884);     // gray
+  static const darkHighlight = Color(0xFFCAFF00);     // same lime
+  static const darkBorder = Color(0xFFF5F4EF);        // off-white border
+  static const darkBorderMuted = Color(0xFF2E2E2E);   // dark gray border
+  static const darkPrimary = Color(0xFFF5F4EF);       // off-white
+  static const darkSecondary = Color(0xFFCAFF00);     // neon lime
+  static const darkDanger = Color(0xFFFF453A);
+  static const darkWarning = Color(0xFFFF9F0A);
+  static const darkSuccess = Color(0xFF30D158);
+  static const darkInfo = Color(0xFF0A84FF);
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AdditionalSections extends StatelessWidget {
@@ -18,285 +17,168 @@ class AdditionalSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const lime = Color(0xFFCAFF00);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Tags Section
-        if (tags != null && tags!.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+        // Tags
+        if (tags != null && tags!.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.tags,
-                      color: Theme.of(context).colorScheme.secondary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Tags',
-                      style: GoogleFonts.nunito(
-                        color: updatedFields.contains("tags")
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.secondary.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        '${tags!.length} tags',
-                        style: GoogleFonts.nunito(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'TAGS',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.0,
+                    color: updatedFields.contains('tags')
+                        ? lime
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: tags!.map((tag) {
-                    final isHighlighted = updatedFields.contains("tags");
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isHighlighted
-                              ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
-                              : Theme.of(context).colorScheme.secondary.withOpacity(0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.label,
-                            size: 14,
-                            color: isHighlighted
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.secondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            tag,
-                            style: GoogleFonts.nunito(
-                              color: isHighlighted
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.secondary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
+                const SizedBox(height: 6),
+                Container(width: 28, height: 3, color: lime),
               ],
             ),
           ),
-
-        // Description Section
-        if (description != null && description!.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.fileLines,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Description',
-                      style: GoogleFonts.nunito(
-                        color: updatedFields.contains("description")
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.onSurface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            thickness: 1.5,
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: tags!.map((tag) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: updatedFields.contains("description")
-                          ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
-                          : Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.3),
+                      width: 1.5,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: Text(
-                    description!,
-                    style: GoogleFonts.nunito(
-                      color: updatedFields.contains("description")
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
+                    tag.toUpperCase(),
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      height: 1.5,
+                      letterSpacing: 1.2,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                ),
-              ],
+                );
+              }).toList(),
             ),
           ),
+        ],
 
-        // Notes Section
-        if (notes != null && notes!.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+        // Description
+        if (description != null && description!.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.noteSticky,
-                      color: Theme.of(context).colorScheme.secondary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Notes',
-                      style: GoogleFonts.nunito(
-                        color: updatedFields.contains("notes")
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: updatedFields.contains("notes")
-                          ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                          : Theme.of(context).colorScheme.secondary.withOpacity(0.3),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        color: Theme.of(context).colorScheme.secondary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          notes!,
-                          style: GoogleFonts.nunito(
-                            color: updatedFields.contains("notes")
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
+                Text(
+                  'DESCRIPTION',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.0,
+                    color: updatedFields.contains('description')
+                        ? lime
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
+                const SizedBox(height: 6),
+                Container(width: 28, height: 3, color: lime),
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            thickness: 1.5,
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Text(
+              description!,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                height: 1.6,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              ),
+            ),
+          ),
+        ],
+
+        // Notes
+        if (notes != null && notes!.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NOTES',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.0,
+                    color: updatedFields.contains('notes')
+                        ? lime
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(width: 28, height: 3, color: lime),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            thickness: 1.5,
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+          ),
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: const Color(0xFFCAFF00),
+                  width: 3,
+                ),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
+            child: Text(
+              notes!,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                height: 1.6,
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              ),
+            ),
+          ),
+        ],
 
         const SizedBox(height: 64),
       ],

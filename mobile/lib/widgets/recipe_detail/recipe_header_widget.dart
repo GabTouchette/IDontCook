@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 
@@ -21,140 +20,109 @@ class RecipeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Recipe Title (no container)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Text(
-            recipe.title,
-            style: GoogleFonts.nunito(
-              fontWeight: FontWeight.w800,
-              fontSize: 34,
-              color: updatedFields.contains("title")
-                  ? Theme.of(context).colorScheme.secondary
-                  : Theme.of(context).colorScheme.onSurface,
-              height: 1.2,
-              letterSpacing: -0.5,
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barBg = isDark ? const Color(0xFFF5F4EF) : const Color(0xFF0A0A0A);
+    final barText = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F4EF);
+    const lime = Color(0xFFCAFF00);
 
-        // Time Information Row (no container)
-        if (recipe.preparation_time != null || recipe.cooking_time != null) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Row(
-              children: [
-                if (recipe.preparation_time != null) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondary
-                              .withOpacity(0.3)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondary
-                              .withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FaIcon(
-                          FontAwesomeIcons.clock,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Prep: ${recipe.preparation_time}m',
-                          style: GoogleFonts.nunito(
-                            color: updatedFields.contains("preparation_time")
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.secondary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+    final stats = <_StatItem>[];
+    if (recipe.preparation_time != null) {
+      stats.add(_StatItem(
+        value: '${recipe.preparation_time}',
+        label: 'PREP',
+        unit: 'MIN',
+        highlighted: updatedFields.contains('preparation_time'),
+      ));
+    }
+    if (recipe.cooking_time != null) {
+      stats.add(_StatItem(
+        value: '${recipe.cooking_time}',
+        label: 'COOK',
+        unit: 'MIN',
+        highlighted: updatedFields.contains('cooking_time'),
+      ));
+    }
+
+    if (stats.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      color: barBg,
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Row(
+        children: [
+          for (int i = 0; i < stats.length; i++) ...[
+            if (i > 0)
+              Container(
+                width: 1,
+                height: 44,
+                color: barText.withOpacity(0.2),
+              ),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    stats[i].label,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: stats[i].highlighted
+                          ? lime
+                          : barText.withOpacity(0.45),
                     ),
                   ),
-                ],
-                if (recipe.preparation_time != null &&
-                    recipe.cooking_time != null)
-                  const SizedBox(width: 12),
-                if (recipe.cooking_time != null) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.3)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        stats[i].value,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w700,
+                          color: stats[i].highlighted ? lime : barText,
+                          height: 1.0,
+                          letterSpacing: -1.5,
                         ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FaIcon(
-                          FontAwesomeIcons.fire,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        stats[i].unit,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                          color: stats[i].highlighted
+                              ? lime
+                              : barText.withOpacity(0.55),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Cook: ${recipe.cooking_time}m',
-                          style: GoogleFonts.nunito(
-                            color: updatedFields.contains("cooking_time")
-                                ? Theme.of(context).colorScheme.secondary
-                                : Theme.of(context).colorScheme.primary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
+}
+
+class _StatItem {
+  final String value;
+  final String label;
+  final String unit;
+  final bool highlighted;
+
+  const _StatItem({
+    required this.value,
+    required this.label,
+    required this.unit,
+    required this.highlighted,
+  });
 }

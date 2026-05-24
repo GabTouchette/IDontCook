@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/social_api.dart';
 import 'package:i_cant_cook/models/comment/comment.dart';
 import 'package:i_cant_cook/models/post/post.dart';
@@ -57,7 +57,7 @@ class _CommentDrawerState extends State<CommentDrawer> {
           return Container(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: BorderRadius.zero,
             ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 16.0),
@@ -77,11 +77,13 @@ class _CommentDrawerState extends State<CommentDrawer> {
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
                           return Center(
-                              child: Text("No comments yet.",
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface)));
+                              child: Text(
+                                'No comments yet.',
+                                style: GoogleFonts.spaceGrotesk(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                  fontSize: 14,
+                                ),
+                              ));
                         }
                         return ListView.builder(
                           controller: scrollController,
@@ -101,24 +103,36 @@ class _CommentDrawerState extends State<CommentDrawer> {
                                   );
                                 },
                                 child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                                    child: Avatars.getAvatarIcon(
-                                        comment.user.avatar_icon),
+                                  leading: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Theme.of(context).colorScheme.outline.withOpacity(0.35),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Avatars.getAvatarIcon(
+                                          comment.user.avatar_icon),
+                                    ),
                                   ),
                                   title: Text(
                                     "@${comment.user.username}",
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface),
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
                                   ),
                                   subtitle: Text(
                                     comment.content,
-                                    style:
-                                        const TextStyle(color: Colors.white70),
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.4,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -140,33 +154,46 @@ class _CommentDrawerState extends State<CommentDrawer> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor:
-                Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: FaIcon(
-              FontAwesomeIcons.solidLemon,
-              color: Theme.of(context).colorScheme.primary,
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.35),
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.chat_bubble_outline,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 "@${widget.post.user.username}",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w300,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
-                "shared a recipe",
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+                'COMMENTS',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.2,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                ),
               ),
             ],
           ),
@@ -178,34 +205,49 @@ class _CommentDrawerState extends State<CommentDrawer> {
 
   Widget _buildCommentInput() {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _commentController,
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                style: GoogleFonts.spaceGrotesk(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
                 decoration: InputDecoration(
-                  hintText: "Add a comment...",
-                  hintStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  hintText: 'Add a comment...',
+                  hintStyle: GoogleFonts.spaceGrotesk(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    fontSize: 14,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
-                      vertical: 16.0, horizontal: 16.0),
+                      vertical: 14.0, horizontal: 14.0),
                 ),
                 onSubmitted: (_) => _addComment(),
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.send,
-                  color: Theme.of(context).colorScheme.primary),
-              onPressed: _addComment,
+            GestureDetector(
+              onTap: _addComment,
+              child: Container(
+                width: 48,
+                height: 48,
+                color: const Color(0xFFCAFF00),
+                child: const Icon(
+                  Icons.send,
+                  color: Color(0xFF0A0A0A),
+                  size: 18,
+                ),
+              ),
             ),
           ],
         ),

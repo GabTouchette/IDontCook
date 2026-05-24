@@ -26,15 +26,22 @@ class ExploreProvider
   bool get isLoading => _isLoading;
   Map<String, dynamic> get filters => _filters;
 
+  String _lastListenerText = '';
+
   ExploreProvider() {
     // Initialize scroll listener to load next page on scroll
     initScrollListener(() {
       fetchNextPage();
     });
 
-    // Listen to search input changes with debounce
+    // Listen to search input changes with debounce.
+    // Only react when text changes, not on cursor/selection changes.
     searchController.addListener(() {
-      onSearchChanged(searchController.text, (_) => refresh());
+      final currentText = searchController.text;
+      if (currentText != _lastListenerText) {
+        _lastListenerText = currentText;
+        onSearchChanged(currentText, (_) => refresh());
+      }
     });
 
     // Initial load

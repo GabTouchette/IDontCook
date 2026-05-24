@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/widgets/dialogs/personal_info_dialog.dart';
-import 'package:i_cant_cook/widgets/developer/network_debug_widget.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -16,8 +15,9 @@ class SettingsPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           surfaceTintColor: Colors.transparent,
+          elevation: 0,
           automaticallyImplyLeading: false,
           centerTitle: true,
           leading: IconButton(
@@ -25,62 +25,90 @@ class SettingsPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
             icon: Icon(
               Icons.chevron_left,
-              size: 28,
+              size: 32,
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'Settings',
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w900,
-                fontSize: 28,
-                letterSpacing: -0.5,
-              ),
+          title: Text(
+            'SETTINGS',
+            style: GoogleFonts.spaceGrotesk(
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+              letterSpacing: 2.5,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
         body: Consumer<SettingsProvider>(
           builder: (context, settingsProvider, _) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  _buildSettingsCard(
-                    context,
-                    icon: Icons.person,
-                    title: "Personal Information",
-                    subtitle: "Update your profile and account details",
-                    onTap: () => _openPersonalInfoModal(context),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSettingsCard(
-                    context,
-                    icon: Icons.developer_mode,
-                    title: "Network Settings",
-                    subtitle: "Configure local IP address for development",
-                    onTap: () => _showNetworkDebugModal(context),
-                  ),
-                  const SizedBox(height: 16),
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, _) {
-                      return _buildSettingsCard(
-                        context,
-                        icon: Icons.logout,
-                        title: "Logout",
-                        subtitle: "Sign out of your account",
-                        isDestructive: true,
+            return Column(
+              children: [
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                ),
+                // Settings items
+                _buildSettingsRow(
+                  context,
+                  icon: Icons.person_outline,
+                  title: 'PERSONAL INFO',
+                  subtitle: 'Update your profile and account details',
+                  onTap: () => _openPersonalInfoModal(context),
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.12),
+                ),
+                const Spacer(),
+                // Logout pinned to bottom
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, _) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                      child: GestureDetector(
                         onTap: () => authProvider.logout().then(
                               (_) => Navigator.of(context)
                                   .pushReplacementNamed('/login'),
                             ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.error,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.logout,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'LOGOUT',
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 2.0,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             );
           },
         ),
@@ -88,97 +116,56 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsCard(
+  Widget _buildSettingsRow(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    bool isDestructive = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDestructive
-                        ? Theme.of(context).colorScheme.error.withOpacity(0.1)
-                        : Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: isDestructive
-                        ? Theme.of(context).colorScheme.error
-                        : Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.nunito(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: isDestructive
-                              ? Theme.of(context).colorScheme.error
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 24,
-                ),
-              ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             ),
-          ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            ),
+          ],
         ),
       ),
     );
@@ -194,41 +181,9 @@ class SettingsPage extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.zero,
       ),
       builder: (context) => const PersonalInfoDialog(),
-    );
-  }
-
-  void _showNetworkDebugModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.all(8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const NetworkDebugWidget(),
-          ],
-        ),
-      ),
     );
   }
 }

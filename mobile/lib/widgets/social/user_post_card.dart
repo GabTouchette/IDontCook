@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
@@ -49,25 +48,15 @@ class _UserPostCardState extends State<UserPostCard>
     final provider = widget.provider;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.12),
+            width: 1,
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
@@ -100,28 +89,39 @@ class _UserPostCardState extends State<UserPostCard>
             },
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Avatars.getAvatarIcon(widget.post.user.avatar_icon),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.35),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Avatars.getAvatarIcon(widget.post.user.avatar_icon),
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       "@${widget.post.user.username}",
-                      style: GoogleFonts.nunito(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Text(
-                      "shared a recipe",
-                      style: GoogleFonts.nunito(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      "SHARED A RECIPE",
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 10,
                         fontWeight: FontWeight.w500,
+                        letterSpacing: 1.2,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       ),
                     ),
                   ],
@@ -142,9 +142,8 @@ class _UserPostCardState extends State<UserPostCard>
                 if (currentUser != null &&
                     currentUser.username == widget.post.user.username) {
                   return IconButton(
-                    icon: FaIcon(FontAwesomeIcons.trash, color: Colors.red),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                     onPressed: _showDeleteDialog,
-                    iconSize: 24,
                   );
                 }
               }
@@ -158,13 +157,15 @@ class _UserPostCardState extends State<UserPostCard>
 
   Widget _buildContent() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 0, 8),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
       child: Text(
         '"${widget.post.content}"',
-        style: GoogleFonts.nunito(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurface),
+        style: GoogleFonts.spaceGrotesk(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            height: 1.5,
+            fontStyle: FontStyle.italic,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
       ),
     );
   }
@@ -196,9 +197,10 @@ class _UserPostCardState extends State<UserPostCard>
                       child: Text(
                         widget.post.recipe_title ??
                             "${widget.post.user.username}'s Recipe",
-                        style: GoogleFonts.nunito(
+                        style: GoogleFonts.spaceGrotesk(
                             fontWeight: FontWeight.w700,
-                            fontSize: 20,
+                            fontSize: 16,
+                            letterSpacing: -0.2,
                             color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ),
@@ -212,9 +214,11 @@ class _UserPostCardState extends State<UserPostCard>
                       : "No description available.",
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w300,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    height: 1.5,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                 ),
               ],
             ),
@@ -237,12 +241,12 @@ class _UserPostCardState extends State<UserPostCard>
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: FaIcon(
-            isThumbsUp ? FontAwesomeIcons.solidThumbsUp : FontAwesomeIcons.thumbsUp,
+          icon: Icon(
+            isThumbsUp ? Icons.thumb_up : Icons.thumb_up_outlined,
             color: isThumbsUp
                 ? Theme.of(context).colorScheme.success
                 : Theme.of(context).colorScheme.outline,
-            size: 20,
+            size: 18,
           ),
           onPressed: () {
             if (post.recipe_id != null) {
@@ -254,18 +258,18 @@ class _UserPostCardState extends State<UserPostCard>
         ),
         Text(
           "$netRating",
-          style: GoogleFonts.nunito(
-              fontSize: 16,
+          style: GoogleFonts.spaceGrotesk(
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Theme.of(context).colorScheme.onSurface),
         ),
         IconButton(
-          icon: FaIcon(
-            isThumbsDown ? FontAwesomeIcons.solidThumbsDown : FontAwesomeIcons.thumbsDown,
+          icon: Icon(
+            isThumbsDown ? Icons.thumb_down : Icons.thumb_down_outlined,
             color: isThumbsDown
                 ? Theme.of(context).colorScheme.error
                 : Theme.of(context).colorScheme.outline,
-            size: 20,
+            size: 18,
           ),
           onPressed: () {
             if (post.recipe_id != null) {
@@ -302,15 +306,14 @@ class _UserPostCardState extends State<UserPostCard>
                       }),
                 );
               },
-              icon: FaIcon(
-                FontAwesomeIcons.comment,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 28,
+              icon: const Icon(
+                Icons.chat_bubble_outline,
+                size: 22,
               ),
             ),
             Text(
               "$commentCount",
-              style: GoogleFonts.nunito(
+              style: GoogleFonts.spaceGrotesk(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -323,20 +326,17 @@ class _UserPostCardState extends State<UserPostCard>
   }
 
   Widget _buildRecipeImage() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: widget.post.recipe_thumbnail_url != null &&
-              widget.post.recipe_thumbnail_url!.isNotEmpty
-          ? Image.network(
-              widget.post.recipe_thumbnail_url!,
-              height: 120,
-              width: 120,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
-            )
-          : PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
-    );
+    return widget.post.recipe_thumbnail_url != null &&
+            widget.post.recipe_thumbnail_url!.isNotEmpty
+        ? Image.network(
+            widget.post.recipe_thumbnail_url!,
+            height: 100,
+            width: 100,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) =>
+                PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
+          )
+        : PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1);
   }
 
   void _showDeleteDialog() {
