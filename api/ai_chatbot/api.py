@@ -254,6 +254,7 @@ class PromptTemplates:
             "- Only reference recipes from the list above.\n"
             "- For new recipes, use this format: $$ { ... } $$ with valid JSON.\n"
             "- Use decimal format for ingredient quantities (e.g. 0.75, 1.0).\n"
+            "- Use abbreviated units in ingredients: tbsp (tablespoon), tsp (teaspoon), cup, oz, lb, g, kg, ml, L, pc (piece), clove, pinch, bunch, can, pkg (package). Avoid full unit names like 'tablespoon' or 'teaspoon'.\n"
             "- When answering general questions, you may remind the user you can generate or suggest recipes.\n\n"
             "**IMPORTANT: Recipe Format Requirements:**\n"
             "- ALL numeric values must be decimals (use 1.0, not 1)\n"
@@ -293,6 +294,7 @@ class PromptTemplates:
             "- Use valid JSON keys like: title, ingredients, instructions, cooking_time, preparation_time, servings, tags, description, notes.\n"
             "- If you change `ingredients` or `tags`, return the full updated list.\n"
             "- Each ingredient must be: {\"name\": \"ingredient name\", \"quantity\": 1.0, \"unit\": \"unit\"} — quantity must be a decimal, unit can be empty if not applicable.\n"
+            "- Use abbreviated units: tbsp (tablespoon), tsp (teaspoon), cup, oz, lb, g, kg, ml, L, pc (piece), clove, pinch, bunch, can, pkg (package).\n"
             "- Instructions must be a list of strings.\n\n"
             "**Example of a modified recipe response (only changed fields):**\n"
             "@@ {\n"
@@ -315,11 +317,11 @@ class PromptTemplates:
             Each ingredient must follow this format:
             - name: string
             - quantity: float (e.g. 2.5)
-            - unit: string (e.g. "cup(s)", "tbsp", "g", "ml", "clove(s)", "oz", etc.) ** Can be empty if not applicable (e.g. "2 eggs" → "" **)
+            - unit: string — use standard abbreviations: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg. Can be empty if not applicable (e.g. "2 eggs" → "")
             - usda_name: string (simplified name for USDA nutrition lookup, e.g. "flour" for "all-purpose flour, sifted")
 
             Important formatting rules:
-            1. Units should be in format: "cup(s)", "clove(s)", "piece(s)", etc. with (s) suffix
+            1. Units must use standard abbreviations: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg. Do NOT use full words like "tablespoon", "teaspoon", "piece(s)", "clove(s)", etc.
             2. usda_name should be the core food item without qualifiers (sifted, chopped, etc.)
             3. Translate French ingredients in usda_name: "porc" → "pork", "boeuf" → "beef", etc.
             4. Make sure the unit is not contained in the name and in the unit field

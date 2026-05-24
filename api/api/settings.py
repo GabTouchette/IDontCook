@@ -72,6 +72,8 @@ railway_public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
 railway_public_origin = f"https://{railway_public_domain}" if railway_public_domain else None
 
 default_allowed_hosts = ["127.0.0.1", "localhost"]
+if DEBUG:
+    default_allowed_hosts.append("*")  # Allow any host in local development
 if railway_public_domain:
     default_allowed_hosts.append(railway_public_domain)
 
