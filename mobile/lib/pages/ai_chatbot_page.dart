@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/services/quick_options_service.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
@@ -24,7 +26,8 @@ class AiChatBotPageState extends State<AiChatBotPage>
     },
     {
       'text': 'MY RECIPES',
-      'query': 'I want to cook one of my saved recipes. Can you help me pick one and suggest how to make it even better?',
+      'query':
+          'I want to cook one of my saved recipes. Can you help me pick one?',
       'icon': Icons.book_outlined,
     },
     {
@@ -124,6 +127,7 @@ class AiChatBotPageState extends State<AiChatBotPage>
   }
 
   void _openMenu() {
+    HapticService.lightImpact();
     setState(() => _menuOpen = true);
     _menuController.forward();
   }
@@ -252,8 +256,9 @@ class AiChatBotPageState extends State<AiChatBotPage>
                                                       q['icon'] as IconData?,
                                                       () {
                                                         QuickOptionsService
-                                                            .trackUsage(q['text']!
-                                                                as String);
+                                                            .trackUsage(
+                                                                q['text']!
+                                                                    as String);
                                                         provider.sendMessage(
                                                             query: q['query']!
                                                                 as String);
@@ -270,8 +275,8 @@ class AiChatBotPageState extends State<AiChatBotPage>
                                 Expanded(
                                   child: ListView.builder(
                                     controller: provider.scrollController,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8),
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
                                     itemCount: provider.currentMessages.length,
                                     itemBuilder: (context, index) {
                                       final message =
@@ -291,14 +296,18 @@ class AiChatBotPageState extends State<AiChatBotPage>
                                                   isLoading:
                                                       message['isLoading'] ==
                                                           true,
-                                                  isRecipeLoading:
-                                                      message['isRecipeLoading'] ==
-                                                          true,
-                                                )
+                                                  isRecipeLoading: message[
+                                                          'isRecipeLoading'] ==
+                                                      true,
+                                                ).animate()
+                                                  .fadeIn(duration: 300.ms)
+                                                  .slideY(begin: 0.08, curve: Curves.easeOut, duration: 300.ms)
                                               : MessageWidget(
                                                   messageText: message['text']!,
                                                   isUser: isUser,
-                                                ),
+                                                ).animate()
+                                                  .fadeIn(duration: 200.ms)
+                                                  .slideX(begin: 0.15, curve: Curves.easeOut, duration: 200.ms),
                                         ),
                                       );
                                     },
@@ -369,7 +378,10 @@ class AiChatBotPageState extends State<AiChatBotPage>
           GestureDetector(
             onTap: () {
               final query = provider.chatController.text.trim();
-              if (query.isNotEmpty) provider.sendMessage(query: query);
+              if (query.isNotEmpty) {
+                HapticService.mediumImpact();
+                provider.sendMessage(query: query);
+              }
             },
             child: Container(
               width: 48,
@@ -390,7 +402,10 @@ class AiChatBotPageState extends State<AiChatBotPage>
   Widget _buildChip(
       BuildContext context, String label, IconData? icon, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticService.selectionClick();
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         decoration: BoxDecoration(
@@ -403,14 +418,14 @@ class AiChatBotPageState extends State<AiChatBotPage>
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface),
+              Icon(icon,
+                  size: 14, color: Theme.of(context).colorScheme.onSurface),
               const SizedBox(width: 6),
             ],
             Text(
               label,
               style: GoogleFonts.spaceGrotesk(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8,
@@ -424,7 +439,8 @@ class AiChatBotPageState extends State<AiChatBotPage>
 
   // ── Side-menu helpers ─────────────────────────────────────────────────
 
-  Widget _buildSideMenu(BuildContext context, ChatProvider provider, double menuWidth) {
+  Widget _buildSideMenu(
+      BuildContext context, ChatProvider provider, double menuWidth) {
     return Container(
       width: menuWidth,
       height: double.infinity,
@@ -436,16 +452,14 @@ class AiChatBotPageState extends State<AiChatBotPage>
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
               child: Text(
-                'COOKBOT',
+                'CONVERSATIONS',
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.spaceGrotesk(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                   letterSpacing: 1.5,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.35),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                 ),
               ),
             ),
@@ -485,38 +499,114 @@ class AiChatBotPageState extends State<AiChatBotPage>
                 ),
               ),
             ),
-            if (provider.savedChats.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
-                child: Text(
-                  'RECENT',
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.spaceGrotesk(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.4),
-                  ),
+            Builder(builder: (context) {
+              final hasActive = provider.globalMessages.isNotEmpty;
+              final hasSaved = provider.savedChats.isNotEmpty;
+              if (!hasActive && !hasSaved) return const Spacer();
+              return Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+                      child: Text(
+                        'CHATS',
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.4),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          if (hasActive)
+                            _buildActiveChatItem(context, provider),
+                          ...provider.savedChats
+                              .asMap()
+                              .entries
+                              .map((e) => _buildChatHistoryItem(
+                                    context,
+                                    provider,
+                                    e.value,
+                                    e.key,
+                                  )),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: provider.savedChats.length,
-                  itemBuilder: (context, index) => _buildChatHistoryItem(
-                    context,
-                    provider,
-                    provider.savedChats[index],
-                    index,
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveChatItem(BuildContext context, ChatProvider provider) {
+    final firstUserMsg = provider.globalMessages.firstWhere(
+      (m) => m['sender'] == 'user',
+      orElse: () => {'text': 'New conversation'},
+    );
+    final rawTitle =
+        (firstUserMsg['text'] as String?)?.trim() ?? 'New conversation';
+    final title =
+        rawTitle.length > 40 ? '${rawTitle.substring(0, 40)}\u2026' : rawTitle;
+
+    return GestureDetector(
+      onTap: _closeMenu,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      height: 1.3,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Active',
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
-            ] else
-              const Spacer(),
+            ),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
           ],
         ),
       ),
@@ -560,10 +650,7 @@ class AiChatBotPageState extends State<AiChatBotPage>
                 fontSize: 9,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.3,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withOpacity(0.4),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
               ),
             ),
           ],
@@ -584,10 +671,19 @@ class AiChatBotPageState extends State<AiChatBotPage>
     if (diff == 0) return 'Today · $timeStr';
     if (diff == 1) return 'Yesterday · $timeStr';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[dt.month - 1]} ${dt.day} · $timeStr';
   }
 }
-

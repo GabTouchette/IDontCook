@@ -1,61 +1,129 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
-
 import 'package:i_cant_cook/providers/auth_provider.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final void Function({required bool isNewUser})? onAuthSuccess;
+  final bool initialSignInMode;
+
+  const LoginPage({
+    super.key,
+    this.onAuthSuccess,
+    this.initialSignInMode = true,
+  });
 
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
 
-  bool _isLoggingIn = true;
+  late AnimationController _shakeController;
+
+  late bool _isLoggingIn;
+  bool _googleLoading = false;
+
+  static const _lime = Color(0xFFCAFF00);
+  static const _btnFg = Color(0xFF0A0A0A); // always black on lime button
+
+  @override
+  void initState() {
+    super.initState();
+    _isLoggingIn = widget.initialSignInMode;
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _handleGoogleSignIn(BuildContext context) async {
+    setState(() => _googleLoading = true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    try {
+      await authProvider.signInWithGoogle();
+      if (context.mounted) {
+        widget.onAuthSuccess != null
+            ? widget.onAuthSuccess!(isNewUser: true)
+            : Navigator.pushNamed(context, '/recipes');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        HapticService.notificationError();
+        _shakeController.forward(from: 0);
+        InformationToast.show(
+          context: context,
+          message: 'Google sign-in failed. Please try again.',
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
+    }
+  }
 
   void _handleLogin(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     try {
-      final username = _usernameController.text;
-      final password = _passwordController.text;
-
-      await authProvider.login(username, password);
-
-      Navigator.pushNamed(context, '/recipes');
+      await authProvider.login(
+          _usernameController.text, _passwordController.text);
+      if (context.mounted) {
+        widget.onAuthSuccess != null
+            ? widget.onAuthSuccess!(isNewUser: false)
+            : Navigator.pushNamed(context, '/recipes');
+      }
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: 'Invalid username or password.',
-        type: ToastType.error,
-      );
+      if (context.mounted) {
+        HapticService.notificationError();
+        _shakeController.forward(from: 0);
+        InformationToast.show(
+          context: context,
+          message: 'Invalid username or password.',
+          type: ToastType.error,
+        );
+      }
     }
   }
 
   void _handleRegister(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     try {
-      final username = _usernameController.text;
-      final password = _passwordController.text;
-      final email = _emailController.text;
-
-      await authProvider.register(username, email, password);
-
-      Navigator.pushNamed(context, '/recipes');
+      await authProvider.register(_usernameController.text,
+          _emailController.text, _passwordController.text);
+      if (context.mounted) {
+        widget.onAuthSuccess != null
+            ? widget.onAuthSuccess!(isNewUser: true)
+            : Navigator.pushNamed(context, '/recipes');
+      }
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: 'Failed to register. Please try again.',
-        type: ToastType.error,
-      );
+      if (context.mounted) {
+        HapticService.notificationError();
+        _shakeController.forward(from: 0);
+        InformationToast.show(
+          context: context,
+          message: 'Failed to register. Please try again.',
+          type: ToastType.error,
+        );
+      }
     }
   }
 
@@ -63,260 +131,352 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.surface,
-              Theme.of(context).scaffoldBackgroundColor,
-            ],
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              "I can't cook",
-              style: GoogleFonts.nunito(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 48,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Your culinary companion for effortless meals.',
-              style: GoogleFonts.nunito(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
+      resizeToAvoidBottomInset: true,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: SafeArea(
+          child: AnimatedBuilder(
+            animation: _shakeController,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(sin(_shakeController.value * 3 * pi) * 6, 0),
+                child: child,
+              );
+            },
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!_isLoggingIn)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withOpacity(0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                  // ── Logo ──
+                  Row(
+                    children: [
+                      Image.asset('assets/images/icon.png',
+                          width: 48, height: 48),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'I DON\'T COOK',
+                            style: GoogleFonts.spaceGrotesk(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          Text(
+                            'YOUR CULINARY COMPANION',
+                            style: GoogleFonts.spaceGrotesk(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.4),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.5,
+                            ),
                           ),
                         ],
                       ),
-                      child: TextField(
-                        controller: _emailController,
-                        style: GoogleFonts.nunito(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: InputDecoration(
-                          icon: Icon(
-                            Icons.email,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 24,
-                          ),
-                          hintText: 'Email',
-                          hintStyle: GoogleFonts.nunito(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                      ),
+                    ],
+                  ).animate().fadeIn(duration: 400.ms).slideY(
+                      begin: -0.07, duration: 400.ms, curve: Curves.easeOut),
+                  const SizedBox(height: 48),
+                  // ── Mode toggle ──
+                  Row(
+                    children: [
+                      _buildModeTab('LOGIN', _isLoggingIn),
+                      const SizedBox(width: 1),
+                      _buildModeTab('REGISTER', !_isLoggingIn),
+                    ],
+                  ).animate(delay: 90.ms).fadeIn(duration: 350.ms),
+                  const SizedBox(height: 32),
+                  // ── Fields ──
+                  if (!_isLoggingIn) ...[
+                    _buildFieldLabel('EMAIL'),
+                    _buildTextField(
+                      _emailController,
+                      hint: 'your@email.com',
+                      icon: Icons.email_outlined,
                     ),
-                  if (!_isLoggingIn) const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withOpacity(0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.1),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _usernameController,
-                      style: GoogleFonts.nunito(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        icon: Icon(
-                          Icons.person,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                        ),
-                        hintText:
-                            _isLoggingIn ? 'Username or email' : 'Username',
-                        hintStyle: GoogleFonts.nunito(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                    ),
+                    const SizedBox(height: 20),
+                  ],
+                  _buildFieldLabel('USERNAME'),
+                  _buildTextField(
+                    _usernameController,
+                    hint: _isLoggingIn ? 'Username or email' : 'Username',
+                    icon: Icons.person_outline,
                   ),
                   const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withOpacity(0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
+                  _buildFieldLabel('PASSWORD'),
+                  _buildTextField(
+                    _passwordController,
+                    hint: '••••••••',
+                    icon: Icons.lock_outline,
+                    obscure: true,
+                  ),
+                  const SizedBox(height: 32),
+                  // ── Primary button ──
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      final busy = auth.isLoading && !_googleLoading;
+                      return GestureDetector(
+                        onTap: (auth.isLoading || _googleLoading)
+                            ? null
+                            : () {
+                                HapticService.mediumImpact();
+                                _isLoggingIn
+                                    ? _handleLogin(context)
+                                    : _handleRegister(context);
+                              },
+                        child: Container(
+                          width: double.infinity,
+                          height: 52,
+                          color: _lime,
+                          child: busy
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: _btnFg,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.check,
+                                        color: _btnFg, size: 18),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      _isLoggingIn ? 'LOGIN' : 'CREATE ACCOUNT',
+                                      style: GoogleFonts.spaceGrotesk(
+                                        color: _btnFg,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  // ── OR divider ──
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
                           color: Theme.of(context)
                               .colorScheme
-                              .primary
-                              .withOpacity(0.1),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                              .outline
+                              .withValues(alpha: 0.3),
+                          thickness: 1,
                         ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      style: GoogleFonts.nunito(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
                       ),
-                      decoration: InputDecoration(
-                        icon: Icon(
-                          Icons.lock,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 24,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.35),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                          ),
                         ),
-                        hintText: 'Password',
-                        hintStyle: GoogleFonts.nunito(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
-                    ),
+                      Expanded(
+                        child: Divider(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.3),
+                          thickness: 1,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 24),
+                  // ── Google button ──
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return GestureDetector(
+                        onTap: (auth.isLoading || _googleLoading)
+                            ? null
+                            : () => _handleGoogleSignIn(context),
+                        child: Container(
+                          width: double.infinity,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                          ),
+                          child: _googleLoading
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                    ),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    FaIcon(
+                                      FontAwesomeIcons.google,
+                                      size: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'CONTINUE WITH GOOGLE',
+                                      style: GoogleFonts.spaceGrotesk(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.7),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 36),
                 ],
               ),
             ),
-            const SizedBox(height: 40),
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                return SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                    onPressed: authProvider.isLoading
-                        ? null
-                        : () => _isLoggingIn
-                            ? _handleLogin(context)
-                            : _handleRegister(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      elevation: 8,
-                      shadowColor: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.3),
-                    ),
-                    child: authProvider.isLoading
-                        ? CircularProgressIndicator(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            strokeWidth: 3,
-                          )
-                        : Text(
-                            _isLoggingIn ? 'Login' : 'Register',
-                            style: GoogleFonts.nunito(
-                              fontSize: 18,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _isLoggingIn = !_isLoggingIn;
-                });
-              },
-              child: Text(
-                _isLoggingIn
-                    ? 'Don\'t have an account? Register'
-                    : 'Already have an account? Login',
-                style: GoogleFonts.nunito(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeTab(String label, bool active) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticService.selectionClick();
+          setState(() => _isLoggingIn = (label == 'LOGIN'));
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: 40,
+          color: active
+              ? _lime
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.spaceGrotesk(
+                color: active
+                    ? _btnFg
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
               ),
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.spaceGrotesk(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.55),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(width: 16, height: 1.5, color: _lime),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller, {
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: GoogleFonts.spaceGrotesk(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      ),
+      cursorColor: _lime,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.spaceGrotesk(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+          size: 20,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(
+              color:
+                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.35),
+              width: 1),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: _lime, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
   }

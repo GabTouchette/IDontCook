@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 
 class MealIngredient {
@@ -71,29 +69,22 @@ class _MealIngredientsSectionState extends State<MealIngredientsSection> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (ctx) {
-        return AnimatedPadding(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
+        return Padding(
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-          child: FractionallySizedBox(
-            heightFactor: 0.75, // open 3/4 of the screen height
-            child: SafeArea(
-              top: false,
-              child: _AddIngredientSheet(
-                onSave: (ing, addAnother) {
-                  setState(() {
-                    widget.ingredients.add(ing);
-                  });
-                  widget.onChanged(widget.ingredients);
-                  if (!addAnother) Navigator.of(ctx).pop();
-                },
-              ),
+          child: SafeArea(
+            top: false,
+            child: _AddIngredientSheet(
+              onSave: (ing, addAnother) {
+                setState(() {
+                  widget.ingredients.add(ing);
+                });
+                widget.onChanged(widget.ingredients);
+                if (!addAnother) Navigator.of(ctx).pop();
+              },
             ),
           ),
         );
@@ -104,155 +95,111 @@ class _MealIngredientsSectionState extends State<MealIngredientsSection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    const lime = Color(0xFFCAFF00);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.15),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section title
+          Text(
+            'INGREDIENTS',
+            style: GoogleFonts.spaceGrotesk(
+              color: theme.colorScheme.onSurface,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.restaurant_menu,
-                  color: theme.colorScheme.primary.withOpacity(0.8),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "Ingredients",
-                  style: GoogleFonts.nunito(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14.0),
-            // Existing ingredients rendered as non-editable rows with delete
-            ...List.generate(widget.ingredients.length, (i) {
-              final ing = widget.ingredients[i];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.2)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        ing.toString(),
-                        style: GoogleFonts.nunito(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete,
-                          color: theme.colorScheme.error.withOpacity(0.9)),
-                      tooltip: 'Remove',
-                      onPressed: () {
-                        setState(() => widget.ingredients.removeAt(i));
-                        widget.onChanged(widget.ingredients);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            }),
-            // Placeholder to add a new ingredient (mirrors MealSlot empty style)
-            GestureDetector(
-              onTap: _openAddDrawer,
-              child: DottedBorder(
-                color: theme.colorScheme.outline,
-                strokeWidth: 1.5,
-                dashPattern: const [6, 4],
-                borderType: BorderType.RRect,
-                radius: const Radius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.outline.withOpacity(0.6),
-                            width: 1,
-                          ),
-                        ),
-                        child: Icon(Icons.add,
-                            color: theme.colorScheme.onSurfaceVariant),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  widget.label,
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 12,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Tap to add an ingredient',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.nunito(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            )
-                          ],
-                        ),
-                      )
-                    ],
+          const SizedBox(height: 4),
+          Container(width: 28, height: 2, color: lime),
+          const SizedBox(height: 12),
+          // Existing ingredients rendered as flat rows with delete
+          ...List.generate(widget.ingredients.length, (i) {
+            final ing = widget.ingredients[i];
+            return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.colorScheme.outline.withOpacity(0.12),
+                    width: 1,
                   ),
                 ),
               ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      color: lime,
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${i + 1}',
+                        style: GoogleFonts.spaceGrotesk(
+                          color: const Color(0xFF0A0A0A),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        ing.toString(),
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => widget.ingredients.removeAt(i));
+                        widget.onChanged(widget.ingredients);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 4),
+                        child: Icon(Icons.close,
+                            size: 16,
+                            color:
+                                theme.colorScheme.error.withOpacity(0.7)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 10),
+          // Add ingredient button — lime fill, black text
+          GestureDetector(
+            onTap: _openAddDrawer,
+            child: Container(
+              height: 44,
+              color: lime,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add, size: 16, color: Color(0xFF0A0A0A)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ADD INGREDIENT',
+                    style: GoogleFonts.spaceGrotesk(
+                      color: const Color(0xFF0A0A0A),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -272,11 +219,14 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
   final _name = TextEditingController();
   final _desc = TextEditingController();
   int? _canonicalId;
+  final _nameFocus = FocusNode();
 
   final _api = RecipeApi();
   List<Map<String, dynamic>> _suggestions = [];
   bool _loading = false;
 
+  static const _lime = Color(0xFFCAFF00);
+  static const _btnFg = Color(0xFF0A0A0A);
   static const _units = [
     '',
     'piece',
@@ -298,6 +248,7 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
     _qty.dispose();
     _name.dispose();
     _desc.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -323,9 +274,7 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
       _canonicalId = item['id'] as int?;
       _suggestions = [];
     });
-    // Optionally collapse the keyboard focus to mimic typical search completion
-    // while keeping the field content intact.
-    FocusScope.of(context).unfocus();
+    _nameFocus.unfocus();
   }
 
   void _handleSave({required bool addAnother}) {
@@ -336,7 +285,7 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
       description: _desc.text,
       canonicalId: _canonicalId,
     );
-    if (ing.name.isEmpty) return; // do nothing if no name
+    if (ing.name.isEmpty) return;
     widget.onSave(ing, addAnother);
     if (addAnother) {
       setState(() {
@@ -350,240 +299,257 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
     }
   }
 
-  InputDecoration _inputDecoration(
-    BuildContext context, {
-    String? hint,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-  }) {
+  InputDecoration _flatDecoration(BuildContext context, {String? hint}) {
     final theme = Theme.of(context);
     return InputDecoration(
       hintText: hint,
+      hintStyle: GoogleFonts.spaceGrotesk(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+        fontSize: 14,
+      ),
       isDense: true,
-      filled: true,
-      fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.12),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.25),
+            width: 1.5),
+      ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide:
-            BorderSide(color: theme.colorScheme.outline.withOpacity(0.15)),
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.25),
+            width: 1.5),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(color: _lime, width: 1.5),
       ),
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final suggestionHeight = _suggestions.isEmpty
-        ? 0.0
-        : (math.min(_suggestions.length, 5) * 44.0 + 8.0);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 44,
-              height: 5,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outline.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(100),
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            Text(
+              'ADD INGREDIENT',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+                color: theme.colorScheme.onSurface,
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Add ingredient',
-            style: GoogleFonts.nunito(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Scrollable content
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 90,
-                        child: TextField(
-                          controller: _qty,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: _inputDecoration(context, hint: 'Qty'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _units.contains(_unit) ? _unit : '',
-                          decoration: _inputDecoration(context, hint: 'Unit'),
-                          isDense: true,
-                          items: _units
-                              .map((u) => DropdownMenuItem(
-                                  value: u, child: Text(u.isEmpty ? '—' : u)))
-                              .toList(),
-                          onChanged: (v) => setState(() => _unit = v ?? ''),
-                        ),
-                      ),
-                    ],
+            const SizedBox(height: 4),
+            Container(width: 28, height: 2, color: _lime),
+            const SizedBox(height: 16),
+            // Qty + Unit
+            Row(
+              children: [
+                SizedBox(
+                  width: 90,
+                  child: TextField(
+                    controller: _qty,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    style: GoogleFonts.spaceGrotesk(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: _flatDecoration(context, hint: 'Qty'),
                   ),
-                  const SizedBox(height: 10),
-                  // Name with typeahead (expand stack height so dropdown is inside hit test)
-                  SizedBox(
-                    height: 52 + suggestionHeight,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        TextField(
-                          controller: _name,
-                          onChanged: _onNameChanged,
-                          decoration: _inputDecoration(
-                            context,
-                            hint: 'Ingredient name',
-                            prefixIcon:
-                                const Icon(Icons.search_outlined, size: 18),
-                            suffixIcon: _loading
-                                ? Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    ),
-                                  )
-                                : null,
-                          ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _units.contains(_unit) ? _unit : '',
+                    style: GoogleFonts.spaceGrotesk(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: _flatDecoration(context, hint: 'Unit'),
+                    isDense: true,
+                    items: _units
+                        .map((u) => DropdownMenuItem(
+                              value: u,
+                              child: Text(u.isEmpty ? '—' : u,
+                                  style:
+                                      GoogleFonts.spaceGrotesk(fontSize: 14)),
+                            ))
+                        .toList(),
+                    onChanged: (v) => setState(() => _unit = v ?? ''),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Name field
+            TextField(
+              controller: _name,
+              focusNode: _nameFocus,
+              onChanged: _onNameChanged,
+              onTapOutside: (_) {
+                _nameFocus.unfocus();
+                Future.delayed(const Duration(milliseconds: 150), () {
+                  if (mounted) setState(() => _suggestions = []);
+                });
+              },
+              style: GoogleFonts.spaceGrotesk(
+                color: theme.colorScheme.onSurface,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _flatDecoration(context, hint: 'Ingredient name')
+                  .copyWith(
+                prefixIcon: Icon(
+                  Icons.search_outlined,
+                  size: 16,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+                suffixIcon: _loading
+                    ? const Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        if (_suggestions.isNotEmpty)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            top: 52,
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(8),
-                              color: theme.colorScheme.surface,
-                              child: ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxHeight: 220),
-                                child: ListView.separated(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 6),
-                                  shrinkWrap: true,
-                                  itemCount: _suggestions.length,
-                                  separatorBuilder: (_, __) => Divider(
-                                    height: 1,
-                                    thickness: 0.5,
-                                    color: theme.colorScheme.outline
-                                        .withOpacity(0.1),
+                      )
+                    : null,
+              ),
+            ),
+            // Inline suggestions — part of scroll, no overlay needed
+            if (_suggestions.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 1),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: _suggestions.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final s = entry.value;
+                    final en = (s['canonical_name_en'] ?? '').toString();
+                    final fr = (s['canonical_name_fr'] ?? '').toString();
+                    return Column(
+                      children: [
+                        if (idx > 0)
+                          Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: theme.colorScheme.outline
+                                .withValues(alpha: 0.1),
+                          ),
+                        InkWell(
+                          onTap: () => _selectSuggestion(s),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            child: Row(
+                              children: [
+                                Icon(Icons.north_west,
+                                    size: 12, color: _lime),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    fr.isNotEmpty ? '$en  •  $fr' : en,
+                                    style: GoogleFonts.spaceGrotesk(
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                  itemBuilder: (context, index) {
-                                    final s = _suggestions[index];
-                                    final en = (s['canonical_name_en'] ?? '')
-                                        .toString();
-                                    final fr = (s['canonical_name_fr'] ?? '')
-                                        .toString();
-                                    return InkWell(
-                                      onTap: () => _selectSuggestion(s),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12.0, vertical: 10.0),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.search,
-                                                size: 16,
-                                                color: theme.colorScheme
-                                                    .onSurfaceVariant),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                fr.isNotEmpty
-                                                    ? '$en  •  $fr'
-                                                    : en,
-                                                style: GoogleFonts.nunito(
-                                                  color: theme
-                                                      .colorScheme.onSurface,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
                                 ),
-                              ),
+                              ],
                             ),
                           ),
+                        ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _desc,
-                    decoration: _inputDecoration(context,
-                        hint: 'Description (optional)'),
-                  ),
-                  const SizedBox(height: 12),
-                ],
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-          ),
-          // Bottom action bar
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _handleSave(addAnother: false),
-                      style: OutlinedButton.styleFrom(
-                        textStyle: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text('Save'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => _handleSave(addAnother: true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        textStyle: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w800),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text('Save & add another'),
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 10),
+            // Description
+            TextField(
+              controller: _desc,
+              style: GoogleFonts.spaceGrotesk(
+                color: theme.colorScheme.onSurface,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
+              decoration:
+                  _flatDecoration(context, hint: 'Description (optional)'),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _handleSave(addAnother: false),
+                    child: Container(
+                      height: 48,
+                      color: _lime,
+                      alignment: Alignment.center,
+                      child: Text(
+                        'SAVE',
+                        style: GoogleFonts.spaceGrotesk(
+                          color: _btnFg,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _handleSave(addAnother: true),
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline
+                              .withValues(alpha: 0.35),
+                          width: 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'SAVE & ADD MORE',
+                        style: GoogleFonts.spaceGrotesk(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

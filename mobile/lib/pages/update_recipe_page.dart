@@ -156,9 +156,9 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(
-            Icons.chevron_left,
-            size: 32,
-            color: Theme.of(context).colorScheme.primary,
+            Icons.close,
+            size: 28,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         title: Text(
@@ -204,36 +204,12 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
                 thickness: 1,
                 height: 1,
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'INGREDIENTS',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                        width: 20,
-                        height: 2,
-                        color: const Color(0xFFCAFF00)),
-                  ],
-                ),
+              MealIngredientsSection(
+                label: 'Ingredient',
+                ingredients: _mealIngredients,
+                onChanged: _onMealIngredientsChanged,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: MealIngredientsSection(
-                  label: 'Ingredient',
-                  ingredients: _mealIngredients,
-                  onChanged: _onMealIngredientsChanged,
-                ),
-              ),
+              const SizedBox(height: 8),
               InstructionsSection(
                 instructions: _instructions,
                 onInstructionsChanged: _onInstructionsChanged,

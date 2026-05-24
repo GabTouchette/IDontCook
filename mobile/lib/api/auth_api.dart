@@ -8,6 +8,25 @@ class AuthApi {
   static const _userKey = 'user_data';
   static const _tokenKey = 'auth_token';
 
+  /// Parse a {token, user} response body and persist to SharedPreferences.
+  Future<User> _parseAndPersistAuthResponse(Map<String, dynamic> responseData) async {
+    final String token = responseData['token'];
+    final Map<String, dynamic> userJson = responseData['user'];
+
+    final user = User(
+      id: userJson['id'],
+      username: userJson['username'],
+      email: userJson['email'],
+      token: token,
+      avatar_icon: userJson['avatar_icon'] ?? '',
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+    await prefs.setString(_userKey, json.encode(user.toJson()));
+    return user;
+  }
+
   /// LOGIN
   Future<User> login(String username, String password) async {
     try {
@@ -22,22 +41,7 @@ class AuthApi {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        final String token = responseData['token'];
-        final Map<String, dynamic> userJson = responseData['user'];
-
-        final user = User(
-          id: userJson['id'],
-          username: userJson['username'],
-          email: userJson['email'],
-          token: token,
-          avatar_icon: userJson['avatar_icon'] ?? '',
-        );
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_tokenKey, token);
-        await prefs.setString(_userKey, json.encode(user.toJson()));
-
-        return user;
+        return await _parseAndPersistAuthResponse(responseData);
       } else {
         throw Exception('Failed to login: ${response.body}');
       }
@@ -64,27 +68,33 @@ class AuthApi {
 
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        final String token = responseData['token'];
-        final Map<String, dynamic> userJson = responseData['user'];
-
-        final user = User(
-          id: userJson['id'],
-          username: userJson['username'],
-          email: userJson['email'],
-          token: token,
-          avatar_icon: userJson['avatar_icon'] ?? '',
-        );
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_tokenKey, token);
-        await prefs.setString(_userKey, json.encode(user.toJson()));
-
-        return user;
+        return await _parseAndPersistAuthResponse(responseData);
       } else {
         throw Exception('Failed to register: ${response.body}');
       }
     } catch (e) {
       throw Exception('Registration error: $e');
+    }
+  }
+
+  /// GOOGLE AUTH
+  Future<User> googleAuthWithIdToken(String idToken) async {
+    try {
+      final url = ApiConfig.buildApiUri('accounts/google-auth/');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'id_token': idToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        return await _parseAndPersistAuthResponse(responseData);
+      } else {
+        throw Exception('Google auth failed: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Google auth error: $e');
     }
   }
 

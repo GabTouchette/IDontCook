@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class AdditionalSections extends StatelessWidget {
   final List<String>? tags;
@@ -18,6 +19,7 @@ class AdditionalSections extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const lime = Color(0xFFCAFF00);
+    final changeColor = Theme.of(context).colorScheme.success;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +38,7 @@ class AdditionalSections extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2.0,
                     color: updatedFields.contains('tags')
-                        ? lime
+                        ? changeColor
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -98,7 +100,7 @@ class AdditionalSections extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2.0,
                     color: updatedFields.contains('description')
-                        ? lime
+                        ? changeColor
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -121,7 +123,12 @@ class AdditionalSections extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 height: 1.6,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                color: updatedFields.contains('description')
+                    ? changeColor
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                fontStyle: updatedFields.contains('description')
+                    ? FontStyle.italic
+                    : null,
               ),
             ),
           ),
@@ -141,7 +148,7 @@ class AdditionalSections extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2.0,
                     color: updatedFields.contains('notes')
-                        ? lime
+                        ? changeColor
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -173,8 +180,12 @@ class AdditionalSections extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 height: 1.6,
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                color: updatedFields.contains('notes')
+                    ? changeColor
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                fontStyle: updatedFields.contains('notes')
+                    ? FontStyle.italic
+                    : null,
               ),
             ),
           ),

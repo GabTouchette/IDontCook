@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/models/user/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -12,113 +14,120 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage>
     with SingleTickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
+  late AnimationController _controller;
+  late Animation<double> _fade;
+  late Animation<double> _scale;
+
+  int _typeChars = 0;
+  static const _splashText = "I DON'T COOK";
 
   @override
   void initState() {
     super.initState();
-
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
     );
-
-    _fadeController.forward();
+    _scale = Tween<double>(begin: 0.72, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
+      ),
+    );
+    _controller.forward();
+    Future.delayed(const Duration(milliseconds: 700), _startTyping);
     _checkAuth();
   }
 
-  Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(milliseconds: 1600));
-    final User? user = await AuthApi.getUser();
+  Future<void> _startTyping() async {
+    for (int i = 0; i < _splashText.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 75));
+      if (!mounted) return;
+      setState(() => _typeChars = i + 1);
+    }
+  }
 
+  Future<void> _checkAuth() async {
+    await Future.delayed(const Duration(milliseconds: 2500));
+    final User? user = await AuthApi.getUser();
     if (mounted) {
       if (user != null) {
         Navigator.pushNamedAndRemoveUntil(
             context, '/recipes', (route) => false);
       } else {
-        Navigator.pushNamedAndRemoveUntil(
-            context, '/landing', (route) => false);
+        final prefs = await SharedPreferences.getInstance();
+        final bool onboardingCompleted =
+            prefs.getBool('onboarding_completed') ?? false;
+        final String next =
+            (kDebugMode || !onboardingCompleted) ? '/onboarding' : '/landing';
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, next, (route) => false);
+        }
       }
     }
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color bg = Color(0xFF0A0A0A);
     const Color lime = Color(0xFFCAFF00);
-    const Color offWhite = Color(0xFFF5F4EF);
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: bg,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: FadeTransition(
-          opacity: _fadeAnimation,
+          opacity: _fade,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Center content
               Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // App logo
-                    Image.asset(
-                      'assets/images/icon.png',
-                      width: 140,
-                      height: 140,
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    // App name
-                    Text(
-                      'IDONTCOOK',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w700,
-                        color: offWhite,
-                        letterSpacing: 4,
+                    ScaleTransition(
+                      scale: _scale,
+                      child: Image.asset(
+                        'assets/images/icon.png',
+                        width: 96,
+                        height: 96,
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // Subtitle
+                    const SizedBox(height: 22),
                     Text(
-                      'your culinary companion',
+                      _splashText.substring(0, _typeChars),
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: offWhite.withValues(alpha: 0.45),
-                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 4.0,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.55),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Bottom loading bar
+              // Bottom progress line
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
                 child: LinearProgressIndicator(
-                  backgroundColor: offWhite.withValues(alpha: 0.08),
-                  valueColor: const AlwaysStoppedAnimation<Color>(lime),
-                  minHeight: 2,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      lime.withValues(alpha: 0.5)),
+                  minHeight: 1.5,
                 ),
               ),
             ],
@@ -128,4 +137,3 @@ class _SplashPageState extends State<SplashPage>
     );
   }
 }
-

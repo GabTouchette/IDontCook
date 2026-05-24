@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 
 class ServingsSection extends StatelessWidget {
   final double servings;
@@ -47,14 +48,22 @@ class ServingsSection extends StatelessWidget {
                           .withOpacity(0.4),
                     ),
                   ),
-                  Text(
-                    _formatServings(servings),
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 42,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1.5,
-                      color: labelColor,
-                      height: 1.0,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: FadeTransition(opacity: animation, child: child),
+                    ),
+                    child: Text(
+                      _formatServings(servings),
+                      key: ValueKey(_formatServings(servings)),
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -1.5,
+                        color: labelColor,
+                        height: 1.0,
+                      ),
                     ),
                   ),
                 ],
@@ -109,7 +118,10 @@ class _CtrlBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        HapticService.selectionClick();
+        onTap();
+      },
       child: SizedBox(
         width: 48,
         height: 44,

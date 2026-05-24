@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class RecipeHeader extends StatelessWidget {
   final Recipe recipe;
@@ -23,7 +24,7 @@ class RecipeHeader extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final barBg = isDark ? const Color(0xFFF5F4EF) : const Color(0xFF0A0A0A);
     final barText = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F4EF);
-    const lime = Color(0xFFCAFF00);
+    final changeColor = Theme.of(context).colorScheme.success;
 
     final stats = <_StatItem>[];
     if (recipe.preparation_time != null) {
@@ -69,7 +70,7 @@ class RecipeHeader extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.8,
                       color: stats[i].highlighted
-                          ? lime
+                          ? changeColor
                           : barText.withOpacity(0.45),
                     ),
                   ),
@@ -84,7 +85,7 @@ class RecipeHeader extends StatelessWidget {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 38,
                           fontWeight: FontWeight.w700,
-                          color: stats[i].highlighted ? lime : barText,
+                          color: stats[i].highlighted ? changeColor : barText,
                           height: 1.0,
                           letterSpacing: -1.5,
                         ),
@@ -97,7 +98,7 @@ class RecipeHeader extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                           color: stats[i].highlighted
-                              ? lime
+                              ? changeColor
                               : barText.withOpacity(0.55),
                         ),
                       ),

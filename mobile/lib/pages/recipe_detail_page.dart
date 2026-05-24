@@ -16,10 +16,12 @@ import 'package:i_cant_cook/widgets/recipe_detail/recipe_detail_skeleton.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_image_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_info_widget.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
+import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/pages/update_recipe_page.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:i_cant_cook/widgets/dialogs/user_post_dialog.dart';
+import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:provider/provider.dart';
 
 class RecipeDetailPage extends StatefulWidget {
@@ -51,6 +53,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     try {
       await provider.saveRecipeOnly(context);
+
+      if (context.mounted) {
+        Provider.of<UserRecipesProvider>(context, listen: false).fetchRecipes();
+      }
 
       // Show success toast
       InformationToast.show(
@@ -111,7 +117,13 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             icon: Container(
               width: 36,
               height: 36,
-              color: Colors.black.withOpacity(0.55),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.55),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.4),
+                  width: 1,
+                ),
+              ),
               child: const Icon(
                 Icons.arrow_back,
                 color: Colors.white,
@@ -356,11 +368,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => SizedBox(
-                        height: MediaQuery.of(context).size.height,
-                        child: RecipeChatDialog(recipe: recipe),
-                      ),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surface,
+                      builder: (_) => RecipeChatDialog(recipe: recipe),
                     );
                   },
                   child: Container(
@@ -474,33 +484,27 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   Widget _buildImagePlaceholder() {
     final provider = context.read<RecipeDetailProvider>();
-    final int imageNumber = ((provider.recipe?.id) ?? 0) % 11 + 1;
-    return Container(
-      height: 250,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/images/stock_food_$imageNumber.jpg',
-            fit: BoxFit.cover,
-            height: 250,
-            width: double.infinity,
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-              child: Container(),
+    final int recipeId = (provider.recipe?.id) ?? 0;
+    return Stack(
+      children: [
+        PlaceholderImageWidget(recipeId: recipeId, height: 250),
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Text(
+              'Tap to add photo',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: Colors.white.withOpacity(0.7),
+              ),
             ),
           ),
-          Center(
-            child: Icon(
-              Icons.image,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              size: 80,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

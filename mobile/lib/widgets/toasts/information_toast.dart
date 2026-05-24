@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/theme/theme.dart';
 
 class InformationToast {
@@ -30,6 +31,22 @@ class InformationToast {
           toastBackgroundColor = Theme.of(context).colorScheme.error;
           break;
       }
+    }
+
+    // Haptic feedback based on severity
+    switch (type) {
+      case ToastType.success:
+        HapticService.notificationSuccess();
+        break;
+      case ToastType.warning:
+        HapticService.notificationWarning();
+        break;
+      case ToastType.error:
+        HapticService.notificationError();
+        break;
+      case ToastType.info:
+        HapticService.selectionClick();
+        break;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(

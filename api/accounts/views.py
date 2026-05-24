@@ -1,6 +1,11 @@
 import random
+import string
 
+from django.conf import settings as django_settings
 from django.http import JsonResponse
+
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -84,12 +89,105 @@ class UserSettingsView(APIView):
     def get(self, request):
         settings, _ = UserSettings.objects.get_or_create(user=request.user)
         serializer = UserSettingsSerializer(settings)
-        return JsonResponse(serializer.data)
+        data = dict(serializer.data)
+        data['first_name'] = request.user.first_name
+        data['last_name'] = request.user.last_name
+        return JsonResponse(data)
 
     def patch(self, request):
+        # Optionally update first_name / last_name on the user model itself
+        first_name = request.data.pop('first_name', None)
+        last_name = request.data.pop('last_name', None)
+        if first_name is not None:
+            request.user.first_name = first_name
+        if last_name is not None:
+            request.user.last_name = last_name
+        if first_name is not None or last_name is not None:
+            request.user.save(update_fields=[
+                f for f, v in [('first_name', first_name), ('last_name', last_name)] if v is not None
+            ])
+
         settings, _ = UserSettings.objects.get_or_create(user=request.user)
         serializer = UserSettingsSerializer(settings, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleAuthView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        token = request.data.get('id_token')
+        if not token:
+            return JsonResponse(
+                {'error': 'id_token is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        client_id = getattr(django_settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
+        if not client_id:
+            return JsonResponse(
+                {'error': 'Google OAuth is not configured on this server'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            payload = id_token.verify_oauth2_token(
+                token,
+                google_requests.Request(),
+                client_id,
+            )
+        except ValueError as exc:
+            return JsonResponse(
+                {'error': f'Invalid Google token: {exc}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = payload.get('email')
+        if not email:
+            return JsonResponse(
+                {'error': 'Google token did not contain an email'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user, created = CustomUser.objects.get_or_create(
+            email=email,
+            defaults={
+                'username': self._generate_username(email),
+                'avatar_icon': self._get_random_avatar_icon(),
+                'first_name': payload.get('given_name', ''),
+                'last_name': payload.get('family_name', ''),
+            },
+        )
+
+        token_obj, _ = Token.objects.get_or_create(user=user)
+
+        return JsonResponse({
+            'token': token_obj.key,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'avatar_icon': user.avatar_icon,
+            },
+            'created': created,
+        }, status=status.HTTP_200_OK)
+
+    def _generate_username(self, email: str) -> str:
+        base = email.split('@')[0][:12].replace('.', '_').replace('+', '_')
+        suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+        candidate = f'{base}_{suffix}'
+        # Ensure uniqueness (retry once on collision — astronomically unlikely)
+        if CustomUser.objects.filter(username=candidate).exists():
+            suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+            candidate = f'{base}_{suffix}'
+        return candidate
+
+    def _get_random_avatar_icon(self) -> str:
+        icons = [
+            'burger', 'pizza', 'apple', 'iceCream', 'carrot', 'fish',
+            'lemon', 'coffee', 'cake', 'hotdog',
+        ]
+        return random.choice(icons)

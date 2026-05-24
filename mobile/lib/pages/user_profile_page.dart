@@ -6,6 +6,7 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/settings_page.dart';
 import 'package:i_cant_cook/providers/user_profile_provider.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
 import 'package:i_cant_cook/widgets/social/user_post_card.dart';
@@ -21,9 +22,10 @@ class UserProfilePage extends StatelessWidget {
       create: (_) => UserProfileProvider(user: user),
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
+          elevation: 0,
           centerTitle: true,
           leading: IconButton(
             padding: const EdgeInsets.only(left: 16.0),
@@ -31,18 +33,16 @@ class UserProfilePage extends StatelessWidget {
             icon: Icon(
               Icons.chevron_left,
               color: Theme.of(context).colorScheme.primary,
-              size: 28,
+              size: 32,
             ),
           ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'Profile',
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w900,
-                fontSize: 28,
-                letterSpacing: -0.5,
-              ),
+          title: Text(
+            'PROFILE',
+            style: GoogleFonts.spaceGrotesk(
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+              letterSpacing: 2.5,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           actions: [
@@ -51,7 +51,7 @@ class UserProfilePage extends StatelessWidget {
               icon: Icon(
                 Icons.settings,
                 color: Theme.of(context).colorScheme.primary,
-                size: 28,
+                size: 32,
               ),
               onPressed: () {
                 Navigator.push(
@@ -115,7 +115,10 @@ class UserProfilePage extends StatelessWidget {
                       const SizedBox(height: 16),
                       if (!provider.isCurrentUser)
                         ElevatedButton.icon(
-                          onPressed: provider.toggleFollowUser,
+                          onPressed: () {
+                            HapticService.mediumImpact();
+                            provider.toggleFollowUser();
+                          },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 100),
@@ -278,7 +281,10 @@ class UserProfilePage extends StatelessWidget {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => provider.setTabIndex(index),
+        onTap: () {
+          HapticService.selectionClick();
+          provider.setTabIndex(index);
+        },
         child: Container(
           decoration: isSelected
               ? BoxDecoration(

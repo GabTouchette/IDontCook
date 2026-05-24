@@ -81,13 +81,13 @@ class _TagsSectionState extends State<TagsSection> {
             'TAGS',
             style: GoogleFonts.spaceGrotesk(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
             ),
           ),
           const SizedBox(height: 4),
-          Container(width: 20, height: 2, color: const Color(0xFFCAFF00)),
+          Container(width: 28, height: 2, color: const Color(0xFFCAFF00)),
           const SizedBox(height: 16),
           _buildMealTypeSection(),
           const SizedBox(height: 4),
@@ -121,10 +121,20 @@ class _TagsSectionState extends State<TagsSection> {
           height: 1,
         ),
         GestureDetector(
-          onTap: () =>
-              setState(() => _expansionStates[category] = !isExpanded),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() {
+            final opening = !isExpanded;
+            // Close all other sections when opening this one
+            if (opening) {
+              for (final key in _expansionStates.keys) {
+                _expansionStates[key] = key == category;
+              }
+            } else {
+              _expansionStates[category] = false;
+            }
+          }),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -132,17 +142,17 @@ class _TagsSectionState extends State<TagsSection> {
                   category.toUpperCase(),
                   style: GoogleFonts.spaceGrotesk(
                     color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
                   ),
                 ),
                 AnimatedRotation(
                   turns: isExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 150),
+                  duration: const Duration(milliseconds: 200),
                   child: Icon(
                     Icons.expand_more,
-                    size: 18,
+                    size: 20,
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
@@ -153,65 +163,73 @@ class _TagsSectionState extends State<TagsSection> {
             ),
           ),
         ),
-        if (isExpanded)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: tags.map((tag) {
-                final isSelected = selectedTags.any(
-                    (t) => t.toLowerCase() == tag.toLowerCase());
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        widget.selectedTags.removeWhere(
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: isExpanded
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: tags.map((tag) {
+                        final isSelected = selectedTags.any(
                             (t) => t.toLowerCase() == tag.toLowerCase());
-                      } else {
-                        widget.selectedTags.add(tag);
-                      }
-                      widget.onTagsChanged(widget.selectedTags);
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 9, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFCAFF00)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.zero,
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFCAFF00)
-                            : Theme.of(context)
-                                .colorScheme
-                                .outline
-                                .withValues(alpha: 0.3),
-                        width: 1,
-                      ),
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                widget.selectedTags.removeWhere(
+                                    (t) => t.toLowerCase() == tag.toLowerCase());
+                              } else {
+                                widget.selectedTags.add(tag);
+                              }
+                              widget.onTagsChanged(widget.selectedTags);
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 120),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFCAFF00)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.zero,
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFFCAFF00)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .outline
+                                        .withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              tag,
+                              style: GoogleFonts.spaceGrotesk(
+                                color: isSelected
+                                    ? const Color(0xFF0A0A0A)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                    child: Text(
-                      tag,
-                      style: GoogleFonts.spaceGrotesk(
-                        color: isSelected
-                            ? const Color(0xFF0A0A0A)
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+                  )
+                : const SizedBox.shrink(),
           ),
+        ),
       ],
     );
   }
@@ -261,7 +279,7 @@ class _TagsSectionState extends State<TagsSection> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                    horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFCAFF00)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 
 class WeeklyCalendar extends StatefulWidget {
   final DateTime weekStart;
@@ -70,6 +71,7 @@ class _WeeklyCalendarState extends State<WeeklyCalendar>
                   // Previous week button
                   IconButton(
                     onPressed: () {
+                      HapticService.lightImpact();
                       _pageController.previousPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
@@ -98,6 +100,7 @@ class _WeeklyCalendarState extends State<WeeklyCalendar>
                   // Next week button
                   IconButton(
                     onPressed: () {
+                      HapticService.lightImpact();
                       _pageController.nextPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
@@ -319,7 +322,10 @@ class _DayTile extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticService.selectionClick();
+        onTap();
+      },
       child: container,
     );
   }

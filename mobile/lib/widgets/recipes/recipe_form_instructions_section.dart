@@ -111,47 +111,41 @@ class _InstructionsSectionState extends State<InstructionsSection> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Delete button
-              GestureDetector(
-                onTap: widget.instructions.length > 1
-                    ? () {
-                        setState(() {
-                          widget.instructions.removeAt(i);
-                        });
-                        widget.onInstructionsChanged(widget.instructions);
-                      }
-                    : null,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: widget.instructions.length > 1
-                          ? Theme.of(context)
+              // Delete button — only visible when step has content
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: widget.instructions[i].controller,
+                builder: (context, value, _) {
+                  if (value.text.isEmpty) return const SizedBox(width: 40);
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        widget.instructions.removeAt(i);
+                      });
+                      widget.onInstructionsChanged(widget.instructions);
+                    },
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context)
                               .colorScheme
                               .error
-                              .withValues(alpha: 0.4)
-                          : Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.1),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.close,
-                    size: 14,
-                    color: widget.instructions.length > 1
-                        ? Theme.of(context)
+                              .withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        size: 14,
+                        color: Theme.of(context)
                             .colorScheme
                             .error
-                            .withValues(alpha: 0.7)
-                        : Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.2),
-                  ),
-                ),
+                            .withValues(alpha: 0.7),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -173,13 +167,13 @@ class _InstructionsSectionState extends State<InstructionsSection> {
             'INSTRUCTIONS',
             style: GoogleFonts.spaceGrotesk(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
             ),
           ),
           const SizedBox(height: 4),
-          Container(width: 20, height: 2, color: _lime),
+          Container(width: 28, height: 2, color: _lime),
           const SizedBox(height: 12),
           ..._buildInstructionsInputFields(),
         ],

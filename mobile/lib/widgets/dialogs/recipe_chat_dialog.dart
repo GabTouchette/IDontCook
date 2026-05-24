@@ -16,91 +16,106 @@ class RecipeChatDialog extends StatefulWidget {
 }
 
 class _RecipeChatDialogState extends State<RecipeChatDialog> {
-  bool _starterMessageSent = false;
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final provider = context.read<ChatProvider>();
-    provider.setCurrentRecipe(widget.recipe.id);
-
-    if (!_starterMessageSent) {
-      _starterMessageSent = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (provider.currentMessages.isEmpty) {
-          provider.addMessage(
-            sender: "ai",
-            text: "Ask me something about your ${widget.recipe.title} recipe!",
-            isRecipeChat: true,
-          );
-        }
-      });
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final provider = context.read<ChatProvider>();
+      provider.setCurrentRecipe(widget.recipe.id);
+      if (provider.currentMessages.isEmpty) {
+        provider.addMessage(
+          sender: "ai",
+          text: "Ask me something about your ${widget.recipe.title} recipe!",
+          isRecipeChat: true,
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      maxChildSize: 0.95,
-      minChildSize: 0.6,
-      builder: (context, scrollControllerSheet) {
-        return Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.zero,
-            ),
-            child: Consumer<ChatProvider>(
-              builder: (context, provider, _) => Column(
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(top: 12, left: 16, right: 16),
-                    child: SizedBox(
-                      height: 40,
-                      child: Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.center,
-                            child: Container(
-                              width: 36,
-                              height: 2,
-                              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                            ),
+    final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: SizedBox(
+          height: screenHeight * 0.65,
+          child: Consumer<ChatProvider>(
+            builder: (context, provider, _) => Column(
+              children: [
+                // Handle bar + close button
+                Padding(
+                  padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
+                  child: SizedBox(
+                    height: 40,
+                    child: Stack(
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 36,
+                            height: 2,
+                            color: cs.outline.withOpacity(0.3),
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              icon: Icon(Icons.close,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  size: 20),
-                              onPressed: () => Navigator.pop(context),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            icon: Icon(Icons.refresh, color: cs.onSurface, size: 20),
+                            tooltip: 'Clear chat',
+                            onPressed: () {
+                              provider.clearRecipeChat();
+                              provider.addMessage(
+                                sender: 'ai',
+                                text: 'Ask me something about your ${widget.recipe.title} recipe!',
+                                isRecipeChat: true,
+                              );
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
-                        ],
-                      ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            icon:
+                                Icon(Icons.close, color: cs.onSurface, size: 20),
+                            onPressed: () => Navigator.pop(context),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: provider.scrollController,
-                      itemCount: provider.currentMessages.length,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemBuilder: (context, index) {
-                        final msg = provider.currentMessages[index];
-                        final isUser = msg['sender'] == 'user';
-                        return Align(
+                ),
+                // Messages
+                Expanded(
+                  child: ListView.builder(
+                    controller: provider.scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: provider.currentMessages.length,
+                    itemBuilder: (context, index) {
+                      final msg = provider.currentMessages[index];
+                      final isUser = msg['sender'] == 'user';
+                      return Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Align(
                           alignment: isUser
                               ? Alignment.centerRight
                               : Alignment.centerLeft,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 4.0),
                             child: msg['sender'] == 'ai'
                                 ? AiResponseBubble(
                                     message: msg['text'],
@@ -114,56 +129,87 @@ class _RecipeChatDialogState extends State<RecipeChatDialog> {
                                     isUser: isUser,
                                   ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                  SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: TextField(
-                          controller: provider.chatController,
-                          style: GoogleFonts.spaceGrotesk(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          onSubmitted: (query) => provider.sendMessage(
-                              query: query,
-                              recipeId: widget.recipe.id,
-                              isRecipeChat: true),
-                          decoration: InputDecoration(
-                            icon: Icon(Icons.chat_bubble_outline,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                                size: 18),
-                            hintText: 'Ask something about this recipe...',
-                            hintStyle: GoogleFonts.spaceGrotesk(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
-                              fontSize: 15,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                        ),
+                ),
+                // Input — matches chatbot page style
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      border: Border.all(
+                        color: cs.outline.withOpacity(0.25),
+                        width: 1.5,
                       ),
                     ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: provider.chatController,
+                            style: GoogleFonts.spaceGrotesk(
+                              color: cs.onSurface,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            onSubmitted: (query) {
+                              FocusScope.of(context).unfocus();
+                              provider.sendMessage(
+                                query: query,
+                                recipeId: widget.recipe.id,
+                                isRecipeChat: true,
+                              );
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Ask something about this recipe...',
+                              hintStyle: GoogleFonts.spaceGrotesk(
+                                color: cs.onSurface.withOpacity(0.35),
+                                fontSize: 15,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14.0,
+                                horizontal: 16.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            final query =
+                                provider.chatController.text.trim();
+                            if (query.isNotEmpty) {
+                              FocusScope.of(context).unfocus();
+                              provider.sendMessage(
+                                query: query,
+                                recipeId: widget.recipe.id,
+                                isRecipeChat: true,
+                              );
+                            }
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            color: cs.onSurface,
+                            child: Icon(
+                              Icons.arrow_forward,
+                              color: cs.surface,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

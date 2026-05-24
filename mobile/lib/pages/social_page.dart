@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/user/user.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 
@@ -150,7 +152,10 @@ class SocialPage extends StatelessWidget {
                                 return UserPostCard(
                                   post: provider.posts[index],
                                   provider: provider,
-                                );
+                                ).animate(
+                                  delay: (index < 8 ? index * 40 : 0).ms,
+                                ).fadeIn(duration: 200.ms)
+                                 .slideY(begin: 0.05, curve: Curves.easeOut, duration: 200.ms);
                               },
                             ),
                     ),
@@ -225,7 +230,10 @@ class SocialPage extends StatelessWidget {
     bool isSelected = provider.tabIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => provider.onTabTapped(index),
+        onTap: () {
+          HapticService.selectionClick();
+          provider.onTabTapped(index);
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
           child: isSelected

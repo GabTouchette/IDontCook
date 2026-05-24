@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/pages/personal_info_page.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
-import 'package:i_cant_cook/providers/settings_provider.dart';
-import 'package:i_cant_cook/widgets/dialogs/personal_info_dialog.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -10,108 +10,108 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SettingsProvider(),
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          centerTitle: true,
-          leading: IconButton(
-            padding: const EdgeInsets.only(left: 16.0),
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(
-              Icons.chevron_left,
-              size: 32,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          title: Text(
-            'SETTINGS',
-            style: GoogleFonts.spaceGrotesk(
-              fontWeight: FontWeight.w700,
-              fontSize: 22,
-              letterSpacing: 2.5,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        leading: IconButton(
+          padding: const EdgeInsets.only(left: 16.0),
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.chevron_left,
+            size: 32,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
-        body: Consumer<SettingsProvider>(
-          builder: (context, settingsProvider, _) {
-            return Column(
-              children: [
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
-                ),
-                // Settings items
-                _buildSettingsRow(
-                  context,
-                  icon: Icons.person_outline,
-                  title: 'PERSONAL INFO',
-                  subtitle: 'Update your profile and account details',
-                  onTap: () => _openPersonalInfoModal(context),
-                ),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.12),
-                ),
-                const Spacer(),
-                // Logout pinned to bottom
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, _) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                      child: GestureDetector(
-                        onTap: () => authProvider.logout().then(
-                              (_) => Navigator.of(context)
-                                  .pushReplacementNamed('/login'),
-                            ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.error,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.logout,
-                                size: 18,
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'LOGOUT',
-                                style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 2.0,
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                              ),
-                            ],
+        title: Text(
+          'SETTINGS',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withValues(alpha: 0.15),
+          ),
+          _buildSettingsRow(
+            context,
+            icon: Icons.person_outline,
+            title: 'PERSONAL INFO',
+            subtitle: 'Update your profile and account details',
+            onTap: () => _openPersonalInfoPage(context),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 16,
+            endIndent: 16,
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withValues(alpha: 0.12),
+          ),
+          const Spacer(),
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                child: GestureDetector(
+                  onTap: () {
+                    HapticService.heavyImpact();
+                    authProvider.logout().then(
+                          (_) => Navigator.of(context)
+                              .pushReplacementNamed('/login'),
+                        );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.error,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.logout,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'LOGOUT',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2.0,
+                            color: Theme.of(context).colorScheme.error,
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            );
-          },
-        ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -132,7 +132,10 @@ class SettingsPage extends StatelessWidget {
             Icon(
               icon,
               size: 22,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.6),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -154,7 +157,10 @@ class SettingsPage extends StatelessWidget {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.45),
                     ),
                   ),
                 ],
@@ -163,7 +169,10 @@ class SettingsPage extends StatelessWidget {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.3),
             ),
           ],
         ),
@@ -171,19 +180,20 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _openPersonalInfoModal(BuildContext context) async {
-    final settingsProvider =
-        Provider.of<SettingsProvider>(context, listen: false);
-    await settingsProvider.fetchAndLoadPersonalInfo();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+  void _openPersonalInfoPage(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        pageBuilder: (_, __, ___) => const PersonalInfoPage(),
+        transitionsBuilder: (_, animation, __, child) => SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(1.0, 0.0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: child,
+        ),
+        transitionDuration: const Duration(milliseconds: 280),
       ),
-      builder: (context) => const PersonalInfoDialog(),
     );
   }
 }
+

@@ -19,6 +19,10 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final User? user = await AuthApi.getUser();
+
+  // Already authenticated → skip splash, go straight to app.
+  // Not authenticated → always go through splash (which then routes to
+  // onboarding or login depending on debug mode / flag).
   final String initialRoute = user != null ? '/recipes' : '/';
 
   runApp(
@@ -35,21 +39,21 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
         ChangeNotifierProvider(create: (_) => MealPlanProvider()),
       ],
-      child: ICantCook(initialRoute: initialRoute),
+      child: IDontCook(initialRoute: initialRoute),
     ),
   );
 }
 
-class ICantCook extends StatelessWidget {
+class IDontCook extends StatelessWidget {
   final String initialRoute;
-  const ICantCook({super.key, required this.initialRoute});
+  const IDontCook({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: 'ICantCook',
+          title: 'IDontCook',
           theme: lightTheme(),
           darkTheme: darkTheme(),
           themeMode: themeProvider.themeMode,

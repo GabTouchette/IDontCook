@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 
-class BigRecipeTile extends StatelessWidget {
+class BigRecipeTile extends StatefulWidget {
   final RecipePreview recipe;
 
   const BigRecipeTile({
@@ -13,15 +14,33 @@ class BigRecipeTile extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<BigRecipeTile> createState() => _BigRecipeTileState();
+}
+
+class _BigRecipeTileState extends State<BigRecipeTile> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final recipe = widget.recipe;
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RecipeDetailPage(recipeId: recipe.id),
-        ),
-      ),
-      child: Column(
+      onTap: () {
+        HapticService.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailPage(recipeId: recipe.id),
+          ),
+        );
+      },
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Full-bleed image
@@ -108,14 +127,15 @@ class BigRecipeTile extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
   Widget _buildTimeText(BuildContext context) {
     final parts = <String>[];
-    if (recipe.preparation_time != null)
-      parts.add('${recipe.preparation_time}m prep');
-    if (recipe.cooking_time != null) parts.add('${recipe.cooking_time}m cook');
+    if (widget.recipe.preparation_time != null)
+      parts.add('${widget.recipe.preparation_time}m prep');
+    if (widget.recipe.cooking_time != null) parts.add('${widget.recipe.cooking_time}m cook');
     if (parts.isEmpty) return const SizedBox.shrink();
     return Text(
       parts.join('  ·  '),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
 import 'package:i_cant_cook/widgets/recommendations/big_recipe_tile.dart';
@@ -20,8 +22,12 @@ class _ExplorePageState extends State<ExplorePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_hasFetched) {
-      Provider.of<ExploreProvider>(context, listen: false).fetchInitialItems();
       _hasFetched = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Provider.of<ExploreProvider>(context, listen: false).fetchInitialItems();
+        }
+      });
     }
   }
 
@@ -66,19 +72,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 }
 
                 if (provider.items.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No recipes found.',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.4),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  );
+                  return _buildExploreEmptyState(context, provider);
                 }
 
                 return ListView.builder(
@@ -103,7 +97,12 @@ class _ExplorePageState extends State<ExplorePage> {
                             )
                           : const SizedBox(height: 60);
                     }
-                    return BigRecipeTile(recipe: provider.items[index]);
+                    return BigRecipeTile(recipe: provider.items[index])
+                      .animate(
+                        delay: (index < 8 ? index * 40 : 0).ms,
+                      )
+                      .fadeIn(duration: 200.ms)
+                      .slideY(begin: 0.05, curve: Curves.easeOut, duration: 200.ms);
                   },
                 );
               },
@@ -137,6 +136,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 return GestureDetector(
                   onTap: hasText
                       ? () {
+                          HapticService.lightImpact();
                           provider.searchController.clear();
                         }
                       : null,
@@ -179,7 +179,10 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
             ),
             GestureDetector(
-              onTap: () => _openFilterDrawer(context),
+              onTap: () {
+                HapticService.selectionClick();
+                _openFilterDrawer(context);
+              },
               child: Consumer<ExploreProvider>(
                 builder: (context, p, _) => Container(
                   width: 46,
@@ -233,7 +236,10 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               const Spacer(),
               GestureDetector(
-                onTap: provider.clearFilters,
+                onTap: () {
+                  HapticService.lightImpact();
+                  provider.clearFilters();
+                },
                 child: Text(
                   'CLEAR',
                   style: GoogleFonts.spaceGrotesk(
@@ -272,6 +278,86 @@ class _ExplorePageState extends State<ExplorePage> {
           child: child,
         );
       },
+    );
+  }
+
+  Widget _buildExploreEmptyState(BuildContext context, ExploreProvider provider) {
+    const lime = Color(0xFFCAFF00);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              color: lime,
+              child: const Icon(
+                Icons.explore_outlined,
+                color: Color(0xFF0A0A0A),
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                Text(
+                  'NO RECIPES FOUND',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 17,
+                    letterSpacing: 2.0,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(width: 32, height: 2, color: lime),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              provider.hasActiveFilters
+                  ? 'No recipes match your current filters. Try clearing them to see more.'
+                  : 'Nothing here yet. Try a different search term.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                height: 1.6,
+                color: scheme.onSurface.withOpacity(0.45),
+              ),
+            ),
+            if (provider.hasActiveFilters) ...[
+              const SizedBox(height: 22),
+              GestureDetector(
+                onTap: () {
+                  HapticService.lightImpact();
+                  provider.clearFilters();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 11, horizontal: 28),
+                  decoration: BoxDecoration(
+                    color: lime,
+                  ),
+                  child: Text(
+                    'CLEAR FILTERS',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      letterSpacing: 1.1,
+                      color: const Color(0xFF0A0A0A),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

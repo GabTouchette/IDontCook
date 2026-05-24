@@ -76,10 +76,11 @@ class RecipeImage extends StatelessWidget {
   }
 
   Widget _fallbackImage() {
-    return Container(
-      color: const Color(0xFF0A0A0A),
-      child: Stack(
-        fit: StackFit.expand,
+    return SizedBox.expand(
+      child: ColoredBox(
+        color: const Color(0xFF0A0A0A),
+        child: Stack(
+          fit: StackFit.expand,
         children: [
           // Faint grid lines for texture
           Positioned.fill(
@@ -91,16 +92,6 @@ class RecipeImage extends StatelessWidget {
               Icons.restaurant,
               size: 160,
               color: Colors.white.withOpacity(0.03),
-            ),
-          ),
-          // Lime accent bar top-left
-          const Positioned(
-            left: 20,
-            top: 24,
-            child: SizedBox(
-              width: 36,
-              height: 3,
-              child: ColoredBox(color: Color(0xFFCAFF00)),
             ),
           ),
           // Centered CTA block
@@ -132,6 +123,7 @@ class RecipeImage extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

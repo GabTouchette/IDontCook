@@ -78,102 +78,129 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      contentPadding: const EdgeInsets.all(16),
-      title: Text(
-        "Digitize a Recipe",
-        style: GoogleFonts.nunito(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
+    final cs = Theme.of(context).colorScheme;
+
+    return Dialog(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: cs.surface,
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          border: Border.all(color: cs.outline, width: 1),
         ),
-        textAlign: TextAlign.center,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Please take a picture of the recipe so that we can digitize it. The clearer the image, the better the result!",
-            style: GoogleFonts.nunito(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'DIGITIZE A RECIPE',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+                color: cs.onSurface,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          if (_image == null)
-            ElevatedButton(
-              onPressed: _takePicture,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 4,
+            const SizedBox(height: 12),
+            Container(height: 1, color: cs.outlineVariant),
+            const SizedBox(height: 16),
+            Text(
+              "Take a picture of a recipe and we'll digitize it for you. The clearer the image, the better the result!",
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
+                height: 1.5,
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  "Take Picture",
-                  style: GoogleFonts.nunito(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+            ),
+            const SizedBox(height: 20),
+            if (_image != null) ...[
+              Image.file(_image!, height: 300),
+              const SizedBox(height: 16),
+            ],
+            if (isLoading)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: CircularProgressIndicator(
+                    color: cs.primary,
+                    strokeWidth: 2,
                   ),
                 ),
               ),
-            )
-          else ...[
-            Image.file(_image!, height: 350),
-            const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _takePicture,
-                  icon: Icon(Icons.refresh),
-                  label: Text(
-                    "Retake",
-                    style: GoogleFonts.nunito(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                if (_image != null) ...[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _takePicture,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: cs.onSurface,
+                        side: BorderSide(color: cs.outlineVariant, width: 1),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'RETAKE',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 4,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : _sendImage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: cs.onPrimary,
+                        elevation: 0,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'DIGITIZE',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _sendImage,
-                  icon: Icon(Icons.upload),
-                  label: Text(
-                    "Send",
-                    style: GoogleFonts.nunito(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                ] else
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _takePicture,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: cs.onPrimary,
+                        elevation: 0,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'TAKE PICTURE',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 4,
-                  ),
-                ),
               ],
             ),
           ],
-          if (isLoading)
-            Padding(
-              padding: EdgeInsets.only(top: 20),
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

@@ -8,6 +8,7 @@ import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/pages/user_profile_page.dart';
 import 'package:i_cant_cook/mixins/post_mixin.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
@@ -241,14 +242,23 @@ class _UserPostCardState extends State<UserPostCard>
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(
-            isThumbsUp ? Icons.thumb_up : Icons.thumb_up_outlined,
-            color: isThumbsUp
-                ? Theme.of(context).colorScheme.success
-                : Theme.of(context).colorScheme.outline,
-            size: 18,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 150),
+            transitionBuilder: (child, animation) => ScaleTransition(
+              scale: Tween(begin: 0.6, end: 1.0).animate(animation),
+              child: child,
+            ),
+            child: Icon(
+              isThumbsUp ? Icons.thumb_up : Icons.thumb_up_outlined,
+              key: ValueKey(isThumbsUp),
+              color: isThumbsUp
+                  ? Theme.of(context).colorScheme.success
+                  : Theme.of(context).colorScheme.outline,
+              size: 18,
+            ),
           ),
           onPressed: () {
+            HapticService.selectionClick();
             if (post.recipe_id != null) {
               provider.handleRecipeVote(post.id, post.recipe_id!, 1);
             }
@@ -264,14 +274,23 @@ class _UserPostCardState extends State<UserPostCard>
               color: Theme.of(context).colorScheme.onSurface),
         ),
         IconButton(
-          icon: Icon(
-            isThumbsDown ? Icons.thumb_down : Icons.thumb_down_outlined,
-            color: isThumbsDown
-                ? Theme.of(context).colorScheme.error
-                : Theme.of(context).colorScheme.outline,
-            size: 18,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 150),
+            transitionBuilder: (child, animation) => ScaleTransition(
+              scale: Tween(begin: 0.6, end: 1.0).animate(animation),
+              child: child,
+            ),
+            child: Icon(
+              isThumbsDown ? Icons.thumb_down : Icons.thumb_down_outlined,
+              key: ValueKey(isThumbsDown),
+              color: isThumbsDown
+                  ? Theme.of(context).colorScheme.error
+                  : Theme.of(context).colorScheme.outline,
+              size: 18,
+            ),
           ),
           onPressed: () {
+            HapticService.selectionClick();
             if (post.recipe_id != null) {
               provider.handleRecipeVote(post.id, post.recipe_id!, -1);
             }
@@ -295,6 +314,7 @@ class _UserPostCardState extends State<UserPostCard>
           children: [
             IconButton(
               onPressed: () {
+                HapticService.selectionClick();
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -357,6 +377,7 @@ class _UserPostCardState extends State<UserPostCard>
   }
 
   Future<void> _deletePost() async {
+    HapticService.heavyImpact();
     final result = await SocialApi().deletePost(widget.post.id);
 
     Navigator.pop(context);

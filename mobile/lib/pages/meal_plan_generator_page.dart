@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/providers/meal_plan_provider.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 
 class MealPlanGeneratorPage extends StatefulWidget {
   const MealPlanGeneratorPage({super.key});
@@ -138,6 +139,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                       value: _focusSavedWeight,
                       onChanged: (v) =>
                           setState(() => _focusSavedWeight = v.clamp(0.0, 1.0)),
+                      onChangeEnd: (_) => HapticService.selectionClick(),
                       min: 0,
                       max: 1,
                       divisions: 10,
@@ -157,6 +159,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                       value: _repeatPreference,
                       onChanged: (v) =>
                           setState(() => _repeatPreference = v.clamp(0.0, 1.0)),
+                      onChangeEnd: (_) => HapticService.selectionClick(),
                       min: 0,
                       max: 1,
                       divisions: 10,
@@ -181,8 +184,10 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         return FilterChip(
                           label: Text(e.key),
                           selected: e.value,
-                          onSelected: (v) =>
-                              setState(() => _dietPrefs[e.key] = v),
+                          onSelected: (v) {
+                              HapticService.selectionClick();
+                              setState(() => _dietPrefs[e.key] = v);
+                            },
                           selectedColor: Theme.of(context)
                               .colorScheme
                               .primary
@@ -219,7 +224,10 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         return FilterChip(
                           label: Text(e.key),
                           selected: e.value,
-                          onSelected: (v) => setState(() => _goals[e.key] = v),
+                          onSelected: (v) {
+                              HapticService.selectionClick();
+                              setState(() => _goals[e.key] = v);
+                            },
                           selectedColor: Theme.of(context)
                               .colorScheme
                               .primary
@@ -256,8 +264,10 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         return FilterChip(
                           label: Text(e.key),
                           selected: e.value,
-                          onSelected: (v) =>
-                              setState(() => _mealTypes[e.key] = v),
+                          onSelected: (v) {
+                              HapticService.selectionClick();
+                              setState(() => _mealTypes[e.key] = v);
+                            },
                           selectedColor: Theme.of(context)
                               .colorScheme
                               .primary
@@ -319,6 +329,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                 onPressed: _loading
                     ? null
                     : () async {
+                        HapticService.mediumImpact();
                         setState(() => _loading = true);
                         final specialRequests = _buildSpecialRequest();
                         final selectedMealTypes = _mealTypes.entries

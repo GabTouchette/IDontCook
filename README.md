@@ -1,4 +1,4 @@
-# ICantCook
+# IDontCook
 
 ## Backend deployment baseline
 

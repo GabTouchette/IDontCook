@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
 import 'package:i_cant_cook/mixins/scroll_mixin.dart';
@@ -82,8 +84,9 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
       addMessage(
           isLoading: true, isRecipeLoading: true, isRecipeChat: isRecipeChat);
 
-      final stream =
-          AiChatbotApi().chatWithBotStream(query, history, recipeId: recipeId);
+      final stream = AiChatbotApi()
+          .chatWithBotStream(query, history, recipeId: recipeId)
+          .timeout(const Duration(seconds: 30));
 
       const delimiters = [r'$$', '&&', '@@'];
       String accumulated = "";
@@ -145,6 +148,12 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
           // Still buffering — keep isRecipeLoading animation visible, no update
         }
       }
+    } on TimeoutException {
+      removeLastMessage(isRecipeChat: isRecipeChat);
+      addMessage(
+        text: "Request timed out. Please check your connection and try again.",
+        isRecipeChat: isRecipeChat,
+      );
     } catch (e) {
       removeLastMessage(isRecipeChat: isRecipeChat);
       addMessage(text: "Error: ${e.toString()}", isRecipeChat: isRecipeChat);
@@ -253,6 +262,13 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     );
     _savedChats.insert(0, session);
     if (_savedChats.length > 5) _savedChats.removeLast();
+  }
+
+  void clearRecipeChat() {
+    if (_currentRecipeId != null) {
+      _recipeChats[_currentRecipeId!] = [];
+      notifyListeners();
+    }
   }
 
   void startNewChat() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 
 class MealSlot extends StatelessWidget {
   final String label;
@@ -67,8 +68,16 @@ class MealSlot extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
+      onTap: () {
+        HapticService.lightImpact();
+        onTap();
+      },
+      onLongPress: onLongPress != null
+          ? () {
+              HapticService.mediumImpact();
+              onLongPress!();
+            }
+          : null,
       child: isEmpty
           ? DottedBorder(
               color: borderColor,

@@ -22,6 +22,13 @@ mixin SearchMixin on ChangeNotifier {
     });
   }
 
+  void clearSearch() {
+    _searchQuery = '';
+    _lastDebouncedQuery = '';
+    _debounceTimer?.cancel();
+    searchController.clear();
+  }
+
   void disposeSearch() {
     searchController.dispose();
     _debounceTimer?.cancel();

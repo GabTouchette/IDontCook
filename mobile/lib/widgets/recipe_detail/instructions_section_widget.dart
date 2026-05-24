@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
+import 'package:i_cant_cook/theme/theme.dart';
 
 class InstructionsSection extends StatelessWidget {
   final Recipe recipe;
@@ -20,6 +22,7 @@ class InstructionsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUpdated = updatedFields.contains('instructions');
     const lime = Color(0xFFCAFF00);
+    final changeColor = Theme.of(context).colorScheme.success;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +44,7 @@ class InstructionsSection extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2.0,
                       color: isUpdated
-                          ? lime
+                          ? changeColor
                           : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -79,9 +82,17 @@ class InstructionsSection extends StatelessWidget {
           final stepNum = (index + 1).toString().padLeft(2, '0');
 
           return GestureDetector(
-            onTap: () => onCompletedInstructions(index),
-            child: Column(
-              children: [
+            onTap: () {
+              HapticService.selectionClick();
+              onCompletedInstructions(index);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              color: isCompleted
+                  ? const Color(0xFFCAFF00).withOpacity(0.06)
+                  : Colors.transparent,
+              child: Column(
+                children: [
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
@@ -130,9 +141,14 @@ class InstructionsSection extends StatelessWidget {
                                       .colorScheme
                                       .onSurface
                                       .withOpacity(0.3)
-                                  : Theme.of(context).colorScheme.onSurface,
+                                  : isUpdated
+                                      ? changeColor
+                                      : Theme.of(context).colorScheme.onSurface,
                               decoration: isCompleted
                                   ? TextDecoration.lineThrough
+                                  : null,
+                              fontStyle: isUpdated && !isCompleted
+                                  ? FontStyle.italic
                                   : null,
                             ),
                           ),
@@ -151,7 +167,8 @@ class InstructionsSection extends StatelessWidget {
                 ),
               ],
             ),
-          );
+          ),
+        );
         }),
       ],
     );

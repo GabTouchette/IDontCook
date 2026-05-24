@@ -1,4 +1,4 @@
-"""Django settings for the ICantCook API."""
+"""Django settings for the IDontCook API."""
 
 import json
 import logging
@@ -116,6 +116,9 @@ CELERY_TIMEZONE = "UTC"
 GS_CREDENTIALS = load_gcs_credentials()
 GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")
 USE_GCS = bool(GS_BUCKET_NAME and GS_CREDENTIALS)
+
+# Google OAuth client ID used to verify mobile sign-in tokens
+GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 
 if GS_BUCKET_NAME and not GS_CREDENTIALS and IS_PRODUCTION:
     raise ImproperlyConfigured(

@@ -46,7 +46,10 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
         }
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
-            return PopupMenuButton<int>(
+            return Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: PopupMenuButton<int>(
+              padding: EdgeInsets.zero,
               onSelected: (value) async {
                 if (value == 0) {
                   Navigator.push(
@@ -118,22 +121,20 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
                   ),
                 ),
               ],
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.35),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Center(
-                    child: Avatars.getAvatarIcon(currentUser.avatar_icon),
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 1.5,
                   ),
                 ),
+                child: Center(
+                  child: Avatars.getAvatarIcon(currentUser.avatar_icon, size: 28),
+                ),
               ),
+            ),
             );
           },
         );

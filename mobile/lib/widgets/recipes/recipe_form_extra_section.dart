@@ -52,13 +52,13 @@ class ExtraSection extends StatelessWidget {
           label,
           style: GoogleFonts.spaceGrotesk(
             color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.5,
           ),
         ),
         const SizedBox(height: 4),
-        Container(width: 20, height: 2, color: const Color(0xFFCAFF00)),
+        Container(width: 28, height: 2, color: const Color(0xFFCAFF00)),
         const SizedBox(height: 10),
         TextField(
           controller: controller,

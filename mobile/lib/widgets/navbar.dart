@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;
@@ -50,7 +51,10 @@ class Navbar extends StatelessWidget {
                   final isSelected = selectedIndex == index;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => onTabChanged(index),
+                      onTap: () {
+                        HapticService.selectionClick();
+                        onTabChanged(index);
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

@@ -19,7 +19,17 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _getBody(),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
+        child: KeyedSubtree(
+          key: ValueKey(_selectedIndex),
+          child: _getBody(),
+        ),
+      ),
       bottomNavigationBar: Navbar(
         selectedIndex: _selectedIndex,
         onTabChanged: (index) {
@@ -34,7 +44,9 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _getBody() {
     switch (_selectedIndex) {
       case 0:
-        return const RecipesPage();
+        return RecipesPage(
+          onNavigateToTab: (index) => setState(() => _selectedIndex = index),
+        );
       case 1:
         return const AiChatBotPage();
       case 2:

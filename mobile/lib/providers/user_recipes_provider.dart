@@ -9,6 +9,7 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
   List<RecipePreview> _filteredRecipes = [];
   int _tabIndex = 0;
   String? _selectedTag;
+  String _tagSearchQuery = '';
   DateTime? _lastRequestTime;
 
   int tileMode = 1; // 0 = small, 1 = medium, 2 = large
@@ -29,6 +30,13 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
     final sortedTags = tagCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     return sortedTags.map((entry) => entry.key).toList();
+  }
+
+  List<String> get filteredUserTags {
+    if (_tagSearchQuery.isEmpty) return userTags;
+    return userTags
+        .where((tag) => tag.toLowerCase().contains(_tagSearchQuery))
+        .toList();
   }
 
   void setTileMode(int mode) {
@@ -58,13 +66,22 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
   void setTabIndex(int index) {
     _tabIndex = index;
     if (index != 3) _selectedTag = null;
+    _tagSearchQuery = '';
+    clearSearch();
     _applyFilters();
     notifyListeners();
   }
 
   void setSelectedTag(String? tag) {
     _selectedTag = tag;
+    _tagSearchQuery = '';
+    clearSearch();
     _applyFilters();
+    notifyListeners();
+  }
+
+  void onTagSearchChanged(String text) {
+    _tagSearchQuery = text.toLowerCase();
     notifyListeners();
   }
 
