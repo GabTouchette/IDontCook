@@ -242,8 +242,8 @@ class SavedRecipeAdmin(admin.ModelAdmin):
 
 
 # Customize the admin site header and title
-admin.site.site_header = "IDontCook Recipe Management"
-admin.site.site_title = "IDontCook Admin"
+admin.site.site_header = "ICantCook Recipe Management"
+admin.site.site_title = "ICantCook Admin"
 admin.site.index_title = "Recipe & Nutrition Management"
 
 

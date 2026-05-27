@@ -39,21 +39,21 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
         ChangeNotifierProvider(create: (_) => MealPlanProvider()),
       ],
-      child: IDontCook(initialRoute: initialRoute),
+      child: ICantCook(initialRoute: initialRoute),
     ),
   );
 }
 
-class IDontCook extends StatelessWidget {
+class ICantCook extends StatelessWidget {
   final String initialRoute;
-  const IDontCook({super.key, required this.initialRoute});
+  const ICantCook({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: 'IDontCook',
+          title: 'ICantCook',
           theme: lightTheme(),
           darkTheme: darkTheme(),
           themeMode: themeProvider.themeMode,

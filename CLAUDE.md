@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IDontCook is a full-stack recipe management application with a Flutter mobile frontend and Django REST API backend. The app enables users to create, share, and discover recipes with AI-powered assistance, nutrition tracking, and social features.
+ICantCook is a full-stack recipe management application with a Flutter mobile frontend and Django REST API backend. The app enables users to create, share, and discover recipes with AI-powered assistance, nutrition tracking, and social features.
 
 ## Development Commands
 

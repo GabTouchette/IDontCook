@@ -19,7 +19,7 @@ class _SplashPageState extends State<SplashPage>
   late Animation<double> _scale;
 
   int _typeChars = 0;
-  static const _splashText = "I DON'T COOK";
+  static const _splashText = "I CAN'T COOK";
 
   @override
   void initState() {

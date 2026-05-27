@@ -1,4 +1,4 @@
-"""Django settings for the IDontCook API."""
+"""Django settings for the ICantCook API."""
 
 import json
 import logging

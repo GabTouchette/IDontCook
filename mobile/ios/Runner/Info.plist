@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>I Don't Cook</string>
+	<string>I Can't Cook</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>IDontCook</string>
+	<string>ICantCook</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -27,13 +27,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>I Don't Cook uses your camera to take photos of your recipes.</string>
+	<string>I Can't Cook uses your camera to take photos of your recipes.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required for voice input and video recording when capturing recipe photos.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Speech recognition is used to let you dictate messages to the recipe assistant.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>I Don't Cook uses your photo library to attach images to your recipes.</string>
+	<string>I Can't Cook uses your photo library to attach images to your recipes.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

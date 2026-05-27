@@ -23,7 +23,7 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
   late Animation<double> _btnFade;
 
   int _typeChars = 0;
-  static const _headline1 = "I DON'T";
+  static const _headline1 = "I CAN'T";
   static const _headline2 = 'COOK.';
 
   String get _line1Text =>
@@ -58,7 +58,7 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
   }
 
   Future<void> _startTyping() async {
-    // Fast-type line 1 "I DON'T"
+    // Fast-type line 1 "I CAN'T"
     for (int i = 0; i < _headline1.length; i++) {
       await Future.delayed(const Duration(milliseconds: 35));
       if (!mounted) return;
@@ -129,8 +129,8 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                     color: _typeChars >= _headline1.length
                         ? const Color(0xFF0A0A0A)
                         : Colors.transparent,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     child: Text(
                       _line2Text.isEmpty ? '\u00A0' : _line2Text,
                       style: GoogleFonts.spaceGrotesk(
