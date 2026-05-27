@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from recipes.models import Recipe
+from recommendations.models import UserRecipeInteraction
 from django.core.cache import cache  # Django's caching system
 import numpy as np
 
@@ -60,8 +61,14 @@ def get_similar_recipes(user_id, top_n=30):
     # NEW: Exclude all recipes that are copies (i.e. have a parent set), regardless of creator
     excluded_all_copies = Recipe.objects.exclude(parent=None).values_list('id', flat=True)
 
-    # Final exclusion set: recipes by user + saved versions + all duplicated (child) recipes
-    excluded = set(excluded_ids).union(set(excluded_user_parents)).union(set(excluded_all_copies))
+    # Exclude recipes the user has downvoted
+    downvoted_ids = UserRecipeInteraction.objects.filter(
+        user_id=user_id, interaction_type='downvote'
+    ).values_list('recipe_id', flat=True)
+
+    # Final exclusion set
+    excluded = set(excluded_ids).union(set(excluded_user_parents)).union(
+        set(excluded_all_copies)).union(set(downvoted_ids))
 
     candidates = Recipe.objects.exclude(id__in=excluded)
     

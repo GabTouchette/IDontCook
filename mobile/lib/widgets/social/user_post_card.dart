@@ -13,7 +13,6 @@ import 'package:i_cant_cook/theme/avatars.dart';
 import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/widgets/dialogs/post_comments_dialog.dart';
-import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 class UserPostCard extends StatefulWidget {
@@ -49,12 +48,11 @@ class _UserPostCardState extends State<UserPostCard>
     final provider = widget.provider;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.12),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
             width: 1,
           ),
         ),
@@ -90,17 +88,11 @@ class _UserPostCardState extends State<UserPostCard>
             },
             child: Row(
               children: [
-                Container(
+                SizedBox(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.35),
-                      width: 1.5,
-                    ),
-                  ),
                   child: Center(
-                    child: Avatars.getAvatarIcon(widget.post.user.avatar_icon),
+                    child: Avatars.getAvatarIcon(widget.post.user.avatar_icon, size: 28),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -122,7 +114,7 @@ class _UserPostCardState extends State<UserPostCard>
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 1.2,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                   ],
@@ -166,7 +158,7 @@ class _UserPostCardState extends State<UserPostCard>
             fontWeight: FontWeight.w400,
             height: 1.5,
             fontStyle: FontStyle.italic,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
       ),
     );
   }
@@ -219,7 +211,7 @@ class _UserPostCardState extends State<UserPostCard>
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 1.5,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                 ),
               ],
             ),
@@ -346,17 +338,31 @@ class _UserPostCardState extends State<UserPostCard>
   }
 
   Widget _buildRecipeImage() {
-    return widget.post.recipe_thumbnail_url != null &&
-            widget.post.recipe_thumbnail_url!.isNotEmpty
-        ? Image.network(
-            widget.post.recipe_thumbnail_url!,
-            height: 100,
-            width: 100,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1),
-          )
-        : PlaceholderImageWidget(recipeId: widget.post.recipe_id ?? 1);
+    if (widget.post.recipe_thumbnail_url != null &&
+        widget.post.recipe_thumbnail_url!.isNotEmpty) {
+      return Image.network(
+        widget.post.recipe_thumbnail_url!,
+        height: 100,
+        width: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+      );
+    }
+    return _buildImagePlaceholder();
+  }
+
+  Widget _buildImagePlaceholder() {
+    const lime = Color(0xFFCAFF00);
+    final bg = widget.post.recipe_id != null && (widget.post.recipe_id! % 2 == 0)
+        ? const Color(0xFFE0DFD9)
+        : const Color(0xFF0A0A0A);
+    final iconColor = bg == const Color(0xFF0A0A0A) ? lime : const Color(0xFF0A0A0A);
+    return Container(
+      width: 100,
+      height: 100,
+      color: bg,
+      child: Icon(Icons.restaurant, color: iconColor, size: 36),
+    );
   }
 
   void _showDeleteDialog() {

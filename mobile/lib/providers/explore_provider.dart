@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/explore_api.dart';
+import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/mixins/pagination_mixin.dart';
 import 'package:i_cant_cook/mixins/scroll_mixin.dart';
@@ -13,10 +14,9 @@ class ExploreProvider
         SearchMixin {
   bool _isLoading = false;
   Map<String, dynamic> _filters = {
-    'prepTime': 60.0,
-    'cookTime': 60.0,
+    'totalTime': 0,
     'cuisine': 'Any',
-    'calories': RangeValues(0, 1000),
+    'maxCalories': 0,
     'excludeAIGenerated': false,
     'excludeOwnRecipes': true,
     'selectedTags': [],
@@ -60,10 +60,8 @@ class ExploreProvider
       params['tags'] = (_filters['selectedTags'] as List<String>).join(',');
     }
 
-    params['prep_time'] = _filters['prepTime'].toString();
-    params['cook_time'] = _filters['cookTime'].toString();
-    params['calories_min'] = _filters['calories'].start.toString();
-    params['calories_max'] = _filters['calories'].end.toString();
+    params['total_time'] = _filters['totalTime'].toString();
+    params['max_calories'] = _filters['maxCalories'].toString();
     params['exclude_ai_generated'] = _filters['excludeAIGenerated'].toString();
     params['exclude_own_recipes'] = _filters['excludeOwnRecipes'].toString();
 
@@ -100,10 +98,9 @@ class ExploreProvider
 
   void clearFilters() {
     _filters = {
-      'prepTime': 60.0,
-      'cookTime': 60.0,
+      'totalTime': 0,
       'cuisine': 'Any',
-      'calories': RangeValues(0, 1000),
+      'maxCalories': 0,
       'excludeAIGenerated': false,
       'excludeOwnRecipes': true,
       'selectedTags': [],
@@ -131,30 +128,64 @@ class ExploreProvider
   }
 
   bool get hasActiveFilters {
-    // Default values that indicate no filtering
-    final defaultFilters = {
-      'prepTime': 60.0,
-      'cookTime': 60.0,
-      'cuisine': 'Any',
-      'calories': RangeValues(0, 1000),
-      'excludeAIGenerated': false,
-      'excludeOwnRecipes': true,
-      'selectedTags': [],
-    };
-    
-    // Check if any filter differs from default
-    return _filters['prepTime'] != defaultFilters['prepTime'] ||
-           _filters['cookTime'] != defaultFilters['cookTime'] ||
-           _filters['cuisine'] != defaultFilters['cuisine'] ||
-           _filters['calories'].start != (defaultFilters['calories'] as RangeValues).start ||
-           _filters['calories'].end != (defaultFilters['calories'] as RangeValues).end ||
-           _filters['excludeAIGenerated'] != defaultFilters['excludeAIGenerated'] ||
-           _filters['excludeOwnRecipes'] != defaultFilters['excludeOwnRecipes'] ||
+    return _filters['totalTime'] != 0 ||
+           _filters['cuisine'] != 'Any' ||
+           _filters['maxCalories'] != 0 ||
+           _filters['excludeAIGenerated'] != false ||
+           _filters['excludeOwnRecipes'] != true ||
            (_filters['selectedTags'] as List).isNotEmpty;
   }
 
   void disposeProvider() {
     disposeScroll();
     disposeSearch();
+  }
+
+  // ── Feedback ──────────────────────────────────────────────────────────────
+
+  /// Remove a recipe from the current list immediately (optimistic UI).
+  void removeItem(int recipeId) {
+    items.removeWhere((r) => r.id == recipeId);
+    notifyListeners();
+  }
+
+  /// Record a thumbs-up — does NOT remove the recipe from the list.
+  Future<void> recordUpvote(int recipeId) async {
+    await ExploreApi().recordInteraction(recipeId, 'upvote');
+  }
+
+  /// Record a thumbs-down and hide the recipe from the current list.
+  Future<void> recordDownvote(int recipeId) async {
+    removeItem(recipeId);
+    await ExploreApi().recordInteraction(recipeId, 'downvote');
+  }
+
+  /// Delete the recipe from the database and remove it from the list.
+  /// Returns true on success. On failure the item is re-inserted at its
+  /// original position so the list stays consistent with the backend.
+  Future<bool> adminDeleteRecipe(int recipeId) async {
+    // Capture position for rollback
+    int? originalIndex;
+    RecipePreview? original;
+    for (int i = 0; i < items.length; i++) {
+      if (items[i].id == recipeId) {
+        originalIndex = i;
+        original = items[i];
+        break;
+      }
+    }
+
+    // Optimistic removal
+    removeItem(recipeId);
+
+    final success = await RecipeApi().deleteRecipe(recipeId);
+
+    if (!success && original != null && originalIndex != null) {
+      // Rollback: re-insert at original position
+      items.insert(originalIndex, original);
+      notifyListeners();
+    }
+
+    return success;
   }
 }

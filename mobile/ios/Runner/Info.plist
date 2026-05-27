@@ -29,7 +29,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>I Don't Cook uses your camera to take photos of your recipes.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone access is required for video recording when capturing recipe photos.</string>
+	<string>Microphone access is required for voice input and video recording when capturing recipe photos.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech recognition is used to let you dictate messages to the recipe assistant.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>I Don't Cook uses your photo library to attach images to your recipes.</string>
 	<key>UIApplicationSceneManifest</key>

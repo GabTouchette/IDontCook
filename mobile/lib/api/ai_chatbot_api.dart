@@ -23,10 +23,9 @@ class AiChatbotApi {
     yield* _apiHelper.streamResponse('ai/chat/', data, headers);
   }
 
-  Future<Map<String, dynamic>> uploadRecipeImage(File image) async {
-    return await _apiHelper.uploadFile(
-      'ai/ocr/',
-      image,
-    );
+  Future<Map<String, dynamic>?> uploadRecipeImages(List<File> images) async {
+    final result = await _apiHelper.uploadMultipleFiles('ai/ocr/', images);
+    if (result == null) return null;
+    return result as Map<String, dynamic>;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:provider/provider.dart';
 
 class CaloriesFilter extends StatelessWidget {
@@ -10,73 +11,122 @@ class CaloriesFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ExploreProvider>(
       builder: (context, provider, child) {
-        final RangeValues values = provider.filters['calories'];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CALORIES',
+        final int maxCalories = (provider.filters['maxCalories'] as num).toInt();
+        final outlineColor = Theme.of(context).colorScheme.outline;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'MAX CALORIES',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
+                    ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: FadeTransition(opacity: animation, child: child),
+                    ),
+                    child: Text(
+                      maxCalories == 0 ? 'ANY' : '$maxCalories',
+                      key: ValueKey(maxCalories),
                       style: GoogleFonts.spaceGrotesk(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 13,
+                        fontSize: 42,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
+                        letterSpacing: -1.5,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        height: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Container(width: 20, height: 2, color: const Color(0xFFCAFF00)),
+                  ),
+                  Text(
+                    'kcal',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: outlineColor, width: 1.5),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _CtrlBtn(
+                      icon: Icons.remove,
+                      onTap: () {
+                        if (maxCalories > 0) {
+                          final newVal = (maxCalories - 100).clamp(0, 99999);
+                          provider.updateFilter('maxCalories', newVal);
+                        }
+                      },
+                    ),
+                    Container(
+                      width: 1.5,
+                      height: 44,
+                      color: outlineColor,
+                    ),
+                    _CtrlBtn(
+                      icon: Icons.add,
+                      onTap: () {
+                        final newVal = maxCalories == 0 ? 100 : maxCalories + 100;
+                        provider.updateFilter('maxCalories', newVal);
+                      },
+                    ),
                   ],
                 ),
-                Text(
-                  '${values.start.round()} – ${values.end == 1000 ? 'Any' : '${values.end.round()} cal'}',
-                  style: GoogleFonts.spaceGrotesk(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(0xFFCAFF00),
-                inactiveTrackColor:
-                    Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                thumbColor: const Color(0xFFCAFF00),
-                overlayColor: const Color(0xFFCAFF00).withValues(alpha: 0.15),
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 7),
-                valueIndicatorColor: const Color(0xFF0A0A0A),
-                valueIndicatorTextStyle: GoogleFonts.spaceGrotesk(
-                  color: const Color(0xFFCAFF00),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-                showValueIndicator: ShowValueIndicator.always,
               ),
-              child: RangeSlider(
-                values: values,
-                min: 0,
-                max: 1000,
-                divisions: 20,
-                labels: RangeLabels(
-                  '${values.start.round()} cal',
-                  values.end == 1000 ? 'Any' : '${values.end.round()} cal',
-                ),
-                onChanged: (val) => provider.updateFilter('calories', val),
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _CtrlBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CtrlBtn({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        HapticService.selectionClick();
+        onTap();
+      },
+      child: SizedBox(
+        width: 48,
+        height: 44,
+        child: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
     );
   }
 }

@@ -3,10 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
 import 'package:i_cant_cook/widgets/explore/ai_generated_filter.dart';
 import 'package:i_cant_cook/widgets/explore/calories_filter.dart';
-import 'package:i_cant_cook/widgets/explore/cook_time_filter.dart';
 import 'package:i_cant_cook/widgets/explore/own_recipes_filter.dart';
-import 'package:i_cant_cook/widgets/explore/prep_time_filter.dart';
 import 'package:i_cant_cook/widgets/explore/tag_filter.dart';
+import 'package:i_cant_cook/widgets/explore/total_time_filter.dart';
 import 'package:provider/provider.dart';
 
 class RecipeSearchFilterDrawer extends StatelessWidget {
@@ -102,23 +101,12 @@ class RecipeSearchFilterDrawer extends StatelessWidget {
                         _buildSectionDivider(context),
                         const SizedBox(height: 10),
                         AIGeneratedFilter(),
-                        const SizedBox(height: 2),
                         _buildSectionDivider(context),
-                        const SizedBox(height: 2),
                         OwnRecipesFilter(),
-                        const SizedBox(height: 10),
                         _buildSectionDivider(context),
-                        const SizedBox(height: 10),
-                        PrepTimeFilter(),
-                        const SizedBox(height: 10),
+                        TotalTimeFilter(),
                         _buildSectionDivider(context),
-                        const SizedBox(height: 10),
-                        CookTimeFilter(),
-                        const SizedBox(height: 10),
-                        _buildSectionDivider(context),
-                        const SizedBox(height: 10),
                         CaloriesFilter(),
-                        const SizedBox(height: 10),
                         _buildSectionDivider(context),
                         const SizedBox(height: 4),
                         TagFilters(),

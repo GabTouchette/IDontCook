@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 
 class RecipeImage extends StatelessWidget {
   final String imageUrl;
   final Function onImagePick;
   final String? title;
+  final int recipeId;
 
   const RecipeImage({
     Key? key,
     required this.imageUrl,
     required this.onImagePick,
+    required this.recipeId,
     this.title,
   }) : super(key: key);
 
@@ -76,74 +79,22 @@ class RecipeImage extends StatelessWidget {
   }
 
   Widget _fallbackImage() {
-    return SizedBox.expand(
-      child: ColoredBox(
-        color: const Color(0xFF0A0A0A),
-        child: Stack(
-          fit: StackFit.expand,
-        children: [
-          // Faint grid lines for texture
-          Positioned.fill(
-            child: CustomPaint(painter: _GridPainter()),
-          ),
-          // Giant watermark icon
-          Center(
-            child: Icon(
-              Icons.restaurant,
-              size: 160,
-              color: Colors.white.withOpacity(0.03),
+    return Stack(
+      children: [
+        PlaceholderImageWidget(recipeId: recipeId, height: 340),
+        Align(
+          alignment: const Alignment(0, 0.50),
+          child: Text(
+            'Tap to add photo',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+              color: Colors.white.withOpacity(0.7),
             ),
           ),
-          // Centered CTA block
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  color: const Color(0xFFCAFF00),
-                  child: const Icon(
-                    Icons.add_a_photo_outlined,
-                    color: Color(0xFF0A0A0A),
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'ADD PHOTO',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 3.0,
-                    color: Colors.white.withOpacity(0.35),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
         ),
-      ),
+      ],
     );
   }
-}
-
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.04)
-      ..strokeWidth = 0.5;
-    const step = 32.0;
-    for (double x = 0; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GridPainter old) => false;
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:i_cant_cook/api/api_helper.dart';
@@ -41,6 +42,20 @@ class RecipeApi {
 
   Future<String> uploadRecipeImage(int recipeId, File imageFile) async {
     return await _apiHelper.imageRequest('recipes/$recipeId/image', imageFile);
+  }
+
+  /// Sends an image to the OCR endpoint and returns the extracted recipe fields,
+  /// or null if the request fails.
+  Future<Map<String, dynamic>?> digitalizeFromImage(File imageFile) async {
+    try {
+      final result = await _apiHelper.uploadFile('ai/ocr/', imageFile);
+      if (result == null) return null;
+      final responseStr = result['response'] as String?;
+      if (responseStr == null) return null;
+      return jsonDecode(responseStr) as Map<String, dynamic>;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<bool> deleteRecipe(int recipeId) async {

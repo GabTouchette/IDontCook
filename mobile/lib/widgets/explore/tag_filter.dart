@@ -14,6 +14,7 @@ class TagFilters extends StatefulWidget {
 
 class TagFiltersState extends State<TagFilters> {
   late Future<Map<String, List<String>>> _usedTagsFuture;
+  final Map<String, bool> _expansionStates = {};
 
   @override
   void initState() {
@@ -24,9 +25,7 @@ class TagFiltersState extends State<TagFilters> {
   Future<Map<String, List<String>>> fetchRecipeTags() async {
     try {
       var data = await RecipeApi().fetchRecipeTags();
-      print('Fetched recipe tags: $data');
 
-      // Filter tagOptions to only include used tags, preserving category structure
       Map<String, List<String>> filteredTags = {};
       tagOptions.forEach((category, tags) {
         final usedCategoryTags =
@@ -35,6 +34,11 @@ class TagFiltersState extends State<TagFilters> {
           filteredTags[category] = usedCategoryTags;
         }
       });
+
+      // Initialize expansion states collapsed
+      for (final key in filteredTags.keys) {
+        _expansionStates[key] = false;
+      }
 
       return filteredTags;
     } catch (e) {
@@ -59,122 +63,225 @@ class TagFiltersState extends State<TagFilters> {
           );
         }
 
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-          // Fallback to showing all tags if there's an error
-          return _buildTagFilters(tagOptions);
+        final tagsByCategory = (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty)
+            ? tagOptions
+            : snapshot.data!;
+
+        // Ensure expansion states exist for all categories
+        for (final key in tagsByCategory.keys) {
+          _expansionStates.putIfAbsent(key, () => false);
         }
 
-        return _buildTagFilters(snapshot.data!);
+        return _buildTagFilters(tagsByCategory);
       },
     );
   }
 
   Widget _buildTagFilters(Map<String, List<String>> tagsByCategory) {
-    final entries = tagsByCategory.entries.toList();
+    return Consumer<ExploreProvider>(
+      builder: (context, provider, _) {
+        final selectedTags =
+            List<String>.from(provider.filters['selectedTags'] ?? []);
+        final totalSelected = selectedTags.length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'TAGS',
+                  style: GoogleFonts.spaceGrotesk(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                if (totalSelected > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    color: const Color(0xFFCAFF00),
+                    child: Text(
+                      '$totalSelected',
+                      style: GoogleFonts.spaceGrotesk(
+                        color: const Color(0xFF0A0A0A),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            ...tagsByCategory.entries.map((entry) {
+              return _buildCollapsibleCategory(
+                context,
+                provider: provider,
+                category: entry.key,
+                tags: entry.value,
+                selectedTags: selectedTags,
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCollapsibleCategory(
+    BuildContext context, {
+    required ExploreProvider provider,
+    required String category,
+    required List<String> tags,
+    required List<String> selectedTags,
+  }) {
+    final isExpanded = _expansionStates[category] ?? false;
+    final categorySelectedCount = tags
+        .where((tag) =>
+            selectedTags.any((t) => t.toLowerCase() == tag.toLowerCase()))
+        .length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (int i = 0; i < entries.length; i++) ...
-          [
-            _CategoryFilter(category: entries[i].key, tags: entries[i].value),
-            if (i < entries.length - 1)
-              Divider(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
-                thickness: 1,
-                height: 1,
-              ),
-          ],
-      ],
-    );
-  }
-}
-
-// Keep your existing _CategoryFilter widget as is
-class _CategoryFilter extends StatelessWidget {
-  final String category;
-  final List<String> tags;
-
-  const _CategoryFilter({required this.category, required this.tags});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ExploreProvider>(
-      builder: (context, provider, child) {
-        final selectedTags = provider.filters['selectedTags'] ?? [];
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.toUpperCase(),
-                    style: GoogleFonts.spaceGrotesk(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.5,
+        Divider(
+          color:
+              Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+          thickness: 1,
+          height: 1,
+        ),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() {
+            final opening = !isExpanded;
+            if (opening) {
+              for (final key in _expansionStates.keys) {
+                _expansionStates[key] = key == category;
+              }
+            } else {
+              _expansionStates[category] = false;
+            }
+          }),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      category.toUpperCase(),
+                      style: GoogleFonts.spaceGrotesk(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                      ),
                     ),
+                    if (categorySelectedCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        color: const Color(0xFFCAFF00),
+                        child: Text(
+                          '$categorySelectedCount',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: const Color(0xFF0A0A0A),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.5),
                   ),
-                  const SizedBox(height: 4),
-                  Container(width: 18, height: 2, color: const Color(0xFFCAFF00)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6.0,
-                runSpacing: 6.0,
-                children: tags.map((tag) {
-                  final isSelected = selectedTags.contains(tag);
-                  return GestureDetector(
-                    onTap: () {
-                      final updatedTags = List<String>.from(selectedTags);
-                      isSelected ? updatedTags.remove(tag) : updatedTags.add(tag);
-                      provider.updateFilter('selectedTags', updatedTags);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFCAFF00)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.zero,
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFFCAFF00)
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        tag,
-                        style: GoogleFonts.spaceGrotesk(
-                          color: isSelected
-                              ? const Color(0xFF0A0A0A)
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
-        );
-      },
+        ),
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: isExpanded
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Wrap(
+                      spacing: 6.0,
+                      runSpacing: 6.0,
+                      children: tags.map((tag) {
+                        final isSelected = selectedTags.any(
+                            (t) => t.toLowerCase() == tag.toLowerCase());
+                        return GestureDetector(
+                          onTap: () {
+                            final updatedTags =
+                                List<String>.from(selectedTags);
+                            isSelected
+                                ? updatedTags.remove(tag)
+                                : updatedTags.add(tag);
+                            provider.updateFilter(
+                                'selectedTags', updatedTags);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 120),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFCAFF00)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.zero,
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFFCAFF00)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .outline
+                                        .withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              tag,
+                              style: GoogleFonts.spaceGrotesk(
+                                color: isSelected
+                                    ? const Color(0xFF0A0A0A)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      ],
     );
   }
 }

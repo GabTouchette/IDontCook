@@ -42,9 +42,12 @@ class _RecipesPageState extends State<RecipesPage> {
               padding: const EdgeInsets.only(left: 16.0),
               onPressed: () {
                 HapticService.mediumImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateRecipePage()),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  builder: (_) => const CreateRecipePage(),
                 ).then((_) {
                   if (mounted) {
                     Provider.of<UserRecipesProvider>(context, listen: false)
@@ -444,9 +447,12 @@ class _RecipesPageState extends State<RecipesPage> {
               label: 'CREATE RECIPE',
               icon: Icons.add,
               filled: true,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => CreateRecipePage()),
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                builder: (_) => const CreateRecipePage(),
               ).then((_) {
                 Provider.of<UserRecipesProvider>(context, listen: false)
                     .fetchRecipes();

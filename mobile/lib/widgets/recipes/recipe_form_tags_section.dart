@@ -111,6 +111,10 @@ class _TagsSectionState extends State<TagsSection> {
   }) {
     final isExpanded = _expansionStates[category] ?? false;
     final selectedTags = widget.selectedTags;
+    final categorySelectedCount = tags
+        .where((tag) =>
+            selectedTags.any((t) => t.toLowerCase() == tag.toLowerCase()))
+        .length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,14 +142,34 @@ class _TagsSectionState extends State<TagsSection> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  category.toUpperCase(),
-                  style: GoogleFonts.spaceGrotesk(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      category.toUpperCase(),
+                      style: GoogleFonts.spaceGrotesk(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    if (categorySelectedCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        color: const Color(0xFFCAFF00),
+                        child: Text(
+                          '$categorySelectedCount',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: const Color(0xFF0A0A0A),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 AnimatedRotation(
                   turns: isExpanded ? 0.5 : 0,

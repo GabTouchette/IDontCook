@@ -131,6 +131,31 @@ class ApiHelper {
     }
   }
 
+  Future<dynamic> uploadMultipleFiles(String endpoint, List<File> files,
+      {bool requiresAuth = true}) async {
+    try {
+      var uri = ApiConfig.buildApiUri(endpoint);
+      var request = http.MultipartRequest('POST', uri);
+
+      if (requiresAuth) {
+        final headers = await AuthApi.getAuthHeader();
+        request.headers.addAll(headers);
+      }
+
+      for (final file in files) {
+        request.files.add(await http.MultipartFile.fromPath('images', file.path));
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } catch (e) {
+      print('Multiple file upload error: $e');
+      return null;
+    }
+  }
+
   Future<String> imageRequest(String endpoint, File imageFile,
       {bool requiresAuth = true}) async {
     try {

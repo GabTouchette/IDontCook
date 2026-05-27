@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 
-class Navbar extends StatelessWidget {
+class Navbar extends StatefulWidget {
   final int selectedIndex;
   final Function(int) onTabChanged;
 
@@ -10,6 +10,13 @@ class Navbar extends StatelessWidget {
     required this.selectedIndex,
     required this.onTabChanged,
   });
+
+  @override
+  State<Navbar> createState() => _NavbarState();
+}
+
+class _NavbarState extends State<Navbar> {
+  int? _activeIndex; // tracks tab during drag to avoid redundant callbacks
 
   static const _lime = Color(0xFFCAFF00);
 
@@ -29,6 +36,38 @@ class Navbar extends StatelessWidget {
     Icons.people,
   ];
 
+  int _indexFromX(double x) {
+    final tabWidth =
+        MediaQuery.of(context).size.width / _iconsOutlined.length;
+    return (x / tabWidth).floor().clamp(0, _iconsOutlined.length - 1);
+  }
+
+  void _selectAt(double x) {
+    final index = _indexFromX(x);
+    if (index != _activeIndex) {
+      _activeIndex = index;
+      HapticService.selectionClick();
+      widget.onTabChanged(index);
+    }
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _activeIndex = widget.selectedIndex;
+    _selectAt(event.localPosition.dx);
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    _selectAt(event.localPosition.dx);
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    _activeIndex = null;
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    _activeIndex = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bg = Theme.of(context).colorScheme.surface;
@@ -43,23 +82,22 @@ class Navbar extends StatelessWidget {
           Divider(height: 1, thickness: 1, color: outline.withOpacity(0.15)),
           SafeArea(
             top: false,
-            child: SizedBox(
-              height: 68,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: List.generate(_iconsOutlined.length, (index) {
-                  final isSelected = selectedIndex == index;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticService.selectionClick();
-                        onTabChanged(index);
-                      },
-                      behavior: HitTestBehavior.opaque,
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: _handlePointerDown,
+              onPointerMove: _handlePointerMove,
+              onPointerUp: _handlePointerUp,
+              onPointerCancel: _handlePointerCancel,
+              child: SizedBox(
+                height: 68,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: List.generate(_iconsOutlined.length, (index) {
+                    final isSelected = widget.selectedIndex == index;
+                    return Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Lime top-bar accent
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
                             height: 3,
@@ -78,9 +116,9 @@ class Navbar extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ),
           ),

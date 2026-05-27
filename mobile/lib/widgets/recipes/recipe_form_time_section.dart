@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 class TimeSection extends StatelessWidget {
   final TextEditingController prepTimeController;
   final TextEditingController cookTimeController;
+  final TextEditingController? servingsController;
 
   const TimeSection({
     Key? key,
     required this.prepTimeController,
     required this.cookTimeController,
+    this.servingsController,
   }) : super(key: key);
 
   @override
@@ -37,6 +39,12 @@ class TimeSection extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                   child: _timeField(context, cookTimeController, 'COOK')),
+              if (servingsController != null) ...
+                [
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: _servingsField(context, servingsController!)),
+                ],
             ],
           ),
         ],
@@ -119,6 +127,60 @@ class TimeSection extends StatelessWidget {
                 color: Color(0xFFCAFF00),
                 width: 1.5,
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _servingsField(BuildContext context, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'SERVINGS',
+          style: GoogleFonts.spaceGrotesk(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          style: GoogleFonts.spaceGrotesk(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          decoration: InputDecoration(
+            hintText: '1',
+            hintStyle: GoogleFonts.spaceGrotesk(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.zero,
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.zero,
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.zero,
+              borderSide: BorderSide(color: Color(0xFFCAFF00), width: 1.5),
             ),
           ),
         ),

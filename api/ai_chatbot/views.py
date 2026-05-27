@@ -124,30 +124,37 @@ class RecipeOCRView(APIView):
     parser_classes = [MultiPartParser]
 
     def post(self, request, *args, **kwargs):
-        image = request.FILES.get('image')
+        images = request.FILES.getlist('images')
+        if not images:
+            # backward compat: single 'image' field
+            single = request.FILES.get('image')
+            if single:
+                images = [single]
+        if not images:
+            return JsonResponse({"error": "No images provided"}, status=400)
 
-        if not image:
-            return JsonResponse({"error": "No image provided"}, status=400)
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_image:
-            for chunk in image.chunks():
-                temp_image.write(chunk)
-            temp_image_path = temp_image.name
-
+        temp_paths = []
         try:
-            return self.process_ocr_response(request.user, temp_image_path)
+            for image in images:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                    for chunk in image.chunks():
+                        tmp.write(chunk)
+                    temp_paths.append(tmp.name)
+
+            return self.process_ocr_response(request.user, temp_paths)
 
         except Exception as e:
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
 
         finally:
-            if os.path.exists(temp_image_path):
-                os.remove(temp_image_path)
-                
-    def process_ocr_response(self, user, image_path):
+            for path in temp_paths:
+                if os.path.exists(path):
+                    os.remove(path)
+
+    def process_ocr_response(self, user, image_paths):
         """
-        Processes an image for OCR and returns a JSON response.
+        Processes one or more images for OCR and returns a JSON response.
         """
         anthropic_service = AnthropicService()
-        response = anthropic_service.ask_ocr(image_path)
+        response = anthropic_service.ask_ocr(image_paths)
         return JsonResponse({"response": response}, status=status.HTTP_200_OK)

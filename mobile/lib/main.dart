@@ -59,6 +59,11 @@ class IDontCook extends StatelessWidget {
           themeMode: themeProvider.themeMode,
           initialRoute: initialRoute,
           onGenerateRoute: generateRoute,
+          builder: (context, child) => GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: child!,
+          ),
         );
       },
     );

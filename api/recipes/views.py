@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.utils.timezone import now
 # Removed timezone import - no longer needed
 from django.core.files.base import ContentFile
-from django.db.models import Case, When, Q
+from django.db.models import Case, When, Q, ExpressionWrapper, F, IntegerField
 from django.db import connection
 from django.db.models.functions import Random
 
@@ -21,7 +21,7 @@ from ai_chatbot.api import AnthropicService
 from recipes.models import Recipe, SavedRecipe, CanonicalIngredient
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
-from recommendations.models import MixedRecommendationPagination
+from recommendations.models import MixedRecommendationPagination, UserRecipeInteraction
 from recommendations.api import get_similar_recipes
 
 class RecipeListAPIView(APIView):
@@ -136,7 +136,7 @@ class RecipeDetailAPIView(APIView):
     def delete(self, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
 
-        if recipe.created_by != request.user:
+        if recipe.created_by != request.user and not request.user.is_staff:
             return JsonResponse({"error": "You do not have permission to delete this recipe."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -215,6 +215,9 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         """
         search_query = request.query_params.get('search', '').strip()
         tags = request.query_params.get('tags', '').split(',') if request.query_params.get('tags') else []
+        total_time = float(request.query_params.get('total_time', 0))
+        max_calories = float(request.query_params.get('max_calories', 0))
+        # Legacy params kept for backward compatibility
         prep_time = float(request.query_params.get('prep_time', 60))
         cook_time = float(request.query_params.get('cook_time', 60))
         calories_min = float(request.query_params.get('calories_min', 0))
@@ -253,13 +256,24 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
                     recipes = recipes.filter(or_q)
 
         # Time filters
-        if prep_time < 60:
-            recipes = recipes.filter(preparation_time__lte=prep_time)
-        if cook_time < 60:
-            recipes = recipes.filter(cooking_time__lte=cook_time)
+        if total_time > 0:
+            recipes = recipes.annotate(
+                total_time_sum=ExpressionWrapper(
+                    F('preparation_time') + F('cooking_time'),
+                    output_field=IntegerField()
+                )
+            ).filter(total_time_sum__lte=int(total_time))
+        else:
+            # Legacy individual time filters
+            if prep_time < 60:
+                recipes = recipes.filter(preparation_time__lte=prep_time)
+            if cook_time < 60:
+                recipes = recipes.filter(cooking_time__lte=cook_time)
 
         # Calories filters
-        if calories_max != 1000 or calories_min != 0:
+        if max_calories > 0:
+            recipes = recipes.filter(calories__lte=max_calories)
+        elif calories_max != 1000 or calories_min != 0:
             recipes = recipes.filter(
                 calories__gte=calories_min,
                 calories__lte=calories_max
@@ -272,6 +286,13 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         # Exclude own recipes
         if exclude_own_recipes:
             recipes = recipes.exclude(created_by=request.user)
+
+        # Exclude recipes the user has downvoted
+        downvoted_ids = UserRecipeInteraction.objects.filter(
+            user=request.user, interaction_type='downvote'
+        ).values_list('recipe_id', flat=True)
+        if downvoted_ids:
+            recipes = recipes.exclude(id__in=downvoted_ids)
 
         # Apply search if query exists
         if search_query:
@@ -331,8 +352,7 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         filtered_ids = set(filtered_recipes.values_list('id', flat=True))
         filtered_combined_ids = [rid for rid in combined_ids if rid in filtered_ids]
         
-        # Rest of your original non-search logic...
-        random.shuffle(filtered_combined_ids)
+        # Preserve TF-IDF relevance order — no full shuffle
         paginator = self.pagination_class()
         page_ids = paginator.paginate_queryset(filtered_combined_ids, request, view=self)
         
@@ -345,16 +365,20 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
             })
         
         preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(page_ids)])
-        page_recipes = Recipe.objects.filter(id__in=page_ids).order_by(preserved_order)
+        page_recipes = list(Recipe.objects.filter(id__in=page_ids).order_by(preserved_order))
         
+        # Inject 4–10 random "discovery" recipes scattered at random positions
+        # so each page load feels fresh without destroying relevance ranking
         num_random = random.randint(4, 10)
-        random_recipes = (
+        random_recipes = list(
             filtered_recipes.exclude(id__in=page_ids)
             .order_by(Random())[:num_random]
         )
-        
-        all_recipes = list(page_recipes) + list(random_recipes)
-        random.shuffle(all_recipes)
+        for r in random_recipes:
+            pos = random.randint(0, len(page_recipes))
+            page_recipes.insert(pos, r)
+
+        all_recipes = page_recipes
         
         recipe_ids = [r.id for r in all_recipes]
         user_saved = SavedRecipe.objects.filter(
@@ -368,6 +392,43 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(final_recipes, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
     
+class RecipeInteractionAPIView(APIView):
+    """Record or toggle a user's thumbs-up / thumbs-down on a recipe."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from django.core.cache import cache
+        recipe = get_object_or_404(Recipe, pk=pk)
+        interaction_type = request.data.get('interaction_type')
+
+        if interaction_type not in ('upvote', 'downvote'):
+            return JsonResponse({'error': 'interaction_type must be upvote or downvote'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        # Toggle: if same type already exists, remove it
+        existing = UserRecipeInteraction.objects.filter(
+            user=request.user, recipe=recipe, interaction_type=interaction_type
+        ).first()
+
+        if existing:
+            existing.delete()
+            cache.delete(f"user_profile_{request.user.id}")
+            return JsonResponse({'interaction_type': interaction_type, 'active': False})
+
+        # Remove the opposite interaction before adding the new one
+        opposite = 'downvote' if interaction_type == 'upvote' else 'upvote'
+        UserRecipeInteraction.objects.filter(
+            user=request.user, recipe=recipe, interaction_type=opposite
+        ).delete()
+
+        UserRecipeInteraction.objects.create(
+            user=request.user, recipe=recipe, interaction_type=interaction_type
+        )
+        cache.delete(f"user_profile_{request.user.id}")
+        return JsonResponse({'interaction_type': interaction_type, 'active': True},
+                            status=status.HTTP_201_CREATED)
+
+
 class RecipeTagsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 

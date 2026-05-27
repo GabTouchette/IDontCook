@@ -1,63 +1,83 @@
 import os
 import base64
+import io as _io
 import json
 import re
 from typing import List, Dict, Any
 from django.conf import settings
 from recipes.models import Ingredient, Recipe
 import anthropic
+from PIL import Image as _PILImage
+
+
+ANTHROPIC_IMG_LIMIT = 5 * 1024 * 1024   # 5 MB (base64 bytes)
+_IMG_SAFE_LIMIT = int(ANTHROPIC_IMG_LIMIT * 0.85)  # leave 15 % headroom
 
 
 def encode_image(image_path):
-    """Encode an image to Base64."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+    """Encode image as Base64, resizing/compressing to stay under Anthropic's 5 MB limit."""
+    with _PILImage.open(image_path) as img:
+        if img.mode in ('RGBA', 'P', 'LA', 'CMYK'):
+            img = img.convert('RGB')
+        # Work on a copy so we don't keep the file handle open
+        img = img.copy()
+
+    # Resize if very large
+    max_dim = 1568
+    if img.width > max_dim or img.height > max_dim:
+        img.thumbnail((max_dim, max_dim), _PILImage.LANCZOS)
+
+    for quality in (85, 75, 65, 55):
+        buf = _io.BytesIO()
+        img.save(buf, format='JPEG', quality=quality)
+        raw = buf.getvalue()
+        # base64 adds ~33 % overhead
+        if ((len(raw) + 2) // 3) * 4 <= _IMG_SAFE_LIMIT:
+            return base64.b64encode(raw).decode('utf-8')
+
+    # Last resort: shrink hard
+    img.thumbnail((1024, 1024), _PILImage.LANCZOS)
+    buf = _io.BytesIO()
+    img.save(buf, format='JPEG', quality=55)
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
 
 class AnthropicService:
     def __init__(self):
         """Initialize the Anthropic client with the API key."""
         self.client = anthropic.Anthropic(api_key=getattr(settings, "ANTHROPIC_API_KEY", None))
 
-    def ask_ocr(self, image_path):
+    def ask_ocr(self, image_paths):
         """
-        Processes an image for OCR using Anthropic and returns a JSON response.
+        Processes one or more images for OCR using Anthropic and returns a JSON string.
+        Accepts a single path string or a list of paths.
+        Raises on any error so callers receive a proper HTTP error response.
         """
-        try:
-            base64_image = encode_image(image_path)
-            ocr_prompt = PromptTemplates.ocr_prompt()
+        if isinstance(image_paths, str):
+            image_paths = [image_paths]
 
-            response = self.client.messages.create(
-                model="claude-sonnet-4-5",
-                max_tokens=2048,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/jpeg",
-                                "data": base64_image,
-                            },
-                        },
-                        {"type": "text", "text": ocr_prompt},
-                    ],
-                }]
-            )
+        content = []
+        for path in image_paths:
+            base64_image = encode_image(path)
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64_image,
+                },
+            })
+        content.append({"type": "text", "text": PromptTemplates.ocr_prompt()})
 
-            response_content = response.content[0].text
-            response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+        response = self.client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            messages=[{"role": "user", "content": content}]
+        )
 
-            try:
-                recipe_json = json.loads(response_content)
-                return json.dumps(recipe_json)
-            except json.JSONDecodeError:
-                return "Error: The response was not valid JSON."
-
-        except anthropic.APIError as e:
-            return f"Error communicating with Anthropic: {e}"
-        except Exception as e:
-            return f"An unexpected error occurred: {e}"
+        response_content = response.content[0].text
+        response_content = re.sub(r"^```json\s*|\s*```$", "", response_content).strip()
+        recipe_json = json.loads(response_content)  # raises JSONDecodeError if invalid
+        return json.dumps(recipe_json)
 
     # Keep backward-compat alias
     def ask_openai_ocr(self, image_path):
@@ -341,20 +361,32 @@ class PromptTemplates:
 
     @staticmethod
     def ocr_prompt():
-        """Generates a prompt for extracting and structuring recipe data from OCR text."""
+        """Generates a prompt for extracting and structuring recipe data from one or more images."""
         return (
-            "Extract and structure the text from the recipe image into the recipe format below:\n\n"
-            "The format should be a valid JSON object and not a JSON string, just like in this example:\n"
+            "Extract and structure the complete recipe from the image(s) into a valid JSON object.\n"
+            "If multiple images are provided, treat them as pages of the same recipe and combine all information.\n\n"
+            "Rules:\n"
+            "- ALL ingredient quantities must be decimals (e.g. 1.0, 0.5, 2.0)\n"
+            "- Use standard abbreviated units: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg. Use empty string \"\" if no unit applies.\n"
+            "- Instructions must be a list of strings, one step per entry\n"
+            "- cooking_time and preparation_time must be integers (minutes)\n"
+            "- servings must be an integer; if not stated in the recipe, estimate it based on the ingredient quantities\n"
+            "- Return ONLY the JSON object — no markdown, no explanation\n\n"
+            'Example output:\n'
             '{\n'
-            '  "title": "Recipe Name",\n'
-            '  "ingredients": [{"name": "Ingredient", "quantity": 1}],\n'
-            '  "instructions": ["Step 1", "Step 2"],\n'
-            '  "cooking_time": 30,\n'
+            '  "title": "Spaghetti Bolognese",\n'
+            '  "ingredients": [\n'
+            '    {"name": "spaghetti", "quantity": 200.0, "unit": "g"},\n'
+            '    {"name": "ground beef", "quantity": 0.5, "unit": "lb"},\n'
+            '    {"name": "eggs", "quantity": 2.0, "unit": ""}\n'
+            '  ],\n'
+            '  "instructions": ["Boil spaghetti until al dente.", "Brown the beef in a pan."],\n'
+            '  "cooking_time": 20,\n'
+            '  "preparation_time": 10,\n'
             '  "servings": 2,\n'
-            '  "preparation_time": 15,\n'
-            '  "tags": ["tag1", "tag2"],\n'
-            '  "description": "Brief description",\n'
-            '  "notes": "Additional notes"\n'
+            '  "tags": ["italian", "pasta"],\n'
+            '  "description": "Classic Italian pasta with meat sauce.",\n'
+            '  "notes": ""\n'
             '}'
         )
        

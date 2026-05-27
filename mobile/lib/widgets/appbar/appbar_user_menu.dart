@@ -121,15 +121,9 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
                   ),
                 ),
               ],
-              child: Container(
+              child: SizedBox(
                 width: 42,
                 height: 42,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 1.5,
-                  ),
-                ),
                 child: Center(
                   child: Avatars.getAvatarIcon(currentUser.avatar_icon, size: 28),
                 ),

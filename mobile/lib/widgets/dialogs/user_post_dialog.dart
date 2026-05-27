@@ -148,7 +148,7 @@ class _PostDialogState extends State<PostDialog> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .outline
-                                    .withOpacity(0.25),
+                                    .withValues(alpha: 0.25),
                                 width: 1.5,
                               ),
                             ),
@@ -167,7 +167,7 @@ class _PostDialogState extends State<PostDialog> {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface
-                                      .withOpacity(0.4),
+                                      .withValues(alpha: 0.4),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -183,41 +183,31 @@ class _PostDialogState extends State<PostDialog> {
                                       value: recipe,
                                       child: Row(
                                         children: [
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            child: recipe.thumbnail_url != null &&
-                                                    recipe.thumbnail_url!
-                                                        .isNotEmpty
-                                                ? Image.network(
-                                                    recipe.thumbnail_url!,
-                                                    width: 32,
-                                                    height: 32,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (_, __, ___) =>
-                                                        Container(
-                                                          width: 32,
-                                                          height: 32,
-                                                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                                          child: Icon(Icons.image_not_supported_outlined, size: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
-                                                        ),
-                                                  )
-                                                : Container(
-                                                    width: 32,
-                                                    height: 32,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .surfaceContainerHighest,
-                                                    child: Icon(
-                                                      Icons.image,
-                                                      size: 18,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface
-                                                          .withOpacity(0.4),
-                                                    ),
+                                          recipe.thumbnail_url != null &&
+                                                  recipe.thumbnail_url!.isNotEmpty
+                                              ? Image.network(
+                                                  recipe.thumbnail_url!,
+                                                  width: 32,
+                                                  height: 32,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      Container(
+                                                        width: 32,
+                                                        height: 32,
+                                                        color: const Color(0xFF0A0A0A),
+                                                        child: const Icon(Icons.restaurant, size: 18, color: Color(0xFFCAFF00)),
+                                                      ),
+                                                )
+                                              : Container(
+                                                  width: 32,
+                                                  height: 32,
+                                                  color: const Color(0xFF0A0A0A),
+                                                  child: const Icon(
+                                                    Icons.restaurant,
+                                                    size: 18,
+                                                    color: Color(0xFFCAFF00),
                                                   ),
-                                          ),
+                                                ),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Text(
@@ -260,7 +250,7 @@ class _PostDialogState extends State<PostDialog> {
                   decoration: InputDecoration(
                     hintText: 'Add a comment to your post...',
                     hintStyle: GoogleFonts.spaceGrotesk(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                       fontSize: 14,
                     ),
                     border: const OutlineInputBorder(
@@ -287,7 +277,7 @@ class _PostDialogState extends State<PostDialog> {
                         child: Text(
                           'CANCEL',
                           style: GoogleFonts.spaceGrotesk(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 1.0,
@@ -330,43 +320,34 @@ class _PostDialogState extends State<PostDialog> {
   }
 
   Widget getRecipeImage(String? imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: imageUrl != null && imageUrl.isNotEmpty
-          ? Image.network(
-              imageUrl,
+    return imageUrl != null && imageUrl.isNotEmpty
+        ? Image.network(
+            imageUrl,
+            height: 150,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
               height: 150,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 60,
-                  ),
-                ),
-              ),
-            )
-          : Container(
-              height: 150,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
+              color: const Color(0xFF0A0A0A),
+              child: const Center(
                 child: Icon(
-                  Icons.image,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 60,
+                  Icons.restaurant,
+                  color: Color(0xFFCAFF00),
+                  size: 48,
                 ),
               ),
             ),
-    );
+          )
+        : Container(
+            height: 150,
+            color: const Color(0xFF0A0A0A),
+            child: const Center(
+              child: Icon(
+                Icons.restaurant,
+                color: Color(0xFFCAFF00),
+                size: 48,
+              ),
+            ),
+          );
   }
 }

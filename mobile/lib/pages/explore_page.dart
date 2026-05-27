@@ -6,6 +6,8 @@ import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
 import 'package:i_cant_cook/widgets/recommendations/big_recipe_tile.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:provider/provider.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -97,7 +99,23 @@ class _ExplorePageState extends State<ExplorePage> {
                             )
                           : const SizedBox(height: 60);
                     }
-                    return BigRecipeTile(recipe: provider.items[index])
+                    final recipe = provider.items[index];
+                    return BigRecipeTile(
+                      recipe: recipe,
+                      onThumbsUp: () => provider.recordUpvote(recipe.id),
+                      onThumbsDown: () => provider.recordDownvote(recipe.id),
+                      onDelete: () async {
+                        final success =
+                            await provider.adminDeleteRecipe(recipe.id);
+                        if (!success && context.mounted) {
+                          InformationToast.show(
+                            context: context,
+                            message: 'Delete failed — make sure your account has staff permissions',
+                            type: ToastType.error,
+                          );
+                        }
+                      },
+                    )
                       .animate(
                         delay: (index < 8 ? index * 40 : 0).ms,
                       )
@@ -123,7 +141,7 @@ class _ExplorePageState extends State<ExplorePage> {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
             width: 1.5,
           ),
         ),
@@ -147,7 +165,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(hasText ? 0.7 : 0.4),
+                          .withValues(alpha: hasText ? 0.7 : 0.4),
                       size: 20,
                     ),
                   ),
@@ -168,7 +186,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.35),
+                        .withValues(alpha: 0.35),
                     fontSize: 15,
                   ),
                   border: InputBorder.none,
@@ -198,7 +216,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         : Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.45),
+                            .withValues(alpha: 0.45),
                   ),
                 ),
               ),
@@ -221,7 +239,7 @@ class _ExplorePageState extends State<ExplorePage> {
               Icon(
                 Icons.filter_alt_rounded,
                 size: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 6),
               Text(
@@ -231,7 +249,7 @@ class _ExplorePageState extends State<ExplorePage> {
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2,
                   color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
               const Spacer(),
@@ -327,7 +345,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 1.6,
-                color: scheme.onSurface.withOpacity(0.45),
+                color: scheme.onSurface.withValues(alpha: 0.45),
               ),
             ),
             if (provider.hasActiveFilters) ...[

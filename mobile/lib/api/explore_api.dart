@@ -26,4 +26,14 @@ class ExploreApi {
 
     return PaginatedRecipes(results: [], next: null, count: 0);
   }
+
+  /// Record a thumbs-up (upvote) or thumbs-down (downvote) on a recipe.
+  /// Returns true if the interaction is now active, false if it was toggled off.
+  Future<bool> recordInteraction(int recipeId, String interactionType) async {
+    final data = await _apiHelper.postRequest(
+      'recipes/$recipeId/interact/',
+      {'interaction_type': interactionType},
+    );
+    return data?['active'] == true;
+  }
 }

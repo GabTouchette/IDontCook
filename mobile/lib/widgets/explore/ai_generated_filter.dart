@@ -10,10 +10,13 @@ class AIGeneratedFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ExploreProvider>(
       builder: (context, provider, child) {
-        return Row(
-          children: [
-            Expanded(
-              child: Text(
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
                 'EXCLUDE AI-GENERATED',
                 style: GoogleFonts.spaceGrotesk(
                   color: Theme.of(context).colorScheme.onSurface,
@@ -22,7 +25,6 @@ class AIGeneratedFilter extends StatelessWidget {
                   letterSpacing: 0.5,
                 ),
               ),
-            ),
             Switch(
               value: provider.filters['excludeAIGenerated'] ?? false,
               onChanged: (value) =>
@@ -35,6 +37,7 @@ class AIGeneratedFilter extends StatelessWidget {
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],
+          ),
         );
       },
     );

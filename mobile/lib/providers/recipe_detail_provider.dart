@@ -102,6 +102,7 @@ class RecipeDetailProvider with ChangeNotifier {
         "web_image_url": _recipe!.image_url,
         // AI-generated recipes (id == -1) already have structured ingredients — skip LLM reformatting
         "is_formatted": _recipe!.id == -1,
+        "servings": _recipe!.servings,
         // Preserve existing nutrition on clone so UI doesn't "lose" it before recalculation
         "calories": _recipe!.calories,
         "protein": _recipe!.protein,
@@ -167,6 +168,7 @@ class RecipeDetailProvider with ChangeNotifier {
         "web_image_url": _recipe!.image_url,
         // AI-generated recipes (id == -1) already have structured ingredients — skip LLM reformatting
         "is_formatted": _recipe!.id == -1,
+        "servings": _recipe!.servings,
         // Preserve existing nutrition so new saved recipe immediately shows values
         "calories": _recipe!.calories,
         "protein": _recipe!.protein,

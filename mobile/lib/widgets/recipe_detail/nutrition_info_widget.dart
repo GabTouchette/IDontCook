@@ -45,7 +45,7 @@ class NutritionInfo extends StatelessWidget {
               height: 12,
               child: CircularProgressIndicator(
                 strokeWidth: 1.5,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
             const SizedBox(width: 8),
@@ -54,7 +54,7 @@ class NutritionInfo extends StatelessWidget {
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 12,
                 color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ],
@@ -108,7 +108,7 @@ class NutritionInfo extends StatelessWidget {
         Divider(
           height: 1,
           thickness: 1.5,
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -122,7 +122,7 @@ class NutritionInfo extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .outline
-                        .withOpacity(0.12),
+                        .withValues(alpha: 0.12),
                   ),
                 Expanded(
                   child: Column(
@@ -148,7 +148,7 @@ class NutritionInfo extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.38),
+                              .withValues(alpha: 0.38),
                         ),
                       ),
                     ],
@@ -161,17 +161,17 @@ class NutritionInfo extends StatelessWidget {
         Divider(
           height: 1,
           thickness: 1,
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.10),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.10),
         ),
-        if (servings > 1)
+        if (servings > 1 || servings == 1)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Text(
-              'for ${servings.toStringAsFixed(0)} servings',
+              'per serving',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 11,
                 color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
               ),
             ),
           ),
@@ -185,8 +185,7 @@ class NutritionInfo extends StatelessWidget {
       recipe.fat != null ||
       recipe.carbs != null;
 
-  double? _scale(double? perServing) =>
-      perServing == null ? null : perServing * servings;
+  double? _scale(double? perServing) => perServing;
 }
 
 class _MacroItem {

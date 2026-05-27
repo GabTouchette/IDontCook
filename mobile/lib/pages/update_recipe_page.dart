@@ -13,8 +13,15 @@ import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
 
 class UpdateRecipePage extends StatefulWidget {
   final int recipeId;
+  /// Optional pre-filled data from OCR digitalization. When provided the API
+  /// fetch is skipped and these values populate the form instead.
+  final Map<String, dynamic>? initialData;
 
-  const UpdateRecipePage({Key? key, required this.recipeId}) : super(key: key);
+  const UpdateRecipePage({
+    Key? key,
+    required this.recipeId,
+    this.initialData,
+  }) : super(key: key);
 
   @override
   _UpdateRecipePageState createState() => _UpdateRecipePageState();
@@ -49,6 +56,10 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
   }
 
   void _fetchRecipe() async {
+    if (widget.initialData != null) {
+      _applyData(widget.initialData!);
+      return;
+    }
     var response = await RecipeApi().getRecipeById(widget.recipeId);
     var recipe = Recipe.fromJson(response);
 
@@ -83,6 +94,42 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
       ));
 
       _selectedTags = List<String>.from(recipe.tags ?? []);
+    });
+  }
+
+  void _applyData(Map<String, dynamic> data) {
+    setState(() {
+      _titleController.text = (data['title'] as String?) ?? '';
+      _preptimeController.text =
+          (data['preparation_time'] ?? data['prep_time'] ?? '').toString();
+      _cooktimeController.text =
+          (data['cooking_time'] ?? data['cook_time'] ?? '').toString();
+      _descriptionController.text = (data['description'] as String?) ?? '';
+      _notesController.text = (data['notes'] as String?) ?? '';
+
+      final rawIngredients = data['ingredients'] as List<dynamic>? ?? [];
+      _mealIngredients = rawIngredients.map<MealIngredient>((ing) {
+        return MealIngredient(
+          quantity: (ing['quantity'] ?? '').toString(),
+          unit: (ing['unit'] as String?) ?? '',
+          name: (ing['name'] as String?) ?? '',
+          description: '',
+        );
+      }).toList();
+
+      final rawInstructions = data['instructions'] as List<dynamic>? ?? [];
+      _instructions = rawInstructions.map<InstructionField>((step) {
+        return InstructionField(
+          controller: TextEditingController(text: step.toString()),
+          focusNode: FocusNode(),
+        );
+      }).toList();
+      _instructions.add(InstructionField(
+        controller: TextEditingController(),
+        focusNode: FocusNode(),
+      ));
+
+      _selectedTags = List<String>.from(data['tags'] ?? []);
     });
   }
 

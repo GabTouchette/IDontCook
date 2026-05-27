@@ -8,6 +8,7 @@ import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/chatbot/ai_response_bubble.dart';
 import 'package:i_cant_cook/widgets/chatbot/chat_message.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class AiChatBotPage extends StatefulWidget {
   const AiChatBotPage({super.key});
@@ -103,6 +104,11 @@ class AiChatBotPageState extends State<AiChatBotPage>
   late final Animation<double> _menuAnimation;
   bool _menuOpen = false;
 
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _speechAvailable = false;
+  bool _speechInitialized = false;
+  bool _isListening = false;
+
   @override
   void initState() {
     super.initState();
@@ -120,8 +126,54 @@ class AiChatBotPageState extends State<AiChatBotPage>
     _refreshQuickQuestions();
   }
 
+  Future<void> _initSpeech() async {
+    _speechInitialized = true;
+    final available = await _speech.initialize(
+      onError: (_) => _setListening(false),
+      onStatus: (status) {
+        if (status == stt.SpeechToText.doneStatus ||
+            status == stt.SpeechToText.notListeningStatus) {
+          _setListening(false);
+        }
+      },
+    );
+    if (mounted) setState(() => _speechAvailable = available);
+  }
+
+  void _setListening(bool value) {
+    if (mounted) setState(() => _isListening = value);
+  }
+
+  Future<void> _toggleListening(TextEditingController controller) async {
+    if (!_speechInitialized) await _initSpeech();
+    if (!_speechAvailable) return;
+    if (_isListening) {
+      HapticService.lightImpact();
+      await _speech.stop();
+      _setListening(false);
+      return;
+    }
+    HapticService.lightImpact();
+    final baseText = controller.text;
+    _setListening(true);
+    await _speech.listen(
+      onResult: (result) {
+        final recognized = result.recognizedWords;
+        final prefix = baseText.isEmpty ? '' : '$baseText ';
+        controller.text = '$prefix$recognized';
+        controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: controller.text.length),
+        );
+      },
+      listenFor: const Duration(seconds: 30),
+      pauseFor: const Duration(seconds: 3),
+      partialResults: true,
+    );
+  }
+
   @override
   void dispose() {
+    _speech.stop();
     _menuController.dispose();
     super.dispose();
   }
@@ -216,9 +268,7 @@ class AiChatBotPageState extends State<AiChatBotPage>
                           centerTitle: true,
                           actions: [UserMenuWidget()],
                         ),
-                        body: GestureDetector(
-                          onTap: () => FocusScope.of(context).unfocus(),
-                          child: Column(
+                        body: Column(
                             children: [
                               if (provider.currentMessages.isEmpty) ...[
                                 Expanded(
@@ -322,7 +372,6 @@ class AiChatBotPageState extends State<AiChatBotPage>
                             ],
                           ),
                         ),
-                      ),
                       // Tap-to-close overlay when menu is open
                       if (_menuOpen)
                         Positioned.fill(
@@ -343,58 +392,104 @@ class AiChatBotPageState extends State<AiChatBotPage>
   }
 
   Widget _buildInput(BuildContext context, ChatProvider provider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
-          width: 1.5,
-        ),
-      ),
+    const highlightColor = Color(0xFFCAFF00);
+    return IntrinsicHeight(
       child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: provider.chatController,
-              style: GoogleFonts.spaceGrotesk(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Ask anything…',
-                hintStyle: GoogleFonts.spaceGrotesk(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
-                  fontSize: 15,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 14.0, horizontal: 16.0),
-              ),
-              onSubmitted: (query) => provider.sendMessage(query: query),
-            ),
-          ),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...[
           GestureDetector(
-            onTap: () {
-              final query = provider.chatController.text.trim();
-              if (query.isNotEmpty) {
-                HapticService.mediumImpact();
-                provider.sendMessage(query: query);
-              }
-            },
+            onTap: () => _toggleListening(provider.chatController),
             child: Container(
               width: 48,
-              height: 48,
-              color: Theme.of(context).colorScheme.onSurface,
-              child: Icon(
-                Icons.arrow_forward,
-                color: Theme.of(context).colorScheme.surface,
-                size: 18,
-              ),
+              color: highlightColor,
+              child: _isListening
+                  ? const Icon(Icons.mic, color: Colors.black, size: 22)
+                      .animate(onPlay: (c) => c.repeat())
+                      .fade(begin: 1, end: 0.3, duration: 600.ms, curve: Curves.easeInOut)
+                  : const Icon(Icons.mic_none, color: Colors.black, size: 22),
             ),
           ),
+          const SizedBox(width: 8),
         ],
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: provider.chatController,
+                    style: GoogleFonts.spaceGrotesk(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: _isListening ? 'Listening…' : 'Ask anything…',
+                      hintStyle: GoogleFonts.spaceGrotesk(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                        fontSize: 15,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14.0, horizontal: 16.0),
+                    ),
+                    onSubmitted: (query) => provider.sendMessage(query: query),
+                  ),
+                ),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: provider.chatController,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: () {
+                        HapticService.lightImpact();
+                        provider.chatController.clear();
+                      },
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        color: Colors.transparent,
+                        child: Icon(
+                          Icons.close,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                          size: 18,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                GestureDetector(
+                  onTap: () {
+                    final query = provider.chatController.text.trim();
+                    if (query.isNotEmpty) {
+                      HapticService.mediumImpact();
+                      provider.sendMessage(query: query);
+                    }
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    child: Icon(
+                      Icons.arrow_forward,
+                      color: Theme.of(context).colorScheme.surface,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
       ),
     );
   }

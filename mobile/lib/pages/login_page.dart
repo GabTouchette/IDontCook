@@ -45,11 +45,29 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
       duration: const Duration(milliseconds: 420),
     );
+    _usernameController.addListener(_onFieldChanged);
+    _passwordController.addListener(_onFieldChanged);
+    _emailController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() => setState(() {});
+
+  bool get _hasRequiredInput {
+    if (_isLoggingIn) {
+      return _usernameController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    }
+    return _emailController.text.isNotEmpty &&
+        _usernameController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty;
   }
 
   @override
   void dispose() {
     _shakeController.dispose();
+    _usernameController.removeListener(_onFieldChanged);
+    _passwordController.removeListener(_onFieldChanged);
+    _emailController.removeListener(_onFieldChanged);
     _usernameController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
@@ -184,59 +202,19 @@ class _LoginPageState extends State<LoginPage>
                     ],
                   ).animate().fadeIn(duration: 400.ms).slideY(
                       begin: -0.07, duration: 400.ms, curve: Curves.easeOut),
-                  const SizedBox(height: 48),
-                  // ── Mode toggle ──
-                  Row(
-                    children: [
-                      _buildModeTab('LOGIN', _isLoggingIn),
-                      const SizedBox(width: 1),
-                      _buildModeTab('REGISTER', !_isLoggingIn),
-                    ],
-                  ).animate(delay: 90.ms).fadeIn(duration: 350.ms),
-                  const SizedBox(height: 32),
-                  // ── Fields ──
-                  if (!_isLoggingIn) ...[
-                    _buildFieldLabel('EMAIL'),
-                    _buildTextField(
-                      _emailController,
-                      hint: 'your@email.com',
-                      icon: Icons.email_outlined,
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                  _buildFieldLabel('USERNAME'),
-                  _buildTextField(
-                    _usernameController,
-                    hint: _isLoggingIn ? 'Username or email' : 'Username',
-                    icon: Icons.person_outline,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildFieldLabel('PASSWORD'),
-                  _buildTextField(
-                    _passwordController,
-                    hint: '••••••••',
-                    icon: Icons.lock_outline,
-                    obscure: true,
-                  ),
-                  const SizedBox(height: 32),
-                  // ── Primary button ──
+                  const SizedBox(height: 36),
+                  // ── Google button (primary) ──
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
-                      final busy = auth.isLoading && !_googleLoading;
                       return GestureDetector(
                         onTap: (auth.isLoading || _googleLoading)
                             ? null
-                            : () {
-                                HapticService.mediumImpact();
-                                _isLoggingIn
-                                    ? _handleLogin(context)
-                                    : _handleRegister(context);
-                              },
+                            : () => _handleGoogleSignIn(context),
                         child: Container(
                           width: double.infinity,
                           height: 52,
                           color: _lime,
-                          child: busy
+                          child: _googleLoading
                               ? const Center(
                                   child: SizedBox(
                                     width: 20,
@@ -250,11 +228,14 @@ class _LoginPageState extends State<LoginPage>
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.check,
-                                        color: _btnFg, size: 18),
-                                    const SizedBox(width: 10),
+                                    FaIcon(
+                                      FontAwesomeIcons.google,
+                                      size: 16,
+                                      color: _btnFg,
+                                    ),
+                                    const SizedBox(width: 12),
                                     Text(
-                                      _isLoggingIn ? 'LOGIN' : 'CREATE ACCOUNT',
+                                      'CONTINUE WITH GOOGLE',
                                       style: GoogleFonts.spaceGrotesk(
                                         color: _btnFg,
                                         fontSize: 13,
@@ -267,8 +248,8 @@ class _LoginPageState extends State<LoginPage>
                         ),
                       );
                     },
-                  ),
-                  const SizedBox(height: 24),
+                  ).animate(delay: 90.ms).fadeIn(duration: 350.ms),
+                  const SizedBox(height: 28),
                   // ── OR divider ──
                   Row(
                     children: [
@@ -306,66 +287,104 @@ class _LoginPageState extends State<LoginPage>
                         ),
                       ),
                     ],
+                  ).animate(delay: 120.ms).fadeIn(duration: 350.ms),
+                  const SizedBox(height: 28),
+                  // ── Mode toggle ──
+                  Row(
+                    children: [
+                      _buildModeTab('LOGIN', _isLoggingIn),
+                      const SizedBox(width: 1),
+                      _buildModeTab('REGISTER', !_isLoggingIn),
+                    ],
+                  ).animate(delay: 150.ms).fadeIn(duration: 350.ms),
+                  const SizedBox(height: 32),
+                  // ── Fields ──
+                  if (!_isLoggingIn) ...[
+                    _buildFieldLabel('EMAIL'),
+                    _buildTextField(
+                      _emailController,
+                      hint: 'your@email.com',
+                      icon: Icons.email_outlined,
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                  _buildFieldLabel('USERNAME'),
+                  _buildTextField(
+                    _usernameController,
+                    hint: _isLoggingIn ? 'Username or email' : 'Username',
+                    icon: Icons.person_outline,
                   ),
-                  const SizedBox(height: 24),
-                  // ── Google button ──
-                  Consumer<AuthProvider>(
-                    builder: (context, auth, _) {
-                      return GestureDetector(
-                        onTap: (auth.isLoading || _googleLoading)
-                            ? null
-                            : () => _handleGoogleSignIn(context),
-                        child: Container(
-                          width: double.infinity,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.35),
-                              width: 1,
-                            ),
-                          ),
-                          child: _googleLoading
-                              ? const Center(
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
+                  const SizedBox(height: 20),
+                  _buildFieldLabel('PASSWORD'),
+                  _buildTextField(
+                    _passwordController,
+                    hint: '••••••••',
+                    icon: Icons.lock_outline,
+                    obscure: true,
+                  ),
+                  // ── Primary button — slides in when fields are filled ──
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOut,
+                    child: _hasRequiredInput
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 32),
+                              Consumer<AuthProvider>(
+                                builder: (context, auth, _) {
+                                  final busy = auth.isLoading && !_googleLoading;
+                                  return GestureDetector(
+                                    onTap: (auth.isLoading || _googleLoading)
+                                        ? null
+                                        : () {
+                                            HapticService.mediumImpact();
+                                            _isLoggingIn
+                                                ? _handleLogin(context)
+                                                : _handleRegister(context);
+                                          },
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 52,
+                                      color: _lime,
+                                      child: busy
+                                          ? const Center(
+                                              child: SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: CircularProgressIndicator(
+                                                  color: _btnFg,
+                                                  strokeWidth: 2.5,
+                                                ),
+                                              ),
+                                            )
+                                          : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(Icons.check,
+                                                    color: _btnFg, size: 18),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  _isLoggingIn
+                                                      ? 'LOGIN'
+                                                      : 'CREATE ACCOUNT',
+                                                  style: GoogleFonts.spaceGrotesk(
+                                                    color: _btnFg,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w700,
+                                                    letterSpacing: 1.5,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                     ),
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    FaIcon(
-                                      FontAwesomeIcons.google,
-                                      size: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.7),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'CONTINUE WITH GOOGLE',
-                                      style: GoogleFonts.spaceGrotesk(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.7),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      );
-                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 36),
                 ],

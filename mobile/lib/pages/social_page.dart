@@ -78,7 +78,7 @@ class SocialPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
                             width: 1.5,
                           ),
                         ),
@@ -91,11 +91,11 @@ class SocialPage extends StatelessWidget {
                           ),
                           decoration: InputDecoration(
                             icon: Icon(Icons.search,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                                 size: 20),
                             hintText: 'Search for a user',
                             hintStyle: GoogleFonts.spaceGrotesk(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                               fontSize: 15,
                             ),
                             border: InputBorder.none,
@@ -119,7 +119,7 @@ class SocialPage extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Container(
                         height: 1,
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                       ),
                     ),
                     Expanded(
@@ -128,7 +128,7 @@ class SocialPage extends StatelessWidget {
                               child: Text(
                                 'No posts available at the moment.',
                                 style: GoogleFonts.spaceGrotesk(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -173,7 +173,7 @@ class SocialPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                           width: 1.5,
                         ),
                       ),
@@ -188,9 +188,11 @@ class SocialPage extends StatelessWidget {
                           itemBuilder: (context, index) {
                             final user = provider.searchResults[index];
                             return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                child: Avatars.getAvatarIcon(user.avatar_icon),
+                              leading: Container(
+                                width: 36,
+                                height: 36,
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                child: Center(child: Avatars.getAvatarIcon(user.avatar_icon, size: 22)),
                               ),
                               title: Text(
                                 "@${user.username}",
@@ -257,7 +259,7 @@ class SocialPage extends StatelessWidget {
                     title.toUpperCase(),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.spaceGrotesk(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                       fontWeight: FontWeight.w500,
                       fontSize: 13,
                       letterSpacing: 1.2,

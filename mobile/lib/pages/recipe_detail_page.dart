@@ -182,6 +182,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                           );
                         });
                         break;
+                      case 'digitalize':
+                        _digitalizeRecipe();
+                        break;
                       case 'delete':
                         showDialog(
                           context: context,
@@ -231,6 +234,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       value: 'edit',
                       icon: FontAwesomeIcons.penToSquare,
                       label: "Edit",
+                    ),
+                    _popupItem(
+                      value: 'digitalize',
+                      icon: FontAwesomeIcons.cameraRetro,
+                      label: "Digitalize from photo",
                     ),
                     _popupItem(
                       value: 'delete',
@@ -328,6 +336,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   RecipeImage(
                     imageUrl: recipe.image_url ?? "",
                     title: recipe.title,
+                    recipeId: recipe.id,
                     onImagePick: widget.viewMode == RecipeViewMode.preview()
                         ? () {}
                         : _pickImage,
@@ -448,25 +457,157 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     final recipe = provider.recipe;
     if (recipe == null || recipe.is_saved != true) return;
 
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      setState(() {
-        _imageFile = File(image.path);
-      });
+    final source = await _showImageSourceSheet();
+    if (source == null) return;
 
-      String newImageUrl = await _uploadImageToServer(_imageFile!, recipe.id);
-      bool success = newImageUrl.isNotEmpty;
-      if (success) {
-        provider.image_url = newImageUrl;
+    try {
+      final XFile? image = await _picker.pickImage(source: source);
+      if (image != null) {
+        setState(() => _imageFile = File(image.path));
+        final newImageUrl =
+            await _uploadImageToServer(_imageFile!, recipe.id);
+        if (newImageUrl.isNotEmpty) {
+          provider.image_url = newImageUrl;
+          InformationToast.show(
+            context: context,
+            message: "Photo saved!",
+            type: ToastType.success,
+          );
+        } else {
+          InformationToast.show(
+            context: context,
+            message: "Failed to upload photo.",
+            type: ToastType.error,
+          );
+        }
+      }
+    } on Exception catch (e) {
+      final msg = e.toString();
+      if (msg.contains('camera_access_denied') ||
+          msg.contains('photo_access_denied')) {
+        _showCameraPermissionDialog();
+      } else {
         InformationToast.show(
           context: context,
-          message: success
-              ? "Image uploaded successfully!"
-              : "Failed to upload image.",
-          type: success ? ToastType.success : ToastType.error,
+          message: "Could not open camera.",
+          type: ToastType.error,
         );
       }
     }
+  }
+
+  Future<ImageSource?> _showImageSourceSheet() async {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera_alt,
+                  color: Theme.of(context).colorScheme.primary),
+              title: Text('Take a photo',
+                  style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library,
+                  color: Theme.of(context).colorScheme.primary),
+              title: Text('Choose from library',
+                  style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCameraPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        title: Text('Camera access required',
+            style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700)),
+        content: Text(
+          'Please allow camera and photo library access in Settings → Privacy → Camera.',
+          style: GoogleFonts.spaceGrotesk(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK',
+                style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _digitalizeRecipe() async {
+    final provider = context.read<RecipeDetailProvider>();
+    final recipe = provider.recipe;
+    if (recipe == null) return;
+
+    ImageSource? source;
+    try {
+      source = await _showImageSourceSheet();
+    } catch (_) {}
+    if (source == null) return;
+
+    XFile? image;
+    try {
+      image = await _picker.pickImage(source: source);
+    } on Exception catch (e) {
+      final msg = e.toString();
+      if (msg.contains('camera_access_denied') ||
+          msg.contains('photo_access_denied')) {
+        _showCameraPermissionDialog();
+      }
+      return;
+    }
+    if (image == null) return;
+
+    // Show loading overlay
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _DigitalizeLoadingDialog(),
+    );
+
+    final data =
+        await RecipeApi().digitalizeFromImage(File(image.path));
+
+    if (!mounted) return;
+    Navigator.pop(context); // dismiss loading
+
+    if (data == null) {
+      InformationToast.show(
+        context: context,
+        message: "Could not read the recipe. Try a clearer photo.",
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UpdateRecipePage(
+          recipeId: recipe.id,
+          initialData: data,
+        ),
+      ),
+    ).then((_) {
+      provider.initializeRecipe(
+        recipe: widget.recipe,
+        recipeId: widget.recipeId,
+      );
+    });
   }
 
   Future<String> _uploadImageToServer(File imageFile, int recipeId) async {
@@ -522,6 +663,38 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
               )
             : _buildImagePlaceholder(),
+      ),
+    );
+  }
+}
+
+class _DigitalizeLoadingDialog extends StatelessWidget {
+  const _DigitalizeLoadingDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              color: Color(0xFFCAFF00),
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Reading recipe...',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
