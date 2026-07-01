@@ -182,10 +182,11 @@ class RecipeAdmin(admin.ModelAdmin):
                 '<strong>{}cal</strong> | {}p | {}f | {}c',
                 int(obj.calories) if obj.calories else 0,
                 f"{obj.protein:.1f}g" if obj.protein else "0g",
-                f"{obj.fat:.1f}g" if obj.fat else "0g", 
+                f"{obj.fat:.1f}g" if obj.fat else "0g",
                 f"{obj.carbs:.1f}g" if obj.carbs else "0g"
             )
-        return format_html('<span style="color: #999;">No nutrition data</span>')
+        from django.utils.safestring import mark_safe
+        return mark_safe('<span style="color: #999;">No nutrition data</span>')
     get_nutrition_summary.short_description = 'Nutrition Summary'
     get_nutrition_summary.admin_order_field = 'calories'
 

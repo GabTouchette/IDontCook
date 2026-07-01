@@ -122,20 +122,23 @@ class Recipe(models.Model):
     REQUIRED_MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert']
     
     def clean(self):
-        """Validate that recipe has exactly one meal type tag (except for drinks/cocktails)"""
+        """Validate and auto-correct meal type tags (keep only one)"""
         if self.tags:
             meal_type_tags = [tag for tag in self.tags if tag in self.REQUIRED_MEAL_TYPES]
-            # Check if this is a drink/cocktail - if so, allow no meal type tags
+            non_meal_type_tags = [tag for tag in self.tags if tag not in self.REQUIRED_MEAL_TYPES]
+
             if self._is_drink_or_cocktail():
+                # For drinks: keep at most one meal type tag
                 if len(meal_type_tags) > 1:
-                    raise ValidationError("Drink/cocktail recipes can have at most one meal type tag")
-                # Allow 0 or 1 meal type tags for drinks/cocktails
+                    self.tags = [meal_type_tags[0]] + non_meal_type_tags
             else:
-                # Regular recipes must have exactly one meal type tag
+                # For regular recipes: ensure exactly one meal type tag
                 if len(meal_type_tags) == 0:
-                    raise ValidationError("Recipe must have exactly one meal type tag: Breakfast, Lunch, Dinner, Snack, or Dessert")
+                    # No meal type tags, add Dinner
+                    self.tags.append('Dinner')
                 elif len(meal_type_tags) > 1:
-                    raise ValidationError("Recipe can only have one meal type tag")
+                    # Multiple meal type tags, keep only the first
+                    self.tags = [meal_type_tags[0]] + non_meal_type_tags
 
     def _is_drink_or_cocktail(self):
         """Check if this recipe is a drink or cocktail"""

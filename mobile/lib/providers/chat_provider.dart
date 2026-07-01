@@ -38,6 +38,25 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
 
   List<ChatSession> get savedChats => List.unmodifiable(_savedChats);
 
+  /// Detects if a message contains a URL
+  bool _containsUrl(String text) {
+    final urlPattern = RegExp(
+      r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)',
+      caseSensitive: false,
+    );
+    return urlPattern.hasMatch(text);
+  }
+
+  /// Extracts URL from text (assumes single URL)
+  String? _extractUrl(String text) {
+    final urlPattern = RegExp(
+      r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)',
+      caseSensitive: false,
+    );
+    final match = urlPattern.firstMatch(text);
+    return match?.group(0);
+  }
+
   void setCurrentRecipe(int recipeId) {
     if (_currentRecipeId != recipeId) {
       _currentRecipeId = recipeId;
@@ -63,7 +82,21 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
   }) async {
     if (query.trim().isEmpty) return;
 
-    addMessage(sender: "user", text: query, isRecipeChat: isRecipeChat);
+    final trimmedQuery = query.trim();
+
+    // Check if message contains a URL — auto-route to recipe import
+    if (_containsUrl(trimmedQuery)) {
+      final url = _extractUrl(trimmedQuery);
+      if (url != null) {
+        addMessage(sender: "user", text: trimmedQuery, isRecipeChat: isRecipeChat);
+        scrollToBottom();
+        await importRecipeFromUrl(url);
+        return;
+      }
+    }
+
+    // Otherwise, handle as normal chat message
+    addMessage(sender: "user", text: trimmedQuery, isRecipeChat: isRecipeChat);
     scrollToBottom();
 
     try {
@@ -85,7 +118,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
           isLoading: true, isRecipeLoading: true, isRecipeChat: isRecipeChat);
 
       final stream = AiChatbotApi()
-          .chatWithBotStream(query, history, recipeId: recipeId)
+          .chatWithBotStream(trimmedQuery, history, recipeId: recipeId)
           .timeout(const Duration(seconds: 30));
 
       const delimiters = [r'$$', '&&', '@@'];
@@ -307,6 +340,27 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     } else if (!isRecipeChat && _globalMessages.isNotEmpty) {
       _globalMessages.removeLast();
       notifyListeners();
+    }
+  }
+
+  Future<void> importRecipeFromUrl(String url) async {
+    addMessage(isLoading: true, isRecipeLoading: true);
+    scrollToBottom();
+
+    try {
+      final result = await AiChatbotApi().importRecipeFromUrl(url);
+      final response = result?['response'] as String?;
+
+      if (response == null || response.trim() == '\$\$ null \$\$' || response.trim().isEmpty) {
+        updateLastMessage("Sorry, I couldn't find a recipe at that URL.");
+        return;
+      }
+
+      updateLastMessage(response);
+    } catch (e) {
+      updateLastMessage("Failed to import recipe: ${e.toString()}");
+    } finally {
+      scrollToBottom();
     }
   }
 

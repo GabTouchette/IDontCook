@@ -21,6 +21,8 @@ Map<String, dynamic> buildRecipeDataFromRecipe(Recipe recipe) {
     "description": recipe.description ?? "",
     "notes": recipe.notes ?? "",
     "tags": recipe.tags ?? [],
+    "servings": recipe.servings,
+    "image_url": recipe.image_url ?? "",
   };
 }
 

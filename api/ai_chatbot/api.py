@@ -13,6 +13,9 @@ from PIL import Image as _PILImage
 ANTHROPIC_IMG_LIMIT = 5 * 1024 * 1024   # 5 MB (base64 bytes)
 _IMG_SAFE_LIMIT = int(ANTHROPIC_IMG_LIMIT * 0.85)  # leave 15 % headroom
 
+CHAT_MODEL  = "claude-haiku-4-5"
+LIGHT_MODEL = "claude-haiku-4-5"
+
 
 def encode_image(image_path):
     """Encode image as Base64, resizing/compressing to stay under Anthropic's 5 MB limit."""
@@ -69,7 +72,7 @@ class AnthropicService:
         content.append({"type": "text", "text": PromptTemplates.ocr_prompt()})
 
         response = self.client.messages.create(
-            model="claude-sonnet-4-5",
+            model=CHAT_MODEL,
             max_tokens=4096,
             messages=[{"role": "user", "content": content}]
         )
@@ -83,7 +86,7 @@ class AnthropicService:
     def ask_openai_ocr(self, image_path):
         return self.ask_ocr(image_path)
 
-    def ask_stream(self, prompt, chat_history=None, recipe_context=None):
+    def ask_stream(self, prompt, chat_history=None, recipe_context=None, use_web_search=False):
         """
         Handles chatbot conversation with streaming response.
         If a recipe_context is provided, it uses a recipe-editing prompt.
@@ -103,11 +106,15 @@ class AnthropicService:
 
             messages.append({"role": "user", "content": final_prompt})
 
-            with self.client.messages.stream(
-                model="claude-sonnet-4-5",
-                max_tokens=2048,
-                messages=messages,
-            ) as stream:
+            stream_kwargs = {
+                "model": CHAT_MODEL,
+                "max_tokens": 2048,
+                "messages": messages,
+            }
+            if use_web_search:
+                stream_kwargs["tools"] = [{"type": "web_search_20250305", "name": "web_search"}]
+
+            with self.client.messages.stream(**stream_kwargs) as stream:
                 for text in stream.text_stream:
                     yield text
 
@@ -128,7 +135,7 @@ class AnthropicService:
 
         raw_ingredient_text = "\n".join(f"{str(ingredient.quantity)} {str(ingredient.name)}" for ingredient in recipe.ingredients.all())
         response = self.client.messages.create(
-                model="claude-haiku-4-5",
+                model=LIGHT_MODEL,
                 max_tokens=2048,
                 messages=[
                     {"role": "user", "content": PromptTemplates.format_ingredients_with_llm_prompt(raw_ingredient_text)}
@@ -275,7 +282,8 @@ class PromptTemplates:
             "- For new recipes, use this format: $$ { ... } $$ with valid JSON.\n"
             "- Use decimal format for ingredient quantities (e.g. 0.75, 1.0).\n"
             "- Use abbreviated units in ingredients: tbsp (tablespoon), tsp (teaspoon), cup, oz, lb, g, kg, ml, L, pc (piece), clove, pinch, bunch, can, pkg (package). Avoid full unit names like 'tablespoon' or 'teaspoon'.\n"
-            "- When answering general questions, you may remind the user you can generate or suggest recipes.\n\n"
+            "- When answering general questions, you may remind the user you can generate or suggest recipes.\n"
+            "- You have access to a web search tool. Use it when the user asks about recipes not in their saved list or when current information would improve your answer.\n\n"
             "**IMPORTANT: Recipe Format Requirements:**\n"
             "- ALL numeric values must be decimals (use 1.0, not 1)\n"
             "- quantity field is REQUIRED for every ingredient\n"
@@ -389,4 +397,33 @@ class PromptTemplates:
             '  "notes": ""\n'
             '}'
         )
-       
+
+    @staticmethod
+    def url_import_prompt(page_content: str, image_url: str = "") -> str:
+        return (
+            "You are a recipe extraction assistant. Extract the recipe from the webpage text below "
+            "and output it wrapped in $$ ... $$ with valid JSON — no other text.\n\n"
+            "JSON schema (all fields required, use null/empty if unknown):\n"
+            "{\n"
+            '  "title": string,\n'
+            '  "image_url": string (URL if provided, empty string if none),\n'
+            '  "ingredients": [{"name": string, "quantity": decimal, "unit": string}],\n'
+            '  "instructions": [string],\n'
+            '  "preparation_time": integer (minutes),\n'
+            '  "cooking_time": integer (minutes),\n'
+            '  "servings": integer (IMPORTANT: extract from content;\n'
+            '  "tags": [string],\n'
+            '  "description": string,\n'
+            '  "notes": string\n'
+            "}\n\n"
+            "Rules:\n"
+            "- ALL ingredient quantities must be decimals (e.g. 1.0, 0.5)\n"
+            "- Use abbreviated units: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg\n"
+            "- Instructions must be a list of strings, one step per entry\n"
+            "- SERVINGS: Look for 'servings', 'serves', 'makes', 'feeds' in the text. If found, use that number.\n"
+            "  If not found, default to 4 (don't use 1 unless explicitly stated).\n"
+            "- If no recipe is found in the text, output: $$ null $$\n\n"
+            f"Image URL available: {image_url if image_url else '(none found)'}\n"
+            f"Use the image_url field to store: {image_url if image_url else '(empty string if not available)'}\n\n"
+            f"Webpage content:\n{page_content}"
+        )

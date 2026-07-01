@@ -28,4 +28,8 @@ class AiChatbotApi {
     if (result == null) return null;
     return result as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>?> importRecipeFromUrl(String url) async {
+    return await _apiHelper.postRequest('ai/import-url/', {'url': url});
+  }
 }

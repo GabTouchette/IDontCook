@@ -18,7 +18,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True)
     created_by = UserSerializer(read_only=True)
-    image_url = serializers.SerializerMethodField()
+    image_url = serializers.CharField(source='web_image_url', required=False, allow_blank=True)
     thumnbnail_url = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
 
@@ -60,18 +60,31 @@ class RecipeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """ Customize the GET response to properly format instructions as a list """
         representation = super().to_representation(instance)
-        
+
         if isinstance(instance.instructions, str):
             representation['instructions'] = eval(instance.instructions)
-        
+
+        # Absolutize relative media URLs (local dev stores /media/... paths that
+        # Flutter's Image.network can't resolve; GCS URLs are already absolute).
+        request = self.context.get('request')
+        if request:
+            for key in ('image_url', 'thumnbnail_url'):
+                val = representation.get(key)
+                if val and val.startswith('/'):
+                    representation[key] = request.build_absolute_uri(val)
+
         return representation
     
     def create(self, validated_data):
         ingredients_data = validated_data.pop("ingredients")
         instructions = validated_data.pop("instructions")
         validated_data["instructions"] = str(instructions)
-        
+
         validated_data["created_by"] = self.context["request"].user
+
+        # Ensure servings is included (default to None if not provided)
+        if "servings" not in validated_data:
+            validated_data["servings"] = None
 
         recipe = Recipe.objects.create(**validated_data)
 
@@ -301,6 +314,16 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
             'carbs',
             'is_saved'
         ]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Absolutize relative media URLs for local dev (GCS URLs are absolute).
+        request = self.context.get('request')
+        if request:
+            val = representation.get('thumbnail_url')
+            if val and val.startswith('/'):
+                representation['thumbnail_url'] = request.build_absolute_uri(val)
+        return representation
 
     def get_thumbnail_url(self, obj):
         if obj.thumbnail and hasattr(obj.thumbnail, 'url'):

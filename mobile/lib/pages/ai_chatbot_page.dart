@@ -432,7 +432,7 @@ class AiChatBotPageState extends State<AiChatBotPage>
                       fontWeight: FontWeight.w400,
                     ),
                     decoration: InputDecoration(
-                      hintText: _isListening ? 'Listening…' : 'Ask anything…',
+                      hintText: _isListening ? 'Listening…' : 'Ask or paste a URL…',
                       hintStyle: GoogleFonts.spaceGrotesk(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                         fontSize: 15,
@@ -781,4 +781,5 @@ class AiChatBotPageState extends State<AiChatBotPage>
     ];
     return '${months[dt.month - 1]} ${dt.day} · $timeStr';
   }
+
 }

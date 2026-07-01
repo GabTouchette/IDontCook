@@ -8,6 +8,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse, StreamingHttpResponse
 from .api import AnthropicService, PromptTemplates
+from .url_fetcher import import_recipe_from_url
 from .models import Conversation, ChatHistory
 from recipes.models import Recipe
 import json
@@ -102,7 +103,7 @@ class ChatbotView(APIView):
             try:
                 anthropic_service = AnthropicService()
                 full_response = ""
-                for chunk in anthropic_service.ask_stream(prompt, chat_history, recipe_context):
+                for chunk in anthropic_service.ask_stream(prompt, chat_history, recipe_context, use_web_search=(recipe_context is None)):
                     full_response += chunk
                     yield f"data: {json.dumps({'token': chunk})}\n\n"
 
@@ -158,3 +159,26 @@ class RecipeOCRView(APIView):
         anthropic_service = AnthropicService()
         response = anthropic_service.ask_ocr(image_paths)
         return JsonResponse({"response": response}, status=status.HTTP_200_OK)
+
+
+class RecipeURLImportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        url = request.data.get("url", "").strip()
+        if not url:
+            return JsonResponse({"error": "url is required"}, status=400)
+
+        try:
+            anthropic_service = AnthropicService()
+            result = import_recipe_from_url(url, anthropic_service)
+            return JsonResponse({"response": result}, status=200)
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=422)
+        except Exception as e:
+            import requests as req_lib
+            if isinstance(e, req_lib.exceptions.ConnectionError):
+                return JsonResponse({"error": "Could not reach that URL."}, status=502)
+            if isinstance(e, req_lib.exceptions.HTTPError):
+                return JsonResponse({"error": f"URL returned an error: {e}"}, status=502)
+            return JsonResponse({"error": f"Import failed: {e}"}, status=500)

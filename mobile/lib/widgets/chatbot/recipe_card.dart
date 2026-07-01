@@ -119,10 +119,11 @@ class RecipeCard extends StatelessWidget {
                     builder: (context) => RecipeDetailPage(
                       recipe: Recipe(
                         id: -1,
-                        image_url: '',
+                        image_url: recipe.image_url,
                         title: recipe.title,
                         preparation_time: recipe.preparation_time,
                         cooking_time: recipe.cooking_time,
+                        servings: recipe.servings,
                         ingredients: recipe.ingredients,
                         instructions: recipe.instructions,
                         description: recipe.description,
