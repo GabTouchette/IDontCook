@@ -3,6 +3,7 @@ import io
 import re
 
 import requests
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 from recipes.models import Recipe
@@ -84,10 +85,27 @@ class Command(BaseCommand):
             '--limit', type=int, default=0,
             help='Stop after importing this many rows (0 = no limit)',
         )
+        parser.add_argument(
+            '--owner', default='',
+            help='Username to assign as recipe creator (default: first superuser)',
+        )
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         limit = options['limit']
+
+        User = get_user_model()
+        owner_username = options.get('owner', '').strip()
+        if owner_username:
+            try:
+                owner = User.objects.get(username=owner_username)
+            except User.DoesNotExist:
+                raise CommandError(f"User '{owner_username}' not found.")
+        else:
+            owner = User.objects.filter(is_superuser=True).order_by('id').first()
+            if not owner:
+                raise CommandError("No superuser found. Create one with createsuperuser or pass --owner.")
+        self.stdout.write(f"Assigning recipes to owner: {owner.username} (id={owner.id})")
 
         if options['file']:
             try:
@@ -143,6 +161,7 @@ class Command(BaseCommand):
                         servings=_parse_servings(row.get('recipeYield')),
                         instructions=instructions,
                         tags=tags,
+                        created_by=owner,
                     )
                     recipe.save()
                     existing_titles.add(title)
