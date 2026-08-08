@@ -53,7 +53,7 @@ class RecipeListAPIView(APIView):
 
         serializer = RecipeSerializer(data=data, context={'request': request})
         if serializer.is_valid():
-            new_recipe = serializer.save(created_by=user, parent=parent)
+            new_recipe = serializer.save(created_by=user, parent=parent, source=Recipe.SOURCE_USER)
             
             # Format ingredients in background only if not already formatted by LLM
             if not new_recipe.is_formatted:
@@ -281,7 +281,7 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
 
         # Exclude AI generated
         if exclude_ai_generated:
-            recipes = recipes.exclude(Q(id=-1) | Q(parent=-1))
+            recipes = recipes.exclude(source=Recipe.SOURCE_AI)
 
         # Exclude own recipes
         if exclude_own_recipes:

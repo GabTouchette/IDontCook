@@ -87,7 +87,6 @@ default_cors_origins = [origin for origin in [os.getenv("FRONTEND_URL"), railway
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=default_cors_origins)
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=default_cors_origins)
 CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
-# Allow localhost on any port (for Flutter web dev against production backend)
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:\d+$",
     r"^http://127\.0\.0\.1:\d+$",
@@ -144,6 +143,7 @@ INSTALLED_APPS = [
     'storages',
     'recommendations',
     'meal_planning',
+    'home',
 ]
 
 AUTHENTICATION_BACKENDS = (

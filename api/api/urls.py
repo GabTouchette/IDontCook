@@ -9,4 +9,5 @@ urlpatterns = [
     path('api/social/', include('social.urls')),
     path('api/accounts/', include('accounts.urls')),
     path('api/', include('meal_planning.urls')),
+    path('api/home/', include('home.urls')),
 ]

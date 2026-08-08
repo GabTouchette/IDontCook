@@ -90,6 +90,26 @@ class Recipe(models.Model):
     is_formatted = models.BooleanField(default=False)
     is_nutrition_calculated = models.BooleanField(default=False)
 
+    # Catalog-first pivot (docs/plans/catalog-first-pivot.md §1.4): distinguishes
+    # curated catalog content from AI-generated / private / imported recipes so
+    # discovery surfaces (recommender, search_catalog, explore filters) can
+    # exclude what shouldn't be suggested to other users as if it were catalog
+    # content. Existing rows are backfilled by a data migration; new creation
+    # call sites should set this explicitly going forward.
+    SOURCE_CATALOG = "catalog"
+    SOURCE_USER = "user"
+    SOURCE_AI = "ai"
+    SOURCE_IMPORT = "import"
+    SOURCE_OCR = "ocr"
+    SOURCE_CHOICES = [
+        (SOURCE_CATALOG, "Catalog"),
+        (SOURCE_USER, "User"),
+        (SOURCE_AI, "AI-generated"),
+        (SOURCE_IMPORT, "URL import"),
+        (SOURCE_OCR, "OCR import"),
+    ]
+    source = models.CharField(max_length=16, choices=SOURCE_CHOICES, default=SOURCE_USER, db_index=True)
+
     # Ingredients & Instructions
     ingredients = models.ManyToManyField('Ingredient', related_name="recipes", blank=True)
     instructions = models.JSONField(blank=True, null=True)
