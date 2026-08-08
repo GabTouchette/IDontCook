@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
-import 'package:i_cant_cook/widgets/recommendations/big_recipe_tile.dart';
+import 'package:i_cant_cook/widgets/explore/reel_recipe_card.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +18,7 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   bool _hasFetched = false;
+  final PageController _pageController = PageController();
 
   @override
   void didChangeDependencies() {
@@ -30,6 +30,19 @@ class _ExplorePageState extends State<ExplorePage> {
           Provider.of<ExploreProvider>(context, listen: false).fetchInitialItems();
         }
       });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index, ExploreProvider provider) {
+    HapticService.selectionClick();
+    if (index >= provider.items.length - 3) {
+      provider.fetchNextPage();
     }
   }
 
@@ -77,51 +90,58 @@ class _ExplorePageState extends State<ExplorePage> {
                   return _buildExploreEmptyState(context, provider);
                 }
 
-                return ListView.builder(
-                  controller: provider.scrollController,
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: EdgeInsets.zero,
-                  itemCount: provider.items.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == provider.items.length) {
-                      return provider.isFetching
-                          ? Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 24),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                          : const SizedBox(height: 60);
-                    }
-                    final recipe = provider.items[index];
-                    return BigRecipeTile(
-                      recipe: recipe,
-                      onThumbsUp: () => provider.recordUpvote(recipe.id),
-                      onThumbsDown: () => provider.recordDownvote(recipe.id),
-                      onDelete: () async {
-                        final success =
-                            await provider.adminDeleteRecipe(recipe.id);
-                        if (!success && context.mounted) {
-                          InformationToast.show(
-                            context: context,
-                            message: 'Delete failed — make sure your account has staff permissions',
-                            type: ToastType.error,
-                          );
-                        }
+                return Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageController,
+                      scrollDirection: Axis.vertical,
+                      itemCount: provider.items.length,
+                      onPageChanged: (index) =>
+                          _onPageChanged(index, provider),
+                      itemBuilder: (context, index) {
+                        final recipe = provider.items[index];
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: ReelRecipeCard(
+                              key: ValueKey(recipe.id),
+                              recipe: recipe,
+                              onThumbsUp: () =>
+                                  provider.recordUpvote(recipe.id),
+                              onThumbsDown: () =>
+                                  provider.recordDownvote(recipe.id),
+                              onDelete: () async {
+                                final success =
+                                    await provider.adminDeleteRecipe(recipe.id);
+                                if (!success && context.mounted) {
+                                  InformationToast.show(
+                                    context: context,
+                                    message:
+                                        'Delete failed — make sure your account has staff permissions',
+                                    type: ToastType.error,
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        );
                       },
-                    )
-                      .animate(
-                        delay: (index < 8 ? index * 40 : 0).ms,
-                      )
-                      .fadeIn(duration: 200.ms)
-                      .slideY(begin: 0.05, curve: Curves.easeOut, duration: 200.ms);
-                  },
+                    ),
+                    if (provider.isFetching)
+                      Positioned(
+                        top: 24,
+                        right: 32,
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
             ),

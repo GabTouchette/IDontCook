@@ -3,6 +3,37 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
 import 'package:i_cant_cook/mixins/scroll_mixin.dart';
+import 'package:i_cant_cook/models/block/block.dart';
+import 'package:i_cant_cook/models/mood/mood.dart';
+
+/// A chat v2 message: an ordered list of typed [Block]s (plan §1.1/§1.6).
+/// The streamed assistant text is itself one or more `text` blocks,
+/// interleaved with tool-produced blocks (recipe, recipe_ref, ...).
+class ChatV2Message {
+  final String sender; // 'user' | 'ai'
+  final List<Block> blocks;
+  final bool isLoading;
+
+  const ChatV2Message({
+    required this.sender,
+    this.blocks = const <Block>[],
+    this.isLoading = false,
+  });
+
+  bool get isUser => sender == 'user';
+
+  /// Concatenated text of all text blocks (e.g. for history previews).
+  String get plainText =>
+      blocks.whereType<TextBlock>().map((block) => block.text).join('\n');
+
+  ChatV2Message copyWith({List<Block>? blocks, bool? isLoading}) {
+    return ChatV2Message(
+      sender: sender,
+      blocks: blocks ?? this.blocks,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
+}
 
 class ChatSession {
   final String id;
@@ -19,6 +50,9 @@ class ChatSession {
 }
 
 class ChatProvider extends ChangeNotifier with ScrollMixin {
+  ChatProvider({AiChatbotApi? api}) : _api = api ?? AiChatbotApi();
+
+  final AiChatbotApi _api;
   final TextEditingController chatController = TextEditingController();
 
   List<Map<String, dynamic>> _globalMessages = [];
@@ -117,7 +151,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
       addMessage(
           isLoading: true, isRecipeLoading: true, isRecipeChat: isRecipeChat);
 
-      final stream = AiChatbotApi()
+      final stream = _api
           .chatWithBotStream(trimmedQuery, history, recipeId: recipeId)
           .timeout(const Duration(seconds: 30));
 
@@ -191,6 +225,214 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
       removeLastMessage(isRecipeChat: isRecipeChat);
       addMessage(text: "Error: ${e.toString()}", isRecipeChat: isRecipeChat);
     } finally {
+      scrollToBottom();
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Chat v2 (typed SSE events, plan §1.6) — used by the conversational home
+  // (Wave 2). The v1 delimiter path above stays functional until then.
+  // ---------------------------------------------------------------------
+
+  final List<ChatV2Message> _v2Messages = [];
+  int? _v2ConversationId;
+  bool _isV2Sending = false;
+  String? _v2LastError;
+  String? _v2ActivityLabel;
+
+  List<ChatV2Message> get v2Messages => List.unmodifiable(_v2Messages);
+  int? get v2ConversationId => _v2ConversationId;
+  bool get isV2Sending => _isV2Sending;
+
+  /// Human-readable label for the "data tool" (e.g. `search_recipes`)
+  /// currently in flight for the message being streamed — e.g. "Searching
+  /// the cookbook…" — or `null` when no tool call is active. Used by the
+  /// typing indicator to replace the bare dots with a labeled state (plan
+  /// §1.3 / WS-P4). Cleared on `done`, `error`, and at the start of every
+  /// new [sendMessageV2] call so it never lingers into an unrelated turn.
+  String? get v2ActivityLabel => _v2ActivityLabel;
+
+  /// Maps a `tool_activity` event's raw tool name to a human label. New
+  /// data tools only need an entry here; unrecognized names (forward-compat
+  /// — a server rollout may add tools before this app is updated) fall back
+  /// to a generic in-progress label rather than showing nothing or crashing.
+  static String _activityLabelFor(String tool) {
+    switch (tool) {
+      case 'search_recipes':
+        return 'Searching the cookbook…';
+      default:
+        return 'Working on it…';
+    }
+  }
+
+  /// Last v2 error message, for surfacing via `InformationToast.show(...,
+  /// type: ToastType.error)` — see also the `onError` callback of
+  /// [sendMessageV2].
+  String? get v2LastError => _v2LastError;
+
+  /// Seeds the v2 thread with an assistant message (e.g. the home feed's
+  /// greeting + module blocks rendered as the opening message in Wave 2).
+  void addV2AssistantMessage(List<Block> blocks) {
+    _v2Messages.add(ChatV2Message(sender: 'ai', blocks: blocks));
+    notifyListeners();
+  }
+
+  /// Appends a plain user turn without hitting the network — used for
+  /// client-side actions the user takes that should still read as part of
+  /// the conversation (e.g. picking a mood), as opposed to [sendMessageV2]
+  /// which round-trips to the chat v2 endpoint.
+  void addV2UserMessage(String text) {
+    _v2Messages.add(ChatV2Message(sender: 'user', blocks: [Block.text(text: text)]));
+    notifyListeners();
+  }
+
+  /// Replaces the blocks of the message at [index] in place, keeping its
+  /// position in the thread. Used when a mood selection (or "change mood")
+  /// re-ranks the feed: message 0's cards update where they sit instead of a
+  /// duplicate feed being appended below. No-ops if [index] is out of range.
+  void replaceV2Message(int index, List<Block> blocks) {
+    if (index < 0 || index >= _v2Messages.length) return;
+    _v2Messages[index] = _v2Messages[index].copyWith(blocks: blocks);
+    notifyListeners();
+  }
+
+  /// Clears the v2 thread and forgets the server-side conversation id.
+  void resetV2Conversation() {
+    _v2Messages.clear();
+    _v2ConversationId = null;
+    _v2LastError = null;
+    _v2ActivityLabel = null;
+    notifyListeners();
+  }
+
+  /// Sends [message] over the chat v2 protocol and builds the assistant
+  /// reply from typed SSE events: `text_delta`s accumulate into text blocks,
+  /// each `block` event appends a typed [Block], `error` surfaces through
+  /// [onError] (wire it to the app's `InformationToast` error toast), and
+  /// `done` finalizes the message.
+  ///
+  /// [chatContext] is one of `"home" | "global" | "recipe_edit"` (plan
+  /// §1.6); [homeFeed] is the raw feed response being replied to.
+  Future<void> sendMessageV2({
+    required String message,
+    String chatContext = 'global',
+    int? recipeId,
+    Mood? mood,
+    Map<String, dynamic>? homeFeed,
+    void Function(String errorMessage)? onError,
+  }) async {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty || _isV2Sending) return;
+
+    _v2LastError = null;
+    _isV2Sending = true;
+    _v2ActivityLabel = null;
+    _v2Messages
+        .add(ChatV2Message(sender: 'user', blocks: [Block.text(text: trimmed)]));
+    _v2Messages
+        .add(const ChatV2Message(sender: 'ai', isLoading: true));
+    notifyListeners();
+    scrollToBottom();
+
+    final assistantIndex = _v2Messages.length - 1;
+    // Whether the next text_delta extends the trailing text block or opens a
+    // new one (a block event in between splits the text).
+    bool appendToOpenTextBlock = false;
+
+    void updateAssistant(
+        ChatV2Message Function(ChatV2Message current) update) {
+      _v2Messages[assistantIndex] = update(_v2Messages[assistantIndex]);
+      notifyListeners();
+    }
+
+    void appendErrorText(String errorMessage) {
+      _v2LastError = errorMessage;
+      _v2ActivityLabel = null;
+      appendToOpenTextBlock = false;
+      updateAssistant((current) => current.copyWith(
+            blocks: [...current.blocks, Block.text(text: errorMessage)],
+            isLoading: false,
+          ));
+      onError?.call(errorMessage);
+    }
+
+    try {
+      final stream = _api
+          .chatWithBotStreamV2(
+            message: trimmed,
+            conversationId: _v2ConversationId,
+            context: chatContext,
+            recipeId: recipeId,
+            mood: mood,
+            homeFeed: homeFeed,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      await for (final event in stream) {
+        event.when(
+          messageStart: (conversationId) {
+            if (conversationId != null) {
+              _v2ConversationId = conversationId;
+            }
+          },
+          textDelta: (text) {
+            updateAssistant((current) {
+              final blocks = List<Block>.of(current.blocks);
+              if (appendToOpenTextBlock &&
+                  blocks.isNotEmpty &&
+                  blocks.last is TextBlock) {
+                final openBlock = blocks.last as TextBlock;
+                blocks[blocks.length - 1] =
+                    Block.text(text: openBlock.text + text);
+              } else {
+                blocks.add(Block.text(text: text));
+                appendToOpenTextBlock = true;
+              }
+              return current.copyWith(blocks: blocks, isLoading: false);
+            });
+            scrollToBottom();
+          },
+          block: (block) {
+            appendToOpenTextBlock = false;
+            _v2ActivityLabel = null;
+            updateAssistant((current) => current.copyWith(
+                  blocks: [...current.blocks, block],
+                  isLoading: false,
+                ));
+            scrollToBottom();
+          },
+          toolActivity: (tool) {
+            _v2ActivityLabel = _activityLabelFor(tool);
+            notifyListeners();
+          },
+          error: (errorMessage) {
+            appendErrorText(errorMessage.isEmpty
+                ? 'Something went wrong. Please try again.'
+                : errorMessage);
+          },
+          done: () {
+            _v2ActivityLabel = null;
+            updateAssistant((current) => current.copyWith(isLoading: false));
+          },
+          unknown: () {
+            // Forward-compat: ignore event types this app version
+            // doesn't know about.
+          },
+        );
+      }
+    } on TimeoutException {
+      appendErrorText(
+          'Request timed out. Please check your connection and try again.');
+    } catch (e) {
+      appendErrorText('Error: ${e.toString()}');
+    } finally {
+      if (_v2Messages[assistantIndex].isLoading) {
+        _v2Messages[assistantIndex] =
+            _v2Messages[assistantIndex].copyWith(isLoading: false);
+      }
+      _isV2Sending = false;
+      _v2ActivityLabel = null;
+      notifyListeners();
       scrollToBottom();
     }
   }
@@ -348,7 +590,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     scrollToBottom();
 
     try {
-      final result = await AiChatbotApi().importRecipeFromUrl(url);
+      final result = await _api.importRecipeFromUrl(url);
       final response = result?['response'] as String?;
 
       if (response == null || response.trim() == '\$\$ null \$\$' || response.trim().isEmpty) {

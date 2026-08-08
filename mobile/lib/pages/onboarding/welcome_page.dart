@@ -192,6 +192,26 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    // SIGN IN LINK
+                    Center(
+                      child: GestureDetector(
+                        onTap: widget.onSignIn,
+                        child: Text(
+                          'Already have an account? Sign in',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.5,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 32),
                   ],
                 ),

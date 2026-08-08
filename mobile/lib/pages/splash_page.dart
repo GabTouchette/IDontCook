@@ -1,9 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/models/user/user.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -59,14 +57,8 @@ class _SplashPageState extends State<SplashPage>
         Navigator.pushNamedAndRemoveUntil(
             context, '/recipes', (route) => false);
       } else {
-        final prefs = await SharedPreferences.getInstance();
-        final bool onboardingCompleted =
-            prefs.getBool('onboarding_completed') ?? false;
-        final String next =
-            (kDebugMode || !onboardingCompleted) ? '/onboarding' : '/landing';
-        if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, next, (route) => false);
-        }
+        Navigator.pushNamedAndRemoveUntil(
+            context, '/onboarding', (route) => false);
       }
     }
   }

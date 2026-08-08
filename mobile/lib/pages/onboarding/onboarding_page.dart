@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'welcome_page.dart';
-import '../login_page.dart';
+import 'login_drawer.dart';
 import 'profile_setup_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -13,21 +13,9 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   int _pageIndex = 0;
-  bool _signInMode = false;
 
-  void _advanceToAuth({required bool signInMode}) {
-    setState(() {
-      _signInMode = signInMode;
-      _pageIndex = 1;
-    });
-  }
-
-  void _onAuthSuccess({required bool isNewUser}) {
-    if (isNewUser) {
-      setState(() => _pageIndex = 2);
-    } else {
-      _completeOnboarding();
-    }
+  void _onAuthSuccess() {
+    setState(() => _pageIndex = 1);
   }
 
   Future<void> _completeOnboarding() async {
@@ -38,24 +26,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
+  void _showLoginDrawer({required bool isSignIn}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => LoginDrawer(
+        initialSignInMode: isSignIn,
+        onSignUpSuccess: _onAuthSuccess,
+      ),
+    );
+  }
+
   Widget _buildCurrentPage() {
     switch (_pageIndex) {
       case 1:
-        return LoginPage(
-          key: const ValueKey(1),
-          initialSignInMode: _signInMode,
-          onAuthSuccess: _onAuthSuccess,
-        );
-      case 2:
         return OnboardingProfileSetupPage(
-          key: const ValueKey(2),
+          key: const ValueKey(1),
           onComplete: _completeOnboarding,
         );
       default:
         return OnboardingWelcomePage(
           key: const ValueKey(0),
-          onGetStarted: () => _advanceToAuth(signInMode: false),
-          onSignIn: () => _advanceToAuth(signInMode: true),
+          onGetStarted: () => _showLoginDrawer(isSignIn: false),
+          onSignIn: () => _showLoginDrawer(isSignIn: true),
         );
     }
   }

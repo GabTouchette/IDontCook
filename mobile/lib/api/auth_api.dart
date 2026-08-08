@@ -40,10 +40,11 @@ class AuthApi {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
+        final Map<String, dynamic> responseData =
+            json.decode(utf8.decode(response.bodyBytes));
         return await _parseAndPersistAuthResponse(responseData);
       } else {
-        throw Exception('Failed to login: ${response.body}');
+        throw Exception('Failed to login: ${utf8.decode(response.bodyBytes)}');
       }
     } catch (e) {
       throw Exception('Login error: $e');
@@ -67,10 +68,12 @@ class AuthApi {
       );
 
       if (response.statusCode == 201) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
+        final Map<String, dynamic> responseData =
+            json.decode(utf8.decode(response.bodyBytes));
         return await _parseAndPersistAuthResponse(responseData);
       } else {
-        throw Exception('Failed to register: ${response.body}');
+        throw Exception(
+            'Failed to register: ${utf8.decode(response.bodyBytes)}');
       }
     } catch (e) {
       throw Exception('Registration error: $e');
@@ -88,10 +91,12 @@ class AuthApi {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
+        final Map<String, dynamic> responseData =
+            json.decode(utf8.decode(response.bodyBytes));
         return await _parseAndPersistAuthResponse(responseData);
       } else {
-        throw Exception('Google auth failed: ${response.body}');
+        throw Exception(
+            'Google auth failed: ${utf8.decode(response.bodyBytes)}');
       }
     } catch (e) {
       throw Exception('Google auth error: $e');

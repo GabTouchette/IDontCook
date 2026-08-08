@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:i_cant_cook/pages/social_page.dart';
 import 'package:i_cant_cook/pages/explore_page.dart';
 import 'package:i_cant_cook/widgets/navbar.dart';
-import 'package:i_cant_cook/pages/ai_chatbot_page.dart';
+import 'package:i_cant_cook/pages/home_page.dart';
 import 'package:i_cant_cook/pages/recipes_page.dart';
 import 'package:i_cant_cook/pages/meal_plan_page.dart';
 
@@ -44,17 +44,17 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _getBody() {
     switch (_selectedIndex) {
       case 0:
+        return const HomePage();
+      case 1:
+        return ExplorePage();
+      case 2:
         return RecipesPage(
           onNavigateToTab: (index) => setState(() => _selectedIndex = index),
         );
-      case 1:
-        return const AiChatBotPage();
-      case 2:
-        return ExplorePage();
       case 3:
-        return const MealPlanPage();
-      case 4:
         return const SocialPage();
+      case 4:
+        return const MealPlanPage();
       default:
         return const Center(child: Text('Page Not Found'));
     }

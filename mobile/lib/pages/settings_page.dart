@@ -74,7 +74,7 @@ class SettingsPage extends StatelessWidget {
                     HapticService.heavyImpact();
                     authProvider.logout().then(
                           (_) => Navigator.of(context)
-                              .pushReplacementNamed('/login'),
+                              .pushNamedAndRemoveUntil('/', (route) => false),
                         );
                   },
                   child: Container(

@@ -179,7 +179,7 @@ class ApiHelper {
       var streamedResponse = await request.send();
       dynamic response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
+        var data = jsonDecode(utf8.decode(response.bodyBytes));
         return data["image_url"];
       } else {
         return "";
@@ -233,12 +233,73 @@ class ApiHelper {
     }
   }
 
+  /// Streams SSE `data:` lines as decoded JSON objects (chat v2 protocol,
+  /// plan §1.6). Unlike [streamResponse], this buffers across chunk
+  /// boundaries so a JSON event split over two chunks still parses, and it
+  /// yields the whole decoded event instead of just a `token` field.
+  Stream<Map<String, dynamic>> streamSseEvents(
+      String endpoint, String data, Map<String, String> headers) async* {
+    Uri url = ApiConfig.buildApiUri(endpoint);
+
+    var request = http.Request("POST", url)
+      ..headers.addAll(headers)
+      ..body = data;
+
+    var client = http.Client();
+
+    try {
+      var streamedResponse = await client.send(request);
+
+      if (streamedResponse.statusCode != 200) {
+        throw Exception(
+            'Failed to connect to chatbot: ${streamedResponse.statusCode}');
+      }
+
+      String buffer = '';
+      await for (var chunk in streamedResponse.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+        int newlineIndex;
+        while ((newlineIndex = buffer.indexOf('\n')) != -1) {
+          final line = buffer.substring(0, newlineIndex);
+          buffer = buffer.substring(newlineIndex + 1);
+          final event = _decodeSseDataLine(line);
+          if (event != null) yield event;
+        }
+      }
+
+      // Flush a trailing data line without a final newline.
+      final event = _decodeSseDataLine(buffer);
+      if (event != null) yield event;
+    } finally {
+      client.close();
+    }
+  }
+
+  Map<String, dynamic>? _decodeSseDataLine(String rawLine) {
+    final line = rawLine.trim();
+    if (!line.startsWith('data:')) return null;
+    final jsonData = line.substring(5).trim();
+    if (jsonData.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(jsonData);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (e) {
+      print('SSE JSON parse error: $e');
+    }
+    return null;
+  }
+
   dynamic _handleResponse(http.Response response) {
+    // response.body decodes using the response's declared charset, which
+    // defaults to Latin-1 when absent — Django's JSON responses don't
+    // declare one, so any non-ASCII character (em dashes, curly quotes,
+    // accents) gets mangled. Decode the raw bytes as UTF-8 explicitly.
+    final body = utf8.decode(response.bodyBytes);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      print('API response: ${response.statusCode}, ${response.body}');
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
+      print('API response: ${response.statusCode}, $body');
+      return body.isNotEmpty ? json.decode(body) : null;
     } else {
-      print('API error: ${response.statusCode}, ${response.body}');
+      print('API error: ${response.statusCode}, $body');
       return null;
     }
   }

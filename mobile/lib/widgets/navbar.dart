@@ -21,19 +21,19 @@ class _NavbarState extends State<Navbar> {
   static const _lime = Color(0xFFCAFF00);
 
   static const _iconsOutlined = [
-    Icons.menu_book_outlined,
-    Icons.chat_bubble_outline,
+    Icons.home_outlined,
     Icons.explore_outlined,
-    Icons.calendar_today_outlined,
+    Icons.menu_book_outlined,
     Icons.people_outline,
+    Icons.calendar_today_outlined,
   ];
 
   static const _iconsFilled = [
-    Icons.menu_book,
-    Icons.chat_bubble,
+    Icons.home,
     Icons.explore,
-    Icons.calendar_today,
+    Icons.menu_book,
     Icons.people,
+    Icons.calendar_today,
   ];
 
   int _indexFromX(double x) {

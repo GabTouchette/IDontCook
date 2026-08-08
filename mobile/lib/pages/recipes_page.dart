@@ -464,7 +464,7 @@ class _RecipesPageState extends State<RecipesPage> {
               label: 'EXPLORE RECIPES',
               icon: Icons.explore_outlined,
               filled: false,
-              onTap: () => widget.onNavigateToTab?.call(2),
+              onTap: () => widget.onNavigateToTab?.call(1),
             ),
             const SizedBox(height: 10),
             _buildActionButton(
@@ -472,7 +472,7 @@ class _RecipesPageState extends State<RecipesPage> {
               label: 'ASK COOKBOT',
               icon: Icons.chat_bubble_outline,
               filled: false,
-              onTap: () => widget.onNavigateToTab?.call(1),
+              onTap: () => widget.onNavigateToTab?.call(0),
             ),
             ],
           ),

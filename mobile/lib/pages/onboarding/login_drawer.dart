@@ -195,6 +195,94 @@ class _LoginDrawerState extends State<LoginDrawer>
                   ),
                   const SizedBox(height: 32),
 
+                  // ── Google button ──
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return GestureDetector(
+                        onTap: (auth.isLoading || _googleLoading)
+                            ? null
+                            : () => _handleGoogleSignIn(context),
+                        child: Container(
+                          width: double.infinity,
+                          height: 52,
+                          color: _lime,
+                          child: _googleLoading
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: _btnFg,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    FaIcon(
+                                      FontAwesomeIcons.google,
+                                      size: 16,
+                                      color: _btnFg,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'CONTINUE WITH GOOGLE',
+                                      style: GoogleFonts.spaceGrotesk(
+                                        color: _btnFg,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── Divider ──
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.3),
+                          thickness: 1,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: GoogleFonts.spaceGrotesk(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.35),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.3),
+                          thickness: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+
                   // ── Fields Section ──
                   if (!_isSigningIn) ...[
                     _buildFieldLabel('EMAIL'),
@@ -275,131 +363,45 @@ class _LoginDrawerState extends State<LoginDrawer>
                       );
                     },
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 32),
 
-                  // ── Divider ──
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.3),
-                          thickness: 1,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR',
-                          style: GoogleFonts.spaceGrotesk(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.35),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.3),
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-
-                  // ── Google button ──
-                  Consumer<AuthProvider>(
-                    builder: (context, auth, _) {
-                      return GestureDetector(
-                        onTap: (auth.isLoading || _googleLoading)
-                            ? null
-                            : () => _handleGoogleSignIn(context),
-                        child: Container(
-                          width: double.infinity,
-                          height: 52,
-                          color: _lime,
-                          child: _googleLoading
-                              ? const Center(
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: _btnFg,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    FaIcon(
-                                      FontAwesomeIcons.google,
-                                      size: 16,
-                                      color: _btnFg,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'CONTINUE WITH GOOGLE',
-                                      style: GoogleFonts.spaceGrotesk(
-                                        color: _btnFg,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Toggle + New here text ──
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _isSigningIn ? 'New here?' : 'Already have an account?',
+                  // ── Toggle + New here text (centered) ──
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      children: [
+                        Text(
+                          _isSigningIn ? 'New here? ' : 'Already have an account? ',
                           style: GoogleFonts.spaceGrotesk(
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
                                 .withValues(alpha: 0.55),
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
                           ),
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          HapticService.selectionClick();
-                          setState(() => _isSigningIn = !_isSigningIn);
-                        },
-                        child: Text(
-                          _isSigningIn ? 'Sign up' : 'Sign in',
-                          style: GoogleFonts.spaceGrotesk(
-                            color: _lime,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                            decoration: TextDecoration.underline,
+                        GestureDetector(
+                          onTap: () {
+                            HapticService.selectionClick();
+                            setState(() => _isSigningIn = !_isSigningIn);
+                          },
+                          child: Text(
+                            _isSigningIn ? 'Sign up' : 'Sign in',
+                            style: GoogleFonts.spaceGrotesk(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                              decoration: TextDecoration.underline,
+                              decorationColor: _lime,
+                              decorationThickness: 2.5,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 32),
                 ],

@@ -11,6 +11,7 @@ import 'package:i_cant_cook/providers/user_profile_provider.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/providers/theme_provider.dart';
 import 'package:i_cant_cook/providers/meal_plan_provider.dart';
+import 'package:i_cant_cook/providers/home_feed_provider.dart';
 
 import 'package:i_cant_cook/routes.dart';
 import 'package:i_cant_cook/theme/theme.dart';
@@ -38,6 +39,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
         ChangeNotifierProvider(create: (_) => MealPlanProvider()),
+        ChangeNotifierProvider(create: (_) => HomeFeedProvider()),
       ],
       child: ICantCook(initialRoute: initialRoute),
     ),
