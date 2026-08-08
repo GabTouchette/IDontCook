@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class NetworkService {
   static const String _cachedIpKey = 'cached_local_ip';
   static const String _prodBaseUrl =
-      'https://i-cant-cook-1500fc1d933c.herokuapp.com';
+      'https://web-production-853e.up.railway.app';
   static const bool _useProd = false; // Set to true for production
   static const int _defaultPort = 8000;
 

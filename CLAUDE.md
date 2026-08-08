@@ -59,9 +59,9 @@ flutter build android
 
 ### Backend (Django)
 - **Django REST Framework** with token authentication
-- **Modular app structure**: `recipes`, `ai_chatbot`, `social`, `accounts`, `recommendations`
+- **Modular app structure**: `recipes`, `ai_chatbot`, `social`, `accounts`, `recommendations`, `meal_planning`, `home`
 - **PostgreSQL** database with Google Cloud Storage for media files
-- **OpenAI API** integration for AI-powered recipe assistance
+- **Anthropic Claude** integration for AI-powered recipe assistance
 - **USDA API** for nutrition data
 - **Celery** for background tasks (nutrition calculations)
 
@@ -71,6 +71,12 @@ flutter build android
 - **Material Design 3** theming with light/dark mode support
 - **Google Fonts (Nunito)** typography throughout the app
 - **Tab-based navigation** with 4 main sections: Recipes, AI Chat, Explore, Social
+
+### Adaptive Home (in progress)
+- **Home feed endpoint** `GET /api/home/feed/` streams contextual module blocks (hero suggestions, cook-again, friend posts, meal-plan nudges, events) ranked by daypart/mood/user signals via `api/home/` module
+- **Chat v2 endpoint** `POST /api/ai/chat/v2/` integrates Anthropic tool use (create/update/reference recipes) with typed SSE events and server-side conversation history
+- **Module selection** driven by preference ranker with time-of-day priors (morning/midday/evening/late × weekday/weekend), user mood context, and ephemeral events
+- **Contracts** locked at `/docs/plans/adaptive-home-implementation.md`—covers block schema (§1.1), module types (§1.2), daypart taxonomy (§1.4), and both endpoints (§1.5–1.6)
 
 ## Key Components
 
@@ -151,6 +157,8 @@ appBar: AppBar(
 ),
 ```
 
+**Note:** Chat pages and home-feed block surfaces use `GoogleFonts.spaceGrotesk` with a lime accent (`#CAFF00`) instead of Nunito.
+
 ### Toast Notifications
 Use the enhanced InformationToast with semantic types:
 ```dart
@@ -164,7 +172,7 @@ InformationToast.show(
 ### Django Backend
 - **Token authentication** required for most endpoints
 - **Nutrition data** automatically calculated for recipes
-- **AI integration** through OpenAI API for recipe assistance
+- **AI integration** through Anthropic Claude for recipe assistance
 - **Image uploads** handled through Google Cloud Storage
 - **Search functionality** implemented with custom search mixins
 
@@ -173,13 +181,18 @@ InformationToast.show(
 ### Backend (.env)
 - `DJANGO_SECRET_KEY` - Django secret key
 - `DATABASE_URL` - PostgreSQL connection string
-- `OPENAI_API_KEY` - OpenAI API key for AI features
+- `ANTHROPIC_API_KEY` - Anthropic Claude API key for AI features
 - `USDA_API_KEY` - USDA nutrition data API key
+- `MEAL_PLAN_REFINER_ENABLED` - Enable meal plan LLM refinement (true/false)
+- `MEAL_PLAN_REFINER_MODEL` - LLM model for meal plan refinement (default: claude-haiku-4-5)
+- `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID for mobile sign-in
+- `CELERY_BROKER_URL` - Redis/broker URL for async task queue
+- `CELERY_RESULT_BACKEND` - Redis/backend URL for task result storage
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON` - Google Cloud Storage credentials
 
 ### Frontend
 - Development API: `http://10.0.2.2:8000` (Android emulator)
-- Production API: `https://i-cant-cook-1500fc1d933c.herokuapp.com`
+- Production API: `https://web-production-853e.up.railway.app`
 
 ## Testing
 
@@ -197,10 +210,10 @@ flutter test
 
 ## Deployment
 
-### Backend (Heroku)
-- Configured with `Procfile` for Heroku deployment
-- Uses PostgreSQL add-on and Google Cloud Storage
-- Environment variables configured in Heroku dashboard
+### Backend (Railway)
+- Deployed on Railway with PostgreSQL database
+- Uses Google Cloud Storage for media files
+- Environment variables configured in Railway dashboard
 
 ### Frontend
 - iOS: Build through Xcode after `flutter build ios`
