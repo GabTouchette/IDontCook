@@ -14,10 +14,18 @@ class ChatV2Message {
   final List<Block> blocks;
   final bool isLoading;
 
+  /// When true, the turn is part of the conversation (and is sent to the
+  /// backend as history) but should NOT be rendered — used for the synthetic
+  /// user prompt behind a mood-pill tap, so the conversation reads as the
+  /// assistant simply opening the topic rather than the user "saying" a line
+  /// they never typed.
+  final bool hidden;
+
   const ChatV2Message({
     required this.sender,
     this.blocks = const <Block>[],
     this.isLoading = false,
+    this.hidden = false,
   });
 
   bool get isUser => sender == 'user';
@@ -26,11 +34,12 @@ class ChatV2Message {
   String get plainText =>
       blocks.whereType<TextBlock>().map((block) => block.text).join('\n');
 
-  ChatV2Message copyWith({List<Block>? blocks, bool? isLoading}) {
+  ChatV2Message copyWith({List<Block>? blocks, bool? isLoading, bool? hidden}) {
     return ChatV2Message(
       sender: sender,
       blocks: blocks ?? this.blocks,
       isLoading: isLoading ?? this.isLoading,
+      hidden: hidden ?? this.hidden,
     );
   }
 }
@@ -240,6 +249,13 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
   String? _v2LastError;
   String? _v2ActivityLabel;
 
+  /// Monotonic id bumped every time the conversation is reset (or otherwise
+  /// invalidated). Each [sendMessageV2] call captures the current value; an
+  /// in-flight stream whose captured id no longer matches has been superseded
+  /// (e.g. the user switched moods mid-stream) and stops touching state,
+  /// which prevents it writing to a now-cleared message list.
+  int _v2Generation = 0;
+
   List<ChatV2Message> get v2Messages => List.unmodifiable(_v2Messages);
   int? get v2ConversationId => _v2ConversationId;
   bool get isV2Sending => _isV2Sending;
@@ -298,10 +314,15 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
 
   /// Clears the v2 thread and forgets the server-side conversation id.
   void resetV2Conversation() {
+    // Invalidate any in-flight stream so it stops mutating the (now cleared)
+    // message list, and drop the sending flag so a fresh turn can start
+    // immediately (e.g. switching moods while a reply is still streaming).
+    _v2Generation++;
     _v2Messages.clear();
     _v2ConversationId = null;
     _v2LastError = null;
     _v2ActivityLabel = null;
+    _isV2Sending = false;
     notifyListeners();
   }
 
@@ -319,16 +340,23 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     int? recipeId,
     Mood? mood,
     Map<String, dynamic>? homeFeed,
+    bool hideUserMessage = false,
     void Function(String errorMessage)? onError,
   }) async {
     final trimmed = message.trim();
     if (trimmed.isEmpty || _isV2Sending) return;
 
+    // Snapshot the generation; a reset (e.g. mood switch) bumps it and this
+    // send treats itself as superseded — see [_v2Generation].
+    final int myGen = _v2Generation;
+
     _v2LastError = null;
     _isV2Sending = true;
     _v2ActivityLabel = null;
-    _v2Messages
-        .add(ChatV2Message(sender: 'user', blocks: [Block.text(text: trimmed)]));
+    _v2Messages.add(ChatV2Message(
+        sender: 'user',
+        blocks: [Block.text(text: trimmed)],
+        hidden: hideUserMessage));
     _v2Messages
         .add(const ChatV2Message(sender: 'ai', isLoading: true));
     notifyListeners();
@@ -341,11 +369,18 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
 
     void updateAssistant(
         ChatV2Message Function(ChatV2Message current) update) {
+      // Superseded by a reset, or the list was cleared out from under us.
+      if (myGen != _v2Generation || assistantIndex >= _v2Messages.length) {
+        return;
+      }
       _v2Messages[assistantIndex] = update(_v2Messages[assistantIndex]);
       notifyListeners();
     }
 
     void appendErrorText(String errorMessage) {
+      // A superseded send (mood switch / reset) must not surface its error —
+      // the conversation it belonged to is already gone.
+      if (myGen != _v2Generation) return;
       _v2LastError = errorMessage;
       _v2ActivityLabel = null;
       appendToOpenTextBlock = false;
@@ -369,6 +404,9 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
           .timeout(const Duration(seconds: 30));
 
       await for (final event in stream) {
+        // Superseded mid-stream (mood switch / reset): stop consuming so we
+        // don't mutate a conversation that's already been torn down.
+        if (myGen != _v2Generation) break;
         event.when(
           messageStart: (conversationId) {
             if (conversationId != null) {
@@ -426,14 +464,19 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     } catch (e) {
       appendErrorText('Error: ${e.toString()}');
     } finally {
-      if (_v2Messages[assistantIndex].isLoading) {
-        _v2Messages[assistantIndex] =
-            _v2Messages[assistantIndex].copyWith(isLoading: false);
+      // Only clean up if this send is still the current one — a superseding
+      // reset already reset these flags and cleared the list.
+      if (myGen == _v2Generation) {
+        if (assistantIndex < _v2Messages.length &&
+            _v2Messages[assistantIndex].isLoading) {
+          _v2Messages[assistantIndex] =
+              _v2Messages[assistantIndex].copyWith(isLoading: false);
+        }
+        _isV2Sending = false;
+        _v2ActivityLabel = null;
+        notifyListeners();
+        scrollToBottom();
       }
-      _isV2Sending = false;
-      _v2ActivityLabel = null;
-      notifyListeners();
-      scrollToBottom();
     }
   }
 

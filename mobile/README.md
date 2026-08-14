@@ -30,7 +30,7 @@ python manage.py runserver
 
 # Terminal 2: Run Flutter web
 cd mobile
-flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
 ```
 
 ### Release builds

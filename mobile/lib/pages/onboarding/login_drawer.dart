@@ -150,23 +150,31 @@ class _LoginDrawerState extends State<LoginDrawer>
           child: child,
         );
       },
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        constraints: BoxConstraints(
+          // Cap at 95% of the screen; content shorter than this sizes the
+          // sheet to fit, so sign-in and sign-up each take only the room
+          // their fields need. Scrolling kicks in only past this cap.
+          maxHeight: MediaQuery.of(context).size.height * 0.95,
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                   // ── Handle bar ──
                   Center(
                     child: Container(
@@ -184,13 +192,21 @@ class _LoginDrawerState extends State<LoginDrawer>
                   ),
                   const SizedBox(height: 16),
                   // ── Title ──
-                  Text(
-                    _isSigningIn ? 'SIGN IN' : 'SIGN UP',
-                    style: GoogleFonts.spaceGrotesk(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                    child: Text(
+                      _isSigningIn ? 'SIGN IN' : 'SIGN UP',
+                      key: ValueKey(_isSigningIn),
+                      style: GoogleFonts.spaceGrotesk(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -284,15 +300,39 @@ class _LoginDrawerState extends State<LoginDrawer>
                   const SizedBox(height: 28),
 
                   // ── Fields Section ──
-                  if (!_isSigningIn) ...[
-                    _buildFieldLabel('EMAIL'),
-                    _buildTextField(
-                      _emailController,
-                      hint: 'your@email.com',
-                      icon: Icons.email_outlined,
+                  // Email field fades + slides in/out; the surrounding
+                  // AnimatedSize smoothly grows/shrinks the sheet to match.
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        alignment: Alignment.topCenter,
+                        child: child,
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                  ],
+                    child: _isSigningIn
+                        ? const SizedBox(
+                            width: double.infinity,
+                            key: ValueKey('no-email'),
+                          )
+                        : Column(
+                            key: const ValueKey('email-field'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildFieldLabel('EMAIL'),
+                              _buildTextField(
+                                _emailController,
+                                hint: 'your@email.com',
+                                icon: Icons.email_outlined,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
+                  ),
                   _buildFieldLabel('USERNAME'),
                   _buildTextField(
                     _usernameController,
@@ -337,27 +377,38 @@ class _LoginDrawerState extends State<LoginDrawer>
                                     ),
                                   ),
                                 )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      _isSigningIn
-                                          ? Icons.login
-                                          : Icons.check,
-                                      color: _btnFg,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      _isSigningIn ? 'SIGN IN' : 'CREATE ACCOUNT',
-                                      style: GoogleFonts.spaceGrotesk(
+                              : AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  transitionBuilder: (child, animation) =>
+                                      FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  ),
+                                  child: Row(
+                                    key: ValueKey(_isSigningIn),
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        _isSigningIn
+                                            ? Icons.login
+                                            : Icons.check,
                                         color: _btnFg,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.5,
+                                        size: 18,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        _isSigningIn
+                                            ? 'SIGN IN'
+                                            : 'CREATE ACCOUNT',
+                                        style: GoogleFonts.spaceGrotesk(
+                                          color: _btnFg,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                         ),
                       );
@@ -394,9 +445,6 @@ class _LoginDrawerState extends State<LoginDrawer>
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
-                              decoration: TextDecoration.underline,
-                              decorationColor: _lime,
-                              decorationThickness: 2.5,
                             ),
                           ),
                         ),
@@ -407,9 +455,8 @@ class _LoginDrawerState extends State<LoginDrawer>
                 ],
               ),
             ),
-          );
-        },
-      ),
+            ),
+          ),
     );
   }
 

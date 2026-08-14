@@ -146,6 +146,37 @@ IconData moodIcon(Mood mood) {
   }
 }
 
+/// Accent color for a [Mood], paired with [moodIcon]. Used to tint the
+/// mood-selection pills (icon + outline when unselected, fill when selected)
+/// so the quick-pill row reads as a colorful palette of intents rather than a
+/// monochrome list. Colors are mid-saturation so they stay legible against
+/// both light and dark surfaces.
+Color moodColor(Mood mood) {
+  switch (mood) {
+    case Mood.rushed:
+      return const Color(0xFFF59E0B); // amber
+    case Mood.ambitious:
+      return const Color(0xFFEF4444); // red
+    case Mood.cookingForSomeone:
+      return const Color(0xFFEC4899); // rose
+    case Mood.comfort:
+      return const Color(0xFFF97316); // orange
+    case Mood.healthy:
+      return const Color(0xFF22C55E); // green
+    case Mood.surpriseMe:
+      return const Color(0xFF8B5CF6); // violet
+  }
+}
+
+/// Readable foreground (ink) color to lay over a filled [background] chip —
+/// dark ink on light accents, white on dark ones — so selected mood pills
+/// keep their label/icon legible regardless of the accent's brightness.
+Color onColorInk(Color background) {
+  return background.computeLuminance() > 0.55
+      ? const Color(0xFF0A0A0A)
+      : Colors.white;
+}
+
 /// Shared type treatment for the small "why you're seeing this" reason/
 /// subtext line used across `hero_suggestion`, `cook_again`, `friend_post`,
 /// and other module cards. Centralized so the feed reads as one coherent

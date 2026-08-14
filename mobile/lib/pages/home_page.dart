@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/block/block.dart';
+import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
 import 'package:i_cant_cook/providers/chat_provider.dart';
 import 'package:i_cant_cook/providers/home_feed_provider.dart';
@@ -24,12 +25,12 @@ class _HomePageState extends State<HomePage> {
   late TextEditingController _messageController;
   late ScrollController _scrollController;
 
-  /// Locally tracked mood selection, set synchronously the instant a mood
-  /// pill is tapped — before the feed refetch resolves — so the tap always
-  /// reads as registered, never as "nothing happened". Highlights the
-  /// tapped pill on the original seeded message, which keeps its
-  /// mood-question card available for picking a different mood again later.
-  Mood? _pendingMood;
+  /// The mood whose conversation is currently open (null = the home feed is
+  /// showing). Set the instant a pill is tapped so it highlights immediately
+  /// and drives the header↔conversation cross-fade. Reset to null on "back to
+  /// home". Local to the page: a conversation persisted in [ChatProvider]
+  /// across tab revisits still shows, just without a highlighted pill.
+  Mood? _activeMood;
 
   /// Whether the message list is scrolled near its bottom. Drives the
   /// visibility of the "scroll to latest" affordance.
@@ -48,7 +49,8 @@ class _HomePageState extends State<HomePage> {
     _messageController = TextEditingController();
     _scrollController = ScrollController()..addListener(_handleScroll);
 
-    // Load the initial feed and seed the chat thread
+    // Load the home feed (rendered directly as the header + home body — the
+    // chat thread stays empty until a mood is picked or the user types).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeHome();
     });
@@ -71,24 +73,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _initializeHome() async {
-    final chatProvider = context.read<ChatProvider>();
-
-    // The dashboard recreates HomePage's State every time this tab is
-    // reselected (AnimatedSwitcher keys on the tab index), but ChatProvider
-    // is a long-lived top-level provider. Only seed the conversation once —
-    // otherwise every tab revisit appends another copy of the feed.
-    if (chatProvider.v2Messages.isNotEmpty) return;
-
     final homeFeedProvider = context.read<HomeFeedProvider>();
+    // The dashboard recreates HomePage's State on every tab revisit, but the
+    // feed is cached on the (long-lived) provider — only fetch it once.
+    if (homeFeedProvider.feed != null) return;
     await homeFeedProvider.loadFeed();
-
-    if (homeFeedProvider.feed != null) {
-      final feed = homeFeedProvider.feed!;
-      final blocksToSeed = feed.renderableBlocks;
-      if (blocksToSeed.isNotEmpty) {
-        chatProvider.addV2AssistantMessage(blocksToSeed);
-      }
-    }
   }
 
   void _scrollToBottom() {
@@ -112,63 +101,81 @@ class _HomePageState extends State<HomePage> {
     _sendMessage();
   }
 
-  /// Handles mood selection by re-ranking the feed **in place**: it refetches
-  /// `/api/home/feed/?mood=` and swaps the cards of the opening message
-  /// (message 0) where they sit, rather than appending the whole feed again
-  /// underneath (which duplicated the entire page and slammed the viewport to
-  /// the bottom). The tapped pill is filled synchronously for instant
-  /// feedback, and a persistent [_MoodChosenIndicator] confirms the choice so
-  /// the in-place re-rank never reads as "nothing happened". The changed cards
-  /// still fade in via their per-block [_blockKey] identity.
-  Future<void> _handleMoodSelected(Mood mood) async {
+  /// Handles a mood-pill tap. The pill becomes a conversation starter:
+  ///
+  ///  - Tapping the mood that's already open toggles back to the home feed.
+  ///  - Otherwise the current conversation (if any) is cleared and a fresh one
+  ///    starts from scratch — so switching moods never mixes suggestions from
+  ///    two different intents. The kick-off prompt is sent *hidden*, so the
+  ///    thread reads as the assistant simply opening the topic rather than the
+  ///    user "saying" a line they never typed.
+  ///
+  /// [ChatProvider.resetV2Conversation] invalidates any in-flight stream, so
+  /// switching moods mid-reply is safe.
+  void _handleMoodSelected(Mood mood) {
     HapticService.lightImpact();
 
-    // Immediate tap feedback: fill the tapped pill before the refetch resolves.
-    final previousMood = _pendingMood;
-    setState(() => _pendingMood = mood);
-
-    final homeFeedProvider = context.read<HomeFeedProvider>();
-    final chatProvider = context.read<ChatProvider>();
-
-    await homeFeedProvider.selectMood(mood);
-
-    if (!mounted) return;
-
-    if (homeFeedProvider.feed != null) {
-      final blocks = homeFeedProvider.feed!.renderableBlocks;
-      if (blocks.isNotEmpty) {
-        chatProvider.replaceV2Message(0, blocks);
-      }
-    } else if (homeFeedProvider.error != null) {
-      // Revert the optimistic pill fill; the feed didn't actually change.
-      setState(() => _pendingMood = previousMood);
-      InformationToast.show(
-        context: context,
-        message: homeFeedProvider.error ?? 'Failed to load feed',
-        type: ToastType.error,
-      );
+    // Tapping the already-open mood again → back to the home feed.
+    if (_activeMood == mood) {
+      _handleBackToHome();
+      return;
     }
+
+    final chatProvider = context.read<ChatProvider>();
+    final homeFeedProvider = context.read<HomeFeedProvider>();
+    final feedPayload = homeFeedProvider.feed?.toJson();
+
+    chatProvider.resetV2Conversation();
+    setState(() => _activeMood = mood);
+
+    chatProvider.sendMessageV2(
+      message: _moodPrompt(mood),
+      chatContext: 'home',
+      mood: mood,
+      homeFeed: feedPayload,
+      hideUserMessage: true,
+      onError: (errorMessage) {
+        if (!mounted) return;
+        InformationToast.show(
+          context: context,
+          message: errorMessage,
+          type: ToastType.error,
+        );
+      },
+    );
+
+    _scrollToBottom();
   }
 
-  /// Clears the active mood and re-ranks the opening message back to its
-  /// no-mood state in place (which brings the mood-question pills back). Wired
-  /// to the "change" affordance on [_MoodChosenIndicator].
-  Future<void> _handleMoodCleared() async {
+  /// Returns to the main home feed: clears the conversation (which also
+  /// cancels any in-flight stream) and drops the active-mood highlight. The
+  /// body cross-fades back to the feed via the [AnimatedSwitcher] in [build].
+  void _handleBackToHome() {
     HapticService.lightImpact();
-    setState(() => _pendingMood = null);
+    context.read<ChatProvider>().resetV2Conversation();
+    setState(() {
+      _activeMood = null;
+      _hasNewContent = false;
+    });
+  }
 
-    final homeFeedProvider = context.read<HomeFeedProvider>();
-    final chatProvider = context.read<ChatProvider>();
-
-    await homeFeedProvider.loadFeed();
-
-    if (!mounted) return;
-
-    if (homeFeedProvider.feed != null) {
-      final blocks = homeFeedProvider.feed!.renderableBlocks;
-      if (blocks.isNotEmpty) {
-        chatProvider.replaceV2Message(0, blocks);
-      }
+  /// Natural-language prompt sent on a mood tap — reads as if the user typed
+  /// their intent. The structured [Mood] is also sent alongside (see
+  /// [ChatProvider.sendMessageV2]) so the backend has both signals.
+  static String _moodPrompt(Mood mood) {
+    switch (mood) {
+      case Mood.rushed:
+        return "I'm short on time tonight — suggest a few quick recipes I could make.";
+      case Mood.ambitious:
+        return "I'm feeling ambitious — suggest a few recipes worth the effort.";
+      case Mood.cookingForSomeone:
+        return "I'm cooking for someone tonight — suggest a few recipes that would impress.";
+      case Mood.comfort:
+        return "I want something comforting — suggest a few cozy recipes.";
+      case Mood.healthy:
+        return "I want to eat healthy — suggest a few nutritious recipes.";
+      case Mood.surpriseMe:
+        return "Surprise me — suggest a few recipes I might not expect.";
     }
   }
 
@@ -191,7 +198,9 @@ class _HomePageState extends State<HomePage> {
     chatProvider.sendMessageV2(
       message: message,
       chatContext: 'home',
-      mood: homeFeedProvider.currentMood,
+      // The active pill is the live mood selection; fall back to the
+      // provider's mood for any legacy path.
+      mood: _activeMood ?? homeFeedProvider.currentMood,
       homeFeed: feedPayload,
       onError: (errorMessage) {
         InformationToast.show(
@@ -205,28 +214,10 @@ class _HomePageState extends State<HomePage> {
     _scrollToBottom();
   }
 
+  /// Pull-to-refresh on the home feed. Only meaningful in feed mode (the
+  /// [RefreshIndicator] only wraps the feed view), so it just re-fetches.
   Future<void> _handleRefresh() async {
-    final homeFeedProvider = context.read<HomeFeedProvider>();
-    final chatProvider = context.read<ChatProvider>();
-
-    // Only allow refresh if not actively sending and no conversation beyond the opening
-    if (chatProvider.isV2Sending) return;
-    if (chatProvider.v2Messages.length > 1) return;
-
-    await homeFeedProvider.refresh();
-
-    if (!mounted) return;
-
-    if (homeFeedProvider.feed != null) {
-      final feed = homeFeedProvider.feed!;
-      final blocksToSeed = feed.renderableBlocks;
-
-      chatProvider.resetV2Conversation();
-      if (blocksToSeed.isNotEmpty) {
-        chatProvider.addV2AssistantMessage(blocksToSeed);
-      }
-      if (!_isNearBottom) setState(() => _hasNewContent = true);
-    }
+    await context.read<HomeFeedProvider>().refresh();
   }
 
   void _scrollToLatest() {
@@ -260,18 +251,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Consumer2<HomeFeedProvider, ChatProvider>(
       builder: (context, homeFeedProvider, chatProvider, _) {
+        final inConversation = chatProvider.v2Messages.isNotEmpty;
+
         // Track message-count growth to know when new content arrived while
         // the user was scrolled away from the bottom — drives the "scroll to
-        // latest" affordance below. Plain field mutation (no setState) is
-        // safe here: this build is already running because Consumer2 is
-        // reacting to the provider's own notifyListeners.
+        // latest" affordance. Plain field mutation (no setState) is safe: this
+        // build is already running because Consumer2 is reacting to the
+        // provider's own notifyListeners.
         final messageCount = chatProvider.v2Messages.length;
         if (messageCount > _lastMessageCount && !_isNearBottom) {
           _hasNewContent = true;
         }
         _lastMessageCount = messageCount;
 
-        final showScrollToLatest = !_isNearBottom &&
+        final showScrollToLatest = inConversation &&
+            !_isNearBottom &&
             (chatProvider.isV2Sending || _hasNewContent);
 
         return Scaffold(
@@ -291,96 +285,259 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          body: RefreshIndicator(
-            onRefresh: _handleRefresh,
-            child: Column(
-              children: [
-                // Thread of messages
-                Expanded(
-                  child: Stack(
-                    children: [
-                      chatProvider.v2Messages.isEmpty
-                          ? Center(
-                              child: homeFeedProvider.isLoading
-                                  ? const CircularProgressIndicator()
-                                  : const SizedBox.shrink(),
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: chatProvider.v2Messages.length,
-                              itemBuilder: (context, index) {
-                                final message = chatProvider.v2Messages[index];
-                                final isUser = message.isUser;
-
-                                return Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      16.0, 0, 16.0, 10.0),
-                                  child: isUser
-                                      ? Align(
-                                          alignment: Alignment.centerRight,
-                                          child:
-                                              _buildUserMessageBubble(message),
-                                        )
-                                      : _buildAssistantMessage(
-                                          context,
-                                          message,
-                                          isFirstMessage: index == 0,
-                                        ),
-                                );
-                              },
-                            ),
-                      // "Scroll to latest" affordance — visible when the
-                      // user has scrolled away from the bottom AND either a
-                      // reply is streaming or new content just arrived.
-                      if (showScrollToLatest)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 12,
-                          child: Center(
-                            child: _ScrollToLatestPill(
-                              isSending: chatProvider.isV2Sending,
-                              onTap: _scrollToLatest,
-                            ),
-                          ),
+          body: Column(
+            children: [
+              // Fixed header: greeting + quick-pills. Persists across the
+              // feed↔conversation switch so only the section beneath it
+              // changes (no full-page swap).
+              _buildHeader(context, homeFeedProvider, inConversation),
+              // Body cross-fades between the home feed and the mood
+              // conversation.
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: inConversation
+                      ? _buildConversationView(
+                          context,
+                          chatProvider,
+                          showScrollToLatest: showScrollToLatest,
+                          key: const ValueKey('conversation'),
+                        )
+                      : _buildHomeFeedView(
+                          context,
+                          homeFeedProvider,
+                          key: const ValueKey('home'),
                         ),
-                    ],
-                  ),
                 ),
-                // Input bar
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: _buildInputBar(context, chatProvider),
-                ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _buildInputBar(context, chatProvider),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  /// Builds an assistant message: renders blocks using BlockRegistry with
-  /// callbacks, with breathing room between consecutive blocks (the feed's
-  /// only source of inter-item spacing — block widgets themselves stay
-  /// margin-free to avoid doubling the gap).
-  ///
-  /// Each block is wrapped in a `ValueKey` derived from its own content
-  /// ([_blockKey]) so that when message 0's blocks are swapped wholesale
-  /// (mood switch, pull-to-refresh), changed/replaced blocks get a fresh
-  /// widget identity and their fade+slide entrance actually replays — a
-  /// plain data-only rebuild otherwise reuses the same widget/element and
-  /// the animation never restarts.
-  Widget _buildAssistantMessage(
+  /// The fixed top section: the assistant avatar + greeting (or a "back to
+  /// home" control while a conversation is open), followed by the quick-pill
+  /// mood chooser. Rendered directly from the feed rather than from the chat
+  /// thread, so it stays put while the body below cross-fades.
+  Widget _buildHeader(
     BuildContext context,
-    ChatV2Message message, {
-    bool isFirstMessage = false,
+    HomeFeedProvider homeFeedProvider,
+    bool inConversation,
+  ) {
+    final feed = homeFeedProvider.feed;
+    if (feed == null) {
+      // Nothing to pin yet — the feed view shows the spinner.
+      return const SizedBox.shrink();
+    }
+
+    final blocks = feed.renderableBlocks;
+
+    // Greeting text: prefer the feed's leading text block, fall back to the
+    // greeting field.
+    String greeting = feed.greeting;
+    for (final block in blocks) {
+      if (block is TextBlock) {
+        greeting = block.text;
+        break;
+      }
+    }
+
+    // The mood-question module carries the pills; render it via the registry
+    // so it stays a single source of truth (icons, wrapping, colors).
+    Block? moodBlock;
+    for (final block in blocks) {
+      if (block is ModuleBlock && block.module.payload is MoodQuestionPayload) {
+        moodBlock = block;
+        break;
+      }
+    }
+
+    final callbacks = BlockCallbacks(
+      onChatPromptTap: _handleChatPromptTap,
+      onMoodSelected: _handleMoodSelected,
+      selectedMood: _activeMood,
+    );
+
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: onSurface.withValues(alpha: 0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Swap the greeting row for a back control while in conversation.
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: inConversation
+                ? _BackToHomeButton(
+                    key: const ValueKey('back'),
+                    onTap: _handleBackToHome,
+                  )
+                : Row(
+                    key: const ValueKey('greeting'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _AssistantAvatar(),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          greeting,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 1.3,
+                            color: onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          if (moodBlock != null) ...[
+            const SizedBox(height: 14),
+            BlockRegistry.build(context, moodBlock, callbacks: callbacks),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The home feed body: the ranked module cards (everything except the
+  /// greeting text and the mood pills, which live in the pinned header).
+  Widget _buildHomeFeedView(
+    BuildContext context,
+    HomeFeedProvider homeFeedProvider, {
+    Key? key,
   }) {
+    final feed = homeFeedProvider.feed;
+    if (feed == null) {
+      return Center(
+        key: key,
+        child: homeFeedProvider.isLoading
+            ? const CircularProgressIndicator()
+            : const SizedBox.shrink(),
+      );
+    }
+
+    // Skip the leading greeting text and the mood-question module — both are
+    // rendered in the pinned header.
+    var skippedGreeting = false;
+    final modules = <Block>[];
+    for (final block in feed.renderableBlocks) {
+      if (!skippedGreeting && block is TextBlock) {
+        skippedGreeting = true;
+        continue;
+      }
+      if (block is ModuleBlock && block.module.payload is MoodQuestionPayload) {
+        continue;
+      }
+      modules.add(block);
+    }
+
+    final callbacks = BlockCallbacks(
+      onChatPromptTap: _handleChatPromptTap,
+      onMoodSelected: _handleMoodSelected,
+      selectedMood: _activeMood,
+    );
+
+    return RefreshIndicator(
+      key: key,
+      onRefresh: _handleRefresh,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        itemCount: modules.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            key: _blockKey(modules[index], index),
+            padding: EdgeInsets.only(
+              bottom: index == modules.length - 1 ? 0 : kBlockFeedGap,
+            ),
+            child: BlockRegistry.build(context, modules[index],
+                    callbacks: callbacks)
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.06, curve: Curves.easeOut, duration: 300.ms),
+          );
+        },
+      ),
+    );
+  }
+
+  /// The mood conversation body: the assistant's streamed turns (and any typed
+  /// follow-ups). Hidden turns — the synthetic mood kick-off prompt — are
+  /// filtered out so the thread reads as the assistant opening the topic.
+  Widget _buildConversationView(
+    BuildContext context,
+    ChatProvider chatProvider, {
+    required bool showScrollToLatest,
+    Key? key,
+  }) {
+    final visible = [
+      for (final m in chatProvider.v2Messages)
+        if (!m.hidden) m,
+    ];
+
+    return Stack(
+      key: key,
+      children: [
+        ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          itemCount: visible.length,
+          itemBuilder: (context, index) {
+            final message = visible[index];
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 10.0),
+              child: message.isUser
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: _buildUserMessageBubble(message),
+                    )
+                  : _buildAssistantMessage(context, message),
+            );
+          },
+        ),
+        if (showScrollToLatest)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 12,
+            child: Center(
+              child: _ScrollToLatestPill(
+                isSending: chatProvider.isV2Sending,
+                onTap: _scrollToLatest,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Builds an assistant turn in the conversation: the avatar beside the
+  /// leading text, then the reply's remaining blocks (recipe cards, etc.) at
+  /// full width. Each block is keyed by its own content ([_blockKey]) so its
+  /// fade+slide entrance replays when new streamed content swaps in.
+  Widget _buildAssistantMessage(BuildContext context, ChatV2Message message) {
     // The avatar marks "the agent is speaking" and sits only beside the
-    // message's leading text (the greeting, or an ordinary reply's opening
-    // line) — it must NOT indent module cards below it, which span the
-    // full row width like the rest of the page.
+    // leading text — it must NOT indent the module/recipe cards below it,
+    // which span the full row width like the rest of the page.
     if (message.isLoading) {
       final activityLabel = context.watch<ChatProvider>().v2ActivityLabel;
       return Row(
@@ -396,49 +553,38 @@ class _HomePageState extends State<HomePage> {
     final callbacks = BlockCallbacks(
       onChatPromptTap: _handleChatPromptTap,
       onMoodSelected: _handleMoodSelected,
-      selectedMood: _pendingMood,
+      selectedMood: _activeMood,
     );
     final blocks = message.blocks;
 
     final hasLeadingText = blocks.isNotEmpty && blocks[0] is TextBlock;
     final restStart = hasLeadingText ? 1 : 0;
-    final hasTrailingContent = restStart < blocks.length;
 
-    Widget animated(Widget child) => child.animate().fadeIn(duration: 300.ms).slideY(
-          begin: 0.08,
-          curve: Curves.easeOut,
-          duration: 300.ms,
-        );
+    Widget animated(Widget child) =>
+        child.animate().fadeIn(duration: 300.ms).slideY(
+              begin: 0.08,
+              curve: Curves.easeOut,
+              duration: 300.ms,
+            );
 
     final leadingText = hasLeadingText
         ? animated(
             TextBlockBubble(
               key: _blockKey(blocks[0], 0),
               text: (blocks[0] as TextBlock).text,
-              isGreeting: isFirstMessage,
             ),
           )
         : const SizedBox.shrink();
 
-    // On the opening message, once a mood is chosen the mood-question pills
-    // drop out of the re-ranked feed — this persistent indicator is what
-    // replaces them, both confirming the choice and offering a way back.
-    final showMoodIndicator = isFirstMessage && _pendingMood != null;
+    final trailing = blocks.sublist(restStart);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showMoodIndicator)
-          Padding(
-            padding: const EdgeInsets.only(bottom: kBlockFeedGap),
-            child: _MoodChosenIndicator(
-              label: _moodLabel(_pendingMood!),
-              onChange: _handleMoodCleared,
-            ),
-          ),
         Padding(
-          padding: EdgeInsets.only(bottom: hasTrailingContent ? kBlockFeedGap : 0),
+          padding: EdgeInsets.only(
+              bottom: trailing.isNotEmpty ? kBlockFeedGap : 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -448,35 +594,18 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        for (var i = restStart; i < blocks.length; i++)
+        for (var i = 0; i < trailing.length; i++)
           Padding(
-            key: _blockKey(blocks[i], i),
+            key: _blockKey(trailing[i], restStart + i),
             padding: EdgeInsets.only(
-              bottom: i == blocks.length - 1 ? 0 : kBlockFeedGap,
+              bottom: i == trailing.length - 1 ? 0 : kBlockFeedGap,
             ),
             child: animated(
-              BlockRegistry.build(context, blocks[i], callbacks: callbacks),
+              BlockRegistry.build(context, trailing[i], callbacks: callbacks),
             ),
           ),
       ],
     );
-  }
-
-  static String _moodLabel(Mood mood) {
-    switch (mood) {
-      case Mood.rushed:
-        return 'Rushed';
-      case Mood.ambitious:
-        return 'Ambitious';
-      case Mood.cookingForSomeone:
-        return 'Cooking for someone';
-      case Mood.comfort:
-        return 'Comfort';
-      case Mood.healthy:
-        return 'Healthy';
-      case Mood.surpriseMe:
-        return 'Surprise me';
-    }
   }
 
   /// Builds a user message bubble (simple text).
@@ -621,51 +750,41 @@ class _AssistantAvatar extends StatelessWidget {
   }
 }
 
-/// Persistent trace of the chosen mood, shown at the top of the opening
-/// message after a mood is picked (the mood-question pills disappear from the
-/// re-ranked feed). Confirms the selection and offers a "change" tap target
-/// that clears the mood and brings the pills back.
-class _MoodChosenIndicator extends StatelessWidget {
-  final String label;
-  final VoidCallback onChange;
+/// "Back to home" control shown in the header while a mood conversation is
+/// open — the explicit way back to the main feed (in addition to re-tapping
+/// the active pill).
+class _BackToHomeButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _MoodChosenIndicator({required this.label, required this.onChange});
+  const _BackToHomeButton({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    final accent = Theme.of(context).colorScheme.primary;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.mood, size: 16, color: accent),
-        const SizedBox(width: 6),
-        Text(
-          'Feeling: $label',
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: onSurface,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.chevron_left, size: 20, color: onSurface),
+              const SizedBox(width: 2),
+              Text(
+                'Back to home',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: onSurface,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        Text('·', style: TextStyle(color: onSurface.withValues(alpha: 0.4))),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: onChange,
-          behavior: HitTestBehavior.opaque,
-          child: Text(
-            'change',
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: onSurface.withValues(alpha: 0.6),
-              decoration: TextDecoration.underline,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

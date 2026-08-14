@@ -436,6 +436,9 @@ class ChatbotV2View(APIView):
                         "total_time": total_time or None,
                         "calories": int(recipe.calories) if recipe.calories is not None else None,
                         "tags": recipe.tags or [],
+                        # Lets the client badge the card as the user's own recipe
+                        # vs. a catalog find.
+                        "is_owned": recipe.created_by_id == getattr(user, "id", None),
                     },
                 }
 

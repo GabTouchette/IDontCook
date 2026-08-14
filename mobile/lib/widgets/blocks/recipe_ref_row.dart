@@ -73,6 +73,8 @@ class RecipeRefRow extends StatelessWidget {
                       height: 1.25,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  _SourceBadge(isOwned: recipe.is_owned),
                   if (metaParts.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -103,6 +105,48 @@ class RecipeRefRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Compact provenance badge on a recipe card — distinguishes one of the
+/// user's own saved/created recipes ("Your recipe") from a catalog find
+/// ("From cookbook"), so a suggestion's source is legible at a glance.
+class _SourceBadge extends StatelessWidget {
+  final bool isOwned;
+
+  const _SourceBadge({required this.isOwned});
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final color = isOwned ? const Color(0xFF22C55E) : onSurface.withValues(alpha: 0.5);
+    final label = isOwned ? 'Your recipe' : 'From cookbook';
+    final icon = isOwned ? Icons.bookmark : Icons.menu_book_outlined;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.45), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -16,6 +16,7 @@ _$RecipeSummaryImpl _$$RecipeSummaryImplFromJson(Map<String, dynamic> json) =>
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
               const <String>[],
+      is_owned: json['is_owned'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$RecipeSummaryImplToJson(_$RecipeSummaryImpl instance) =>
@@ -26,4 +27,5 @@ Map<String, dynamic> _$$RecipeSummaryImplToJson(_$RecipeSummaryImpl instance) =>
       'total_time': instance.total_time,
       'calories': instance.calories,
       'tags': instance.tags,
+      'is_owned': instance.is_owned,
     };

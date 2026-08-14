@@ -64,21 +64,20 @@ class MoodQuestionCard extends StatelessWidget {
               ],
             ),
           ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final option in options) ...[
-                _MoodChoiceChip(
-                  option: option,
-                  selected: selectedMood != null &&
-                      selectedMood == option.moodValue,
-                  onTap: () => onMoodSelected?.call(option.moodValue!),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ],
-          ),
+        // Wrapped (not horizontally scrolled) so every mood is reachable
+        // without swiping — the pills flow onto as many lines as needed.
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in options)
+              _MoodChoiceChip(
+                option: option,
+                selected:
+                    selectedMood != null && selectedMood == option.moodValue,
+                onTap: () => onMoodSelected?.call(option.moodValue!),
+              ),
+          ],
         ),
       ],
     );
@@ -98,9 +97,18 @@ class _MoodChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    final fg = selected ? Theme.of(context).colorScheme.onPrimary : onSurface;
+    // Each mood carries its own accent so the row reads as a colorful palette.
+    // Unknown moods (moodValue == null) fall back to the neutral on-surface
+    // tone — but those options are filtered out upstream, so this is defensive.
+    final accent =
+        option.moodValue != null ? moodColor(option.moodValue!) : onSurface;
+    // Selected: everything sits on the accent fill, so use readable ink.
+    // Unselected: the icon carries the mood color while the label stays a
+    // neutral on-surface tone (colored label text — e.g. amber on white —
+    // reads poorly).
+    final ink = selected ? onColorInk(accent) : onSurface;
+    final iconColor = selected ? onColorInk(accent) : accent;
 
     return GestureDetector(
       onTap: onTap,
@@ -114,16 +122,21 @@ class _MoodChoiceChip extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: accent, width: 1.5),
               )
-            : blockPillDecoration(
-                context,
-                outlineOpacity: 0.2,
-                fill: onSurface.withValues(alpha: 0.04),
+            : BoxDecoration(
+                // Faint tint of the mood's own color, with a matching outline —
+                // colorful but low-key until picked.
+                color: accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: accent.withValues(alpha: 0.55),
+                  width: 1.5,
+                ),
               ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (option.moodValue != null) ...[
-              Icon(moodIcon(option.moodValue!), size: 16, color: fg),
+              Icon(moodIcon(option.moodValue!), size: 16, color: iconColor),
               const SizedBox(width: 6),
             ],
             Text(
@@ -131,7 +144,7 @@ class _MoodChoiceChip extends StatelessWidget {
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: fg,
+                color: ink,
               ),
             ),
           ],
