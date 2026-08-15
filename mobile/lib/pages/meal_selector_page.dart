@@ -5,6 +5,7 @@ import 'package:i_cant_cook/models/meal_planning/meal_plan.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/providers/meal_plan_provider.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class MealSelectorPage extends StatefulWidget {
   final int dayIndex;
@@ -62,7 +63,7 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                              r.thumbnail_url!,
+                              ApiConfig.resolveImageUrl(r.thumbnail_url!),
                               width: 56,
                               height: 56,
                               fit: BoxFit.cover,

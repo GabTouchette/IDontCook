@@ -14,6 +14,7 @@ import 'package:i_cant_cook/theme/theme.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/widgets/dialogs/post_comments_dialog.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class UserPostCard extends StatefulWidget {
   final Post post;
@@ -341,7 +342,7 @@ class _UserPostCardState extends State<UserPostCard>
     if (widget.post.recipe_thumbnail_url != null &&
         widget.post.recipe_thumbnail_url!.isNotEmpty) {
       return Image.network(
-        widget.post.recipe_thumbnail_url!,
+        ApiConfig.resolveImageUrl(widget.post.recipe_thumbnail_url!),
         height: 100,
         width: 100,
         fit: BoxFit.cover,

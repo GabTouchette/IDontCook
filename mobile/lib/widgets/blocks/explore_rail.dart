@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/recipe_summary/recipe_summary.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 /// Renders an `explore_rail` module: a titled horizontal list of compact
 /// recipe tiles. Tapping a tile opens the recipe.
@@ -89,7 +90,7 @@ class _RailTile extends StatelessWidget {
               width: double.infinity,
               child: recipe.image_url != null
                   ? Image.network(
-                      recipe.image_url!,
+                      ApiConfig.resolveImageUrl(recipe.image_url!),
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
                           _imagePlaceholder(context),

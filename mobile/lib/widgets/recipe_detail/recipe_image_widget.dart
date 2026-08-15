@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class RecipeImage extends StatelessWidget {
   final String imageUrl;
@@ -29,7 +30,7 @@ class RecipeImage extends StatelessWidget {
             // Image layer
             imageUrl.isNotEmpty
                 ? Image.network(
-                    imageUrl,
+                    ApiConfig.resolveImageUrl(imageUrl),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
                         _fallbackImage(),

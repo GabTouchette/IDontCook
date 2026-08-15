@@ -31,6 +31,39 @@ class ApiConfig {
 
   static String get apiBaseUrl => '${origin}/api';
 
+  // Scraped-image hosts that serve NO `Access-Control-Allow-Origin` header. On
+  // Flutter web the CanvasKit renderer paints network images onto a <canvas>,
+  // and the browser refuses to read cross-origin images without CORS headers
+  // (tainted canvas) — so these fail to render silently, with no console error.
+  // We route only these hosts through the backend image proxy. Hosts that
+  // already send CORS (images.immediate.co.uk, ucarecdn.com) and our own
+  // GCS/media URLs are left untouched. Keep this in sync with the backend
+  // ALLOWED_IMAGE_HOSTS allowlist in api/api/image_proxy.py.
+  static const Set<String> _proxyImageHosts = {
+    'www.allrecipes.com',
+    'images.allrecipes.com',
+    'images.ricardocuisine.com',
+    'food.fnr.sndimg.com',
+  };
+
+  /// Returns a browser-loadable image URL. On Flutter web, URLs from hosts that
+  /// lack CORS headers are rewritten through the backend image proxy so the
+  /// CanvasKit renderer can paint them; all other URLs (and every URL on native
+  /// iOS/Android, where CORS does not apply) are returned unchanged.
+  static String resolveImageUrl(String? url) {
+    final raw = url ?? '';
+    if (!kIsWeb || raw.isEmpty) {
+      return raw;
+    }
+    final uri = Uri.tryParse(raw);
+    if (uri == null ||
+        !(uri.scheme == 'http' || uri.scheme == 'https') ||
+        !_proxyImageHosts.contains(uri.host)) {
+      return raw;
+    }
+    return '$origin/api/images/proxy/?url=${Uri.encodeComponent(raw)}';
+  }
+
   static Uri buildApiUri(
     String endpoint, {
     Map<String, String>? queryParameters,

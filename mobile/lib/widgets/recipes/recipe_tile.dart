@@ -13,6 +13,7 @@ import 'package:i_cant_cook/widgets/dialogs/recipe_preview_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class RecipeTile extends StatelessWidget {
   final RecipePreview recipe;
@@ -200,7 +201,7 @@ class RecipeTile extends StatelessWidget {
                   child: recipe.thumbnail_url != null &&
                           recipe.thumbnail_url!.isNotEmpty
                       ? Image.network(
-                          recipe.thumbnail_url!,
+                          ApiConfig.resolveImageUrl(recipe.thumbnail_url!),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => PlaceholderImageWidget(
                               recipeId: recipe.id, height: 200, title: recipe.title),
@@ -381,7 +382,7 @@ class RecipeTile extends StatelessWidget {
       height: size.toDouble(),
       child: imageUrl != null && imageUrl.isNotEmpty
           ? Image.network(
-              imageUrl,
+              ApiConfig.resolveImageUrl(imageUrl),
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
                   PlaceholderImageWidget(recipeId: recipe.id, height: size, title: recipe.title),

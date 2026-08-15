@@ -6,6 +6,7 @@ import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class PostDialog extends StatefulWidget {
   final Recipe? recipe;
@@ -186,7 +187,7 @@ class _PostDialogState extends State<PostDialog> {
                                           recipe.thumbnail_url != null &&
                                                   recipe.thumbnail_url!.isNotEmpty
                                               ? Image.network(
-                                                  recipe.thumbnail_url!,
+                                                  ApiConfig.resolveImageUrl(recipe.thumbnail_url!),
                                                   width: 32,
                                                   height: 32,
                                                   fit: BoxFit.cover,
@@ -322,7 +323,7 @@ class _PostDialogState extends State<PostDialog> {
   Widget getRecipeImage(String? imageUrl) {
     return imageUrl != null && imageUrl.isNotEmpty
         ? Image.network(
-            imageUrl,
+            ApiConfig.resolveImageUrl(imageUrl),
             height: 150,
             width: double.infinity,
             fit: BoxFit.cover,

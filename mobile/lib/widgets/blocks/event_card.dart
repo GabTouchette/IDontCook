@@ -5,6 +5,7 @@ import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/recipe_summary/recipe_summary.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 /// Renders an `event_card` module: an ephemeral, festive card — lime accent
 /// border and a title badge, body text, optional image, optional CTA, and an
@@ -44,7 +45,7 @@ class EventCard extends StatelessWidget {
               height: 140,
               width: double.infinity,
               child: Image.network(
-                payload.image_url!,
+                ApiConfig.resolveImageUrl(payload.image_url!),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
@@ -161,7 +162,7 @@ class _EventRailTile extends StatelessWidget {
               width: double.infinity,
               child: recipe.image_url != null
                   ? Image.network(
-                      recipe.image_url!,
+                      ApiConfig.resolveImageUrl(recipe.image_url!),
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
                           _imagePlaceholder(context),

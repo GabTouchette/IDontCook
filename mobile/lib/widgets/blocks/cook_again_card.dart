@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 /// Renders a `cook_again` module: recipe image/title, "saved X ago" line
 /// derived from `saved_at`, and the module's "why you're seeing this"
@@ -54,7 +55,7 @@ class CookAgainCard extends StatelessWidget {
                 height: 64,
                 child: recipe.image_url != null
                     ? Image.network(
-                        recipe.image_url!,
+                        ApiConfig.resolveImageUrl(recipe.image_url!),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _imagePlaceholder(context),
                       )

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import numpy as np
 from django.core.cache import cache  # Django's caching system
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -33,7 +33,41 @@ COLD_START_INTERACTION_WEIGHTS = {
 COLD_START_SAVE_WEIGHT = 1.0
 COLD_START_HALF_LIFE_DAYS = 30.0
 
+# Explore/recommendation surfaces are visually driven: a recipe card without a
+# thumbnail reads as broken and converts poorly. We therefore heavily bias
+# ranking toward recipes that have an image. A recipe "has an image" if it has
+# either an uploaded file (`image`) or a scraped/catalog URL (`web_image_url`).
+#
+# The penalty is applied multiplicatively to a recipe's final score, so an
+# imageless recipe keeps only IMAGELESS_SCORE_PENALTY of its score and is
+# effectively sunk to the bottom of the ranking. This is intentionally
+# aggressive: as of Aug 2026 ~99.8% of both the local and prod catalog already
+# carry an image (all via `web_image_url`), so this only demotes the ~0.2%
+# imageless tail rather than reshuffling the bulk of results. Tune here.
+IMAGELESS_SCORE_PENALTY = 0.1
+
 USER_PROFILE_CACHE_TIMEOUT = 60 * 60  # 1 hour
+
+
+def _recipe_ids_with_images(ids):
+    """
+    Return the subset of `ids` whose recipe has a usable image — either an
+    uploaded file (`image`) or a scraped/catalog URL (`web_image_url`). Used to
+    apply IMAGELESS_SCORE_PENALTY when ranking explore/recommendation results.
+    """
+    if not ids:
+        return set()
+    return set(
+        Recipe.objects
+        .filter(id__in=ids)
+        .filter(Q(image__gt='') | Q(web_image_url__gt=''))
+        .values_list('id', flat=True)
+    )
+
+
+def _image_multiplier(recipe_id, ids_with_images):
+    """Score multiplier that demotes recipes lacking an image."""
+    return 1.0 if recipe_id in ids_with_images else IMAGELESS_SCORE_PENALTY
 
 
 def _recipe_text(recipe):
@@ -251,6 +285,7 @@ def get_trending_recipes(user_id, exclude_ids=(), top_n=20):
     created_at_by_id = dict(
         Recipe.objects.filter(id__in=candidate_ids).values_list('id', 'created_at')
     )
+    ids_with_images = _recipe_ids_with_images(candidate_ids)
 
     now = timezone.now()
     scored = []
@@ -261,7 +296,7 @@ def get_trending_recipes(user_id, exclude_ids=(), top_n=20):
         else:
             age_days = COLD_START_HALF_LIFE_DAYS
         decay = 0.5 ** (age_days / COLD_START_HALF_LIFE_DAYS)
-        scored.append((rid, base_score * decay))
+        scored.append((rid, base_score * decay * _image_multiplier(rid, ids_with_images)))
 
     scored.sort(key=lambda x: x[1], reverse=True)
     return [rid for rid, _ in scored[:top_n]]
@@ -346,7 +381,15 @@ def get_similar_recipes(user_id, top_n=30):
     candidate_matrix, ordered_ids = _candidate_vectors(candidates, tfidf, version)
 
     similarities = cosine_similarity(user_profile_vector, candidate_matrix).flatten()
-    scored = sorted(zip(ordered_ids, similarities), key=lambda x: x[1], reverse=True)
+    ids_with_images = {
+        r.id for r in candidates
+        if (r.image and str(r.image)) or r.web_image_url
+    }
+    scored = sorted(
+        zip(ordered_ids, similarities),
+        key=lambda pair: pair[1] * _image_multiplier(pair[0], ids_with_images),
+        reverse=True,
+    )
     return [rid for rid, _ in scored[:top_n]]
 
 
