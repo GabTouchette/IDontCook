@@ -23,6 +23,7 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:i_cant_cook/widgets/dialogs/user_post_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:provider/provider.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Recipe? recipe;
@@ -656,7 +657,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
         child: imageUrl != null && imageUrl.isNotEmpty
             ? Image.network(
-                imageUrl,
+                ApiConfig.resolveImageUrl(imageUrl),
                 height: 250,
                 width: double.infinity,
                 fit: BoxFit.cover,

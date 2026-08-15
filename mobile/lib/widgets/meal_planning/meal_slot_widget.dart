@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class MealSlot extends StatelessWidget {
   final String label;
@@ -187,7 +188,7 @@ class MealSlot extends StatelessWidget {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              thumbnailUrl!,
+                              ApiConfig.resolveImageUrl(thumbnailUrl!),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
                                   Icon(iconData, color: iconColor),

@@ -4,6 +4,7 @@ import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 /// Renders a `hero_suggestion` module — the "main character" of the feed.
 /// When an image is available it goes full-bleed behind a dark gradient
@@ -63,7 +64,7 @@ class HeroSuggestionCard extends StatelessWidget {
             if (hasImage)
               Positioned.fill(
                 child: Image.network(
-                  recipe.image_url!,
+                  ApiConfig.resolveImageUrl(recipe.image_url!),
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, progress) {
                     if (progress == null) return child;

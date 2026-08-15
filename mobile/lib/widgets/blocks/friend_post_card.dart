@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 /// Renders a `friend_post` module: author avatar (fallback: first letter of
 /// username, since `avatar_url` is currently always null server-side),
@@ -106,7 +107,7 @@ class FriendPostCard extends StatelessWidget {
                       height: 48,
                       child: recipe.image_url != null
                           ? Image.network(
-                              recipe.image_url!,
+                              ApiConfig.resolveImageUrl(recipe.image_url!),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
                                   _imagePlaceholder(context),

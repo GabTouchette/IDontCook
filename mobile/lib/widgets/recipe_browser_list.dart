@@ -6,6 +6,7 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class RecipeBrowserList extends StatefulWidget {
   final String query;
@@ -45,7 +46,7 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Image.network(
-        url,
+        ApiConfig.resolveImageUrl(url),
         width: 48,
         height: 48,
         fit: BoxFit.cover,

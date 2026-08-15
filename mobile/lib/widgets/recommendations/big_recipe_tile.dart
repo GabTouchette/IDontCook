@@ -4,6 +4,7 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 class BigRecipeTile extends StatefulWidget {
   final RecipePreview recipe;
@@ -147,7 +148,7 @@ class _BigRecipeTileState extends State<BigRecipeTile> {
                   child: recipe.thumbnail_url != null &&
                           recipe.thumbnail_url!.isNotEmpty
                       ? Image.network(
-                          recipe.thumbnail_url!,
+                          ApiConfig.resolveImageUrl(recipe.thumbnail_url!),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
                               PlaceholderImageWidget(

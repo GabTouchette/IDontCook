@@ -225,6 +225,37 @@ class GetTrendingRecipesTests(TestCase):
         self.assertEqual(via_cold_start, via_trending)
 
 
+class ImageBiasRankingTests(TestCase):
+    """Explore/recommendation surfaces heavily bias toward recipes that have
+    an image (uploaded file or `web_image_url`); imageless recipes are demoted
+    via IMAGELESS_SCORE_PENALTY so they sink to the bottom of the ranking."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="img_user", password="pass1234")
+        self.author = User.objects.create_user(username="img_author", password="pass1234")
+
+        # Two equally-popular, equally-recent recipes; only the difference in
+        # image presence should decide their relative order.
+        self.with_image = _make_recipe(self.author, "Has Photo", ingredient_names=["egg"])
+        self.with_image.web_image_url = "https://example.com/photo.jpg"
+        self.with_image.save(update_fields=["web_image_url"])
+        self.no_image = _make_recipe(self.author, "No Photo", ingredient_names=["egg"])
+
+        voters = [
+            User.objects.create_user(username=f"img_voter{i}", password="pass1234")
+            for i in range(5)
+        ]
+        for u in voters:
+            UserRecipeInteraction.objects.create(user=u, recipe=self.with_image, interaction_type="upvote")
+            UserRecipeInteraction.objects.create(user=u, recipe=self.no_image, interaction_type="upvote")
+
+    def test_trending_ranks_image_recipe_above_imageless(self):
+        ranked = get_trending_recipes(self.user.id, top_n=10)
+        self.assertIn(self.with_image.id, ranked)
+        self.assertIn(self.no_image.id, ranked)
+        self.assertLess(ranked.index(self.with_image.id), ranked.index(self.no_image.id))
+
+
 class RecipeVectorPrecomputeTests(TestCase):
     """Precomputed RecipeVector rows should produce identical similarity
     results to an on-the-fly transform, and any recipe missing a stored

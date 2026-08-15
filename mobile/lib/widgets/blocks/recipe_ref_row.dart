@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/recipe_summary/recipe_summary.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
+import 'package:i_cant_cook/api/api_config.dart';
 
 /// Renders a `recipe_ref` block: a compact tappable row that opens the
 /// referenced recipe in [RecipeDetailPage] (same behavior as the v1 `&&`
@@ -38,7 +39,7 @@ class RecipeRefRow extends StatelessWidget {
                 width: 44,
                 height: 44,
                 child: Image.network(
-                  recipe.image_url!,
+                  ApiConfig.resolveImageUrl(recipe.image_url!),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: Theme.of(context)
