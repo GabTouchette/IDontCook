@@ -48,11 +48,8 @@ class Ingredient(models.Model):
     original_text = models.CharField(max_length=500, blank=True, null=True)  # Full ingredient string
     usda_name = models.CharField(max_length=255, blank=True, null=True)  # Simplified name for USDA lookup
     nutrition_data = models.ForeignKey(NutritionData, on_delete=models.SET_NULL, null=True, blank=True)
-    # New fields for catalog architecture
-    language = models.CharField(max_length=8, blank=True, null=True)  # e.g., 'en', 'fr'
+    # Catalog architecture: normalized_name feeds canonical linking/dedup tooling.
     normalized_name = models.CharField(max_length=255, blank=True, null=True, db_index=True)
-    category = models.CharField(max_length=100, blank=True, null=True)
-    match_confidence = models.FloatField(blank=True, null=True)
     canonical = models.ForeignKey(CanonicalIngredient, on_delete=models.SET_NULL, null=True, blank=True, related_name="ingredients")
 
     def __str__(self):

@@ -24,6 +24,7 @@ mixin _$Ingredient {
   String? get name => throw _privateConstructorUsedError;
   double? get quantity => throw _privateConstructorUsedError;
   String? get unit => throw _privateConstructorUsedError;
+  String? get preparation => throw _privateConstructorUsedError;
   List<String>? get substitutes => throw _privateConstructorUsedError;
   Map<String, dynamic>? get nutrition => throw _privateConstructorUsedError;
   int? get canonical => throw _privateConstructorUsedError;
@@ -45,6 +46,7 @@ abstract class $IngredientCopyWith<$Res> {
       String? name,
       double? quantity,
       String? unit,
+      String? preparation,
       List<String>? substitutes,
       Map<String, dynamic>? nutrition,
       int? canonical});
@@ -67,6 +69,7 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
     Object? name = freezed,
     Object? quantity = freezed,
     Object? unit = freezed,
+    Object? preparation = freezed,
     Object? substitutes = freezed,
     Object? nutrition = freezed,
     Object? canonical = freezed,
@@ -87,6 +90,10 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
       unit: freezed == unit
           ? _value.unit
           : unit // ignore: cast_nullable_to_non_nullable
+              as String?,
+      preparation: freezed == preparation
+          ? _value.preparation
+          : preparation // ignore: cast_nullable_to_non_nullable
               as String?,
       substitutes: freezed == substitutes
           ? _value.substitutes
@@ -117,6 +124,7 @@ abstract class _$$IngredientImplCopyWith<$Res>
       String? name,
       double? quantity,
       String? unit,
+      String? preparation,
       List<String>? substitutes,
       Map<String, dynamic>? nutrition,
       int? canonical});
@@ -137,6 +145,7 @@ class __$$IngredientImplCopyWithImpl<$Res>
     Object? name = freezed,
     Object? quantity = freezed,
     Object? unit = freezed,
+    Object? preparation = freezed,
     Object? substitutes = freezed,
     Object? nutrition = freezed,
     Object? canonical = freezed,
@@ -157,6 +166,10 @@ class __$$IngredientImplCopyWithImpl<$Res>
       unit: freezed == unit
           ? _value.unit
           : unit // ignore: cast_nullable_to_non_nullable
+              as String?,
+      preparation: freezed == preparation
+          ? _value.preparation
+          : preparation // ignore: cast_nullable_to_non_nullable
               as String?,
       substitutes: freezed == substitutes
           ? _value._substitutes
@@ -182,6 +195,7 @@ class _$IngredientImpl implements _Ingredient {
       this.name,
       this.quantity,
       this.unit,
+      this.preparation,
       final List<String>? substitutes,
       final Map<String, dynamic>? nutrition,
       this.canonical})
@@ -199,6 +213,8 @@ class _$IngredientImpl implements _Ingredient {
   final double? quantity;
   @override
   final String? unit;
+  @override
+  final String? preparation;
   final List<String>? _substitutes;
   @override
   List<String>? get substitutes {
@@ -224,7 +240,7 @@ class _$IngredientImpl implements _Ingredient {
 
   @override
   String toString() {
-    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, substitutes: $substitutes, nutrition: $nutrition, canonical: $canonical)';
+    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, preparation: $preparation, substitutes: $substitutes, nutrition: $nutrition, canonical: $canonical)';
   }
 
   @override
@@ -237,6 +253,8 @@ class _$IngredientImpl implements _Ingredient {
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
             (identical(other.unit, unit) || other.unit == unit) &&
+            (identical(other.preparation, preparation) ||
+                other.preparation == preparation) &&
             const DeepCollectionEquality()
                 .equals(other._substitutes, _substitutes) &&
             const DeepCollectionEquality()
@@ -253,6 +271,7 @@ class _$IngredientImpl implements _Ingredient {
       name,
       quantity,
       unit,
+      preparation,
       const DeepCollectionEquality().hash(_substitutes),
       const DeepCollectionEquality().hash(_nutrition),
       canonical);
@@ -277,6 +296,7 @@ abstract class _Ingredient implements Ingredient {
       final String? name,
       final double? quantity,
       final String? unit,
+      final String? preparation,
       final List<String>? substitutes,
       final Map<String, dynamic>? nutrition,
       final int? canonical}) = _$IngredientImpl;
@@ -292,6 +312,8 @@ abstract class _Ingredient implements Ingredient {
   double? get quantity;
   @override
   String? get unit;
+  @override
+  String? get preparation;
   @override
   List<String>? get substitutes;
   @override

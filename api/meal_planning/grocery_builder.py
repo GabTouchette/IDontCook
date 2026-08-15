@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Dict, List, Tuple
-import re
 
 from .models import MealPlan
 from recipes.ingredient_normalizer import normalize_name_and_prep
@@ -77,56 +76,9 @@ _COUNT_UNITS = {
 }
 
 
-# Common name synonyms to help collapse variants
-_NAME_SYNONYMS = {
-    "scallion": "green onion",
-    "scallions": "green onion",
-    "spring onion": "green onion",
-    "cilantro": "coriander",
-    "coriander leaves": "coriander",
-    "bell pepper": "capsicum",
-    "bell peppers": "capsicum",
-    "powdered sugar": "icing sugar",
-    "confectioners sugar": "icing sugar",
-    "bicarbonate of soda": "baking soda",
-    "bicarb soda": "baking soda",
-}
-
-
-_DESCRIPTORS = {
-    "fresh",
-    "dried",
-    "minced",
-    "chopped",
-    "sliced",
-    "optional",
-    "to taste",
-    "ground",
-}
-
-
-def _strip_parentheses(text: str) -> str:
-    return re.sub(r"\([^)]*\)", "", text or "").strip()
-
-
-def _normalize_name(name: str, usda_name: str | None, nutrition_normalized: str | None) -> str:
-    # Priority: nutrition_data.normalized_name > usda_name > provided name
-    base = (nutrition_normalized or usda_name or name or "").strip().lower()
-    base = _strip_parentheses(base)
-    # Remove commas and extra punctuation
-    base = re.sub(r"[,:;]\s*", " ", base)
-    # Remove common descriptors tokens
-    toks = [t for t in re.split(r"\s+", base) if t]
-    toks = [t for t in toks if t not in _DESCRIPTORS]
-    base = " ".join(toks).strip()
-    # Apply simple plural normalization
-    if base.endswith("es") and len(base) > 4:
-        base = base[:-2]
-    elif base.endswith("s") and len(base) > 3:
-        base = base[:-1]
-    # Synonyms
-    base = _NAME_SYNONYMS.get(base, base)
-    return base
+# Name/prep/synonym normalization is owned by recipes.ingredient_normalizer
+# (imported as normalize_name_and_prep and used in build_grocery_list). This
+# module only owns unit normalization below.
 
 
 def _normalize_unit(unit: str | None) -> Tuple[str, str, float]:

@@ -10,6 +10,7 @@ class Ingredient with _$Ingredient {
     String? name,
     double? quantity,
     String? unit,
+    String? preparation,
     List<String>? substitutes,
     Map<String, dynamic>? nutrition,
     int? canonical, // The canonical ID from backend

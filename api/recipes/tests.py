@@ -10,9 +10,10 @@ from django.urls import reverse
 from PIL import Image
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from recipes.models import Recipe, SavedRecipe
+from recipes.models import Ingredient, Recipe, SavedRecipe
+from recipes.serializers import RecipeSerializer
 
 
 class IngredientPayloadValidationTests(TestCase):
@@ -77,9 +78,11 @@ class RecipesApiTests(APITestCase):
 		shutil.rmtree(self.media_root, ignore_errors=True)
 
 	def test_recipe_create_creates_saved_copy_and_enqueues_tasks(self):
+		# Ingredient formatting is dispatched by the create view; nutrition
+		# calculation is dispatched by the serializer via dispatch_nutrition_calculation.
 		with patch('recipes.views.format_recipe_ingredients.delay') as format_delay, patch(
-			'recipes.views.get_recipe_nutrition_info.delay'
-		) as nutrition_delay:
+			'recipes.tasks.dispatch_nutrition_calculation'
+		) as nutrition_dispatch:
 			response = self.client.post(
 				reverse('recipe-list'),
 				{
@@ -101,7 +104,7 @@ class RecipesApiTests(APITestCase):
 		recipe = Recipe.objects.get(title='Tomato Pasta')
 		self.assertTrue(SavedRecipe.objects.filter(user=self.user, recipe=recipe).exists())
 		format_delay.assert_called_once_with(recipe.id)
-		nutrition_delay.assert_called_once_with(recipe.id)
+		nutrition_dispatch.assert_called_once_with(recipe.id)
 
 	def test_recipe_list_returns_user_saved_recipes(self):
 		recipe = Recipe.objects.create(title='Saved Soup', created_by=self.user)
@@ -156,3 +159,48 @@ class RecipesApiTests(APITestCase):
 		image.save(buffer, format='JPEG')
 		buffer.seek(0)
 		return SimpleUploadedFile('recipe.jpg', buffer.read(), content_type='image/jpeg')
+
+
+class IngredientOrphanCleanupTests(TestCase):
+    """Editing a recipe must not leave orphaned Ingredient rows behind."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="orphan-chef",
+            email="orphan@example.com",
+            password="pass1234",
+        )
+        self.factory = APIRequestFactory()
+
+    @patch("recipes.tasks.dispatch_nutrition_calculation")
+    def test_update_deletes_orphaned_ingredient_rows(self, _mock_dispatch):
+        recipe = Recipe.objects.create(title="Soup", created_by=self.user, servings=1)
+        old = [
+            Ingredient.objects.create(name="carrot", quantity=2, unit="piece"),
+            Ingredient.objects.create(name="onion", quantity=1, unit="piece"),
+        ]
+        recipe.ingredients.add(*old)
+        self.assertEqual(Ingredient.objects.count(), 2)
+
+        request = self.factory.put("/api/recipes/")
+        request.user = self.user
+        serializer = RecipeSerializer(instance=recipe, context={"request": request})
+        serializer.update(
+            recipe,
+            {
+                "ingredients": [
+                    {"name": "potato", "quantity": 3, "unit": "piece"},
+                ],
+                "instructions": ["Boil"],
+            },
+        )
+
+        # The two old rows must be gone (not just detached), and only the new
+        # ingredient should remain in the table.
+        self.assertFalse(
+            Ingredient.objects.filter(id__in=[i.id for i in old]).exists()
+        )
+        self.assertEqual(Ingredient.objects.count(), 1)
+        self.assertEqual(recipe.ingredients.count(), 1)
+        self.assertEqual(recipe.ingredients.first().name, "potato")

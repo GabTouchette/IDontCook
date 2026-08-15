@@ -53,16 +53,12 @@ class Command(BaseCommand):
                     ing.preparation = prep
                     changed = True
 
-                # Set a baseline confidence if we touched normalization
-                if changed and ing.match_confidence is None:
-                    ing.match_confidence = 0.7
-
                 if changed:
                     dirty.append(ing)
 
             if dirty and not dry_run:
                 with transaction.atomic():
-                    Ingredient.objects.bulk_update(dirty, ["normalized_name", "preparation", "match_confidence"])
+                    Ingredient.objects.bulk_update(dirty, ["normalized_name", "preparation"])
                 updated += len(dirty)
 
             self.stdout.write(self.style.SUCCESS(f"Processed {min(start, total)}/{total}... updated {updated} so far"))

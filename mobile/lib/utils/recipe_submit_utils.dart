@@ -8,13 +8,19 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 Map<String, dynamic> buildRecipeDataFromRecipe(Recipe recipe) {
   return {
     "title": recipe.title,
-    "ingredients": recipe.ingredients
-        .map((i) => {
-              "quantity": i.quantity ?? "1",
-              "unit": i.unit ?? "",
-              "name": i.name ?? "",
-            })
-        .toList(),
+    "ingredients": recipe.ingredients.map((i) {
+      final item = <String, dynamic>{
+        if (i.quantity != null) "quantity": i.quantity,
+        "unit": i.unit ?? "",
+        "name": i.name ?? "",
+        if (i.preparation != null && i.preparation!.isNotEmpty)
+          "preparation": i.preparation,
+        if (i.substitutes != null && i.substitutes!.isNotEmpty)
+          "substitutes": i.substitutes,
+      };
+      if (i.canonical != null) item["canonical_id"] = i.canonical;
+      return item;
+    }).toList(),
     "instructions": recipe.instructions,
     "preparation_time": recipe.preparation_time ?? 0,
     "cooking_time": recipe.cooking_time ?? 0,

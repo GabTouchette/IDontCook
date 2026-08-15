@@ -1,6 +1,6 @@
 import random
 import threading
-from recipes.tasks import format_recipe_ingredients
+from recipes.tasks import format_recipe_ingredients, dispatch_nutrition_calculation
 from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
@@ -485,17 +485,9 @@ class RecipeNutritionAPIView(APIView):
             return JsonResponse({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
 
         if not recipe.is_nutrition_calculated:
-            # Kick off calculation in background (idempotent — safe to fire multiple times)
-            def _calc():
-                try:
-                    recipe.calculate_nutrition()
-                except Exception as exc:
-                    import traceback
-                    print(f"Background nutrition calc failed for recipe {pk}: {exc}")
-                    traceback.print_exc()
-
-            t = threading.Thread(target=_calc, daemon=True)
-            t.start()
+            # Queue calculation (Celery, with a thread fallback in dev). Idempotent —
+            # safe to fire multiple times; the client polls until is_calculated=true.
+            dispatch_nutrition_calculation(recipe.id)
 
             return JsonResponse({'is_calculated': False}, status=status.HTTP_202_ACCEPTED)
 

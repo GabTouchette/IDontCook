@@ -1,4 +1,3 @@
-import threading
 from rest_framework import serializers
 from .models import Recipe, Ingredient, NutritionData, CanonicalIngredient
 from accounts.serializers import UserSerializer
@@ -113,11 +112,13 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             recipe.ingredients.add(ingredient_obj)
 
-        # Calculate nutrition in background so create() returns immediately
+        # Queue nutrition calculation (Celery, with a thread fallback in dev) so
+        # create() returns immediately.
         try:
-            threading.Thread(target=recipe.calculate_nutrition, daemon=True).start()
+            from recipes.tasks import dispatch_nutrition_calculation
+            dispatch_nutrition_calculation(recipe.id)
         except Exception:
-            pass  # Don't fail recipe creation if nutrition calculation fails
+            pass  # Don't fail recipe creation if nutrition dispatch fails
 
         return recipe
 
@@ -244,7 +245,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.servings = validated_data.get("servings", instance.servings)  
         instance.save()
 
-        # Update ingredients if necessary
+        # Update ingredients if necessary.
+        # Capture the previously-linked rows so we can delete the ones that end
+        # up orphaned after the rebuild. Because ingredients is a ManyToMany but
+        # rows are always created per-recipe, clear() alone would leak the old
+        # rows (and their cached nutrition_data/canonical links) forever.
+        old_ingredient_ids = list(instance.ingredients.values_list("id", flat=True))
         instance.ingredients.clear()
         for ingredient_data in ingredients_data:
             # Apply smart unit defaults if unit is missing or empty
@@ -271,11 +277,20 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             instance.ingredients.add(ingredient_obj)
 
-        # Recalculate nutrition in background so update() returns immediately
+        # Delete the old rows that are no longer attached to any recipe. The
+        # recipes__isnull filter keeps this safe if a row were ever shared.
+        if old_ingredient_ids:
+            Ingredient.objects.filter(
+                id__in=old_ingredient_ids, recipes__isnull=True
+            ).delete()
+
+        # Queue nutrition recalculation (Celery, with a thread fallback in dev)
+        # so update() returns immediately.
         try:
-            threading.Thread(target=instance.calculate_nutrition, daemon=True).start()
+            from recipes.tasks import dispatch_nutrition_calculation
+            dispatch_nutrition_calculation(instance.id)
         except Exception:
-            pass  # Don't fail update if nutrition calculation fails
+            pass  # Don't fail update if nutrition dispatch fails
 
         return instance
     

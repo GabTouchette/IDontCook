@@ -116,3 +116,43 @@ def normalize_name_and_prep(raw_name: str) -> Tuple[str, Optional[str]]:
 
     prep = ' '.join(prep_tokens).strip() if prep_tokens else None
     return name, (prep or None)
+
+
+# ---------------------------------------------------------------------------
+# USDA search cleaning
+# ---------------------------------------------------------------------------
+# Words that describe preparation or state, not the ingredient itself. These
+# pollute USDA searches and cause bad matches. This is the single source of
+# truth for USDA-name cleaning — recipes.nutrition_service imports
+# clean_for_usda() from here rather than keeping its own copy.
+_USDA_PREP_WORDS = {
+    'fresh', 'dried', 'dry', 'frozen', 'raw', 'cooked', 'roasted', 'toasted',
+    'minced', 'chopped', 'diced', 'sliced', 'grated', 'shredded', 'spiralized',
+    'crushed', 'ground', 'mashed', 'peeled', 'deveined', 'trimmed', 'halved',
+    'quartered', 'julienned', 'cubed', 'crumbled', 'pureed', 'squeezed',
+    'boneless', 'skinless', 'pitted', 'seeded', 'cored',
+    'large', 'small', 'medium', 'whole', 'handful',
+    'unsalted', 'salted', 'sweetened', 'unsweetened', 'plain',
+    'organic', 'extra', 'virgin', 'pure', 'natural',
+    'leaves', 'leaf', 'cloves', 'clove', 'stalks', 'stalk', 'sprig', 'sprigs',
+    'slices', 'chunks', 'pieces', 'strips',
+    'finely', 'roughly', 'thinly', 'coarsely',
+}
+
+
+def clean_for_usda(name: str) -> str:
+    """Strip preparation/state words from an ingredient name before USDA lookup.
+
+    Examples:
+        'Garlic cloves, minced'  -> 'garlic'
+        'Fresh basil leaves'     -> 'basil'
+        'Chicken breast, boneless skinless' -> 'chicken breast'
+    """
+    # Remove anything after a comma (preparation notes)
+    name = name.split(',')[0]
+    # Tokenize and drop prep words
+    tokens = re.split(r'[\s/]+', name.lower())
+    cleaned = [t for t in tokens if t and t not in _USDA_PREP_WORDS]
+    result = ' '.join(cleaned).strip()
+    # Fall back to original (lowercased, comma-stripped) if everything was stripped
+    return result if result else name.split(',')[0].strip().lower()

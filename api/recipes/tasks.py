@@ -1,10 +1,47 @@
 import logging
+import threading
+
 from celery import shared_task
 
 from recipes.models import Recipe
 from ai_chatbot.api import AnthropicService
 
 logger = logging.getLogger(__name__)
+
+
+@shared_task
+def calculate_recipe_nutrition(recipe_id):
+    """Calculate and cache nutrition for a recipe. Idempotent — safe to run
+    multiple times. Replaces the raw daemon threads that previously ran this
+    inline in the serializer/view (not durable, no retry, no visibility)."""
+    logger.info(f"🥦 CELERY TASK STARTED: calculate_recipe_nutrition for recipe_id={recipe_id}")
+    try:
+        recipe = Recipe.objects.get(id=recipe_id)
+    except Recipe.DoesNotExist:
+        logger.warning(f"calculate_recipe_nutrition: recipe {recipe_id} not found")
+        return f"Recipe {recipe_id} not found"
+
+    recipe.calculate_nutrition()
+    logger.info(f"✅ CELERY TASK COMPLETED: nutrition for recipe '{recipe.title}'")
+    return f"Calculated nutrition for recipe '{recipe.title}'"
+
+
+def dispatch_nutrition_calculation(recipe_id):
+    """Queue nutrition calculation on Celery, falling back to a daemon thread if
+    the broker is unavailable (e.g. local dev without Redis). Mirrors the
+    dispatch-or-fallback pattern already used for format_recipe_ingredients."""
+    try:
+        calculate_recipe_nutrition.delay(recipe_id)
+    except Exception as exc:
+        logger.warning(
+            f"⚠️ Celery dispatch failed for nutrition calc ({exc}); "
+            f"running in background thread"
+        )
+        threading.Thread(
+            target=calculate_recipe_nutrition,
+            args=(recipe_id,),
+            daemon=True,
+        ).start()
 
 @shared_task
 def format_recipe_ingredients(recipe_id):

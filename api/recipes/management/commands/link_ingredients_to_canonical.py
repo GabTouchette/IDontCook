@@ -55,9 +55,7 @@ class Command(BaseCommand):
             if ci_id:
                 if not dry:
                     ing.canonical_id = ci_id
-                    # Boost confidence for exact/link matches
-                    ing.match_confidence = max(ing.match_confidence or 0, 0.9)
-                    ing.save(update_fields=["canonical", "match_confidence"])
+                    ing.save(update_fields=["canonical"])
                 linked += 1
 
             if scanned % 500 == 0:

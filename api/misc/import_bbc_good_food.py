@@ -154,7 +154,6 @@ def get_or_create_ingredient(raw_text: str) -> Ingredient | None:
         name=name,
         preparation=preparation or "",
         original_text=raw_text,
-        language="en",
     )
 
 
