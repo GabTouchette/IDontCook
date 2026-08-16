@@ -21,10 +21,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final User? user = await AuthApi.getUser();
 
-  // Already authenticated → skip splash, go straight to app.
-  // Not authenticated → always go through splash (which then routes to
-  // onboarding or login depending on debug mode / flag).
-  final String initialRoute = user != null ? '/recipes' : '/';
+  // Already authenticated → go straight to the app.
+  // Not authenticated → start at onboarding (welcome + auth).
+  final String initialRoute = user != null ? '/recipes' : '/onboarding';
 
   runApp(
     MultiProvider(

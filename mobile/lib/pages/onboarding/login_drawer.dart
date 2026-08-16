@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
@@ -9,12 +8,15 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
 
 class LoginDrawer extends StatefulWidget {
-  final VoidCallback onSignUpSuccess;
+  /// Fired after a successful auth. [isNewAccount] is true only for a fresh
+  /// registration (so the caller can route to profile setup); an existing
+  /// sign-in reports false.
+  final void Function({required bool isNewAccount}) onAuthSuccess;
   final bool initialSignInMode;
 
   const LoginDrawer({
     super.key,
-    required this.onSignUpSuccess,
+    required this.onAuthSuccess,
     this.initialSignInMode = true,
   });
 
@@ -30,7 +32,6 @@ class _LoginDrawerState extends State<LoginDrawer>
 
   late AnimationController _shakeController;
   late bool _isSigningIn;
-  bool _googleLoading = false;
 
   static const _lime = Color(0xFFCAFF00);
   static const _btnFg = Color(0xFF0A0A0A);
@@ -72,30 +73,6 @@ class _LoginDrawerState extends State<LoginDrawer>
     super.dispose();
   }
 
-  void _handleGoogleSignIn(BuildContext context) async {
-    setState(() => _googleLoading = true);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    try {
-      await authProvider.signInWithGoogle();
-      if (context.mounted) {
-        Navigator.pop(context);
-        widget.onSignUpSuccess();
-      }
-    } catch (e) {
-      if (context.mounted) {
-        HapticService.notificationError();
-        _shakeController.forward(from: 0);
-        InformationToast.show(
-          context: context,
-          message: 'Google sign-in failed. Please try again.',
-          type: ToastType.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _googleLoading = false);
-    }
-  }
-
   void _handleLogin(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
@@ -103,7 +80,7 @@ class _LoginDrawerState extends State<LoginDrawer>
           _usernameController.text, _passwordController.text);
       if (context.mounted) {
         Navigator.pop(context);
-        widget.onSignUpSuccess();
+        widget.onAuthSuccess(isNewAccount: false);
       }
     } catch (e) {
       if (context.mounted) {
@@ -125,7 +102,7 @@ class _LoginDrawerState extends State<LoginDrawer>
           _emailController.text, _passwordController.text);
       if (context.mounted) {
         Navigator.pop(context);
-        widget.onSignUpSuccess();
+        widget.onAuthSuccess(isNewAccount: true);
       }
     } catch (e) {
       if (context.mounted) {
@@ -211,94 +188,6 @@ class _LoginDrawerState extends State<LoginDrawer>
                   ),
                   const SizedBox(height: 32),
 
-                  // ── Google button ──
-                  Consumer<AuthProvider>(
-                    builder: (context, auth, _) {
-                      return GestureDetector(
-                        onTap: (auth.isLoading || _googleLoading)
-                            ? null
-                            : () => _handleGoogleSignIn(context),
-                        child: Container(
-                          width: double.infinity,
-                          height: 52,
-                          color: _lime,
-                          child: _googleLoading
-                              ? const Center(
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: _btnFg,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    FaIcon(
-                                      FontAwesomeIcons.google,
-                                      size: 16,
-                                      color: _btnFg,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'CONTINUE WITH GOOGLE',
-                                      style: GoogleFonts.spaceGrotesk(
-                                        color: _btnFg,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 28),
-
-                  // ── Divider ──
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.3),
-                          thickness: 1,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR',
-                          style: GoogleFonts.spaceGrotesk(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.35),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.3),
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-
                   // ── Fields Section ──
                   // Email field fades + slides in/out; the surrounding
                   // AnimatedSize smoothly grows/shrinks the sheet to match.
@@ -352,9 +241,9 @@ class _LoginDrawerState extends State<LoginDrawer>
                   // ── Primary button ──
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
-                      final busy = auth.isLoading && !_googleLoading;
+                      final busy = auth.isLoading;
                       return GestureDetector(
-                        onTap: (_hasRequiredInput && !(auth.isLoading || _googleLoading))
+                        onTap: (_hasRequiredInput && !auth.isLoading)
                             ? () {
                                 HapticService.mediumImpact();
                                 _isSigningIn
@@ -441,10 +330,11 @@ class _LoginDrawerState extends State<LoginDrawer>
                           child: Text(
                             _isSigningIn ? 'Sign up' : 'Sign in',
                             style: GoogleFonts.spaceGrotesk(
-                              color: Colors.black,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),

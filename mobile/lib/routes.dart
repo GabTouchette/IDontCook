@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:i_cant_cook/pages/splash_page.dart';
 import 'package:i_cant_cook/pages/dashboard_page.dart';
 import 'package:i_cant_cook/pages/onboarding/onboarding_page.dart';
 
@@ -7,8 +6,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
   Widget page;
   switch (settings.name) {
     case '/':
-      page = const SplashPage();
-      break;
     case '/onboarding':
       page = const OnboardingPage();
       break;
@@ -20,7 +17,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       page = const DashboardPage();
       break;
     default:
-      page = const SplashPage();
+      page = const OnboardingPage();
   }
   return PageRouteBuilder<dynamic>(
     settings: settings,

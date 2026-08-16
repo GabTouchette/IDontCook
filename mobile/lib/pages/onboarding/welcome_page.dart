@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingWelcomePage extends StatefulWidget {
-  final VoidCallback onGetStarted;
-  final VoidCallback onSignIn;
+  final VoidCallback onContinueWithGoogle;
+  final VoidCallback onContinueWithEmail;
+  final bool googleLoading;
 
   const OnboardingWelcomePage({
     super.key,
-    required this.onGetStarted,
-    required this.onSignIn,
+    required this.onContinueWithGoogle,
+    required this.onContinueWithEmail,
+    this.googleLoading = false,
   });
 
   @override
@@ -167,45 +170,57 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // GET STARTED
+                    // CONTINUE WITH GOOGLE (primary — works for new & returning)
                     GestureDetector(
-                      onTap: widget.onGetStarted,
+                      onTap:
+                          widget.googleLoading ? null : widget.onContinueWithGoogle,
                       child: Container(
                         height: 52,
                         color: _lime,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.arrow_forward,
-                                color: _black, size: 18),
-                            const SizedBox(width: 10),
-                            Text(
-                              'GET STARTED',
-                              style: GoogleFonts.spaceGrotesk(
-                                color: _black,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.5,
+                        child: widget.googleLoading
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: _black,
+                                    strokeWidth: 2.5,
+                                  ),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const FaIcon(FontAwesomeIcons.google,
+                                      color: _black, size: 16),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'CONTINUE WITH GOOGLE',
+                                    style: GoogleFonts.spaceGrotesk(
+                                      color: _black,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // SIGN IN LINK
+                    // CONTINUE WITH EMAIL (secondary — opens the auth sheet)
                     Center(
                       child: GestureDetector(
-                        onTap: widget.onSignIn,
+                        onTap: widget.onContinueWithEmail,
                         child: Text(
-                          'Already have an account? Sign in',
+                          'Continue with email',
                           style: GoogleFonts.spaceGrotesk(
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
                                 .withValues(alpha: 0.6),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                             letterSpacing: 0.5,
                             decoration: TextDecoration.underline,
                           ),

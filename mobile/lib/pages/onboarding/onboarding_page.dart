@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
+import 'package:i_cant_cook/providers/auth_provider.dart';
+import 'package:i_cant_cook/services/haptic_service.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'welcome_page.dart';
 import 'login_drawer.dart';
 import 'profile_setup_page.dart';
@@ -13,8 +18,15 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   int _pageIndex = 0;
+  bool _googleLoading = false;
 
-  void _onAuthSuccess() {
+  /// Returning user (existing account) → straight into the app.
+  void _routeToApp() {
+    Navigator.pushReplacementNamed(context, '/recipes');
+  }
+
+  /// Brand-new account → run the one-time profile-setup step.
+  void _goToProfileSetup() {
     setState(() => _pageIndex = 1);
   }
 
@@ -26,14 +38,41 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
-  void _showLoginDrawer({required bool isSignIn}) {
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _googleLoading = true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    try {
+      await authProvider.signInWithGoogle();
+      if (mounted) _routeToApp();
+    } catch (e) {
+      if (mounted) {
+        HapticService.notificationError();
+        InformationToast.show(
+          context: context,
+          message: 'Google sign-in failed. Please try again.',
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
+    }
+  }
+
+  void _showEmailSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => LoginDrawer(
-        initialSignInMode: isSignIn,
-        onSignUpSuccess: _onAuthSuccess,
+        // The drawer closes itself, then we route by what happened:
+        // an existing sign-in goes to the app; a fresh account gets setup.
+        onAuthSuccess: ({required bool isNewAccount}) {
+          if (isNewAccount) {
+            _goToProfileSetup();
+          } else {
+            _routeToApp();
+          }
+        },
       ),
     );
   }
@@ -48,8 +87,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       default:
         return OnboardingWelcomePage(
           key: const ValueKey(0),
-          onGetStarted: () => _showLoginDrawer(isSignIn: false),
-          onSignIn: () => _showLoginDrawer(isSignIn: true),
+          googleLoading: _googleLoading,
+          onContinueWithGoogle: _handleGoogleSignIn,
+          onContinueWithEmail: _showEmailSheet,
         );
     }
   }
