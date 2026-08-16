@@ -346,11 +346,28 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
         return obj.web_image_url
 
     def get_ingredients_count(self, obj):
+        # Prefer the bulk-computed counts injected by the list view (one grouped
+        # query for the whole page) over a COUNT query per recipe.
+        counts = self.context.get('ingredient_counts')
+        if counts is not None:
+            return counts.get(obj.id, 0)
         return obj.ingredients.count()
-    
+
     def get_is_saved(self, obj):
-        user = self.context.get('request').user
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
         if not user or not user.is_authenticated:
             return False
 
-        return Recipe.objects.filter(parent=obj.id).exists()
+        # Bulk path (list view): the recipe is the user's own, or it's the user's
+        # saved copy of an original (swapped in via saved_map). No per-row query.
+        saved_version_ids = self.context.get('saved_version_ids')
+        if saved_version_ids is not None:
+            return obj.created_by_id == user.id or obj.id in saved_version_ids
+
+        # Fallback for single-object callers — user-scoped (the previous
+        # implementation checked any copy globally, which was a correctness bug).
+        return (
+            obj.created_by_id == user.id
+            or Recipe.objects.filter(created_by=user, parent=obj.id).exists()
+        )

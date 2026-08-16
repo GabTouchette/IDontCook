@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.utils.timezone import now
 # Removed timezone import - no longer needed
 from django.core.files.base import ContentFile
-from django.db.models import Case, When, Q, ExpressionWrapper, F, IntegerField
+from django.db.models import Case, When, Q, ExpressionWrapper, F, IntegerField, Count
 from django.db import connection
 from django.db.models.functions import Random
 
@@ -310,6 +310,26 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
     
         return recipes.distinct()
     
+    def _preview_context(self, request, recipes, saved_map):
+        """Bulk-resolve the two per-recipe fields the preview serializer needs so
+        it never issues a query per recipe (the N+1 that made explore crawl on
+        networked Postgres). One COUNT-grouped query for ingredient counts; the
+        user's saved versions come from the saved_map already fetched above.
+        """
+        ids = [r.id for r in recipes]
+        ingredient_counts = dict(
+            Recipe.objects.filter(id__in=ids)
+            .annotate(_ic=Count('ingredients'))
+            .values_list('id', '_ic')
+        )
+        return {
+            'request': request,
+            'ingredient_counts': ingredient_counts,
+            # The recipe objects that ARE the user's saved copy of an original
+            # (saved_map swaps them in below). Membership => is_saved.
+            'saved_version_ids': {r.id for r in saved_map.values()},
+        }
+
     def get_combined_recipe_ids(self, user):
         # 1. Recommended recipe IDs
         recommended_ids = get_similar_recipes(user.id, top_n=500)
@@ -343,10 +363,13 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
             saved_map = {s.original_recipe_id: s.recipe for s in user_saved}
 
             final_recipes = [saved_map.get(r.id, r) for r in page_recipes]
-            
-            serializer = self.serializer_class(final_recipes, many=True, context={'request': request})
+
+            serializer = self.serializer_class(
+                final_recipes, many=True,
+                context=self._preview_context(request, final_recipes, saved_map),
+            )
             return paginator.get_paginated_response(serializer.data)
-        
+
         # Original recommendation logic for non-search cases
         combined_ids = self.get_combined_recipe_ids(user)
         filtered_ids = set(filtered_recipes.values_list('id', flat=True))
@@ -388,8 +411,11 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         saved_map = {s.original_recipe_id: s.recipe for s in user_saved}
         
         final_recipes = [saved_map.get(r.id, r) for r in all_recipes]
-        
-        serializer = self.serializer_class(final_recipes, many=True, context={'request': request})
+
+        serializer = self.serializer_class(
+            final_recipes, many=True,
+            context=self._preview_context(request, final_recipes, saved_map),
+        )
         return paginator.get_paginated_response(serializer.data)
     
 class RecipeInteractionAPIView(APIView):

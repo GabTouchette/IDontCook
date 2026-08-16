@@ -300,17 +300,36 @@ USDA_API_KEY = os.getenv('USDA_API_KEY')
 MEAL_PLAN_REFINER_OPENAI_ENABLED = os.getenv("MEAL_PLAN_REFINER_OPENAI_ENABLED", "False").lower() == "true"
 MEAL_PLAN_REFINER_OPENAI_MODEL = os.getenv("MEAL_PLAN_REFINER_OPENAI_MODEL", "gpt-3.5-turbo")
 
-# Cache configuration for nutrition lookups
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+# Cache configuration.
+#
+# In production use Redis (already provisioned for Celery) so the cache is
+# SHARED across gunicorn workers and SURVIVES restarts/deploys. Without this the
+# LocMemCache below is per-process and cold after every deploy, which silently
+# defeats every cache we rely on in the request path — the recommendation
+# user-profile cache (recommendations/api.py) and the Flipp/OSM deal caches
+# (home/flipp_client.py, 6h TTL) — turning warm reads back into slow external
+# calls and TF-IDF refits on every request. Falls back to LocMem when no Redis
+# URL is configured (e.g. local dev).
+_redis_cache_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL")
+if _redis_cache_url and _redis_cache_url.startswith(("redis://", "rediss://")):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _redis_cache_url,
+            'TIMEOUT': 300,
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
