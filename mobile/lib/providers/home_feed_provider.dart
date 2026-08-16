@@ -6,18 +6,24 @@ import 'package:i_cant_cook/models/mood/mood.dart';
 import 'package:i_cant_cook/services/location_service.dart';
 
 class HomeFeedProvider extends ChangeNotifier {
-  HomeFeedProvider({HomeApi? api, LocationService? locationService})
-      : _api = api ?? HomeApi(),
-        _location = locationService ?? LocationService();
+  HomeFeedProvider({
+    HomeApi? api,
+    LocationService? locationService,
+    List<Duration>? dealsWarmBackoff,
+  })  : _api = api ?? HomeApi(),
+        _location = locationService ?? LocationService(),
+        _dealsWarmBackoff = dealsWarmBackoff ?? _defaultDealsWarmBackoff;
 
   final HomeApi _api;
   final LocationService _location;
+  final List<Duration> _dealsWarmBackoff;
 
   HomeFeed? _feed;
   bool _isLoading = false;
   String? _error;
   Mood? _currentMood;
   DateTime? _lastLoadedAt;
+  bool _isPollingDeals = false;
 
   /// How long a loaded feed stays "fresh". Past this, returning to the Home
   /// tab silently refetches so the feed reshuffles (new hero, re-ranked
@@ -66,6 +72,13 @@ class HomeFeedProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+
+    // If the freshly-loaded feed shows a deals rail still warming server-side
+    // (cold cache → `loading` placeholder), start polling for the ready rail.
+    // Triggered here — not from the setup card — so it works no matter how the
+    // loading card appeared: a fresh page load with a saved location, or the
+    // user just enabling location. Self-guards against overlapping polls.
+    _maybeStartDealsPoll();
   }
 
   /// Selects a mood and refetches the feed. Conversation stays intact or resets
@@ -79,13 +92,14 @@ class HomeFeedProvider extends ChangeNotifier {
     await loadFeed(mood: _currentMood);
   }
 
-  /// Backoff schedule (~30s total) for re-polling the feed while the deals rail
-  /// warms. Sized to cover the worst case of the server-side warm — OSM Overpass
-  /// alone has a 25s timeout — so a cold location resolves on its own instead of
-  /// leaving the loading card stuck until a manual refresh. Backoff (rather than
-  /// a tight fixed interval) keeps the number of full-feed refetches — each of
-  /// which re-ranks the feed — to a handful.
-  static const List<Duration> _dealsWarmBackoff = [
+  /// Default backoff schedule (~30s total) for re-polling the feed while the
+  /// deals rail warms. Sized to cover the worst case of the server-side warm —
+  /// OSM Overpass alone has a 25s timeout — so a cold location resolves on its
+  /// own instead of leaving the loading card stuck until a manual refresh.
+  /// Backoff (rather than a tight fixed interval) keeps the number of full-feed
+  /// refetches — each of which re-ranks the feed — to a handful. Overridable via
+  /// the constructor so tests can poll on millisecond delays.
+  static const List<Duration> _defaultDealsWarmBackoff = [
     Duration(seconds: 2),
     Duration(seconds: 3),
     Duration(seconds: 4),
@@ -94,22 +108,36 @@ class HomeFeedProvider extends ChangeNotifier {
     Duration(seconds: 9),
   ];
 
-  /// Refetches after the user enables location, then polls until the nearby
-  /// deals rail finishes warming server-side.
-  ///
-  /// The rail warms out-of-band on a cold cache: the backend returns a
-  /// `loading` placeholder and kicks off the Flipp/OSM fetch in the background,
-  /// so a single refresh would leave the placeholder up until the user manually
-  /// refreshes minutes later. This polls (bounded, with backoff) to swap in the
-  /// ready rail — or stops early once it's ready/empty. Lives on the provider,
-  /// not the setup card, so it survives that card being replaced mid-poll.
+  /// Refetches after the user enables location. The deals rail then warms
+  /// out-of-band on a cold cache (backend returns a `loading` placeholder and
+  /// fetches Flipp/OSM in the background); [loadFeed] auto-starts the poll that
+  /// swaps in the ready rail, so this just needs to kick off the first fetch.
   Future<void> refreshForNewLocation() async {
     await refresh();
-    for (final delay in _dealsWarmBackoff) {
-      if (!_dealsWarming) return;
-      await Future.delayed(delay);
-      await refresh();
-    }
+  }
+
+  /// Starts polling for the deals rail to finish warming, if it's currently in
+  /// its `loading` state and no poll is already running.
+  ///
+  /// A single feed load would otherwise leave the `loading` placeholder up until
+  /// the user manually refreshes minutes later. Polls (bounded, with backoff) by
+  /// re-fetching the feed until the rail resolves to `ready`/empty. The re-entry
+  /// guard is essential: each [refresh] inside the loop calls [loadFeed], which
+  /// calls this again — the guard stops that from spawning nested polls.
+  void _maybeStartDealsPoll() {
+    if (_isPollingDeals || !_dealsWarming) return;
+    _isPollingDeals = true;
+    Future(() async {
+      try {
+        for (final delay in _dealsWarmBackoff) {
+          if (!_dealsWarming) return;
+          await Future.delayed(delay);
+          await refresh();
+        }
+      } finally {
+        _isPollingDeals = false;
+      }
+    });
   }
 
   /// True while the feed contains a `deals_rail` module still in its `loading`
