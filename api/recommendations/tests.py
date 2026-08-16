@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from datetime import timedelta
 
@@ -14,6 +14,12 @@ from recommendations.api import (
     store_recipe_vector,
 )
 from recommendations.models import RecipeVector, UserRecipeInteraction
+
+# get_similar_recipes now caches its ranked result per user. Disable caching in
+# these tests so each call exercises the real computation (and results can't leak
+# between tests via reused ids) — otherwise a second call returns the first
+# call's cached ranking and assertions pass vacuously.
+_NO_CACHE = {'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
 
 User = get_user_model()
 
@@ -31,6 +37,7 @@ def _make_recipe(created_by, title, tags=None, ingredient_names=None, descriptio
     return recipe
 
 
+@override_settings(CACHES=_NO_CACHE)
 class WeightedProfileRankingTests(TestCase):
     """
     Building a user profile that also weights positive interactions
@@ -124,6 +131,7 @@ class WeightedProfileRankingTests(TestCase):
         self.assertNotIn(downvoted.id, recommendations)
 
 
+@override_settings(CACHES=_NO_CACHE)
 class ColdStartFallbackTests(TestCase):
     """When a user has no signal at all, get_similar_recipes should fall
     back to a popularity+recency blend instead of returning nothing."""
@@ -176,6 +184,7 @@ class ColdStartFallbackTests(TestCase):
         self.assertLess(ranked.index(self.popular_recent.id), ranked.index(self.popular_old.id))
 
 
+@override_settings(CACHES=_NO_CACHE)
 class GetTrendingRecipesTests(TestCase):
     """get_trending_recipes() is the standalone extraction of the
     popularity+recency scorer that used to live only inside
@@ -225,6 +234,7 @@ class GetTrendingRecipesTests(TestCase):
         self.assertEqual(via_cold_start, via_trending)
 
 
+@override_settings(CACHES=_NO_CACHE)
 class ImageBiasRankingTests(TestCase):
     """Explore/recommendation surfaces heavily bias toward recipes that have
     an image (uploaded file or `web_image_url`); imageless recipes are demoted
@@ -256,6 +266,7 @@ class ImageBiasRankingTests(TestCase):
         self.assertLess(ranked.index(self.with_image.id), ranked.index(self.no_image.id))
 
 
+@override_settings(CACHES=_NO_CACHE)
 class RecipeVectorPrecomputeTests(TestCase):
     """Precomputed RecipeVector rows should produce identical similarity
     results to an on-the-fly transform, and any recipe missing a stored
@@ -323,6 +334,7 @@ class RecipeVectorPrecomputeTests(TestCase):
         self.assertIn(self.candidate_a.id, recommendations)
 
 
+@override_settings(CACHES=_NO_CACHE)
 class RecipeVectorSignalTests(TestCase):
     """Saving a Recipe should (synchronously, since no Celery broker is
     available in tests) populate a RecipeVector for it."""

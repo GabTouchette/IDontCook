@@ -4,6 +4,7 @@ import pickle
 from collections import defaultdict
 
 import numpy as np
+from scipy import sparse
 from django.core.cache import cache  # Django's caching system
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -47,6 +48,12 @@ COLD_START_HALF_LIFE_DAYS = 30.0
 IMAGELESS_SCORE_PENALTY = 0.1
 
 USER_PROFILE_CACHE_TIMEOUT = 60 * 60  # 1 hour
+# The ranked similar-recipes list per user. Scoring the whole catalog by cosine
+# similarity (loads every candidate + builds a dense TF-IDF matrix) is the
+# dominant cost of the explore/home requests, so cache the ranking and slice it
+# per caller instead of recomputing every request. Kept in line with the 1h
+# profile cache — a refit (new vocab version) busts both.
+SIMILAR_RECIPES_CACHE_TIMEOUT = 30 * 60  # 30 minutes
 
 
 def _recipe_ids_with_images(ids):
@@ -142,12 +149,19 @@ def _sparse_entries(vector):
     return [[int(i), float(dense[i])] for i in nonzero]
 
 
-def _entries_to_dense_row(entries, dim):
-    row = np.zeros(dim)
-    for idx, weight in entries:
+def _entries_to_sparse_row(entries, dim):
+    """A 1 x dim sparse CSR row from stored [[index, weight], ...] entries.
+
+    Sparse (not dense) so the candidate matrix stays tiny: a dense
+    n_candidates x n_features matrix over the full catalog is hundreds of MB and
+    was the bulk of the recommendation latency + container memory pressure.
+    """
+    cols, data = [], []
+    for idx, weight in (entries or []):
         if 0 <= idx < dim:
-            row[idx] = weight
-    return row
+            cols.append(idx)
+            data.append(weight)
+    return sparse.csr_matrix((data, ([0] * len(cols), cols)), shape=(1, dim))
 
 
 def store_recipe_vector(recipe, tfidf, version):
@@ -338,7 +352,7 @@ def _candidate_vectors(candidates, tfidf, version):
     for pos, r in enumerate(candidates):
         entries = stored_by_id.get(r.id)
         if entries is not None:
-            rows[pos] = _entries_to_dense_row(entries, dim)
+            rows[pos] = _entries_to_sparse_row(entries, dim)
         else:
             missing_recipes.append(r)
             missing_positions.append(pos)
@@ -346,15 +360,15 @@ def _candidate_vectors(candidates, tfidf, version):
     if missing_recipes:
         try:
             texts = [_recipe_text(r) for r in missing_recipes]
-            computed = tfidf.transform(texts).toarray()
-            for pos, dense_row in zip(missing_positions, computed):
-                rows[pos] = dense_row
+            computed = tfidf.transform(texts)  # already a sparse CSR matrix
+            for i, pos in enumerate(missing_positions):
+                rows[pos] = computed.getrow(i)
         except Exception:
             logger.exception("On-the-fly TF-IDF transform failed for %d candidates", len(missing_recipes))
             for pos in missing_positions:
-                rows[pos] = np.zeros(dim)
+                rows[pos] = sparse.csr_matrix((1, dim))
 
-    return np.vstack(rows), ids
+    return sparse.vstack(rows, format='csr'), ids
 
 
 def get_similar_recipes(user_id, top_n=30):
@@ -362,22 +376,41 @@ def get_similar_recipes(user_id, top_n=30):
     Recommend recipes similar to the user's own taste profile. Falls back to
     a popularity+recency blend when the user has no profile signal at all
     (cold start), instead of returning nothing.
-    """
-    excluded = _excluded_recipe_ids(user_id)
 
+    The full ranked candidate list is cached per (user, vectorizer version) and
+    sliced to `top_n` — scoring the whole catalog by cosine similarity is the
+    expensive part (see _rank_similar_recipes) and previously reran on every
+    explore/home request, which is what made those pages take 20-30s.
+    """
     profile = build_user_profile(user_id)
     if not profile:
-        return _cold_start_fallback(excluded, top_n)
+        return _cold_start_fallback(_excluded_recipe_ids(user_id), top_n)
 
     tfidf, user_profile_vector = profile
     if tfidf is None or user_profile_vector is None:
-        return _cold_start_fallback(excluded, top_n)
+        return _cold_start_fallback(_excluded_recipe_ids(user_id), top_n)
 
+    version = _vocab_version(tfidf)
+    cache_key = f"similar_recipes_{user_id}_v{version}"
+    ranked = cache.get(cache_key)
+    if ranked is None:
+        ranked = _rank_similar_recipes(user_id, tfidf, user_profile_vector, version)
+        cache.set(cache_key, ranked, SIMILAR_RECIPES_CACHE_TIMEOUT)
+    return ranked[:top_n]
+
+
+def _rank_similar_recipes(user_id, tfidf, user_profile_vector, version):
+    """Score every non-excluded catalog recipe by cosine similarity to the
+    user's taste profile and return ALL candidate ids in ranked order.
+
+    Expensive (loads all candidates + builds a dense TF-IDF matrix) — callers go
+    through get_similar_recipes, which caches this result.
+    """
+    excluded = _excluded_recipe_ids(user_id)
     candidates = list(Recipe.objects.exclude(id__in=excluded))
     if not candidates:
         return []
 
-    version = _vocab_version(tfidf)
     candidate_matrix, ordered_ids = _candidate_vectors(candidates, tfidf, version)
 
     similarities = cosine_similarity(user_profile_vector, candidate_matrix).flatten()
@@ -390,7 +423,7 @@ def get_similar_recipes(user_id, top_n=30):
         key=lambda pair: pair[1] * _image_multiplier(pair[0], ids_with_images),
         reverse=True,
     )
-    return [rid for rid, _ in scored[:top_n]]
+    return [rid for rid, _ in scored]
 
 
 # import pandas as pd
