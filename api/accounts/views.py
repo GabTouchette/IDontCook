@@ -124,6 +124,9 @@ class GoogleAuthView(APIView):
     permission_classes = []
 
     def post(self, request):
+        # TEMP DIAGNOSTIC: prove whether the request reaches this endpoint at all.
+        logger.warning('google-auth endpoint HIT (has_id_token=%s)',
+                       bool(request.data.get('id_token')))
         token = request.data.get('id_token')
         if not token:
             return JsonResponse(
