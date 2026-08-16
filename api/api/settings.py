@@ -311,12 +311,31 @@ MEAL_PLAN_REFINER_OPENAI_MODEL = os.getenv("MEAL_PLAN_REFINER_OPENAI_MODEL", "gp
 # calls and TF-IDF refits on every request. Falls back to LocMem when no Redis
 # URL is configured (e.g. local dev).
 _redis_cache_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL")
-if IS_PRODUCTION and _redis_cache_url and _redis_cache_url.startswith(("redis://", "rediss://")):
+# Ops escape hatch: set DISABLE_REDIS_CACHE=true to force LocMem without a code
+# deploy (e.g. if the Redis endpoint is misconfigured and you want it out of the
+# path entirely rather than degrading per-request).
+_disable_redis_cache = env.bool("DISABLE_REDIS_CACHE", default=False)
+if (
+    IS_PRODUCTION
+    and not _disable_redis_cache
+    and _redis_cache_url
+    and _redis_cache_url.startswith(("redis://", "rediss://"))
+):
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            # Resilient wrapper: a Redis outage degrades to a cache miss instead
+            # of hanging the worker / 500-ing the request (see api/cache_backends.py).
+            'BACKEND': 'api.cache_backends.ResilientRedisCache',
             'LOCATION': _redis_cache_url,
             'TIMEOUT': 300,
+            'OPTIONS': {
+                # Fail fast instead of blocking a gunicorn worker until it's
+                # killed (WORKER TIMEOUT) when Redis is unreachable/slow. These
+                # flow through to redis.ConnectionPool.from_url.
+                'socket_connect_timeout': 2,
+                'socket_timeout': 2,
+                'retry_on_timeout': False,
+            },
         }
     }
 else:
