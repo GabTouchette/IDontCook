@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.core.cache import cache
 from django.test import TestCase
@@ -8,6 +9,7 @@ from home.collectors import (
     FeedContext,
     apply_mood_recipe_filter,
     collect_cook_again,
+    collect_deals,
     collect_event_card,
     collect_explore_rail,
     collect_friend_post,
@@ -16,7 +18,9 @@ from home.collectors import (
     collect_meal_plan_nudge,
     collect_mood_question,
 )
+from home.deals_service import deals_cache_key
 from home.models import HomeEvent
+from home.tasks import dispatch_deals_warm
 from meal_planning.models import GroceryList, MealPlan, PlannedMeal
 from recipes.models import SavedRecipe
 from social.models import Follow, Post
@@ -254,3 +258,71 @@ class MoodQuestionTests(TestCase):
             moods,
             ['rushed', 'ambitious', 'cooking_for_someone', 'comfort', 'healthy', 'surprise_me'],
         )
+
+
+class CollectDealsTests(TestCase):
+    """collect_deals must never do external I/O in the request path: it reads a
+    warmed cache and dispatches a background warm on a miss."""
+
+    def setUp(self):
+        cache.clear()
+        self.user = make_user('deals_user')
+
+    def _ctx(self, lat=None, lng=None):
+        return FeedContext(
+            user=self.user, now=timezone.now(), daypart='evening',
+            is_weekend=False, lat=lat, lng=lng,
+        )
+
+    def test_no_location_returns_setup_card_without_warming(self):
+        with patch('home.collectors.dispatch_deals_warm') as warm:
+            result = collect_deals(self._ctx())
+        self.assertEqual(len(result), 1)
+        module, _score = result[0]
+        self.assertEqual(module['payload']['state'], 'setup')
+        warm.assert_not_called()
+
+    def test_cold_cache_dispatches_warm_and_shows_no_rail(self):
+        with patch('home.collectors.dispatch_deals_warm') as warm:
+            result = collect_deals(self._ctx(lat=45.5, lng=-73.56))
+        # No rail this load — the feed never blocks on Flipp/OSM.
+        self.assertEqual(result, [])
+        warm.assert_called_once()
+        # Keyed on the RAW coords so the warm task recomputes the same key.
+        self.assertEqual(warm.call_args[0][0], deals_cache_key(45.5, -73.56, ''))
+
+    def test_warm_cache_ready_renders_cached_rail_without_warming(self):
+        key = deals_cache_key(45.5, -73.56, '')
+        payload = {
+            'state': 'ready', 'postal_code': 'H2X1Y4',
+            'stores': [], 'total_count': 1, 'items': [{'name': 'Milk'}],
+        }
+        cache.set(key, payload, 60)
+        with patch('home.collectors.dispatch_deals_warm') as warm:
+            result = collect_deals(self._ctx(lat=45.5, lng=-73.56))
+        self.assertEqual(len(result), 1)
+        module, _score = result[0]
+        self.assertEqual(module['module_type'], 'deals_rail')
+        self.assertEqual(module['payload'], payload)
+        warm.assert_not_called()
+
+    def test_warm_cache_empty_shows_no_rail(self):
+        key = deals_cache_key(45.5, -73.56, '')
+        cache.set(key, {'state': 'empty'}, 60)
+        with patch('home.collectors.dispatch_deals_warm') as warm:
+            result = collect_deals(self._ctx(lat=45.5, lng=-73.56))
+        self.assertEqual(result, [])
+        warm.assert_not_called()
+
+
+class DispatchDealsWarmTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_dedupes_concurrent_warms_by_lock(self):
+        key = 'home_deals_v1_test'
+        with patch('home.tasks.warm_deals_cache') as task:
+            dispatch_deals_warm(key, 45.5, -73.56, '')
+            dispatch_deals_warm(key, 45.5, -73.56, '')
+        # Second dispatch is a no-op while the first warm is in flight.
+        task.delay.assert_called_once()

@@ -10,16 +10,18 @@ import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
+from django.core.cache import cache
 from django.db.models import Count, ExpressionWrapper, F, IntegerField
 
 from meal_planning.models import GroceryList, MealPlan, PlannedMeal
 from recipes.models import Recipe, SavedRecipe
 from social.models import Follow, Post
 
-from .deals_service import aggregate_deals, nearby_stores, resolve_location
+from .deals_service import deals_cache_key
 from .models import HomeEvent
 from .ranking import MOODS
 from .serializers import build_module, recipe_summary, recipe_total_time
+from .tasks import dispatch_deals_warm
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +53,6 @@ BASE_SCORES = {
     'chat_prompt': 1.5,
     'deals_rail': 2.6,
 }
-
-# How many sale items to embed in the home-feed deals rail (the full list lives
-# behind the "See all deals" CTA -> /api/home/deals/).
-DEALS_RAIL_LIMIT = 12
-
 
 @dataclass
 class FeedContext:
@@ -698,24 +695,6 @@ def collect_mood_question(ctx):
     return [(module, BASE_SCORES['mood_question'])]
 
 
-def _deal_item(item):
-    """Trim a FlippClient item to the display fields the deals rail needs."""
-    return {
-        'name': item['name'],
-        'name_alt': item.get('name_alt'),
-        'brand': item.get('brand') or '',
-        'price': item.get('price'),
-        'price_value': item.get('price_value'),
-        'discount': item.get('discount'),
-        'image_url': item.get('image_url'),
-        'valid_to': item.get('valid_to'),
-        # Which nearby store this deal is from, how far, and $ saved.
-        'merchant': item.get('merchant') or '',
-        'distance_m': item.get('distance_m'),
-        'savings': item.get('savings'),
-    }
-
-
 # Number of nearest stores to aggregate deals across for the home rail.
 DEALS_STORE_LIMIT = 5
 
@@ -724,14 +703,18 @@ def collect_deals(ctx):
     """The biggest grocery discounts near the user, across their nearest stores.
 
     Location-driven (no manual store pick): uses the client GPS coords from the
-    feed request, else the user's persisted settings location. Two states, both
-    on the same `deals_rail` module:
-      * `setup`  — no location available -> an "enable location" prompt. Kept
-        low-ish so it doesn't dominate a feed for a user who hasn't opted in.
-      * `ready`  — top discounts pooled from the DEALS_STORE_LIMIT closest
-        stores, deepest discount first, each item tagged with its store.
+    feed request, else the user's persisted settings location.
 
-    Never raises: any Flipp/OSM failure yields [] (collect_modules also guards).
+    This collector does ZERO external I/O in the request path — the slow
+    Flipp/OSM/geocode work runs in home.tasks.warm_deals_cache and lands in the
+    shared cache. Behaviour by cache/location state:
+      * no location signal at all -> `setup` prompt ("enable location"), scored
+        low so it doesn't dominate a feed for a user who hasn't opted in.
+      * warm cache (`ready`)       -> the cached top discounts rail.
+      * cold cache with a location -> nothing this load; a background warm is
+        kicked off so the rail appears on the next feed refresh (never blocks).
+
+    Never raises: any failure yields [] (collect_modules also guards).
     """
     settings = getattr(ctx.user, 'settings', None)
     lat, lng = ctx.lat, ctx.lng
@@ -740,9 +723,10 @@ def collect_deals(ctx):
         lng = getattr(settings, 'longitude', None) if settings else None
     postal = (getattr(settings, 'postal_code', '') or '').strip() if settings else ''
 
-    lat, lng, postal = resolve_location(lat=lat, lng=lng, postal=postal)
-
-    if len(postal) < 6:
+    # A usable location signal WITHOUT geocoding (resolve_location does network,
+    # so it can't run here): explicit coords, or a postal with at least an FSA.
+    has_location = (lat is not None and lng is not None) or len(postal) >= 3
+    if not has_location:
         payload = {
             'state': 'setup',
             'postal_code': None,
@@ -758,33 +742,22 @@ def collect_deals(ctx):
         )
         return [(module, BASE_SCORES['deals_rail'] * 0.7)]
 
-    stores = nearby_stores(postal, lat, lng, store_limit=DEALS_STORE_LIMIT)
-    if not stores:
+    key = deals_cache_key(lat, lng, postal)
+    cached = cache.get(key)
+    if cached is None:
+        # Cold cache: warm it out-of-band and show no rail this load rather than
+        # blocking the feed on Flipp/OSM. It surfaces on the next refresh.
+        dispatch_deals_warm(key, lat, lng, postal, DEALS_STORE_LIMIT)
         return []
-    items = aggregate_deals(stores)
-    if not items:
+    if cached.get('state') != 'ready':
+        # Warmed but this location has no deals — don't render an empty rail.
         return []
 
-    payload = {
-        'state': 'ready',
-        'postal_code': postal,
-        'stores': [
-            {
-                'merchant': s['merchant'],
-                'merchant_id': s['merchant_id'],
-                'merchant_logo': s.get('logo_url'),
-                'distance_m': s.get('distance_m'),
-            }
-            for s in stores
-        ],
-        'total_count': len(items),
-        'items': [_deal_item(it) for it in items[:DEALS_RAIL_LIMIT]],
-    }
     module = build_module(
         'deals-nearby',
         'deals_rail',
         'Best deals near you right now',
-        payload,
+        cached,
     )
     return [(module, BASE_SCORES['deals_rail'])]
 

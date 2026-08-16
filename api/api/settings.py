@@ -311,7 +311,7 @@ MEAL_PLAN_REFINER_OPENAI_MODEL = os.getenv("MEAL_PLAN_REFINER_OPENAI_MODEL", "gp
 # calls and TF-IDF refits on every request. Falls back to LocMem when no Redis
 # URL is configured (e.g. local dev).
 _redis_cache_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL")
-if _redis_cache_url and _redis_cache_url.startswith(("redis://", "rediss://")):
+if IS_PRODUCTION and _redis_cache_url and _redis_cache_url.startswith(("redis://", "rediss://")):
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
