@@ -310,7 +310,15 @@ MEAL_PLAN_REFINER_OPENAI_MODEL = os.getenv("MEAL_PLAN_REFINER_OPENAI_MODEL", "gp
 # (home/flipp_client.py, 6h TTL) — turning warm reads back into slow external
 # calls and TF-IDF refits on every request. Falls back to LocMem when no Redis
 # URL is configured (e.g. local dev).
-_redis_cache_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL")
+# Prefer an explicit public/cache-specific URL when set (e.g. Railway's public
+# Redis proxy endpoint) — the private `redis.railway.internal` host only works
+# when private networking is actually enabled + same-environment, and falls back
+# to the Celery broker URL otherwise.
+_redis_cache_url = (
+    os.getenv("REDIS_PUBLIC_URL")
+    or os.getenv("REDIS_URL")
+    or os.getenv("CELERY_BROKER_URL")
+)
 # Ops escape hatch: set DISABLE_REDIS_CACHE=true to force LocMem without a code
 # deploy (e.g. if the Redis endpoint is misconfigured and you want it out of the
 # path entirely rather than degrading per-request).
