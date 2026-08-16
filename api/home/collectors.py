@@ -745,10 +745,25 @@ def collect_deals(ctx):
     key = deals_cache_key(lat, lng, postal)
     cached = cache.get(key)
     if cached is None:
-        # Cold cache: warm it out-of-band and show no rail this load rather than
-        # blocking the feed on Flipp/OSM. It surfaces on the next refresh.
+        # Cold cache: warm it out-of-band rather than blocking the feed on
+        # Flipp/OSM. Show a `loading` placeholder (not nothing) so a user who
+        # just enabled location sees a "finding deals" card instead of a blank
+        # gap — the client polls until this flips to `ready`/empty.
         dispatch_deals_warm(key, lat, lng, postal, DEALS_STORE_LIMIT)
-        return []
+        payload = {
+            'state': 'loading',
+            'postal_code': postal or None,
+            'stores': [],
+            'total_count': 0,
+            'items': [],
+        }
+        module = build_module(
+            'deals-loading',
+            'deals_rail',
+            'Finding the best deals near you…',
+            payload,
+        )
+        return [(module, BASE_SCORES['deals_rail'] * 0.7)]
     if cached.get('state') != 'ready':
         # Warmed but this location has no deals — don't render an empty rail.
         return []

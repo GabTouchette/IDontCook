@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/home_api.dart';
 import 'package:i_cant_cook/models/home_feed/home_feed.dart';
+import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
 import 'package:i_cant_cook/services/location_service.dart';
 
@@ -76,6 +77,57 @@ class HomeFeedProvider extends ChangeNotifier {
   /// Refreshes the feed (with the current mood if one was already selected).
   Future<void> refresh() async {
     await loadFeed(mood: _currentMood);
+  }
+
+  /// Backoff schedule (~30s total) for re-polling the feed while the deals rail
+  /// warms. Sized to cover the worst case of the server-side warm — OSM Overpass
+  /// alone has a 25s timeout — so a cold location resolves on its own instead of
+  /// leaving the loading card stuck until a manual refresh. Backoff (rather than
+  /// a tight fixed interval) keeps the number of full-feed refetches — each of
+  /// which re-ranks the feed — to a handful.
+  static const List<Duration> _dealsWarmBackoff = [
+    Duration(seconds: 2),
+    Duration(seconds: 3),
+    Duration(seconds: 4),
+    Duration(seconds: 5),
+    Duration(seconds: 7),
+    Duration(seconds: 9),
+  ];
+
+  /// Refetches after the user enables location, then polls until the nearby
+  /// deals rail finishes warming server-side.
+  ///
+  /// The rail warms out-of-band on a cold cache: the backend returns a
+  /// `loading` placeholder and kicks off the Flipp/OSM fetch in the background,
+  /// so a single refresh would leave the placeholder up until the user manually
+  /// refreshes minutes later. This polls (bounded, with backoff) to swap in the
+  /// ready rail — or stops early once it's ready/empty. Lives on the provider,
+  /// not the setup card, so it survives that card being replaced mid-poll.
+  Future<void> refreshForNewLocation() async {
+    await refresh();
+    for (final delay in _dealsWarmBackoff) {
+      if (!_dealsWarming) return;
+      await Future.delayed(delay);
+      await refresh();
+    }
+  }
+
+  /// True while the feed contains a `deals_rail` module still in its `loading`
+  /// state (location known, deals warming server-side). False once it resolves
+  /// to a ready rail or drops out of the feed (no deals for this location).
+  bool get _dealsWarming {
+    final feed = _feed;
+    if (feed == null) return false;
+    for (final block in feed.blocks) {
+      final module = block.maybeMap(
+        module: (b) => b.module,
+        orElse: () => null,
+      );
+      if (module == null || module.moduleType != 'deals_rail') continue;
+      final payload = module.payload;
+      return payload is DealsRailPayload && payload.isLoading;
+    }
+    return false;
   }
 
   /// Clears the feed and resets mood (for when conversation is reset).

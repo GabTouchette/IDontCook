@@ -282,11 +282,16 @@ class CollectDealsTests(TestCase):
         self.assertEqual(module['payload']['state'], 'setup')
         warm.assert_not_called()
 
-    def test_cold_cache_dispatches_warm_and_shows_no_rail(self):
+    def test_cold_cache_dispatches_warm_and_shows_loading_card(self):
         with patch('home.collectors.dispatch_deals_warm') as warm:
             result = collect_deals(self._ctx(lat=45.5, lng=-73.56))
-        # No rail this load — the feed never blocks on Flipp/OSM.
-        self.assertEqual(result, [])
+        # A `loading` placeholder this load (not a blank gap) while the warm
+        # runs out-of-band — the feed never blocks on Flipp/OSM, and the client
+        # polls until this flips to `ready`/empty.
+        self.assertEqual(len(result), 1)
+        module, _score = result[0]
+        self.assertEqual(module['module_type'], 'deals_rail')
+        self.assertEqual(module['payload']['state'], 'loading')
         warm.assert_called_once()
         # Keyed on the RAW coords so the warm task recomputes the same key.
         self.assertEqual(warm.call_args[0][0], deals_cache_key(45.5, -73.56, ''))

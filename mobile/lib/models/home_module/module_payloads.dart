@@ -209,10 +209,12 @@ class DealStore with _$DealStore {
 }
 
 /// `deals_rail` → the biggest discounts pooled from the user's nearest stores.
-/// `{ "state": "setup"|"ready", "postal_code": str|null, "stores": [DealStore],
-///    "total_count": int, "items": [DealItem] }`
+/// `{ "state": "setup"|"loading"|"ready", "postal_code": str|null,
+///    "stores": [DealStore], "total_count": int, "items": [DealItem] }`
 ///
 /// `setup` means we have no location yet — the card prompts to enable location.
+/// `loading` means the location is known but deals are still warming server-side
+/// (cold cache) — the card shows a "finding deals" state and the client polls.
 @freezed
 class DealsRailPayload with _$DealsRailPayload implements ModulePayload {
   const DealsRailPayload._();
@@ -229,6 +231,9 @@ class DealsRailPayload with _$DealsRailPayload implements ModulePayload {
       _$DealsRailPayloadFromJson(json);
 
   bool get needsSetup => state == 'setup';
+
+  /// Location is known but deals are still warming server-side (cold cache).
+  bool get isLoading => state == 'loading';
 }
 
 /// One option of a `mood_question`:

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
@@ -64,21 +65,186 @@ class MoodQuestionCard extends StatelessWidget {
               ],
             ),
           ),
-        // Wrapped (not horizontally scrolled) so every mood is reachable
-        // without swiping — the pills flow onto as many lines as needed.
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        // Single-line marquee: pills auto-scroll slowly in an infinite loop.
+        // The user can grab and scroll manually (which pauses the auto-scroll)
+        // and tap a pill; releasing resumes the loop from wherever it landed.
+        _MoodPillsMarquee(
+          options: options,
+          selectedMood: selectedMood,
+          onMoodSelected: onMoodSelected,
+        ),
+      ],
+    );
+  }
+}
+
+/// A single horizontal line of mood pills that auto-scrolls slowly and loops
+/// forever. The content is laid out as a repeating run of the pill set; a
+/// [Ticker] advances the scroll offset every frame and wraps it back by one
+/// set width once it passes the seam, so the loop is seamless.
+///
+/// Pointer-down pauses the animation (so a manual drag or a tap is never
+/// fought by the auto-scroll); pointer-up/cancel resumes it from wherever the
+/// user left the offset. Because the scroll view itself handles the drag, the
+/// user gets normal momentum/fling while interacting.
+class _MoodPillsMarquee extends StatefulWidget {
+  final List<MoodOption> options;
+  final Mood? selectedMood;
+  final void Function(Mood mood)? onMoodSelected;
+
+  const _MoodPillsMarquee({
+    required this.options,
+    this.selectedMood,
+    this.onMoodSelected,
+  });
+
+  @override
+  State<_MoodPillsMarquee> createState() => _MoodPillsMarqueeState();
+}
+
+class _MoodPillsMarqueeState extends State<_MoodPillsMarquee>
+    with SingleTickerProviderStateMixin {
+  // Slow, gentle drift.
+  static const double _pixelsPerSecond = 22.0;
+  static const double _gap = 8.0;
+
+  final ScrollController _scroll = ScrollController();
+  final GlobalKey _setKey = GlobalKey();
+
+  Ticker? _ticker;
+  Duration _lastElapsed = Duration.zero;
+  double _setWidth = 0; // width of one full pill set, including trailing gap
+  int _copies = 3; // enough repeats to cover the viewport + one seam
+  bool _paused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker(_onTick)..start();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  @override
+  void didUpdateWidget(covariant _MoodPillsMarquee oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Pill set may change width when options change; re-measure next frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _measure() {
+    if (!mounted) return;
+    final setBox = _setKey.currentContext?.findRenderObject() as RenderBox?;
+    final viewportWidth = context.size?.width ?? 0;
+    if (setBox == null || !setBox.hasSize) return;
+    final width = setBox.size.width;
+    if (width <= 0) return;
+    // Repeat enough that the visible window (viewport) plus the one-set wrap
+    // margin is always filled with pills.
+    final needed = ((viewportWidth / width).ceil()) + 2;
+    final copies = needed < 3 ? 3 : needed;
+    if (width != _setWidth || copies != _copies) {
+      setState(() {
+        _setWidth = width;
+        _copies = copies;
+      });
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    final delta = elapsed - _lastElapsed;
+    _lastElapsed = elapsed;
+    if (_paused || _setWidth <= 0 || !_scroll.hasClients) return;
+    final dt = delta.inMicroseconds / Duration.microsecondsPerSecond;
+    var next = _scroll.offset + _pixelsPerSecond * dt;
+    // Wrap by whole sets so the offset stays in a stable range and the seam
+    // is invisible (each set is identical).
+    while (next >= _setWidth) {
+      next -= _setWidth;
+    }
+    _scroll.jumpTo(next);
+  }
+
+  void _pause() => _paused = true;
+
+  void _resume() {
+    if (!mounted) return;
+    // Normalize whatever offset the drag/fling left us at back into the first
+    // seam window so the ongoing loop stays seamless.
+    if (_scroll.hasClients && _setWidth > 0) {
+      var o = _scroll.offset % _setWidth;
+      if (o < 0) o += _setWidth;
+      _scroll.jumpTo(o);
+    }
+    _lastElapsed = _ticker?.isActive == true ? _lastElapsed : Duration.zero;
+    _paused = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _pause(),
+      onPointerUp: (_) => _resume(),
+      onPointerCancel: (_) => _resume(),
+      child: SingleChildScrollView(
+        controller: _scroll,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            for (final option in options)
-              _MoodChoiceChip(
-                option: option,
-                selected:
-                    selectedMood != null && selectedMood == option.moodValue,
-                onTap: () => onMoodSelected?.call(option.moodValue!),
+            for (var i = 0; i < _copies; i++)
+              _MoodPillSet(
+                key: i == 0 ? _setKey : null,
+                options: widget.options,
+                selectedMood: widget.selectedMood,
+                onMoodSelected: widget.onMoodSelected,
+                gap: _gap,
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One run of every pill, each separated by [gap] and with a trailing [gap]
+/// so that consecutive sets keep uniform spacing across the seam.
+class _MoodPillSet extends StatelessWidget {
+  final List<MoodOption> options;
+  final Mood? selectedMood;
+  final void Function(Mood mood)? onMoodSelected;
+  final double gap;
+
+  const _MoodPillSet({
+    super.key,
+    required this.options,
+    required this.selectedMood,
+    required this.onMoodSelected,
+    required this.gap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final option in options)
+          Padding(
+            padding: EdgeInsets.only(right: gap),
+            child: _MoodChoiceChip(
+              option: option,
+              selected:
+                  selectedMood != null && selectedMood == option.moodValue,
+              onTap: () => onMoodSelected?.call(option.moodValue!),
+            ),
+          ),
       ],
     );
   }

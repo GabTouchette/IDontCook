@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/api_config.dart';
@@ -12,9 +14,11 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
 
 /// Renders a `deals_rail` module — the biggest discounts pooled from the user's
-/// nearest stores. Two states:
-///  * `setup`  — no location yet: a prompt to turn on location.
-///  * `ready`  — a horizontal rail of the top deals nearby, each tagged with
+/// nearest stores. Three states:
+///  * `setup`   — no location yet: a prompt to turn on location.
+///  * `loading` — location known, deals still warming server-side: a "finding
+///     deals" placeholder while the client polls for the ready rail.
+///  * `ready`   — a horizontal rail of the top deals nearby, each tagged with
 ///     the store it's from, plus "See all".
 class DealsRail extends StatelessWidget {
   final DealsRailPayload payload;
@@ -25,6 +29,7 @@ class DealsRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (payload.needsSetup) return _SetupCard(reason: reason);
+    if (payload.isLoading) return _LoadingCard(reason: reason);
     if (payload.items.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
@@ -310,7 +315,14 @@ class _SetupCardState extends State<_SetupCard> {
             longitude: loc.latLng.longitude,
             postalCode: loc.postalCode,
           );
-      if (mounted) context.read<HomeFeedProvider>().refresh();
+      // Refetch to pick up the new coords, then keep polling until the deals
+      // rail warms server-side (cold cache) — otherwise the rail would never
+      // appear until a manual refresh minutes later. The poll lives on the
+      // provider so it survives this setup card being replaced by the loading
+      // card on the first refetch.
+      if (mounted) {
+        unawaited(context.read<HomeFeedProvider>().refreshForNewLocation());
+      }
       return;
     }
 
@@ -388,6 +400,47 @@ class _SetupCardState extends State<_SetupCard> {
                 _busy ? 'Locating…' : 'Turn on location',
                 style: GoogleFonts.spaceGrotesk(
                     fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown while the deals rail is warming server-side (cold cache) after the
+/// user has enabled location — keeps a card in place instead of a blank gap
+/// while [HomeFeedProvider.refreshForNewLocation] polls for the ready rail.
+class _LoadingCard extends StatelessWidget {
+  final String reason;
+
+  const _LoadingCard({required this.reason});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: blockCardDecoration(context),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              reason.isNotEmpty
+                  ? reason
+                  : 'Finding the best deals near you…',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
               ),
             ),
           ),

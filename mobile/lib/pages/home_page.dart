@@ -341,42 +341,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// The fixed top section: the assistant avatar + greeting (or a "back to
-  /// home" control while a conversation is open), followed by the quick-pill
-  /// mood chooser. Rendered directly from the feed rather than from the chat
-  /// thread, so it stays put while the body below cross-fades.
+  /// The pinned top section — only present while a mood conversation is open.
+  /// It carries the "Back to home" control plus the mood pills, so the user
+  /// can switch moods (or bail out) mid-thread without scrolling.
+  ///
+  /// On the home feed itself there is no pinned header: the greeting and the
+  /// mood pills are the first items inside the feed's own scroll view (see
+  /// [_buildHomeFeedView]), so they scroll away with the rest of the page.
   Widget _buildHeader(
     BuildContext context,
     HomeFeedProvider homeFeedProvider,
     bool inConversation,
   ) {
+    if (!inConversation) return const SizedBox.shrink();
+
     final feed = homeFeedProvider.feed;
-    if (feed == null) {
-      // Nothing to pin yet — the feed view shows the spinner.
-      return const SizedBox.shrink();
-    }
-
-    final blocks = feed.renderableBlocks;
-
-    // Greeting text: prefer the feed's leading text block, fall back to the
-    // greeting field.
-    String greeting = feed.greeting;
-    for (final block in blocks) {
-      if (block is TextBlock) {
-        greeting = block.text;
-        break;
-      }
-    }
+    if (feed == null) return const SizedBox.shrink();
 
     // The mood-question module carries the pills; render it via the registry
-    // so it stays a single source of truth (icons, wrapping, colors).
-    Block? moodBlock;
-    for (final block in blocks) {
-      if (block is ModuleBlock && block.module.payload is MoodQuestionPayload) {
-        moodBlock = block;
-        break;
-      }
-    }
+    // so it stays a single source of truth (icons, colors, marquee).
+    final moodBlock = _findMoodBlock(feed.renderableBlocks);
 
     final callbacks = BlockCallbacks(
       onChatPromptTap: _handleChatPromptTap,
@@ -400,34 +384,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Swap the greeting row for a back control while in conversation.
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: inConversation
-                ? _BackToHomeButton(
-                    key: const ValueKey('back'),
-                    onTap: _handleBackToHome,
-                  )
-                : Row(
-                    key: const ValueKey('greeting'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _AssistantAvatar(),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          greeting,
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            height: 1.3,
-                            color: onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
+          _BackToHomeButton(onTap: _handleBackToHome),
           if (moodBlock != null) ...[
             const SizedBox(height: 14),
             BlockRegistry.build(context, moodBlock, callbacks: callbacks),
@@ -435,6 +392,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  /// The first `MoodQuestionPayload` module in [blocks], or null.
+  Block? _findMoodBlock(List<Block> blocks) {
+    for (final block in blocks) {
+      if (block is ModuleBlock && block.module.payload is MoodQuestionPayload) {
+        return block;
+      }
+    }
+    return null;
   }
 
   /// The home feed body: the ranked module cards (everything except the
@@ -454,13 +421,16 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Skip the leading greeting text and the mood-question module — both are
-    // rendered in the pinned header.
-    var skippedGreeting = false;
+    // Pull out the greeting text and the mood-question module — they lead the
+    // scroll (avatar + greeting, then the mood pills) rather than sitting in a
+    // pinned header, so they scroll away with the modules beneath them.
+    String greeting = feed.greeting;
+    var capturedGreeting = false;
     final modules = <Block>[];
     for (final block in feed.renderableBlocks) {
-      if (!skippedGreeting && block is TextBlock) {
-        skippedGreeting = true;
+      if (!capturedGreeting && block is TextBlock) {
+        greeting = block.text;
+        capturedGreeting = true;
         continue;
       }
       if (block is ModuleBlock && block.module.payload is MoodQuestionPayload) {
@@ -468,6 +438,7 @@ class _HomePageState extends State<HomePage> {
       }
       modules.add(block);
     }
+    final moodBlock = _findMoodBlock(feed.renderableBlocks);
 
     final callbacks = BlockCallbacks(
       onChatPromptTap: _handleChatPromptTap,
@@ -475,25 +446,57 @@ class _HomePageState extends State<HomePage> {
       selectedMood: _activeMood,
     );
 
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return RefreshIndicator(
       key: key,
       onRefresh: _handleRefresh,
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        itemCount: modules.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            key: _blockKey(modules[index], index),
-            padding: EdgeInsets.only(
-              bottom: index == modules.length - 1 ? 0 : kBlockFeedGap,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        children: [
+          // Greeting (assistant avatar + comment) — now part of the scroll.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _AssistantAvatar(),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  greeting,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                    color: onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (moodBlock != null) ...[
+            const SizedBox(height: 14),
+            BlockRegistry.build(context, moodBlock, callbacks: callbacks),
+          ],
+          // Divider echoing the old pinned-header seam, so the lead-in still
+          // reads as distinct from the ranked modules below it.
+          Container(
+            margin: const EdgeInsets.fromLTRB(0, 16, 0, 4),
+            height: 1,
+            color: onSurface.withValues(alpha: 0.08),
+          ),
+          for (var index = 0; index < modules.length; index++)
+            Padding(
+              key: _blockKey(modules[index], index),
+              padding: EdgeInsets.only(
+                bottom: index == modules.length - 1 ? 0 : kBlockFeedGap,
+              ),
+              child: BlockRegistry.build(context, modules[index],
+                      callbacks: callbacks)
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.06, curve: Curves.easeOut, duration: 300.ms),
             ),
-            child: BlockRegistry.build(context, modules[index],
-                    callbacks: callbacks)
-                .animate()
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.06, curve: Curves.easeOut, duration: 300.ms),
-          );
-        },
+        ],
       ),
     );
   }
@@ -774,7 +777,7 @@ class _AssistantAvatar extends StatelessWidget {
 class _BackToHomeButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const _BackToHomeButton({super.key, required this.onTap});
+  const _BackToHomeButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
