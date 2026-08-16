@@ -1,8 +1,13 @@
+import base64
+import json
+import logging
 import random
 import string
 
 from django.conf import settings as django_settings
 from django.http import JsonResponse
+
+logger = logging.getLogger(__name__)
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
@@ -140,6 +145,26 @@ class GoogleAuthView(APIView):
                 client_id,
             )
         except ValueError as exc:
+            # TEMP DIAGNOSTIC: log why verification failed and decode the token's
+            # own (unverified) claims so we can compare what Google minted against
+            # the client_id the server expects. Remove once Google login is fixed.
+            try:
+                payload_b64 = token.split('.')[1]
+                payload_b64 += '=' * (-len(payload_b64) % 4)  # restore padding
+                unverified = json.loads(base64.urlsafe_b64decode(payload_b64))
+                logger.warning(
+                    'Google auth verify failed: %s | expected_client_id=%s | '
+                    'token aud=%s iss=%s azp=%s exp=%s email=%s',
+                    exc, client_id,
+                    unverified.get('aud'), unverified.get('iss'),
+                    unverified.get('azp'), unverified.get('exp'),
+                    unverified.get('email'),
+                )
+            except Exception as decode_err:  # noqa: BLE001 - diagnostic only
+                logger.warning(
+                    'Google auth verify failed: %s | (claims decode failed: %s)',
+                    exc, decode_err,
+                )
             return JsonResponse(
                 {'error': f'Invalid Google token: {exc}'},
                 status=status.HTTP_400_BAD_REQUEST,
