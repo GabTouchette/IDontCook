@@ -1,7 +1,7 @@
 name: i_cant_cook
 description: A Recipe app that helps you create, find and share recipes.
 
-version: 1.2.0+3
+version: 1.2.0+4
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
