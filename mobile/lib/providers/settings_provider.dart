@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/settings_api.dart';
+import 'package:i_cant_cook/models/grocery_store/grocery_store.dart';
 
 class SettingsProvider with ChangeNotifier {
   final SettingsApi _settingsApi = SettingsApi();
@@ -10,6 +11,16 @@ class SettingsProvider with ChangeNotifier {
   String city = '';
   String country = '';
   String ethnicity = '';
+
+  // Grocery deals — location powers the nearby-deals home module.
+  String postalCode = '';
+  double? latitude;
+  double? longitude;
+  String dealsStoreMerchant = '';
+  int? dealsStoreMerchantId;
+
+  bool get hasStore => dealsStoreMerchantId != null;
+  bool get hasLocation => latitude != null && longitude != null;
 
   // Dietary preferences
   bool isVegan = false;
@@ -158,6 +169,51 @@ class SettingsProvider with ChangeNotifier {
     };
   }
 
+  /// Persist the user's chosen grocery store. We store merchant_id (stable)
+  /// plus the postal code; the backend re-resolves the weekly flyer from these.
+  Future<bool> saveStoreSelection({
+    required String postalCode,
+    required GroceryStore store,
+  }) async {
+    final ok = await _settingsApi.updatePersonalInfo({
+      'postal_code': postalCode,
+      'deals_store_merchant': store.merchant,
+      'deals_store_merchant_id': store.merchant_id,
+    });
+    if (ok) {
+      this.postalCode = postalCode;
+      dealsStoreMerchant = store.merchant;
+      dealsStoreMerchantId = store.merchant_id;
+      notifyListeners();
+    }
+    return ok;
+  }
+
+  /// Persist the device location (from GPS) so the backend's nearby-deals
+  /// module can use it even when a request doesn't carry coordinates. Postal is
+  /// optional (the backend reverse-geocodes coords when it's absent).
+  Future<bool> saveLocation({
+    required double latitude,
+    required double longitude,
+    String? postalCode,
+  }) async {
+    final body = <String, dynamic>{
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+    if (postalCode != null && postalCode.isNotEmpty) {
+      body['postal_code'] = postalCode;
+    }
+    final ok = await _settingsApi.updatePersonalInfo(body);
+    if (ok) {
+      this.latitude = latitude;
+      this.longitude = longitude;
+      if (postalCode != null && postalCode.isNotEmpty) this.postalCode = postalCode;
+      notifyListeners();
+    }
+    return ok;
+  }
+
   Future<void> fetchAndLoadPersonalInfo() async {
     final data = await _settingsApi.getPersonalInfo();
     if (data == null) return;
@@ -167,6 +223,12 @@ class SettingsProvider with ChangeNotifier {
     city = data['city'] ?? '';
     country = data['country'] ?? '';
     ethnicity = data['ethnicity'] ?? '';
+
+    postalCode = data['postal_code'] ?? '';
+    latitude = (data['latitude'] as num?)?.toDouble();
+    longitude = (data['longitude'] as num?)?.toDouble();
+    dealsStoreMerchant = data['deals_store_merchant'] ?? '';
+    dealsStoreMerchantId = data['deals_store_merchant_id'];
 
     isVegan = data['is_vegan'] ?? false;
     isVegetarian = data['is_vegetarian'] ?? false;

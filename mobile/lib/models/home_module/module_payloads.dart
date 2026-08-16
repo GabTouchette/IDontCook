@@ -152,6 +152,85 @@ class EventCardPayload with _$EventCardPayload implements ModulePayload {
       _$EventCardPayloadFromJson(json);
 }
 
+/// One sale item inside a `deals_rail`, tagged with which nearby store it's
+/// from: `{ "name": str, "name_alt": str|null, "brand": str, "price": str|null,
+///    "price_value": num|null, "discount": int|null, "image_url": str|null,
+///    "valid_to": iso8601|null, "merchant": str, "distance_m": int|null }`
+@freezed
+class DealItem with _$DealItem {
+  const DealItem._();
+
+  const factory DealItem({
+    @Default('') String name,
+    String? name_alt,
+    @Default('') String brand,
+    String? price,
+    num? price_value,
+    int? discount,
+    String? image_url,
+    String? valid_to,
+    @Default('') String merchant,
+    int? distance_m,
+    num? savings,
+  }) = _DealItem;
+
+  factory DealItem.fromJson(Map<String, dynamic> json) =>
+      _$DealItemFromJson(json);
+
+  /// "800 m" / "1.2 km" — null when distance is unknown.
+  String? get distanceLabel {
+    final d = distance_m;
+    if (d == null) return null;
+    if (d < 1000) return '$d m';
+    return '${(d / 1000).toStringAsFixed(1)} km';
+  }
+
+  /// "Save $3.00" — null when there's no computable saving.
+  String? get savingsLabel {
+    final s = savings;
+    if (s == null || s <= 0) return null;
+    return 'Save \$${s.toStringAsFixed(2)}';
+  }
+}
+
+/// A store included in the nearby-deals pool: `{ "merchant": str,
+/// "merchant_id": int, "merchant_logo": str|null, "distance_m": int|null }`.
+@freezed
+class DealStore with _$DealStore {
+  const factory DealStore({
+    @Default('') String merchant,
+    @Default(0) int merchant_id,
+    String? merchant_logo,
+    int? distance_m,
+  }) = _DealStore;
+
+  factory DealStore.fromJson(Map<String, dynamic> json) =>
+      _$DealStoreFromJson(json);
+}
+
+/// `deals_rail` → the biggest discounts pooled from the user's nearest stores.
+/// `{ "state": "setup"|"ready", "postal_code": str|null, "stores": [DealStore],
+///    "total_count": int, "items": [DealItem] }`
+///
+/// `setup` means we have no location yet — the card prompts to enable location.
+@freezed
+class DealsRailPayload with _$DealsRailPayload implements ModulePayload {
+  const DealsRailPayload._();
+
+  const factory DealsRailPayload({
+    @Default('ready') String state,
+    String? postal_code,
+    @Default(<DealStore>[]) List<DealStore> stores,
+    @Default(0) int total_count,
+    @Default(<DealItem>[]) List<DealItem> items,
+  }) = _DealsRailPayload;
+
+  factory DealsRailPayload.fromJson(Map<String, dynamic> json) =>
+      _$DealsRailPayloadFromJson(json);
+
+  bool get needsSetup => state == 'setup';
+}
+
 /// One option of a `mood_question`:
 /// `{"mood": MoodEnum, "label": str, "emoji": str}`
 ///

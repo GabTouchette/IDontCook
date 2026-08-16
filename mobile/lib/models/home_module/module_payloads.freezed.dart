@@ -1685,6 +1685,823 @@ abstract class _EventCardPayload implements EventCardPayload {
       throw _privateConstructorUsedError;
 }
 
+DealItem _$DealItemFromJson(Map<String, dynamic> json) {
+  return _DealItem.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DealItem {
+  String get name => throw _privateConstructorUsedError;
+  String? get name_alt => throw _privateConstructorUsedError;
+  String get brand => throw _privateConstructorUsedError;
+  String? get price => throw _privateConstructorUsedError;
+  num? get price_value => throw _privateConstructorUsedError;
+  int? get discount => throw _privateConstructorUsedError;
+  String? get image_url => throw _privateConstructorUsedError;
+  String? get valid_to => throw _privateConstructorUsedError;
+  String get merchant => throw _privateConstructorUsedError;
+  int? get distance_m => throw _privateConstructorUsedError;
+  num? get savings => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DealItemCopyWith<DealItem> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DealItemCopyWith<$Res> {
+  factory $DealItemCopyWith(DealItem value, $Res Function(DealItem) then) =
+      _$DealItemCopyWithImpl<$Res, DealItem>;
+  @useResult
+  $Res call(
+      {String name,
+      String? name_alt,
+      String brand,
+      String? price,
+      num? price_value,
+      int? discount,
+      String? image_url,
+      String? valid_to,
+      String merchant,
+      int? distance_m,
+      num? savings});
+}
+
+/// @nodoc
+class _$DealItemCopyWithImpl<$Res, $Val extends DealItem>
+    implements $DealItemCopyWith<$Res> {
+  _$DealItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? name = null,
+    Object? name_alt = freezed,
+    Object? brand = null,
+    Object? price = freezed,
+    Object? price_value = freezed,
+    Object? discount = freezed,
+    Object? image_url = freezed,
+    Object? valid_to = freezed,
+    Object? merchant = null,
+    Object? distance_m = freezed,
+    Object? savings = freezed,
+  }) {
+    return _then(_value.copyWith(
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      name_alt: freezed == name_alt
+          ? _value.name_alt
+          : name_alt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      brand: null == brand
+          ? _value.brand
+          : brand // ignore: cast_nullable_to_non_nullable
+              as String,
+      price: freezed == price
+          ? _value.price
+          : price // ignore: cast_nullable_to_non_nullable
+              as String?,
+      price_value: freezed == price_value
+          ? _value.price_value
+          : price_value // ignore: cast_nullable_to_non_nullable
+              as num?,
+      discount: freezed == discount
+          ? _value.discount
+          : discount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      image_url: freezed == image_url
+          ? _value.image_url
+          : image_url // ignore: cast_nullable_to_non_nullable
+              as String?,
+      valid_to: freezed == valid_to
+          ? _value.valid_to
+          : valid_to // ignore: cast_nullable_to_non_nullable
+              as String?,
+      merchant: null == merchant
+          ? _value.merchant
+          : merchant // ignore: cast_nullable_to_non_nullable
+              as String,
+      distance_m: freezed == distance_m
+          ? _value.distance_m
+          : distance_m // ignore: cast_nullable_to_non_nullable
+              as int?,
+      savings: freezed == savings
+          ? _value.savings
+          : savings // ignore: cast_nullable_to_non_nullable
+              as num?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DealItemImplCopyWith<$Res>
+    implements $DealItemCopyWith<$Res> {
+  factory _$$DealItemImplCopyWith(
+          _$DealItemImpl value, $Res Function(_$DealItemImpl) then) =
+      __$$DealItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String name,
+      String? name_alt,
+      String brand,
+      String? price,
+      num? price_value,
+      int? discount,
+      String? image_url,
+      String? valid_to,
+      String merchant,
+      int? distance_m,
+      num? savings});
+}
+
+/// @nodoc
+class __$$DealItemImplCopyWithImpl<$Res>
+    extends _$DealItemCopyWithImpl<$Res, _$DealItemImpl>
+    implements _$$DealItemImplCopyWith<$Res> {
+  __$$DealItemImplCopyWithImpl(
+      _$DealItemImpl _value, $Res Function(_$DealItemImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? name = null,
+    Object? name_alt = freezed,
+    Object? brand = null,
+    Object? price = freezed,
+    Object? price_value = freezed,
+    Object? discount = freezed,
+    Object? image_url = freezed,
+    Object? valid_to = freezed,
+    Object? merchant = null,
+    Object? distance_m = freezed,
+    Object? savings = freezed,
+  }) {
+    return _then(_$DealItemImpl(
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      name_alt: freezed == name_alt
+          ? _value.name_alt
+          : name_alt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      brand: null == brand
+          ? _value.brand
+          : brand // ignore: cast_nullable_to_non_nullable
+              as String,
+      price: freezed == price
+          ? _value.price
+          : price // ignore: cast_nullable_to_non_nullable
+              as String?,
+      price_value: freezed == price_value
+          ? _value.price_value
+          : price_value // ignore: cast_nullable_to_non_nullable
+              as num?,
+      discount: freezed == discount
+          ? _value.discount
+          : discount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      image_url: freezed == image_url
+          ? _value.image_url
+          : image_url // ignore: cast_nullable_to_non_nullable
+              as String?,
+      valid_to: freezed == valid_to
+          ? _value.valid_to
+          : valid_to // ignore: cast_nullable_to_non_nullable
+              as String?,
+      merchant: null == merchant
+          ? _value.merchant
+          : merchant // ignore: cast_nullable_to_non_nullable
+              as String,
+      distance_m: freezed == distance_m
+          ? _value.distance_m
+          : distance_m // ignore: cast_nullable_to_non_nullable
+              as int?,
+      savings: freezed == savings
+          ? _value.savings
+          : savings // ignore: cast_nullable_to_non_nullable
+              as num?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DealItemImpl extends _DealItem {
+  const _$DealItemImpl(
+      {this.name = '',
+      this.name_alt,
+      this.brand = '',
+      this.price,
+      this.price_value,
+      this.discount,
+      this.image_url,
+      this.valid_to,
+      this.merchant = '',
+      this.distance_m,
+      this.savings})
+      : super._();
+
+  factory _$DealItemImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DealItemImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final String name;
+  @override
+  final String? name_alt;
+  @override
+  @JsonKey()
+  final String brand;
+  @override
+  final String? price;
+  @override
+  final num? price_value;
+  @override
+  final int? discount;
+  @override
+  final String? image_url;
+  @override
+  final String? valid_to;
+  @override
+  @JsonKey()
+  final String merchant;
+  @override
+  final int? distance_m;
+  @override
+  final num? savings;
+
+  @override
+  String toString() {
+    return 'DealItem(name: $name, name_alt: $name_alt, brand: $brand, price: $price, price_value: $price_value, discount: $discount, image_url: $image_url, valid_to: $valid_to, merchant: $merchant, distance_m: $distance_m, savings: $savings)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DealItemImpl &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.name_alt, name_alt) ||
+                other.name_alt == name_alt) &&
+            (identical(other.brand, brand) || other.brand == brand) &&
+            (identical(other.price, price) || other.price == price) &&
+            (identical(other.price_value, price_value) ||
+                other.price_value == price_value) &&
+            (identical(other.discount, discount) ||
+                other.discount == discount) &&
+            (identical(other.image_url, image_url) ||
+                other.image_url == image_url) &&
+            (identical(other.valid_to, valid_to) ||
+                other.valid_to == valid_to) &&
+            (identical(other.merchant, merchant) ||
+                other.merchant == merchant) &&
+            (identical(other.distance_m, distance_m) ||
+                other.distance_m == distance_m) &&
+            (identical(other.savings, savings) || other.savings == savings));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      name,
+      name_alt,
+      brand,
+      price,
+      price_value,
+      discount,
+      image_url,
+      valid_to,
+      merchant,
+      distance_m,
+      savings);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DealItemImplCopyWith<_$DealItemImpl> get copyWith =>
+      __$$DealItemImplCopyWithImpl<_$DealItemImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DealItemImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DealItem extends DealItem {
+  const factory _DealItem(
+      {final String name,
+      final String? name_alt,
+      final String brand,
+      final String? price,
+      final num? price_value,
+      final int? discount,
+      final String? image_url,
+      final String? valid_to,
+      final String merchant,
+      final int? distance_m,
+      final num? savings}) = _$DealItemImpl;
+  const _DealItem._() : super._();
+
+  factory _DealItem.fromJson(Map<String, dynamic> json) =
+      _$DealItemImpl.fromJson;
+
+  @override
+  String get name;
+  @override
+  String? get name_alt;
+  @override
+  String get brand;
+  @override
+  String? get price;
+  @override
+  num? get price_value;
+  @override
+  int? get discount;
+  @override
+  String? get image_url;
+  @override
+  String? get valid_to;
+  @override
+  String get merchant;
+  @override
+  int? get distance_m;
+  @override
+  num? get savings;
+  @override
+  @JsonKey(ignore: true)
+  _$$DealItemImplCopyWith<_$DealItemImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+DealStore _$DealStoreFromJson(Map<String, dynamic> json) {
+  return _DealStore.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DealStore {
+  String get merchant => throw _privateConstructorUsedError;
+  int get merchant_id => throw _privateConstructorUsedError;
+  String? get merchant_logo => throw _privateConstructorUsedError;
+  int? get distance_m => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DealStoreCopyWith<DealStore> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DealStoreCopyWith<$Res> {
+  factory $DealStoreCopyWith(DealStore value, $Res Function(DealStore) then) =
+      _$DealStoreCopyWithImpl<$Res, DealStore>;
+  @useResult
+  $Res call(
+      {String merchant,
+      int merchant_id,
+      String? merchant_logo,
+      int? distance_m});
+}
+
+/// @nodoc
+class _$DealStoreCopyWithImpl<$Res, $Val extends DealStore>
+    implements $DealStoreCopyWith<$Res> {
+  _$DealStoreCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? merchant = null,
+    Object? merchant_id = null,
+    Object? merchant_logo = freezed,
+    Object? distance_m = freezed,
+  }) {
+    return _then(_value.copyWith(
+      merchant: null == merchant
+          ? _value.merchant
+          : merchant // ignore: cast_nullable_to_non_nullable
+              as String,
+      merchant_id: null == merchant_id
+          ? _value.merchant_id
+          : merchant_id // ignore: cast_nullable_to_non_nullable
+              as int,
+      merchant_logo: freezed == merchant_logo
+          ? _value.merchant_logo
+          : merchant_logo // ignore: cast_nullable_to_non_nullable
+              as String?,
+      distance_m: freezed == distance_m
+          ? _value.distance_m
+          : distance_m // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DealStoreImplCopyWith<$Res>
+    implements $DealStoreCopyWith<$Res> {
+  factory _$$DealStoreImplCopyWith(
+          _$DealStoreImpl value, $Res Function(_$DealStoreImpl) then) =
+      __$$DealStoreImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String merchant,
+      int merchant_id,
+      String? merchant_logo,
+      int? distance_m});
+}
+
+/// @nodoc
+class __$$DealStoreImplCopyWithImpl<$Res>
+    extends _$DealStoreCopyWithImpl<$Res, _$DealStoreImpl>
+    implements _$$DealStoreImplCopyWith<$Res> {
+  __$$DealStoreImplCopyWithImpl(
+      _$DealStoreImpl _value, $Res Function(_$DealStoreImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? merchant = null,
+    Object? merchant_id = null,
+    Object? merchant_logo = freezed,
+    Object? distance_m = freezed,
+  }) {
+    return _then(_$DealStoreImpl(
+      merchant: null == merchant
+          ? _value.merchant
+          : merchant // ignore: cast_nullable_to_non_nullable
+              as String,
+      merchant_id: null == merchant_id
+          ? _value.merchant_id
+          : merchant_id // ignore: cast_nullable_to_non_nullable
+              as int,
+      merchant_logo: freezed == merchant_logo
+          ? _value.merchant_logo
+          : merchant_logo // ignore: cast_nullable_to_non_nullable
+              as String?,
+      distance_m: freezed == distance_m
+          ? _value.distance_m
+          : distance_m // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DealStoreImpl implements _DealStore {
+  const _$DealStoreImpl(
+      {this.merchant = '',
+      this.merchant_id = 0,
+      this.merchant_logo,
+      this.distance_m});
+
+  factory _$DealStoreImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DealStoreImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final String merchant;
+  @override
+  @JsonKey()
+  final int merchant_id;
+  @override
+  final String? merchant_logo;
+  @override
+  final int? distance_m;
+
+  @override
+  String toString() {
+    return 'DealStore(merchant: $merchant, merchant_id: $merchant_id, merchant_logo: $merchant_logo, distance_m: $distance_m)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DealStoreImpl &&
+            (identical(other.merchant, merchant) ||
+                other.merchant == merchant) &&
+            (identical(other.merchant_id, merchant_id) ||
+                other.merchant_id == merchant_id) &&
+            (identical(other.merchant_logo, merchant_logo) ||
+                other.merchant_logo == merchant_logo) &&
+            (identical(other.distance_m, distance_m) ||
+                other.distance_m == distance_m));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, merchant, merchant_id, merchant_logo, distance_m);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DealStoreImplCopyWith<_$DealStoreImpl> get copyWith =>
+      __$$DealStoreImplCopyWithImpl<_$DealStoreImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DealStoreImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DealStore implements DealStore {
+  const factory _DealStore(
+      {final String merchant,
+      final int merchant_id,
+      final String? merchant_logo,
+      final int? distance_m}) = _$DealStoreImpl;
+
+  factory _DealStore.fromJson(Map<String, dynamic> json) =
+      _$DealStoreImpl.fromJson;
+
+  @override
+  String get merchant;
+  @override
+  int get merchant_id;
+  @override
+  String? get merchant_logo;
+  @override
+  int? get distance_m;
+  @override
+  @JsonKey(ignore: true)
+  _$$DealStoreImplCopyWith<_$DealStoreImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+DealsRailPayload _$DealsRailPayloadFromJson(Map<String, dynamic> json) {
+  return _DealsRailPayload.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DealsRailPayload {
+  String get state => throw _privateConstructorUsedError;
+  String? get postal_code => throw _privateConstructorUsedError;
+  List<DealStore> get stores => throw _privateConstructorUsedError;
+  int get total_count => throw _privateConstructorUsedError;
+  List<DealItem> get items => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DealsRailPayloadCopyWith<DealsRailPayload> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DealsRailPayloadCopyWith<$Res> {
+  factory $DealsRailPayloadCopyWith(
+          DealsRailPayload value, $Res Function(DealsRailPayload) then) =
+      _$DealsRailPayloadCopyWithImpl<$Res, DealsRailPayload>;
+  @useResult
+  $Res call(
+      {String state,
+      String? postal_code,
+      List<DealStore> stores,
+      int total_count,
+      List<DealItem> items});
+}
+
+/// @nodoc
+class _$DealsRailPayloadCopyWithImpl<$Res, $Val extends DealsRailPayload>
+    implements $DealsRailPayloadCopyWith<$Res> {
+  _$DealsRailPayloadCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? state = null,
+    Object? postal_code = freezed,
+    Object? stores = null,
+    Object? total_count = null,
+    Object? items = null,
+  }) {
+    return _then(_value.copyWith(
+      state: null == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String,
+      postal_code: freezed == postal_code
+          ? _value.postal_code
+          : postal_code // ignore: cast_nullable_to_non_nullable
+              as String?,
+      stores: null == stores
+          ? _value.stores
+          : stores // ignore: cast_nullable_to_non_nullable
+              as List<DealStore>,
+      total_count: null == total_count
+          ? _value.total_count
+          : total_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      items: null == items
+          ? _value.items
+          : items // ignore: cast_nullable_to_non_nullable
+              as List<DealItem>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DealsRailPayloadImplCopyWith<$Res>
+    implements $DealsRailPayloadCopyWith<$Res> {
+  factory _$$DealsRailPayloadImplCopyWith(_$DealsRailPayloadImpl value,
+          $Res Function(_$DealsRailPayloadImpl) then) =
+      __$$DealsRailPayloadImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String state,
+      String? postal_code,
+      List<DealStore> stores,
+      int total_count,
+      List<DealItem> items});
+}
+
+/// @nodoc
+class __$$DealsRailPayloadImplCopyWithImpl<$Res>
+    extends _$DealsRailPayloadCopyWithImpl<$Res, _$DealsRailPayloadImpl>
+    implements _$$DealsRailPayloadImplCopyWith<$Res> {
+  __$$DealsRailPayloadImplCopyWithImpl(_$DealsRailPayloadImpl _value,
+      $Res Function(_$DealsRailPayloadImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? state = null,
+    Object? postal_code = freezed,
+    Object? stores = null,
+    Object? total_count = null,
+    Object? items = null,
+  }) {
+    return _then(_$DealsRailPayloadImpl(
+      state: null == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String,
+      postal_code: freezed == postal_code
+          ? _value.postal_code
+          : postal_code // ignore: cast_nullable_to_non_nullable
+              as String?,
+      stores: null == stores
+          ? _value._stores
+          : stores // ignore: cast_nullable_to_non_nullable
+              as List<DealStore>,
+      total_count: null == total_count
+          ? _value.total_count
+          : total_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      items: null == items
+          ? _value._items
+          : items // ignore: cast_nullable_to_non_nullable
+              as List<DealItem>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DealsRailPayloadImpl extends _DealsRailPayload {
+  const _$DealsRailPayloadImpl(
+      {this.state = 'ready',
+      this.postal_code,
+      final List<DealStore> stores = const <DealStore>[],
+      this.total_count = 0,
+      final List<DealItem> items = const <DealItem>[]})
+      : _stores = stores,
+        _items = items,
+        super._();
+
+  factory _$DealsRailPayloadImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DealsRailPayloadImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final String state;
+  @override
+  final String? postal_code;
+  final List<DealStore> _stores;
+  @override
+  @JsonKey()
+  List<DealStore> get stores {
+    if (_stores is EqualUnmodifiableListView) return _stores;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_stores);
+  }
+
+  @override
+  @JsonKey()
+  final int total_count;
+  final List<DealItem> _items;
+  @override
+  @JsonKey()
+  List<DealItem> get items {
+    if (_items is EqualUnmodifiableListView) return _items;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_items);
+  }
+
+  @override
+  String toString() {
+    return 'DealsRailPayload(state: $state, postal_code: $postal_code, stores: $stores, total_count: $total_count, items: $items)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DealsRailPayloadImpl &&
+            (identical(other.state, state) || other.state == state) &&
+            (identical(other.postal_code, postal_code) ||
+                other.postal_code == postal_code) &&
+            const DeepCollectionEquality().equals(other._stores, _stores) &&
+            (identical(other.total_count, total_count) ||
+                other.total_count == total_count) &&
+            const DeepCollectionEquality().equals(other._items, _items));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      state,
+      postal_code,
+      const DeepCollectionEquality().hash(_stores),
+      total_count,
+      const DeepCollectionEquality().hash(_items));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DealsRailPayloadImplCopyWith<_$DealsRailPayloadImpl> get copyWith =>
+      __$$DealsRailPayloadImplCopyWithImpl<_$DealsRailPayloadImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DealsRailPayloadImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DealsRailPayload extends DealsRailPayload {
+  const factory _DealsRailPayload(
+      {final String state,
+      final String? postal_code,
+      final List<DealStore> stores,
+      final int total_count,
+      final List<DealItem> items}) = _$DealsRailPayloadImpl;
+  const _DealsRailPayload._() : super._();
+
+  factory _DealsRailPayload.fromJson(Map<String, dynamic> json) =
+      _$DealsRailPayloadImpl.fromJson;
+
+  @override
+  String get state;
+  @override
+  String? get postal_code;
+  @override
+  List<DealStore> get stores;
+  @override
+  int get total_count;
+  @override
+  List<DealItem> get items;
+  @override
+  @JsonKey(ignore: true)
+  _$$DealsRailPayloadImplCopyWith<_$DealsRailPayloadImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 MoodOption _$MoodOptionFromJson(Map<String, dynamic> json) {
   return _MoodOption.fromJson(json);
 }

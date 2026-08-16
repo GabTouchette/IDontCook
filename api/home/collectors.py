@@ -16,6 +16,7 @@ from meal_planning.models import GroceryList, MealPlan, PlannedMeal
 from recipes.models import Recipe, SavedRecipe
 from social.models import Follow, Post
 
+from .deals_service import aggregate_deals, nearby_stores, resolve_location
 from .models import HomeEvent
 from .ranking import MOODS
 from .serializers import build_module, recipe_summary, recipe_total_time
@@ -25,9 +26,10 @@ logger = logging.getLogger(__name__)
 RUSHED_MAX_TOTAL_TIME = 30  # §1.3: rushed -> total_time <= 30
 
 # Hero rotates among the top-N recommendations (not always index 0) so refresh
-# surfaces a different-but-still-well-matched pick. "Balanced" variety: the pool
-# is small enough that quality stays high.
-HERO_SAMPLE_POOL = 5
+# surfaces a different-but-still-well-matched pick. Widened from 5 -> 8 so the
+# hero card visibly changes across revisits/refreshes rather than cycling a tiny
+# handful; the pool is still small enough that every pick is well-matched.
+HERO_SAMPLE_POOL = 8
 
 # Base scores per module type; mood_question is high so it ranks near the top.
 # The three catalog-discovery `explore_rail` variants (catalog-first-pivot.md
@@ -47,7 +49,12 @@ BASE_SCORES = {
     'meal_plan_nudge': 1.8,
     'grocery_shortcut': 1.6,
     'chat_prompt': 1.5,
+    'deals_rail': 2.6,
 }
+
+# How many sale items to embed in the home-feed deals rail (the full list lives
+# behind the "See all deals" CTA -> /api/home/deals/).
+DEALS_RAIL_LIMIT = 12
 
 
 @dataclass
@@ -57,6 +64,10 @@ class FeedContext:
     daypart: str
     is_weekend: bool
     mood: str = None
+    # Device location (from the client's GPS) for the nearby-deals module.
+    # None falls back to the user's persisted settings location.
+    lat: float = None
+    lng: float = None
     # Per-request variety component. Defaults to 0 (fully deterministic, which
     # keeps unit tests stable when they build a FeedContext directly); the view
     # injects a random value per request so refresh/re-rank actually rotates the
@@ -687,6 +698,105 @@ def collect_mood_question(ctx):
     return [(module, BASE_SCORES['mood_question'])]
 
 
+def _deal_item(item):
+    """Trim a FlippClient item to the display fields the deals rail needs."""
+    return {
+        'name': item['name'],
+        'name_alt': item.get('name_alt'),
+        'brand': item.get('brand') or '',
+        'price': item.get('price'),
+        'price_value': item.get('price_value'),
+        'discount': item.get('discount'),
+        'image_url': item.get('image_url'),
+        'valid_to': item.get('valid_to'),
+        # Which nearby store this deal is from, how far, and $ saved.
+        'merchant': item.get('merchant') or '',
+        'distance_m': item.get('distance_m'),
+        'savings': item.get('savings'),
+    }
+
+
+# Number of nearest stores to aggregate deals across for the home rail.
+DEALS_STORE_LIMIT = 5
+
+
+def collect_deals(ctx):
+    """The biggest grocery discounts near the user, across their nearest stores.
+
+    Location-driven (no manual store pick): uses the client GPS coords from the
+    feed request, else the user's persisted settings location. Two states, both
+    on the same `deals_rail` module:
+      * `setup`  — no location available -> an "enable location" prompt. Kept
+        low-ish so it doesn't dominate a feed for a user who hasn't opted in.
+      * `ready`  — top discounts pooled from the DEALS_STORE_LIMIT closest
+        stores, deepest discount first, each item tagged with its store.
+
+    Never raises: any Flipp/OSM failure yields [] (collect_modules also guards).
+    """
+    settings = getattr(ctx.user, 'settings', None)
+    lat, lng = ctx.lat, ctx.lng
+    if lat is None or lng is None:
+        lat = getattr(settings, 'latitude', None) if settings else None
+        lng = getattr(settings, 'longitude', None) if settings else None
+    postal = (getattr(settings, 'postal_code', '') or '').strip() if settings else ''
+
+    lat, lng, postal = resolve_location(lat=lat, lng=lng, postal=postal)
+
+    if len(postal) < 6:
+        payload = {
+            'state': 'setup',
+            'postal_code': None,
+            'stores': [],
+            'total_count': 0,
+            'items': [],
+        }
+        module = build_module(
+            'deals-setup',
+            'deals_rail',
+            'Turn on location to see the best deals near you',
+            payload,
+        )
+        return [(module, BASE_SCORES['deals_rail'] * 0.7)]
+
+    stores = nearby_stores(postal, lat, lng, store_limit=DEALS_STORE_LIMIT)
+    if not stores:
+        return []
+    items = aggregate_deals(stores)
+    if not items:
+        return []
+
+    payload = {
+        'state': 'ready',
+        'postal_code': postal,
+        'stores': [
+            {
+                'merchant': s['merchant'],
+                'merchant_id': s['merchant_id'],
+                'merchant_logo': s.get('logo_url'),
+                'distance_m': s.get('distance_m'),
+            }
+            for s in stores
+        ],
+        'total_count': len(items),
+        'items': [_deal_item(it) for it in items[:DEALS_RAIL_LIMIT]],
+    }
+    module = build_module(
+        'deals-nearby',
+        'deals_rail',
+        'Best deals near you right now',
+        payload,
+    )
+    return [(module, BASE_SCORES['deals_rail'])]
+
+
+# Active collectors, in tie-break priority order.
+#
+# `collect_meal_plan_nudge` and `collect_chat_prompt` are intentionally NOT
+# wired in: product removed the static meal-plan card and the bottom
+# "What should I cook tonight" chat-prompt chip from the home feed (they read
+# as fixed furniture rather than responsive content). The collector functions
+# (and their unit tests) are kept so the modules can be re-enabled by adding
+# them back to this list — nothing else references them at feed-build time.
 COLLECTORS = [
     collect_mood_question,
     collect_hero_suggestion,
@@ -695,9 +805,8 @@ COLLECTORS = [
     collect_event_card,
     collect_explore_rail,
     collect_catalog_discovery_rails,
-    collect_meal_plan_nudge,
     collect_grocery_shortcut,
-    collect_chat_prompt,
+    collect_deals,
 ]
 
 

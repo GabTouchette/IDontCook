@@ -37,7 +37,7 @@ A **block** is the unit of rich content in both chat messages and the home feed.
 ```json
 {
   "id": "string (unique per feed, e.g. 'hero-812')",
-  "module_type": "hero_suggestion | cook_again | friend_post | meal_plan_nudge | grocery_shortcut | chat_prompt | explore_rail | event_card | mood_question",
+  "module_type": "hero_suggestion | cook_again | friend_post | meal_plan_nudge | grocery_shortcut | chat_prompt | explore_rail | event_card | mood_question | deals_rail",
   "reason": "string — human-readable 'why you're seeing this'",
   "payload": { ...type-specific, see below }
 }
@@ -56,6 +56,7 @@ Payloads:
 | `explore_rail` | `{ "title": str, "recipes": [RecipeSummary] }` (3–8 recipes) |
 | `event_card` | `{ "event_slug": str, "title": str, "body": str, "image_url": str\|null, "cta": str\|null, "recipes": [RecipeSummary] }` |
 | `mood_question` | `{ "question": str, "options": [{"mood": MoodEnum, "label": str, "emoji": str}] }` |
+| `deals_rail` | `{ "state": "setup"\|"ready", "merchant": str\|null, "merchant_logo": str\|null, "postal_code": str\|null, "valid_to": iso8601\|null, "total_count": int, "items": [DealItem] }` where `DealItem = { "name": str, "name_alt": str\|null, "brand": str, "price": str\|null, "price_value": num\|null, "discount": int\|null, "image_url": str\|null, "valid_to": iso8601\|null }`. `state=setup` = no store chosen (card opens the store finder); `ready` = deals for the user's saved store, deepest discount first. Full list at `GET /api/home/deals/`. Source: Flipp (Wishabi) flyer backend, cached ~6h. See also `GET /api/home/stores/?postal_code=` for the store finder. |
 
 **Forward-compat rule (mobile):** unknown `block_type` or `module_type` is silently skipped, never an error.
 

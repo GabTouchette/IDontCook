@@ -23,7 +23,12 @@ PAYLOAD_KEYS = {
     'explore_rail': {'title', 'recipes'},
     'event_card': {'event_slug', 'title', 'body', 'image_url', 'cta', 'recipes'},
     'mood_question': {'question', 'options'},
+    'deals_rail': {'state', 'postal_code', 'stores', 'total_count', 'items'},
 }
+
+DEAL_ITEM_KEYS = {'name', 'name_alt', 'brand', 'price', 'price_value',
+                  'discount', 'image_url', 'valid_to', 'merchant', 'distance_m',
+                  'savings'}
 
 
 def make_user(username, **kwargs):
@@ -87,3 +92,7 @@ def assert_module_schema(test, module):
     if module_type == 'mood_question':
         for option in payload['options']:
             test.assertEqual(set(option.keys()), {'mood', 'label', 'emoji'})
+    if module_type == 'deals_rail':
+        test.assertIn(payload['state'], ('setup', 'ready'))
+        for item in payload['items']:
+            test.assertEqual(set(item.keys()), DEAL_ITEM_KEYS)

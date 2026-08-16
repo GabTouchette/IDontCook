@@ -20,6 +20,16 @@ class UserSettings(models.Model):
     country = models.CharField(max_length=100, blank=True)
     ethnicity = models.CharField(max_length=100, blank=True)
 
+    # Grocery deals — the user's location powers the "deals near you" home
+    # module (aggregating the nearest stores). postal_code is what Flipp needs;
+    # latitude/longitude give exact proximity (from GPS). The deals_store_* fields
+    # remain for the standalone store finder but aren't required by the feed.
+    postal_code = models.CharField(max_length=10, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    deals_store_merchant = models.CharField(max_length=120, blank=True)
+    deals_store_merchant_id = models.IntegerField(null=True, blank=True)
+
     # Dietary Preferences
     is_vegan = models.BooleanField(default=False)
     is_vegetarian = models.BooleanField(default=False)

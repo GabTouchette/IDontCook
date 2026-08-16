@@ -158,6 +158,78 @@ Map<String, dynamic> _$$EventCardPayloadImplToJson(
       'recipes': instance.recipes,
     };
 
+_$DealItemImpl _$$DealItemImplFromJson(Map<String, dynamic> json) =>
+    _$DealItemImpl(
+      name: json['name'] as String? ?? '',
+      name_alt: json['name_alt'] as String?,
+      brand: json['brand'] as String? ?? '',
+      price: json['price'] as String?,
+      price_value: json['price_value'] as num?,
+      discount: (json['discount'] as num?)?.toInt(),
+      image_url: json['image_url'] as String?,
+      valid_to: json['valid_to'] as String?,
+      merchant: json['merchant'] as String? ?? '',
+      distance_m: (json['distance_m'] as num?)?.toInt(),
+      savings: json['savings'] as num?,
+    );
+
+Map<String, dynamic> _$$DealItemImplToJson(_$DealItemImpl instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'name_alt': instance.name_alt,
+      'brand': instance.brand,
+      'price': instance.price,
+      'price_value': instance.price_value,
+      'discount': instance.discount,
+      'image_url': instance.image_url,
+      'valid_to': instance.valid_to,
+      'merchant': instance.merchant,
+      'distance_m': instance.distance_m,
+      'savings': instance.savings,
+    };
+
+_$DealStoreImpl _$$DealStoreImplFromJson(Map<String, dynamic> json) =>
+    _$DealStoreImpl(
+      merchant: json['merchant'] as String? ?? '',
+      merchant_id: (json['merchant_id'] as num?)?.toInt() ?? 0,
+      merchant_logo: json['merchant_logo'] as String?,
+      distance_m: (json['distance_m'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$$DealStoreImplToJson(_$DealStoreImpl instance) =>
+    <String, dynamic>{
+      'merchant': instance.merchant,
+      'merchant_id': instance.merchant_id,
+      'merchant_logo': instance.merchant_logo,
+      'distance_m': instance.distance_m,
+    };
+
+_$DealsRailPayloadImpl _$$DealsRailPayloadImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DealsRailPayloadImpl(
+      state: json['state'] as String? ?? 'ready',
+      postal_code: json['postal_code'] as String?,
+      stores: (json['stores'] as List<dynamic>?)
+              ?.map((e) => DealStore.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <DealStore>[],
+      total_count: (json['total_count'] as num?)?.toInt() ?? 0,
+      items: (json['items'] as List<dynamic>?)
+              ?.map((e) => DealItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <DealItem>[],
+    );
+
+Map<String, dynamic> _$$DealsRailPayloadImplToJson(
+        _$DealsRailPayloadImpl instance) =>
+    <String, dynamic>{
+      'state': instance.state,
+      'postal_code': instance.postal_code,
+      'stores': instance.stores,
+      'total_count': instance.total_count,
+      'items': instance.items,
+    };
+
 _$MoodOptionImpl _$$MoodOptionImplFromJson(Map<String, dynamic> json) =>
     _$MoodOptionImpl(
       mood: json['mood'] as String? ?? '',

@@ -8,7 +8,7 @@ class HomeApi {
   /// Fetches the home feed for the given local time, weekday, and optional mood.
   /// Computes daypart and weekend flag from local DateTime.now() on device.
   /// Weekday conversion: Dart weekday is 1=Mon..7=Sun → 0..6 for API.
-  Future<HomeFeed?> fetchHomeFeed({Mood? mood}) async {
+  Future<HomeFeed?> fetchHomeFeed({Mood? mood, double? lat, double? lng}) async {
     try {
       final now = DateTime.now();
       final hour = now.hour;
@@ -19,6 +19,9 @@ class HomeApi {
         'local_hour': hour.toString(),
         'weekday': apiWeekday.toString(),
         if (mood != null) 'mood': mood.wireValue,
+        // Device location powers the "deals near you" module (auto, no prompt).
+        if (lat != null && lng != null) 'lat': lat.toString(),
+        if (lat != null && lng != null) 'lng': lng.toString(),
       };
 
       final response = await _apiHelper.getRequest(

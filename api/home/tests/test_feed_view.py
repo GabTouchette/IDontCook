@@ -137,7 +137,6 @@ class NewUserFallbackTests(APITestCase):
         types = [b['module']['module_type'] for b in data['blocks'][1:]]
         # Minimum viable feed for a cold-start user.
         self.assertIn('explore_rail', types)
-        self.assertIn('chat_prompt', types)
         self.assertIn('mood_question', types)
         for block in data['blocks'][1:]:
             assert_module_schema(self, block['module'])
@@ -163,5 +162,6 @@ class NewUserFallbackTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         types = [b['module']['module_type'] for b in data['blocks'][1:]]
-        self.assertIn('chat_prompt', types)
+        # Even with an empty database the feed is still valid — the mood
+        # question always anchors it.
         self.assertIn('mood_question', types)

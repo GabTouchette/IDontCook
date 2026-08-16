@@ -8,6 +8,8 @@ All priors are plain dicts so they can be tuned without code changes elsewhere.
 Missing keys always default to 1.0 (neutral).
 """
 
+import random
+
 # §1.3 mood taxonomy (LOCKED)
 MOODS = [
     'rushed',
@@ -25,6 +27,14 @@ DAYPARTS = ['morning', 'midday', 'evening', 'late']
 # personal-library modules a returning user still relies on.
 MAX_MODULES = 7
 
+# Bounded per-request score jitter (±25%) applied when a `variety_seed` is
+# supplied. This is what keeps the feed from feeling static: between refreshes
+# it rotates *which* mid-tier modules clear the MAX_MODULES cap and the order
+# they appear in, while the band is tight enough that a strong module (hero,
+# mood_question) never gets leapfrogged by a much weaker one. Off by default
+# (seed None) so unit tests keep deterministic ordering.
+RANKING_JITTER = 0.25
+
 # Module types allowed to appear more than once in a single feed.
 MULTI_ALLOWED = {
     'event_card': 2,
@@ -32,6 +42,15 @@ MULTI_ALLOWED = {
     # candidates compete; ranking decides which 3 survive) — catalog-first
     # -pivot.md §2/WS-P3.
     'explore_rail': 3,
+}
+
+# Module types pinned to a fixed feed position (0-based slot in the final
+# ordered list) regardless of score — so they can't be buried by ranking jitter
+# or dropped by the MAX_MODULES cap. The nearby-deals rail is pinned right under
+# the hero so it's always visible on the home page (both its `setup` prompt for
+# users without a store and its populated `ready` state). One instance only.
+PINNED_SLOTS = {
+    'deals_rail': 1,
 }
 
 # --- Library-size-aware weighting (catalog-first-pivot.md §2/WS-P3 item 2) -
@@ -198,18 +217,24 @@ def score_module(module_type, base_score, daypart, is_weekend, mood):
     return base_score * daypart_prior * mood_prior
 
 
-def rank_modules(candidates, daypart, is_weekend, mood, max_modules=MAX_MODULES, saved_count=None):
+def rank_modules(candidates, daypart, is_weekend, mood, max_modules=MAX_MODULES,
+                 saved_count=None, variety_seed=None):
     """Score, sort, dedup and cap candidate modules.
 
     `candidates` is a list of (module_dict, base_score) tuples. `saved_count`
     (optional) triggers the library-size-aware weighting above; omitted or
     None leaves scoring unchanged (backward compatible with existing callers).
-    Returns the final ordered list of module dicts.
+    `variety_seed` (optional) enables the bounded per-request score jitter
+    (see RANKING_JITTER) so the feed rotates between refreshes; None keeps
+    ordering fully deterministic. Returns the final ordered list of module dicts.
     """
     candidates = apply_library_size_weighting(candidates, saved_count)
+    rng = random.Random(variety_seed) if variety_seed is not None else None
     scored = []
     for module, base_score in candidates:
         score = score_module(module['module_type'], base_score, daypart, is_weekend, mood)
+        if rng is not None:
+            score *= 1.0 + rng.uniform(-RANKING_JITTER, RANKING_JITTER)
         scored.append((score, module))
 
     # Stable sort: highest score first; ties keep collector order.
@@ -230,4 +255,23 @@ def rank_modules(candidates, daypart, is_weekend, mood, max_modules=MAX_MODULES,
         type_counts[module_type] = type_counts.get(module_type, 0) + 1
         if len(ranked) >= max_modules:
             break
-    return ranked
+
+    return _apply_pins(ranked, scored, max_modules)
+
+
+def _apply_pins(ranked, scored, max_modules):
+    """Force pinned module types (PINNED_SLOTS) into fixed feed positions.
+
+    Takes the best-scored candidate of each pinned type and moves it to its
+    slot — inserting it if ranking/capping had dropped it. Keeps the feed within
+    `max_modules` by trimming the tail (pins sit near the top, so a trim only
+    ever drops the lowest-ranked unpinned module). `scored` is already sorted
+    highest-first, so `next(...)` picks the strongest instance of the type.
+    """
+    for module_type, slot in PINNED_SLOTS.items():
+        pinned = next((m for _s, m in scored if m['module_type'] == module_type), None)
+        if pinned is None:
+            continue
+        ranked = [m for m in ranked if m['id'] != pinned['id']]
+        ranked.insert(min(slot, len(ranked)), pinned)
+    return ranked[:max_modules]

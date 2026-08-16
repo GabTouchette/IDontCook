@@ -5,6 +5,7 @@ import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
 import 'package:i_cant_cook/widgets/blocks/chat_prompt_chip.dart';
 import 'package:i_cant_cook/widgets/blocks/cook_again_card.dart';
+import 'package:i_cant_cook/widgets/blocks/deals_rail.dart';
 import 'package:i_cant_cook/widgets/blocks/event_card.dart';
 import 'package:i_cant_cook/widgets/blocks/explore_rail.dart';
 import 'package:i_cant_cook/widgets/blocks/friend_post_card.dart';
@@ -144,6 +145,9 @@ class BlockRegistry {
     }
     if (payload is EventCardPayload) {
       return EventCard(module: module, onCtaTap: callbacks.onModuleCtaTap);
+    }
+    if (payload is DealsRailPayload) {
+      return DealsRail(payload: payload, reason: module.reason);
     }
     // Unknown module types → forward-compat skip.
     return const SizedBox.shrink();

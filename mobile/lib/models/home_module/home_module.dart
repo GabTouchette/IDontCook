@@ -67,6 +67,9 @@ class HomeModule with _$HomeModule {
         case 'mood_question':
           payload = MoodQuestionPayload.fromJson(rawPayload);
           break;
+        case 'deals_rail':
+          payload = DealsRailPayload.fromJson(rawPayload);
+          break;
         default:
           payload = UnknownModulePayload(raw: rawPayload);
       }

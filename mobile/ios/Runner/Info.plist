@@ -34,6 +34,8 @@
 	<string>Speech recognition is used to let you dictate messages to the recipe assistant.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>I Can't Cook uses your photo library to attach images to your recipes.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>I Can't Cook uses your location to find grocery stores and weekly deals near you.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

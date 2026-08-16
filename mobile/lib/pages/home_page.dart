@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -75,9 +77,25 @@ class _HomePageState extends State<HomePage> {
   Future<void> _initializeHome() async {
     final homeFeedProvider = context.read<HomeFeedProvider>();
     // The dashboard recreates HomePage's State on every tab revisit, but the
-    // feed is cached on the (long-lived) provider — only fetch it once.
-    if (homeFeedProvider.feed != null) return;
-    await homeFeedProvider.loadFeed();
+    // feed is cached on the (long-lived) provider.
+    //
+    //  - First visit (no feed yet): load and show the spinner.
+    //  - Revisit while the feed is still fresh: keep it (no network churn).
+    //  - Revisit after the freshness window: silently refresh in the
+    //    background — the old feed stays on screen until the reshuffled one
+    //    arrives, so Home feels alive without a spinner flash.
+    //
+    // Skip the background refresh while a mood conversation is open so we don't
+    // swap the feed out from under an active thread.
+    if (homeFeedProvider.feed == null) {
+      await homeFeedProvider.loadFeed();
+      return;
+    }
+    final inConversation = context.read<ChatProvider>().v2Messages.isNotEmpty;
+    if (!inConversation && homeFeedProvider.isStale) {
+      // Fire-and-forget: keeps the current feed visible during the refetch.
+      unawaited(homeFeedProvider.refresh());
+    }
   }
 
   void _scrollToBottom() {
