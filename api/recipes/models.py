@@ -135,9 +135,22 @@ class Recipe(models.Model):
     fat = models.FloatField(null=True, blank=True)
     carbs = models.FloatField(null=True, blank=True)
 
+    class Meta:
+        # Discovery/filter surfaces (explore, home rails, "new" rails) order and
+        # filter on these columns; without indexes they force sequential scans as
+        # the catalog grows. `source` already has db_index=True on the field. The
+        # `tags` JSONField needs a Postgres GIN index for `tags__contains` — added
+        # separately (Postgres-only) since GIN isn't supported on sqlite dev DBs.
+        indexes = [
+            models.Index(fields=["-created_at"], name="recipe_created_at_idx"),
+            models.Index(fields=["-last_visited_at"], name="recipe_last_visited_idx"),
+            models.Index(fields=["is_favorite"], name="recipe_is_favorite_idx"),
+            models.Index(fields=["source", "-created_at"], name="recipe_source_created_idx"),
+        ]
+
     # Required meal type tags
     REQUIRED_MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert']
-    
+
     def clean(self):
         """Validate and auto-correct meal type tags (keep only one)"""
         if self.tags:

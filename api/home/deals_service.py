@@ -8,6 +8,7 @@ endpoint so both aggregate identically.
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from django.core.cache import cache
 
@@ -152,23 +153,55 @@ def _rank_key(item):
     )
 
 
+def _aggregate_cache_key(stores):
+    """Cache key for an aggregated deal set — the sorted flyer ids fully
+    determine the items and their savings ranking. Flyer ids are location-scoped,
+    so stores sharing a set are near each other (distance_m may differ by a few
+    metres between callers, a display-only field)."""
+    flyer_ids = sorted(str(s.get('flyer_id')) for s in stores)
+    return "home_deals_agg_v1_" + "_".join(flyer_ids)
+
+
 def aggregate_deals(stores):
     """Every flyer item across `stores`, tagged with store + distance + savings,
     ranked by biggest dollar savings first.
 
     Each item keeps its `merchant` (set by FlippClient) and gains `distance_m`
     (from its store) and `savings` (derived dollar amount, or None).
+
+    The per-store Flipp flyer-item calls are fanned out across a thread pool
+    (they're independent network I/O) instead of run serially, so a cold
+    flyer-items cache costs ~one call's latency rather than the sum of up to five.
+    The assembled result is cached so repeat requests for the same flyer set skip
+    the aggregation entirely.
     """
-    items = []
+    if not stores:
+        return []
+
+    cache_key = _aggregate_cache_key(stores)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     client = FlippClient()
-    for store in stores:
+
+    def _items_for(store):
+        out = []
         for item in client.flyer_items(store['flyer_id'], merchant=store['merchant']):
             tagged = dict(item)
             tagged['distance_m'] = store.get('distance_m')
             tagged['savings'] = deal_savings(item.get('price_value'), item.get('discount'))
-            items.append(tagged)
+            out.append(tagged)
+        return out
+
+    items = []
+    with ThreadPoolExecutor(max_workers=min(len(stores), DEFAULT_STORE_LIMIT)) as executor:
+        # map preserves input order; global sort below makes order immaterial anyway.
+        for store_items in executor.map(_items_for, stores):
+            items.extend(store_items)
 
     items.sort(key=_rank_key)
+    cache.set(cache_key, items, DEALS_CACHE_TTL)
     return items
 
 

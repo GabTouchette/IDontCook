@@ -330,20 +330,6 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
             'saved_version_ids': {r.id for r in saved_map.values()},
         }
 
-    def get_combined_recipe_ids(self, user):
-        # 1. Recommended recipe IDs
-        recommended_ids = get_similar_recipes(user.id, top_n=500)
-
-        # 2. Random recipe IDs excluding recommended
-        excluded_ids = set(recommended_ids)
-        random_ids = list(
-            Recipe.objects.exclude(id__in=excluded_ids).values_list('id', flat=True)
-        )
-
-        # Recommended first, then random
-        combined = list(recommended_ids) + random_ids
-        return combined
-
     def get(self, request, *args, **kwargs):
         user = request.user
         filtered_recipes = self.get_filtered_recipes(request)
@@ -370,28 +356,32 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
             )
             return paginator.get_paginated_response(serializer.data)
 
-        # Original recommendation logic for non-search cases
-        combined_ids = self.get_combined_recipe_ids(user)
-        filtered_ids = set(filtered_recipes.values_list('id', flat=True))
-        filtered_combined_ids = [rid for rid in combined_ids if rid in filtered_ids]
-        
-        # Preserve TF-IDF relevance order — no full shuffle
+        # Recommendation path (non-search). Order the FILTERED queryset in the DB
+        # so the user's recommended recipes come first (TF-IDF relevance order),
+        # then the rest, and let the paginator slice one page with LIMIT/OFFSET.
+        # This replaces the old approach that pulled the entire catalog id-space
+        # (get_combined_recipe_ids) and every filtered id into Python just to
+        # return a single 20-item page.
+        recommended_ids = get_similar_recipes(user.id, top_n=500)
+        if recommended_ids:
+            rec_rank = Case(
+                *[When(pk=pk, then=pos) for pos, pk in enumerate(recommended_ids)],
+                default=len(recommended_ids),
+                output_field=IntegerField(),
+            )
+            ordered = filtered_recipes.annotate(_rec_rank=rec_rank).order_by('_rec_rank', 'id')
+        else:
+            ordered = filtered_recipes.order_by('id')
+
         paginator = self.pagination_class()
-        page_ids = paginator.paginate_queryset(filtered_combined_ids, request, view=self)
-        
-        if not page_ids:
-            return JsonResponse({
-                'count': len(filtered_combined_ids),
-                'next': None,
-                'previous': None,
-                'results': []
-            })
-        
-        preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(page_ids)])
-        page_recipes = list(Recipe.objects.filter(id__in=page_ids).order_by(preserved_order))
-        
+        page_recipes = paginator.paginate_queryset(ordered, request, view=self)
+        if not page_recipes:
+            return paginator.get_paginated_response([])
+        page_recipes = list(page_recipes)
+        page_ids = [r.id for r in page_recipes]
+
         # Inject 4–10 random "discovery" recipes scattered at random positions
-        # so each page load feels fresh without destroying relevance ranking
+        # so each page load feels fresh without destroying relevance ranking.
         num_random = random.randint(4, 10)
         random_recipes = list(
             filtered_recipes.exclude(id__in=page_ids)

@@ -11,7 +11,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'unit', 'quantity', 'preparation', 'substitutes', 'canonical_id', 'canonical']
+        # quantity_unit / original_text are the preserved raw amount strings for
+        # imported rows that never got a numeric quantity (e.g. "pinch of",
+        # "salt to taste"). Exposed so the client can show the real text instead
+        # of falling back to a fabricated "1".
+        fields = ['id', 'name', 'unit', 'quantity', 'quantity_unit', 'original_text', 'preparation', 'substitutes', 'canonical_id', 'canonical']
 
 
 class RecipeSerializer(serializers.ModelSerializer):

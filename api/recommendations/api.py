@@ -54,6 +54,10 @@ USER_PROFILE_CACHE_TIMEOUT = 60 * 60  # 1 hour
 # per caller instead of recomputing every request. Kept in line with the 1h
 # profile cache — a refit (new vocab version) busts both.
 SIMILAR_RECIPES_CACHE_TIMEOUT = 30 * 60  # 30 minutes
+# Global (non-personalized) trending ranking. Recomputed at most twice an hour;
+# invoked on every home-feed request via the trending rail, so caching it keeps
+# the feed off the full interaction/save aggregation + Python sort each time.
+TRENDING_CACHE_TIMEOUT = 30 * 60  # 30 minutes
 
 
 def _recipe_ids_with_images(ids):
@@ -265,10 +269,38 @@ def get_trending_recipes(user_id, exclude_ids=(), top_n=20):
     `user_id` is accepted for signature symmetry with other recommendation
     entry points and potential future personalized-trending variants; the
     current scoring is global (not user-specific).
+
+    The expensive global ranking (aggregating every interaction + save and
+    sorting all candidates in Python) is cached — it is invoked on every
+    home-feed request via the trending rail and was the one recommendation
+    entry point the similar_recipes cache didn't cover. Caller-specific
+    `exclude_ids` and `top_n` are applied to the cached ranking below.
     """
-    excluded_ids = set(exclude_ids or ())
-    ai_generated_ids = Recipe.objects.filter(source=Recipe.SOURCE_AI).values_list('id', flat=True)
-    excluded_ids.update(ai_generated_ids)
+    ranked = _ranked_trending_ids()
+    excluded = set(exclude_ids or ())
+    if excluded:
+        ranked = [rid for rid in ranked if rid not in excluded]
+    return ranked[:top_n]
+
+
+def _ranked_trending_ids():
+    """Global popularity+recency ranking over the whole catalog (AI-generated
+    recipes excluded), best-first. Cached for TRENDING_CACHE_TIMEOUT; returns
+    ALL ranked ids so callers can apply their own exclusions/limit cheaply.
+    """
+    cache_key = "trending_recipes_v1"
+    ranked = cache.get(cache_key)
+    if ranked is None:
+        ranked = _compute_ranked_trending_ids()
+        cache.set(cache_key, ranked, TRENDING_CACHE_TIMEOUT)
+    return ranked
+
+
+def _compute_ranked_trending_ids():
+    """Uncached global trending ranking — see _ranked_trending_ids for caching."""
+    excluded_ids = set(
+        Recipe.objects.filter(source=Recipe.SOURCE_AI).values_list('id', flat=True)
+    )
 
     score_by_recipe = defaultdict(float)
 
@@ -313,7 +345,7 @@ def get_trending_recipes(user_id, exclude_ids=(), top_n=20):
         scored.append((rid, base_score * decay * _image_multiplier(rid, ids_with_images)))
 
     scored.sort(key=lambda x: x[1], reverse=True)
-    return [rid for rid, _ in scored[:top_n]]
+    return [rid for rid, _ in scored]
 
 
 def _cold_start_fallback(excluded_ids, top_n):

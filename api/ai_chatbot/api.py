@@ -247,7 +247,10 @@ class AnthropicService:
             })
         content.append({"type": "text", "text": PromptTemplates.ocr_prompt()})
 
-        response = self.client.messages.create(
+        # Runs synchronously in the OCR request path; bound the wall-clock instead
+        # of inheriting the SDK default (600s x 2 retries) so a slow/hung call
+        # can't pin the request for minutes.
+        response = self.client.with_options(timeout=60, max_retries=1).messages.create(
             model=LIGHT_MODEL,
             max_tokens=4096,
             messages=[{"role": "user", "content": content}]
@@ -315,6 +318,33 @@ class AnthropicService:
     # more turns than the old create/update/reference loop.
     MAX_V2_TURNS = 7
 
+    @staticmethod
+    def _with_tool_cache(tools):
+        """Return `tools` with a cache_control breakpoint on the last definition.
+
+        Caching is a prefix match rendered as tools -> system -> messages, so a
+        breakpoint on the final tool caches the whole (stable) tool list. Copies
+        rather than mutating the shared tool dicts. Returns the input unchanged
+        when there are no tools.
+        """
+        if not tools:
+            return tools
+        cached = [dict(t) for t in tools]
+        cached[-1] = {**cached[-1], "cache_control": {"type": "ephemeral"}}
+        return cached
+
+    @staticmethod
+    def _with_system_cache(system):
+        """Wrap a string `system` prompt in a cached text block.
+
+        Passing `system` as a list of content blocks lets us attach
+        cache_control; a plain string can't carry one. Returns non-string /
+        empty input unchanged (already a block list, or nothing to cache).
+        """
+        if isinstance(system, str) and system:
+            return [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+        return system
+
     def ask_stream_v2(self, system, messages, tools, resolve_block=None, resolve_data_tool=None):
         """
         Streams a chat v2 turn using Anthropic tool use.
@@ -349,6 +379,16 @@ class AnthropicService:
         resolve_data_tool = resolve_data_tool or default_resolve_data_tool
         messages = list(messages)
 
+        # Prompt caching (shared/prompt-caching.md): `tools` and `system` render
+        # before `messages` and are byte-identical across every turn of this
+        # agentic loop (up to MAX_V2_TURNS) — and usually across turns of the
+        # same conversation. Cache both so each loop turn re-reads the prefix at
+        # ~0.1x cost instead of re-prefilling it, cutting time-to-first-token.
+        # Two breakpoints: one on the tool list (survives system changes per the
+        # cache invalidation hierarchy) and one on the system prefix.
+        cached_tools = self._with_tool_cache(tools)
+        cached_system = self._with_system_cache(system)
+
         for _ in range(self.MAX_V2_TURNS):
             tool_buffers = {}      # stream index -> {"id", "name", "json"}
             assistant_content = []  # replayable content blocks for continuation
@@ -360,9 +400,14 @@ class AnthropicService:
                 stream = self.client.messages.create(
                     model=CHAT_MODEL,
                     max_tokens=8192,
-                    system=system,
+                    system=cached_system,
                     messages=messages,
-                    tools=tools,
+                    tools=cached_tools,
+                    # claude-sonnet-5 runs adaptive thinking when `thinking` is
+                    # omitted, spending pre-text tokens before the first visible
+                    # character on every loop turn. Disable it (matching v1) to
+                    # cut time-to-first-token; re-enable if we want reasoning.
+                    thinking={"type": "disabled"},
                     stream=True,
                 )
 

@@ -124,6 +124,7 @@ String _deduplicateTokens(String text) {
   required String dbName,
   required double servings,
   required double baseServings,
+  String dbQuantityUnit = '',
 }) {
   double qty = dbQuantity;
   String unit = dbUnit.trim();
@@ -143,6 +144,22 @@ String _deduplicateTokens(String text) {
     if (extractedUnit.isNotEmpty && stripped.isNotEmpty) {
       unit = extractedUnit;
       name = stripped;
+    }
+
+    // Nothing usable in the name — fall back to the preserved quantity_unit
+    // string ("2 tbsp", "1/4 cup") that imported rows carry.
+    if (qty == 0) {
+      final qu = dbQuantityUnit.trim();
+      final quMatch = _leadingQtyRe.firstMatch(qu);
+      if (quMatch != null) {
+        final parsed = _parseFraction(quMatch.group(1)!);
+        if (parsed != null && parsed > 0) {
+          qty = parsed;
+          final (quStripped, quUnit) =
+              _stripLeadingUnitToken(qu.substring(quMatch.end).trim());
+          if (unit.isEmpty && quUnit.isNotEmpty) unit = quUnit;
+        }
+      }
     }
   } else {
     // ── Case: DB has qty and/or unit — strip redundant tokens from name ──────
@@ -179,8 +196,23 @@ String _deduplicateTokens(String text) {
 
   final adjusted = adjustQuantityForServings(qty, baseServings, servings);
   final rawQty = formatQuantity(adjusted);
+
+  if (rawQty.isEmpty) {
+    // No numeric quantity anywhere. Prefer showing the preserved text
+    // ("pinch of", "to taste") over fabricating a "1". If there's no text
+    // either, show nothing rather than a misleading number.
+    final fallbackText = dbQuantityUnit.trim();
+    return (
+      qty: fallbackText,
+      unit: fallbackText.isEmpty && unit.isNotEmpty
+          ? abbreviateUnit(unit.toLowerCase())
+          : '',
+      name: name,
+    );
+  }
+
   return (
-    qty: rawQty.isEmpty ? '1' : rawQty,
+    qty: rawQty,
     unit: unit.isNotEmpty ? abbreviateUnit(unit.toLowerCase()) : '',
     name: name,
   );

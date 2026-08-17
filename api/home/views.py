@@ -7,7 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .collectors import FeedContext, collect_modules
+from django.core.cache import cache
+
+from .collectors import CACHEABLE_COLLECTORS, FeedContext, collect_deals, collect_modules
 from .deals_service import aggregate_deals, nearby_stores, resolve_location, stores_by_ids
 from .flipp_client import FlippClient, normalize_postal
 from .geocode import geocode_postal_code, reverse_geocode
@@ -24,6 +26,14 @@ class HomeFeedView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+
+    # Short TTL: long enough to absorb rapid refreshes and back-to-back loads,
+    # short enough that new saves/posts/plans surface within a couple of minutes.
+    MODULES_CACHE_TTL = 90  # seconds
+
+    @staticmethod
+    def _modules_cache_key(user_id, daypart, is_weekend, mood):
+        return f"home_feed_modules_v1_{user_id}_{daypart}_{int(is_weekend)}_{mood or ''}"
 
     def get(self, request):
         local_hour = self._parse_int(request.query_params.get('local_hour'))
@@ -69,7 +79,22 @@ class HomeFeedView(APIView):
             lng=lng,
             variety_seed=random.randint(0, 10_000),
         )
-        candidates = collect_modules(ctx)
+        # The DB-heavy collectors (hero, cook-again, rails, events, …) are stable
+        # for a short window, so cache their output per (user, daypart, weekend,
+        # mood) and skip re-running the whole fan-out on every request / refresh.
+        # Ranking + greeting still run per request off the fresh variety_seed, so
+        # a pull-to-refresh keeps reshuffling order and copy. The deals rail is
+        # excluded from the cache and collected fresh (cheap + self-warming) so a
+        # completed background warm shows up immediately.
+        modules_cache_key = self._modules_cache_key(
+            request.user.id, daypart, is_weekend, mood
+        )
+        candidates = cache.get(modules_cache_key)
+        if candidates is None:
+            candidates = collect_modules(ctx, collectors=CACHEABLE_COLLECTORS)
+            cache.set(modules_cache_key, candidates, self.MODULES_CACHE_TTL)
+        candidates = candidates + collect_modules(ctx, collectors=[collect_deals])
+
         modules = rank_modules(
             candidates, daypart, is_weekend, mood,
             saved_count=ctx.saved_count,

@@ -6,6 +6,7 @@ import requests
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
+from recipes.ingredient_parsing import parse_ingredient
 from recipes.models import Ingredient, Recipe
 
 # CSV 'source' column -> (importer username, Recipe.source value).
@@ -16,62 +17,6 @@ _IMPORTER_BY_CSV_SOURCE = {
     'AllRecipes': ('allrecipes_importer', Recipe.SOURCE_CATALOG),
     'BBC': ('bbc_good_food_importer', Recipe.SOURCE_CATALOG),
 }
-
-_UNIT_WORDS = (
-    r'tbsp|tbsps|tablespoons?|tsp|tsps|teaspoons?|cups?|lbs?|pounds?|oz|ounces?|'
-    r'g|kg|grams?|kilograms?|ml|milliliters?|l|liters?|litres?|cloves?|pinch(?:es)?|'
-    r'dash(?:es)?|cans?|slices?|pieces?|inch(?:es)?|sprigs?|bunch(?:es)?|stalks?|heads?'
-)
-_LEADING_QTY_RE = re.compile(r'^([\d¼½¾⅓⅔⅛⅜⅝⅞./\s-]+(?:,\d[\d¼½¾⅓⅔⅛⅜⅝⅞./\s-]*)?)(.*)$')
-_UNIT_RE = re.compile(r'^(' + _UNIT_WORDS + r')\b\.?\s*(.*)$', re.IGNORECASE)
-_PAREN_RE = re.compile(r'^(\([^)]*\))\s*(.*)$')
-
-
-def _parse_ingredient_line(line):
-    """
-    '2 tbsp (30 ml) miso' -> quantity_unit='2 tbsp (30 ml)', name='miso'
-    '1 tablespoon (15 ml) olive oil' -> quantity_unit='1 tablespoon (15 ml)', name='olive oil'
-    '1/2 lb (225 g) mixed mushrooms, cut into large pieces' -> name='mixed mushrooms',
-        preparation='cut into large pieces'
-    'salt to taste' -> quantity_unit='', name='salt to taste' (no leading quantity)
-
-    Peels the quantity, then unit/parenthetical (in whichever order they appear),
-    off the front of the line rather than assuming a fixed order — source data
-    mixes 'qty unit (metric)' and 'qty (metric) unit'.
-    """
-    original_text = line.strip()
-
-    m = _LEADING_QTY_RE.match(original_text)
-    qty_part = m.group(1).strip() if m else ''
-    rest = m.group(2).strip() if m else original_text
-
-    parts = [qty_part] if qty_part else []
-    if qty_part:
-        for _ in range(2):
-            um = _UNIT_RE.match(rest)
-            pm = _PAREN_RE.match(rest)
-            if um:
-                parts.append(um.group(1))
-                rest = um.group(2).strip()
-            elif pm:
-                parts.append(pm.group(1))
-                rest = pm.group(2).strip()
-            else:
-                break
-
-    quantity_unit = ' '.join(parts).strip()
-    name_and_prep = rest if quantity_unit else original_text
-
-    if ',' in name_and_prep:
-        name, _, preparation = name_and_prep.partition(',')
-        name = name.strip()
-        preparation = preparation.strip()
-    else:
-        name = name_and_prep.strip()
-        preparation = ''
-
-    return quantity_unit, name, preparation, original_text
-
 
 _MEAL_TYPE_MAP = {
     'breakfast': 'Breakfast',
@@ -136,14 +81,22 @@ def _parse_instructions(raw):
 
 
 def _get_or_create_ingredient(line):
-    quantity_unit, name, preparation, original_text = _parse_ingredient_line(line)
+    parsed = parse_ingredient(line)
+    name = parsed['name']
     if not name:
         return None
+    quantity = round(parsed['quantity'], 4) if parsed['quantity'] is not None else None
     ingredient, _ = Ingredient.objects.get_or_create(
         name=name,
-        quantity_unit=quantity_unit,
-        preparation=preparation,
-        defaults={'original_text': original_text},
+        quantity_unit=parsed['quantity_unit'],
+        preparation=parsed['preparation'],
+        defaults={
+            # Populate the numeric fields the API and app actually read, not just
+            # the combined string — otherwise every line renders as "1 <name>".
+            'quantity': quantity,
+            'unit': parsed['unit'],
+            'original_text': parsed['original_text'],
+        },
     )
     return ingredient
 

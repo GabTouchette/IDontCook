@@ -158,7 +158,14 @@ def import_recipe_from_url(url: str, service) -> str:
 
     prompt = PromptTemplates.url_import_prompt(content, image_url)
 
-    client = anthropic.Anthropic(api_key=getattr(settings, "ANTHROPIC_API_KEY", None))
+    # Runs synchronously in the URL-import request path (already preceded by a
+    # blocking page fetch); bound the LLM wall-clock instead of inheriting the
+    # SDK default (600s x 2 retries) so a slow/hung call can't pin the request.
+    client = anthropic.Anthropic(
+        api_key=getattr(settings, "ANTHROPIC_API_KEY", None),
+        timeout=45,
+        max_retries=1,
+    )
     response = client.messages.create(
         model=LIGHT_MODEL,
         max_tokens=2048,

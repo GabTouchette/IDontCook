@@ -167,10 +167,15 @@ class AnthropicRefiner:
             " {\"op\":\"swap\",\"a\":{\"day\":1,\"meal_type\":\"lunch\"},\"b\":{\"day\":2,\"meal_type\":\"dinner\"}}]"\
         )
 
-        # Call Anthropic messages (non-streaming)
-        print(system)
+        # Call Anthropic messages (non-streaming). This runs synchronously inside
+        # the meal-plan generate request, so bound the wall-clock: the SDK
+        # default is a 600s timeout x 2 retries. `self.timeout_s` was previously
+        # stored but never applied — pass it via with_options, and cap retries so
+        # worst-case blocking is ~timeout_s x (max_retries + 1), not minutes.
         try:
-            response = self._svc.client.messages.create(
+            response = self._svc.client.with_options(
+                timeout=self.timeout_s, max_retries=1,
+            ).messages.create(
                 model=self.model,
                 max_tokens=2048,
                 system=system,
@@ -183,7 +188,6 @@ class AnthropicRefiner:
             content = content.strip().removeprefix("```json").removesuffix("```").strip()
             ops = json.loads(content)
             if isinstance(ops, list):
-                print(ops)
                 return ops
         except Exception:
             return []

@@ -160,16 +160,45 @@ def get_recommended_recipes(user, limit=20):
     return [recipes[rid] for rid in recipe_ids if rid in recipes]
 
 
+# Fallback pool cached across users. Sized well above the typical `limit` so the
+# per-user own-recipe exclusion applied on top still has headroom. Bump the key
+# suffix (_v1) if the ranking logic changes.
+POPULAR_RECIPES_CACHE_TIMEOUT = 30 * 60  # 30 minutes
+_POPULAR_POOL_SIZE = 60
+
+
+def _popular_recipe_ids():
+    """Cached global ranking of most-saved, most-recent original catalog recipes
+    (AI-generated excluded). The `Count('saved_by')` aggregation + sort over the
+    catalog is the expensive part and is identical across users apart from the
+    caller's own-recipe exclusion, which get_popular_recipes applies afterward.
+    """
+    cache_key = "home_popular_recipe_ids_v1"
+    ids = cache.get(cache_key)
+    if ids is None:
+        ids = list(
+            Recipe.objects
+            .filter(parent__isnull=True)
+            .exclude(source=Recipe.SOURCE_AI)
+            .annotate(num_saves=Count('saved_by'))
+            .order_by('-num_saves', '-created_at')
+            .values_list('id', flat=True)[:_POPULAR_POOL_SIZE]
+        )
+        cache.set(cache_key, ids, POPULAR_RECIPES_CACHE_TIMEOUT)
+    return ids
+
+
 def get_popular_recipes(user, limit=20):
     """Fallback pool: most-saved, most recent original catalog recipes not authored by the user."""
-    return list(
-        Recipe.objects
-        .filter(parent__isnull=True)
-        .exclude(created_by=user)
-        .exclude(source=Recipe.SOURCE_AI)
-        .annotate(num_saves=Count('saved_by'))
-        .order_by('-num_saves', '-created_at')[:limit]
-    )
+    pool_ids = _popular_recipe_ids()
+    if not pool_ids:
+        return []
+    own_ids = set(Recipe.objects.filter(created_by=user).values_list('id', flat=True))
+    keep_ids = [rid for rid in pool_ids if rid not in own_ids][:limit]
+    if not keep_ids:
+        return []
+    by_id = {r.id: r for r in Recipe.objects.filter(id__in=keep_ids)}
+    return [by_id[rid] for rid in keep_ids if rid in by_id]
 
 
 def _current_meal_plan(ctx):
@@ -798,10 +827,25 @@ COLLECTORS = [
 ]
 
 
-def collect_modules(ctx):
-    """Run every collector, tolerating individual failures (no 500s on bad data)."""
+# Collectors whose output is DB-expensive but stable for a short window — safe to
+# cache per (user, daypart, is_weekend, mood). `collect_deals` is deliberately
+# excluded: it is cheap (a cache read that may dispatch a background warm) and
+# must run every request so a just-completed warm surfaces immediately rather
+# than waiting out the feed cache TTL.
+CACHEABLE_COLLECTORS = [c for c in COLLECTORS if c is not collect_deals]
+
+
+def collect_modules(ctx, collectors=None):
+    """Run collectors, tolerating individual failures (no 500s on bad data).
+
+    `collectors` defaults to the full COLLECTORS list; callers can pass a subset
+    (e.g. CACHEABLE_COLLECTORS, or just [collect_deals]) to split the cacheable
+    fan-out from the always-fresh deals rail.
+    """
+    if collectors is None:
+        collectors = COLLECTORS
     candidates = []
-    for collector in COLLECTORS:
+    for collector in collectors:
         try:
             candidates.extend(collector(ctx))
         except Exception:

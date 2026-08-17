@@ -95,6 +95,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
             dbQuantity: ingredient.quantity ?? 0,
             dbUnit: ingredient.unit ?? '',
             dbName: ingredient.name ?? '',
+            dbQuantityUnit: ingredient.quantityUnit ?? '',
             servings: widget.servings,
             baseServings: (widget.recipe.servings ?? 1).toDouble(),
           );

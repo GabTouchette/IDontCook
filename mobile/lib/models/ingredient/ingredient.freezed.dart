@@ -23,7 +23,12 @@ mixin _$Ingredient {
   int? get id => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
   double? get quantity => throw _privateConstructorUsedError;
-  String? get unit => throw _privateConstructorUsedError;
+  String? get unit =>
+      throw _privateConstructorUsedError; // Preserved raw amount string for imported rows that never got a numeric
+// quantity (e.g. "pinch of", "2 tbsp"). Used as a display fallback so the
+// UI never fabricates a "1". See resolveIngredientDisplay in functions.dart.
+  @JsonKey(name: 'quantity_unit')
+  String? get quantityUnit => throw _privateConstructorUsedError;
   String? get preparation => throw _privateConstructorUsedError;
   List<String>? get substitutes => throw _privateConstructorUsedError;
   Map<String, dynamic>? get nutrition => throw _privateConstructorUsedError;
@@ -46,6 +51,7 @@ abstract class $IngredientCopyWith<$Res> {
       String? name,
       double? quantity,
       String? unit,
+      @JsonKey(name: 'quantity_unit') String? quantityUnit,
       String? preparation,
       List<String>? substitutes,
       Map<String, dynamic>? nutrition,
@@ -69,6 +75,7 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
     Object? name = freezed,
     Object? quantity = freezed,
     Object? unit = freezed,
+    Object? quantityUnit = freezed,
     Object? preparation = freezed,
     Object? substitutes = freezed,
     Object? nutrition = freezed,
@@ -90,6 +97,10 @@ class _$IngredientCopyWithImpl<$Res, $Val extends Ingredient>
       unit: freezed == unit
           ? _value.unit
           : unit // ignore: cast_nullable_to_non_nullable
+              as String?,
+      quantityUnit: freezed == quantityUnit
+          ? _value.quantityUnit
+          : quantityUnit // ignore: cast_nullable_to_non_nullable
               as String?,
       preparation: freezed == preparation
           ? _value.preparation
@@ -124,6 +135,7 @@ abstract class _$$IngredientImplCopyWith<$Res>
       String? name,
       double? quantity,
       String? unit,
+      @JsonKey(name: 'quantity_unit') String? quantityUnit,
       String? preparation,
       List<String>? substitutes,
       Map<String, dynamic>? nutrition,
@@ -145,6 +157,7 @@ class __$$IngredientImplCopyWithImpl<$Res>
     Object? name = freezed,
     Object? quantity = freezed,
     Object? unit = freezed,
+    Object? quantityUnit = freezed,
     Object? preparation = freezed,
     Object? substitutes = freezed,
     Object? nutrition = freezed,
@@ -166,6 +179,10 @@ class __$$IngredientImplCopyWithImpl<$Res>
       unit: freezed == unit
           ? _value.unit
           : unit // ignore: cast_nullable_to_non_nullable
+              as String?,
+      quantityUnit: freezed == quantityUnit
+          ? _value.quantityUnit
+          : quantityUnit // ignore: cast_nullable_to_non_nullable
               as String?,
       preparation: freezed == preparation
           ? _value.preparation
@@ -195,6 +212,7 @@ class _$IngredientImpl implements _Ingredient {
       this.name,
       this.quantity,
       this.unit,
+      @JsonKey(name: 'quantity_unit') this.quantityUnit,
       this.preparation,
       final List<String>? substitutes,
       final Map<String, dynamic>? nutrition,
@@ -213,6 +231,12 @@ class _$IngredientImpl implements _Ingredient {
   final double? quantity;
   @override
   final String? unit;
+// Preserved raw amount string for imported rows that never got a numeric
+// quantity (e.g. "pinch of", "2 tbsp"). Used as a display fallback so the
+// UI never fabricates a "1". See resolveIngredientDisplay in functions.dart.
+  @override
+  @JsonKey(name: 'quantity_unit')
+  final String? quantityUnit;
   @override
   final String? preparation;
   final List<String>? _substitutes;
@@ -240,7 +264,7 @@ class _$IngredientImpl implements _Ingredient {
 
   @override
   String toString() {
-    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, preparation: $preparation, substitutes: $substitutes, nutrition: $nutrition, canonical: $canonical)';
+    return 'Ingredient(id: $id, name: $name, quantity: $quantity, unit: $unit, quantityUnit: $quantityUnit, preparation: $preparation, substitutes: $substitutes, nutrition: $nutrition, canonical: $canonical)';
   }
 
   @override
@@ -253,6 +277,8 @@ class _$IngredientImpl implements _Ingredient {
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
             (identical(other.unit, unit) || other.unit == unit) &&
+            (identical(other.quantityUnit, quantityUnit) ||
+                other.quantityUnit == quantityUnit) &&
             (identical(other.preparation, preparation) ||
                 other.preparation == preparation) &&
             const DeepCollectionEquality()
@@ -271,6 +297,7 @@ class _$IngredientImpl implements _Ingredient {
       name,
       quantity,
       unit,
+      quantityUnit,
       preparation,
       const DeepCollectionEquality().hash(_substitutes),
       const DeepCollectionEquality().hash(_nutrition),
@@ -296,6 +323,7 @@ abstract class _Ingredient implements Ingredient {
       final String? name,
       final double? quantity,
       final String? unit,
+      @JsonKey(name: 'quantity_unit') final String? quantityUnit,
       final String? preparation,
       final List<String>? substitutes,
       final Map<String, dynamic>? nutrition,
@@ -312,6 +340,11 @@ abstract class _Ingredient implements Ingredient {
   double? get quantity;
   @override
   String? get unit;
+  @override // Preserved raw amount string for imported rows that never got a numeric
+// quantity (e.g. "pinch of", "2 tbsp"). Used as a display fallback so the
+// UI never fabricates a "1". See resolveIngredientDisplay in functions.dart.
+  @JsonKey(name: 'quantity_unit')
+  String? get quantityUnit;
   @override
   String? get preparation;
   @override
