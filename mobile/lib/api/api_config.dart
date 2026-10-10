@@ -44,6 +44,8 @@ class ApiConfig {
     'images.allrecipes.com',
     'images.ricardocuisine.com',
     'food.fnr.sndimg.com',
+    'www.seriouseats.com',
+    'www.simplyrecipes.com',
   };
 
   /// Returns a browser-loadable image URL. On Flutter web, URLs from hosts that

@@ -36,6 +36,10 @@ ALLOWED_IMAGE_HOSTS = frozenset({
     "images.ricardocuisine.com",
     "ucarecdn.com",
     "food.fnr.sndimg.com",
+    # Dotdash Meredith CDNs (Serious Eats / Simply Recipes) — serve no CORS header
+    # and 460-block non-browser User-Agents, so they must go through the proxy.
+    "www.seriouseats.com",
+    "www.simplyrecipes.com",
 })
 
 MAX_IMAGE_BYTES = 15 * 1024 * 1024  # 15 MB ceiling
