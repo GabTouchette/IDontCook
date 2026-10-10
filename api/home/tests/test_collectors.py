@@ -324,10 +324,43 @@ class DispatchDealsWarmTests(TestCase):
     def setUp(self):
         cache.clear()
 
+    def test_runs_warm_in_thread_by_default(self):
+        # No Celery worker in prod: the warm must run in-process (a thread), not
+        # be enqueued to a queue nothing consumes.
+        key = 'home_deals_v1_test'
+        with patch('home.tasks._USE_CELERY_FOR_DEALS', False), \
+                patch('home.tasks.warm_deals_cache') as task, \
+                patch('home.tasks.threading.Thread') as thread_cls:
+            dispatch_deals_warm(key, 45.5, -73.56, '')
+        task.delay.assert_not_called()
+        thread_cls.assert_called_once()
+        thread_cls.return_value.start.assert_called_once()
+
+    def test_uses_celery_when_worker_enabled(self):
+        key = 'home_deals_v1_test'
+        with patch('home.tasks._USE_CELERY_FOR_DEALS', True), \
+                patch('home.tasks.warm_deals_cache') as task, \
+                patch('home.tasks.threading.Thread') as thread_cls:
+            dispatch_deals_warm(key, 45.5, -73.56, '')
+        task.delay.assert_called_once()
+        thread_cls.assert_not_called()
+
+    def test_falls_back_to_thread_when_broker_down(self):
+        key = 'home_deals_v1_test'
+        with patch('home.tasks._USE_CELERY_FOR_DEALS', True), \
+                patch('home.tasks.warm_deals_cache') as task, \
+                patch('home.tasks.threading.Thread') as thread_cls:
+            task.delay.side_effect = OSError('broker unreachable')
+            dispatch_deals_warm(key, 45.5, -73.56, '')
+        thread_cls.assert_called_once()
+        thread_cls.return_value.start.assert_called_once()
+
     def test_dedupes_concurrent_warms_by_lock(self):
         key = 'home_deals_v1_test'
-        with patch('home.tasks.warm_deals_cache') as task:
+        with patch('home.tasks.warm_deals_cache'), \
+                patch('home.tasks.threading.Thread') as thread_cls:
             dispatch_deals_warm(key, 45.5, -73.56, '')
             dispatch_deals_warm(key, 45.5, -73.56, '')
-        # Second dispatch is a no-op while the first warm is in flight.
-        task.delay.assert_called_once()
+        # Second dispatch is a no-op while the first warm holds the lock.
+        thread_cls.assert_called_once()
+        thread_cls.return_value.start.assert_called_once()

@@ -188,6 +188,7 @@ InformationToast.show(
 - `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID for mobile sign-in
 - `CELERY_BROKER_URL` - Redis/broker URL for async task queue
 - `CELERY_RESULT_BACKEND` - Redis/backend URL for task result storage
+- `DEALS_WARM_USE_CELERY` - Route the home-feed deals warm through Celery instead of an in-process thread (default: false). Only enable when a dedicated Celery worker is actually deployed; the Railway web service runs gunicorn only, so the default in-process thread is what makes the deals rail warm in prod.
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON` - Google Cloud Storage credentials
 
 ### Frontend
