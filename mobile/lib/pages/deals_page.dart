@@ -10,6 +10,7 @@ import 'package:i_cant_cook/services/deals_cache.dart';
 import 'package:i_cant_cook/services/location_service.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
 import 'package:i_cant_cook/widgets/blocks/deals_rail.dart';
+import 'package:i_cant_cook/widgets/deals/deal_detail_sheet.dart';
 
 /// Full "See all deals" list — the biggest discounts pooled from a curated set
 /// of nearby stores. The store list is seeded from the nearest stores, then the
@@ -33,10 +34,19 @@ class _DealsPageState extends State<DealsPage> {
   bool _isLoading = true;
   bool _seeded = false;
 
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _init() async {
@@ -90,9 +100,23 @@ class _DealsPageState extends State<DealsPage> {
   }
 
   List<DealItem> get _filteredItems {
-    final items = _deals?.items ?? const <DealItem>[];
-    if (_selectedMerchants.isEmpty) return items;
-    return items.where((it) => _selectedMerchants.contains(it.merchant)).toList();
+    var items = _deals?.items ?? const <DealItem>[];
+    if (_selectedMerchants.isNotEmpty) {
+      items = items
+          .where((it) => _selectedMerchants.contains(it.merchant))
+          .toList();
+    }
+    final q = _searchQuery.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      items = items
+          .where((it) =>
+              it.name.toLowerCase().contains(q) ||
+              (it.name_alt?.toLowerCase().contains(q) ?? false) ||
+              it.brand.toLowerCase().contains(q) ||
+              it.merchant.toLowerCase().contains(q))
+          .toList();
+    }
+    return items;
   }
 
   void _toggleMerchant(String merchant) {
@@ -113,8 +137,9 @@ class _DealsPageState extends State<DealsPage> {
 
   Future<void> _removeStore(DealStore store) async {
     setState(() {
-      _managedStores =
-          _managedStores.where((s) => s.merchant_id != store.merchant_id).toList();
+      _managedStores = _managedStores
+          .where((s) => s.merchant_id != store.merchant_id)
+          .toList();
       _selectedMerchants.remove(store.merchant);
       _isLoading = true;
     });
@@ -186,6 +211,7 @@ class _DealsPageState extends State<DealsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildSearchBar(theme),
         _buildStoreChips(theme),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
@@ -202,6 +228,58 @@ class _DealsPageState extends State<DealsPage> {
         ),
         Expanded(child: _buildGrid(theme, items)),
       ],
+    );
+  }
+
+  Widget _buildSearchBar(ThemeData theme) {
+    final onSurface = theme.colorScheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() => _searchQuery = value),
+        textInputAction: TextInputAction.search,
+        style: GoogleFonts.spaceGrotesk(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w500,
+          color: onSurface,
+        ),
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: 'Search deals, brands or stores',
+          hintStyle: GoogleFonts.spaceGrotesk(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w500,
+            color: onSurface.withValues(alpha: 0.4),
+          ),
+          prefixIcon: Icon(Icons.search,
+              size: 20, color: onSurface.withValues(alpha: 0.5)),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.close,
+                      size: 18, color: onSurface.withValues(alpha: 0.5)),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: theme.colorScheme.surface,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kBlockAccent, width: 1.5),
+          ),
+        ),
+      ),
     );
   }
 
@@ -244,10 +322,13 @@ class _DealsPageState extends State<DealsPage> {
 
   Widget _buildGrid(ThemeData theme, List<DealItem> items) {
     if (_managedStores.isEmpty) {
-      return _emptyState(theme,
-          'No stores in your list.\nTap "Add" to pick a store.');
+      return _emptyState(
+          theme, 'No stores in your list.\nTap "Add" to pick a store.');
     }
     if (items.isEmpty) {
+      if (_searchQuery.trim().isNotEmpty) {
+        return _emptyState(theme, 'No deals match "${_searchQuery.trim()}".');
+      }
       return _emptyState(
         theme,
         _selectedMerchants.isEmpty
@@ -269,7 +350,8 @@ class _DealsPageState extends State<DealsPage> {
     );
   }
 
-  Widget _emptyState(ThemeData theme, String message, {bool showClear = false}) {
+  Widget _emptyState(ThemeData theme, String message,
+      {bool showClear = false}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -322,7 +404,8 @@ class _Chip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         alignment: Alignment.center,
-        padding: EdgeInsets.only(left: icon != null ? 10 : 14, right: onRemove != null ? 6 : 14),
+        padding: EdgeInsets.only(
+            left: icon != null ? 10 : 14, right: onRemove != null ? 6 : 14),
         decoration: BoxDecoration(
           color: selected ? kBlockAccent : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(999),
@@ -355,8 +438,9 @@ class _Chip extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   size: 15,
-                  color: (selected ? kBlockAccentInk : theme.colorScheme.onSurface)
-                      .withValues(alpha: 0.6),
+                  color:
+                      (selected ? kBlockAccentInk : theme.colorScheme.onSurface)
+                          .withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -377,131 +461,134 @@ class _DealGridCard extends StatelessWidget {
     final theme = Theme.of(context);
     final onSurface = theme.colorScheme.onSurface;
 
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.12),
-          width: 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              SizedBox(
-                height: 120,
-                width: double.infinity,
-                child: item.image_url != null
-                    ? Image.network(
-                        ApiConfig.resolveImageUrl(item.image_url!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _placeholder(context),
-                      )
-                    : _placeholder(context),
-              ),
-              if (item.discount != null && item.discount! > 0)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: kBlockAccent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '-${item.discount}%',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: kBlockAccentInk,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+    return GestureDetector(
+      onTap: () => showDealDetail(context, item),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.12),
+            width: 1.0,
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                        color: onSurface,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                SizedBox(
+                  height: 120,
+                  width: double.infinity,
+                  child: item.image_url != null
+                      ? Image.network(
+                          ApiConfig.resolveImageUrl(item.image_url!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _placeholder(context),
+                        )
+                      : _placeholder(context),
+                ),
+                if (item.discount != null && item.discount! > 0)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: kBlockAccent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '-${item.discount}%',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: kBlockAccentInk,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        dealPriceLabel(item),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
                           color: onSurface,
                         ),
                       ),
-                      if (item.savingsLabel != null) ...[
-                        const SizedBox(width: 6),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          dealPriceLabel(item),
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: onSurface,
+                          ),
+                        ),
+                        if (item.savingsLabel != null) ...[
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              item.savingsLabel!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: dealSavingsColor(context),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Icon(Icons.storefront_outlined,
+                            size: 11, color: onSurface.withValues(alpha: 0.5)),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            item.savingsLabel!,
+                            item.distanceLabel != null
+                                ? '${item.merchant} · ${item.distanceLabel}'
+                                : item.merchant,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.spaceGrotesk(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: dealSavingsColor(context),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: onSurface.withValues(alpha: 0.5),
                             ),
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Icon(Icons.storefront_outlined,
-                          size: 11, color: onSurface.withValues(alpha: 0.5)),
-                      const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(
-                          item.distanceLabel != null
-                              ? '${item.merchant} · ${item.distanceLabel}'
-                              : item.merchant,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

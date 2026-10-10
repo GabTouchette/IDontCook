@@ -191,6 +191,31 @@ class DealItem with _$DealItem {
     if (s == null || s <= 0) return null;
     return 'Save \$${s.toStringAsFixed(2)}';
   }
+
+  /// "Valid until Jan 15" — null when there's no parseable end date. Flipp
+  /// sends `valid_to` as a date or ISO datetime string; render it dependency-
+  /// free (no `intl`) with a short month name.
+  String? get validUntilLabel {
+    final raw = valid_to;
+    if (raw == null || raw.isEmpty) return null;
+    final date = DateTime.tryParse(raw);
+    if (date == null) return null;
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return 'Valid until ${months[date.month - 1]} ${date.day}';
+  }
 }
 
 /// A store included in the nearby-deals pool: `{ "merchant": str,
@@ -259,9 +284,7 @@ class MoodOption with _$MoodOption {
 
 /// `mood_question` → `{ "question": str, "options": [MoodOption] }`
 @freezed
-class MoodQuestionPayload
-    with _$MoodQuestionPayload
-    implements ModulePayload {
+class MoodQuestionPayload with _$MoodQuestionPayload implements ModulePayload {
   const factory MoodQuestionPayload({
     @Default('') String question,
     @Default(<MoodOption>[]) List<MoodOption> options,
