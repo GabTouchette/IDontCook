@@ -10,6 +10,7 @@ import 'package:i_cant_cook/providers/home_feed_provider.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/services/location_service.dart';
 import 'package:i_cant_cook/widgets/blocks/block_styles.dart';
+import 'package:i_cant_cook/widgets/deals/deal_detail_sheet.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
 
@@ -113,133 +114,138 @@ class _DealTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
-    return Container(
-      width: 150,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
-          width: 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              SizedBox(
-                height: 100,
-                width: double.infinity,
-                child: item.image_url != null
-                    ? Image.network(
-                        ApiConfig.resolveImageUrl(item.image_url!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _imagePlaceholder(context),
-                      )
-                    : _imagePlaceholder(context),
-              ),
-              if (item.discount != null && item.discount! > 0)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: kBlockAccent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '-${item.discount}%',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: kBlockAccentInk,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+    return GestureDetector(
+      onTap: () => showDealDetail(context, item),
+      child: Container(
+        width: 150,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color:
+                Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+            width: 1.0,
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                        color: onSurface,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                SizedBox(
+                  height: 100,
+                  width: double.infinity,
+                  child: item.image_url != null
+                      ? Image.network(
+                          ApiConfig.resolveImageUrl(item.image_url!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              _imagePlaceholder(context),
+                        )
+                      : _imagePlaceholder(context),
+                ),
+                if (item.discount != null && item.discount! > 0)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: kBlockAccent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '-${item.discount}%',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: kBlockAccentInk,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        dealPriceLabel(item),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.spaceGrotesk(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
                           color: onSurface,
                         ),
                       ),
-                      if (item.savingsLabel != null) ...[
-                        const SizedBox(width: 6),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          dealPriceLabel(item),
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: onSurface,
+                          ),
+                        ),
+                        if (item.savingsLabel != null) ...[
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              item.savingsLabel!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: dealSavingsColor(context),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    // Which store this deal is from, and how far.
+                    Row(
+                      children: [
+                        Icon(Icons.storefront_outlined,
+                            size: 11, color: onSurface.withValues(alpha: 0.5)),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            item.savingsLabel!,
+                            item.distanceLabel != null
+                                ? '${item.merchant} · ${item.distanceLabel}'
+                                : item.merchant,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.spaceGrotesk(
                               fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: dealSavingsColor(context),
+                              fontWeight: FontWeight.w500,
+                              color: onSurface.withValues(alpha: 0.5),
                             ),
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  // Which store this deal is from, and how far.
-                  Row(
-                    children: [
-                      Icon(Icons.storefront_outlined,
-                          size: 11, color: onSurface.withValues(alpha: 0.5)),
-                      const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(
-                          item.distanceLabel != null
-                              ? '${item.merchant} · ${item.distanceLabel}'
-                              : item.merchant,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -434,9 +440,7 @@ class _LoadingCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              reason.isNotEmpty
-                  ? reason
-                  : 'Finding the best deals near you…',
+              reason.isNotEmpty ? reason : 'Finding the best deals near you…',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
