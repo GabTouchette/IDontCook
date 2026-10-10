@@ -16,12 +16,16 @@ class ReelRecipeCard extends StatefulWidget {
   final VoidCallback? onThumbsDown;
   final VoidCallback? onDelete;
 
+  /// Fired when the user opens this recipe's detail (a "click" ranking signal).
+  final VoidCallback? onOpen;
+
   const ReelRecipeCard({
     Key? key,
     required this.recipe,
     this.onThumbsUp,
     this.onThumbsDown,
     this.onDelete,
+    this.onOpen,
   }) : super(key: key);
 
   @override
@@ -137,6 +141,7 @@ class _ReelRecipeCardState extends State<ReelRecipeCard> {
     return GestureDetector(
       onTap: () {
         HapticService.lightImpact();
+        widget.onOpen?.call();
         Navigator.push(
           context,
           MaterialPageRoute(

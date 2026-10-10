@@ -300,6 +300,15 @@ USDA_API_KEY = os.getenv('USDA_API_KEY')
 MEAL_PLAN_REFINER_OPENAI_ENABLED = os.getenv("MEAL_PLAN_REFINER_OPENAI_ENABLED", "False").lower() == "true"
 MEAL_PLAN_REFINER_OPENAI_MODEL = os.getenv("MEAL_PLAN_REFINER_OPENAI_MODEL", "gpt-3.5-turbo")
 
+# Recommendations v2 — multi-interest taste profile + directional downvote
+# (docs/plans/recommendation-algo-v2.md). RECOMMENDER_V2_ENABLED gates the whole
+# v2 ranker (recency-weighted signals, clicks, clustering, dislike vector);
+# set it false to fall back to the single-centroid v1 ranker without a deploy.
+# RECOMMENDER_MULTI_INTEREST_ENABLED gates just the clustering step within v2
+# (off → v2 still runs but with one averaged centroid) — useful for A/B.
+RECOMMENDER_V2_ENABLED = env.bool("RECOMMENDER_V2_ENABLED", default=True)
+RECOMMENDER_MULTI_INTEREST_ENABLED = env.bool("RECOMMENDER_MULTI_INTEREST_ENABLED", default=True)
+
 # Cache configuration.
 #
 # In production use Redis (already provisioned for Celery) so the cache is

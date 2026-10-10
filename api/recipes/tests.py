@@ -204,3 +204,47 @@ class IngredientOrphanCleanupTests(TestCase):
         self.assertEqual(Ingredient.objects.count(), 1)
         self.assertEqual(recipe.ingredients.count(), 1)
         self.assertEqual(recipe.ingredients.first().name, "potato")
+
+
+class RecipeClickEventTests(APITestCase):
+    """POST /api/recipes/<id>/click/ records an append-only click event."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username="clicker", password="pw")
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+        self.recipe = Recipe.objects.create(title="Tacos", created_by=self.user)
+
+    def test_click_creates_event_and_is_append_only(self):
+        from recommendations.models import RecipeEvent
+
+        url = reverse("recipe-click", kwargs={"pk": self.recipe.id})
+
+        res = self.client.post(url)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.json(), {"recorded": True})
+        self.assertEqual(
+            RecipeEvent.objects.filter(
+                user=self.user, recipe=self.recipe, kind=RecipeEvent.KIND_CLICK
+            ).count(),
+            1,
+        )
+
+        # Append-only: a second open records a second row (not a toggle).
+        self.client.post(url)
+        self.assertEqual(
+            RecipeEvent.objects.filter(user=self.user, recipe=self.recipe).count(),
+            2,
+        )
+
+    def test_click_requires_auth(self):
+        self.client.force_authenticate(user=None)
+        res = self.client.post(
+            reverse("recipe-click", kwargs={"pk": self.recipe.id})
+        )
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_click_unknown_recipe_404s(self):
+        res = self.client.post(reverse("recipe-click", kwargs={"pk": 999999}))
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)

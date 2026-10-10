@@ -42,6 +42,46 @@ class RecipeVector(models.Model):
         return f"RecipeVector(recipe={self.recipe_id}, version={self.vectorizer_version})"
 
 
+class RecipeEvent(models.Model):
+    """Append-only engagement events used as weak ranking signals.
+
+    Unlike `UserRecipeInteraction` (toggle semantics — one row per
+    user×recipe×type, created/deleted as the user toggles like/upvote),
+    `RecipeEvent` is append-only and repeatable: a user can open ("click") the
+    same recipe many times and each open is its own timestamped row. This keeps
+    frequency + recency available for the recency-weighted recommendation
+    signals (see docs/plans/recommendation-algo-v2.md §1) without bolting a
+    counter onto the toggle table.
+
+    Only `click` (opening a recipe's detail from explore) is recorded today;
+    `impression`/`dwell` are intentionally NOT captured yet — they are reserved
+    for a future seen-suppression pass (Direction C) and would just be data we
+    don't rank on.
+    """
+    KIND_CLICK = 'click'
+    KIND_CHOICES = [
+        (KIND_CLICK, 'Click'),
+    ]
+
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='recipe_events'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='events'
+    )
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES, default=KIND_CLICK)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            # Profile build reads a user's recent events of a kind.
+            models.Index(fields=['user', 'kind', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id} {self.kind} recipe {self.recipe_id}"
+
+
 class UserRecipeInteraction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)

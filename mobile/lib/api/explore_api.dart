@@ -36,4 +36,10 @@ class ExploreApi {
     );
     return data?['active'] == true;
   }
+
+  /// Record a "click" — the user opened this recipe's detail. Weak,
+  /// recency-weighted ranking signal; append-only and fire-and-forget.
+  Future<void> recordClick(int recipeId) async {
+    await _apiHelper.postRequest('recipes/$recipeId/click/', {});
+  }
 }

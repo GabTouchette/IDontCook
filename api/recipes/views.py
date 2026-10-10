@@ -1,4 +1,3 @@
-import random
 import threading
 from recipes.tasks import format_recipe_ingredients, dispatch_nutrition_calculation
 from rest_framework.views import APIView
@@ -12,7 +11,6 @@ from django.utils.timezone import now
 from django.core.files.base import ContentFile
 from django.db.models import Case, When, Q, ExpressionWrapper, F, IntegerField, Count
 from django.db import connection
-from django.db.models.functions import Random
 
 from PIL import Image, ExifTags
 from io import BytesIO
@@ -21,8 +19,8 @@ from ai_chatbot.api import AnthropicService
 from recipes.models import Recipe, SavedRecipe, CanonicalIngredient
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
-from recommendations.models import MixedRecommendationPagination, UserRecipeInteraction
-from recommendations.api import get_similar_recipes
+from recommendations.models import MixedRecommendationPagination, RecipeEvent, UserRecipeInteraction
+from recommendations.api import get_similar_recipes, invalidate_user_recommendation_cache
 
 class RecipeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -209,6 +207,15 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
     serializer_class = RecipePreviewSerializer
     pagination_class = MixedRecommendationPagination
 
+    @staticmethod
+    def _parse_int(value):
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
     def get_filtered_recipes(self, request):
         """
         Apply filtering params from query params and return a queryset.
@@ -357,12 +364,18 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
             return paginator.get_paginated_response(serializer.data)
 
         # Recommendation path (non-search). Order the FILTERED queryset in the DB
-        # so the user's recommended recipes come first (TF-IDF relevance order),
-        # then the rest, and let the paginator slice one page with LIMIT/OFFSET.
-        # This replaces the old approach that pulled the entire catalog id-space
-        # (get_combined_recipe_ids) and every filtered id into Python just to
-        # return a single 20-item page.
-        recommended_ids = get_similar_recipes(user.id, top_n=500)
+        # so the user's recommended recipes come first (relevance order), then the
+        # rest, and let the paginator slice one page with LIMIT/OFFSET. This
+        # replaces the old approach that pulled the entire catalog id-space into
+        # Python just to return a single 20-item page.
+        #
+        # `seed` is a per-session variety seed from the client (stable across
+        # pages of one browse session, regenerated on pull-to-refresh). It drives
+        # the ranker's band-shuffle + exploration slice so a refresh reshuffles
+        # the feed while pagination within a session stays consistent — this is
+        # what replaces the old per-page "inject 4-10 random recipes" hack.
+        seed = self._parse_int(request.query_params.get('seed'))
+        recommended_ids = get_similar_recipes(user.id, top_n=500, seed=seed)
         if recommended_ids:
             rec_rank = Case(
                 *[When(pk=pk, then=pos) for pos, pk in enumerate(recommended_ids)],
@@ -377,22 +390,8 @@ class FilteredRecommendationsAPIView(generics.GenericAPIView):
         page_recipes = paginator.paginate_queryset(ordered, request, view=self)
         if not page_recipes:
             return paginator.get_paginated_response([])
-        page_recipes = list(page_recipes)
-        page_ids = [r.id for r in page_recipes]
+        all_recipes = list(page_recipes)
 
-        # Inject 4–10 random "discovery" recipes scattered at random positions
-        # so each page load feels fresh without destroying relevance ranking.
-        num_random = random.randint(4, 10)
-        random_recipes = list(
-            filtered_recipes.exclude(id__in=page_ids)
-            .order_by(Random())[:num_random]
-        )
-        for r in random_recipes:
-            pos = random.randint(0, len(page_recipes))
-            page_recipes.insert(pos, r)
-
-        all_recipes = page_recipes
-        
         recipe_ids = [r.id for r in all_recipes]
         user_saved = SavedRecipe.objects.filter(
             user=user,
@@ -413,7 +412,6 @@ class RecipeInteractionAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        from django.core.cache import cache
         recipe = get_object_or_404(Recipe, pk=pk)
         interaction_type = request.data.get('interaction_type')
 
@@ -428,7 +426,7 @@ class RecipeInteractionAPIView(APIView):
 
         if existing:
             existing.delete()
-            cache.delete(f"user_profile_{request.user.id}")
+            invalidate_user_recommendation_cache(request.user.id)
             return JsonResponse({'interaction_type': interaction_type, 'active': False})
 
         # Remove the opposite interaction before adding the new one
@@ -440,9 +438,28 @@ class RecipeInteractionAPIView(APIView):
         UserRecipeInteraction.objects.create(
             user=request.user, recipe=recipe, interaction_type=interaction_type
         )
-        cache.delete(f"user_profile_{request.user.id}")
+        invalidate_user_recommendation_cache(request.user.id)
         return JsonResponse({'interaction_type': interaction_type, 'active': True},
                             status=status.HTTP_201_CREATED)
+
+
+class RecipeClickAPIView(APIView):
+    """Record a 'click' — the user opened a recipe's detail — as a weak,
+    recency-weighted ranking signal (docs/plans/recommendation-algo-v2.md §1.3).
+
+    Append-only and fire-and-forget: it never toggles, always returns 201, and
+    does NOT invalidate the user-profile cache (clicks are high-volume and only
+    a weak signal, so they fold in naturally on the next profile rebuild rather
+    than busting the cache on every open).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        RecipeEvent.objects.create(
+            user=request.user, recipe=recipe, kind=RecipeEvent.KIND_CLICK
+        )
+        return JsonResponse({'recorded': True}, status=status.HTTP_201_CREATED)
 
 
 class RecipeTagsAPIView(APIView):

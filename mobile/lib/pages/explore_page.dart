@@ -111,6 +111,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                   provider.recordUpvote(recipe.id),
                               onThumbsDown: () =>
                                   provider.recordDownvote(recipe.id),
+                              onOpen: () => provider.recordClick(recipe.id),
                               onDelete: () async {
                                 final success =
                                     await provider.adminDeleteRecipe(recipe.id);

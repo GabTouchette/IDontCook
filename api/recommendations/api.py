@@ -1,18 +1,28 @@
 import hashlib
 import logging
+import math
 import pickle
+import random
 from collections import defaultdict
 
 import numpy as np
 from scipy import sparse
+from django.conf import settings
 from django.core.cache import cache  # Django's caching system
 from django.db.models import Count, Q
 from django.utils import timezone
+from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import normalize as sk_normalize
 
 from recipes.models import Recipe, SavedRecipe
-from recommendations.models import RecipeVector, UserRecipeInteraction, VectorizerArtifact
+from recommendations.models import (
+    RecipeEvent,
+    RecipeVector,
+    UserRecipeInteraction,
+    VectorizerArtifact,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +68,47 @@ SIMILAR_RECIPES_CACHE_TIMEOUT = 30 * 60  # 30 minutes
 # invoked on every home-feed request via the trending rail, so caching it keeps
 # the feed off the full interaction/save aggregation + Python sort each time.
 TRENDING_CACHE_TIMEOUT = 30 * 60  # 30 minutes
+
+
+# --- Recommender v2: multi-interest profile + directional downvote -----------
+# See docs/plans/recommendation-algo-v2.md. Gated by RECOMMENDER_V2_ENABLED so
+# the single-centroid v1 ranker can be restored without a deploy.
+#
+# Positive taste signals → base profile weight (before recency decay). A recipe
+# counts once, at the max effective weight across however the user engaged with
+# it (e.g. a recipe that was both clicked and upvoted counts as an upvote).
+V2_SIGNAL_WEIGHTS = {
+    "save": 2.0,     # saved a copy of someone else's recipe (strong intent)
+    "upvote": 2.0,
+    "like": 1.5,
+    "comment": 1.25,
+    "created": 1.0,
+    "click": 0.5,    # opened a recipe's detail — weak, noisy, self-reinforcing
+}
+# Every signal's weight decays by its age so current taste outweighs old taste.
+SIGNAL_HALF_LIFE_DAYS = 75.0
+# Below this many engaged recipes a single centroid is used (not enough to
+# meaningfully cluster tastes yet) — identical to v1 behaviour.
+MIN_RECIPES_FOR_CLUSTERING = 8
+MAX_TASTE_CLUSTERS = 5
+# Clicks are high-volume; cap how many fold into one profile build (cost bound).
+CLICK_LOOKBACK_LIMIT = 300
+# λ_neg: how hard a downvote demotes recipes *similar* to the disliked one.
+DISLIKE_PENALTY = 0.5
+
+# --- Variety & diversity layer (docs/plans/recommendation-algo-v2.md §3) ------
+# The ranked POOL (content + popularity/recency blend, MMR-diversified) is the
+# expensive part and is cached; the per-request seeded transform (band-shuffle +
+# exploration) is cheap and applied on top so a refresh reshuffles the feed
+# without recomputing cosine. All three score components are min-max normalized
+# before blending so these weights are directly comparable.
+POPULARITY_WEIGHT = 0.15   # β: nudge toward globally popular recipes
+RECENCY_WEIGHT = 0.10      # γ: nudge toward newer catalog recipes
+RECENCY_HALF_LIFE_DAYS = 60.0
+MMR_LAMBDA = 0.7           # α: relevance vs diversity in MMR (higher = more relevant)
+MMR_POOL_SIZE = 300        # only the top-M by blended score is diversified (cost bound)
+EXPLORATION_RATIO = 0.18   # ε: share of visible slots given to popular off-profile recipes
+VARIETY_BAND_SIZE = 8      # per-request shuffle happens within contiguous relevance bands
 
 
 def _recipe_ids_with_images(ids):
@@ -237,6 +288,165 @@ def build_user_profile(user_id):
     return result
 
 
+def _recency_weight(base_weight, ts, now):
+    """Decay a signal's weight by its age (half-life SIGNAL_HALF_LIFE_DAYS) so a
+    user's recent engagement outweighs old engagement."""
+    if ts is None:
+        return base_weight
+    age_days = max((now - ts).total_seconds() / 86400.0, 0.0)
+    return base_weight * (0.5 ** (age_days / SIGNAL_HALF_LIFE_DAYS))
+
+
+def _gather_positive_signals(user_id, now):
+    """Collect a user's positive taste signals as
+    {recipe_id: effective_weight} plus {recipe_id: Recipe}, taking the MAX
+    recency-weighted weight across all of a recipe's signals (so a recipe that
+    was both clicked and upvoted counts once, as the upvote)."""
+    weight_by_id = {}
+    recipe_objs = {}
+
+    def _bump(recipe, base_weight, ts):
+        if recipe is None:
+            return
+        w = _recency_weight(base_weight, ts, now)
+        rid = recipe.id
+        recipe_objs.setdefault(rid, recipe)
+        if w > weight_by_id.get(rid, 0.0):
+            weight_by_id[rid] = w
+
+    # Created recipes (parent is None) and saved copies (parent set).
+    for r in Recipe.objects.filter(created_by=user_id):
+        base = V2_SIGNAL_WEIGHTS["save"] if r.parent_id else V2_SIGNAL_WEIGHTS["created"]
+        _bump(r, base, r.created_at)
+
+    # Positive interactions.
+    interactions = (
+        UserRecipeInteraction.objects
+        .filter(user_id=user_id, interaction_type__in=("upvote", "like", "comment"))
+        .select_related("recipe")
+    )
+    for it in interactions:
+        _bump(it.recipe, V2_SIGNAL_WEIGHTS[it.interaction_type], it.created_at)
+
+    # Clicks (opens) — weak signal, capped for cost; most-recent click wins.
+    clicks = (
+        RecipeEvent.objects
+        .filter(user_id=user_id, kind=RecipeEvent.KIND_CLICK)
+        .select_related("recipe")
+        .order_by("-created_at")[:CLICK_LOOKBACK_LIMIT]
+    )
+    for ev in clicks:
+        _bump(ev.recipe, V2_SIGNAL_WEIGHTS["click"], ev.created_at)
+
+    return weight_by_id, recipe_objs
+
+
+def _taste_centroids(vectors, weights, multi_interest):
+    """Return an (K, n_features) dense array of taste centroids.
+
+    A single weighted-average centroid (v1 behaviour) unless multi-interest is
+    enabled AND the user has enough engaged recipes to cluster — then K spherical
+    k-means centroids, so a candidate matching ANY ONE of the user's interests
+    can rank high instead of only matching the blurry average of all of them
+    (the root cause of "always the same recommendations")."""
+    n = vectors.shape[0]
+    if not multi_interest or n < MIN_RECIPES_FOR_CLUSTERING:
+        centroid = vectors.multiply(weights.reshape(-1, 1)).sum(axis=0) / weights.sum()
+        return np.asarray(centroid).reshape(1, -1)
+
+    k = min(max(2, round(math.sqrt(n / 2.0))), MAX_TASTE_CLUSTERS)
+    # Spherical k-means: L2-normalize rows so euclidean clustering ≈ cosine.
+    normed = sk_normalize(vectors)
+    km = KMeans(n_clusters=k, n_init=3, random_state=42)
+    km.fit(normed, sample_weight=weights)
+    return np.asarray(km.cluster_centers_)
+
+
+def _dislike_vector(user_id, now, tfidf):
+    """A single 'dislike' centroid (recency-weighted mean of the user's
+    downvoted recipes), or None. Used to demote candidates *similar* to what the
+    user thumbed down — the exact downvoted recipes are also hard-excluded from
+    candidates via _excluded_recipe_ids."""
+    downvotes = (
+        UserRecipeInteraction.objects
+        .filter(user_id=user_id, interaction_type="downvote")
+        .select_related("recipe")
+    )
+    texts, weights = [], []
+    for it in downvotes:
+        if it.recipe is None:
+            continue
+        texts.append(_recipe_text(it.recipe))
+        weights.append(_recency_weight(1.0, it.created_at, now))
+    if not texts:
+        return None
+    vectors = tfidf.transform(texts)
+    w = np.array(weights, dtype=float).reshape(-1, 1)
+    dislike = vectors.multiply(w).sum(axis=0) / w.sum()
+    return np.asarray(dislike).reshape(1, -1)
+
+
+def build_user_profile_v2(user_id):
+    """Multi-interest taste profile (docs/plans/recommendation-algo-v2.md §2).
+
+    Returns a dict {tfidf, version, centroids, dislike} or None when the user
+    has no positive taste signal (→ caller falls back to cold-start trending; a
+    dislike vector alone can't rank a feed). `centroids` is (K>=1, n_features);
+    `dislike` is (1, n_features) or None. Cached 1h, keyed on vectorizer version.
+    """
+    tfidf, version = get_active_vectorizer()
+    if tfidf is None:
+        return None
+
+    cache_key = f"user_profile_v2_{user_id}_v{version}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
+    now = timezone.now()
+    weight_by_id, recipe_objs = _gather_positive_signals(user_id, now)
+    if not weight_by_id:
+        return None
+
+    ids = list(weight_by_id.keys())
+    texts = [_recipe_text(recipe_objs[rid]) for rid in ids]
+    weights = np.array([weight_by_id[rid] for rid in ids], dtype=float)
+    vectors = tfidf.transform(texts)
+
+    multi = getattr(settings, "RECOMMENDER_MULTI_INTEREST_ENABLED", True)
+    result = {
+        "tfidf": tfidf,
+        "version": version,
+        "centroids": _taste_centroids(vectors, weights, multi),
+        "dislike": _dislike_vector(user_id, now, tfidf),
+    }
+    cache.set(cache_key, result, USER_PROFILE_CACHE_TIMEOUT)
+    return result
+
+
+def invalidate_user_recommendation_cache(user_id):
+    """Drop a user's cached taste profile + ranked recommendations so a new
+    up/downvote (or other signal change) is reflected immediately instead of
+    waiting out the 1h/30m TTLs.
+
+    Deletes both the v1 and v2 keys. The keys are suffixed with the active
+    vectorizer version (which the HTTP view doesn't know), so we resolve it here
+    via get_active_vectorizer — cheap: it reads the stored artifact, no refit.
+    This also fixes the earlier no-op delete that used an unversioned key.
+    """
+    try:
+        _, version = get_active_vectorizer()
+    except Exception:
+        logger.exception("Could not resolve vectorizer version to invalidate rec cache")
+        return
+    cache.delete_many([
+        f"user_profile_{user_id}_v{version}",
+        f"user_profile_v2_{user_id}_v{version}",
+        f"similar_recipes_{user_id}_v{version}",
+        f"similar_recipes_v2_{user_id}_v{version}",
+    ])
+
+
 def _excluded_recipe_ids(user_id):
     """Recipe ids that should never be recommended back to this user:
     their own recipes, their own saved copies, any recipe that's a copy
@@ -403,17 +613,27 @@ def _candidate_vectors(candidates, tfidf, version):
     return sparse.vstack(rows, format='csr'), ids
 
 
-def get_similar_recipes(user_id, top_n=30):
+def get_similar_recipes(user_id, top_n=30, seed=None):
     """
     Recommend recipes similar to the user's own taste profile. Falls back to
     a popularity+recency blend when the user has no profile signal at all
     (cold start), instead of returning nothing.
 
-    The full ranked candidate list is cached per (user, vectorizer version) and
-    sliced to `top_n` — scoring the whole catalog by cosine similarity is the
-    expensive part (see _rank_similar_recipes) and previously reran on every
-    explore/home request, which is what made those pages take 20-30s.
+    The expensive ranked POOL is cached per (user, vectorizer version); scoring
+    the whole catalog by cosine similarity is what previously made explore/home
+    take 20-30s. `seed` (optional) applies a cheap per-request variety transform
+    (band-shuffle + exploration) on top of the cached pool so a refresh feels
+    fresh without recomputing — pass a stable session seed to keep pagination
+    consistent, a new seed to reshuffle. `seed=None` → deterministic pool order.
+
+    When RECOMMENDER_V2_ENABLED (default on), uses the multi-interest profile +
+    directional-downvote ranker (docs/plans/recommendation-algo-v2.md); set the
+    flag false to revert to the single-centroid v1 path below (which ignores
+    `seed`).
     """
+    if getattr(settings, "RECOMMENDER_V2_ENABLED", True):
+        return _get_similar_recipes_v2(user_id, top_n, seed)
+
     profile = build_user_profile(user_id)
     if not profile:
         return _cold_start_fallback(_excluded_recipe_ids(user_id), top_n)
@@ -429,6 +649,182 @@ def get_similar_recipes(user_id, top_n=30):
         ranked = _rank_similar_recipes(user_id, tfidf, user_profile_vector, version)
         cache.set(cache_key, ranked, SIMILAR_RECIPES_CACHE_TIMEOUT)
     return ranked[:top_n]
+
+
+def _get_similar_recipes_v2(user_id, top_n, seed=None):
+    """v2 entry point: multi-interest profile + directional downvote, with the
+    diversified pool cached and a cheap seeded variety transform layered on top.
+    Cold-starts to trending (also variety-shuffled when seeded)."""
+    profile = build_user_profile_v2(user_id)
+    if not profile:
+        excluded = _excluded_recipe_ids(user_id)
+        if seed is None:
+            return _cold_start_fallback(excluded, top_n)
+        ranked = [r for r in _ranked_trending_ids() if r not in excluded]
+        return _apply_variety(ranked, seed, top_n, user_id)
+
+    version = profile["version"]
+    cache_key = f"similar_recipes_v2_{user_id}_v{version}"
+    pool = cache.get(cache_key)
+    if pool is None:
+        pool = _rank_similar_recipes_v2(user_id, profile, version)
+        cache.set(cache_key, pool, SIMILAR_RECIPES_CACHE_TIMEOUT)
+
+    if seed is None:
+        return pool[:top_n]
+    return _apply_variety(pool, seed, top_n, user_id)
+
+
+def _minmax(x):
+    """Scale an array to [0, 1]; all-equal input → all zeros."""
+    x = np.asarray(x, dtype=float)
+    lo, hi = float(x.min()), float(x.max())
+    if hi - lo < 1e-12:
+        return np.zeros_like(x)
+    return (x - lo) / (hi - lo)
+
+
+def _popularity_norms(ids):
+    """Per-id popularity in [0, 1], derived from global trending rank (best = 1).
+    Recipes with no popularity signal get 0."""
+    ranked = _ranked_trending_ids()
+    if not ranked:
+        return np.zeros(len(ids))
+    n = len(ranked)
+    rank = {rid: i for i, rid in enumerate(ranked)}
+    return np.array([(1.0 - rank[r] / n) if r in rank else 0.0 for r in ids])
+
+
+def _recency_norms(candidates):
+    """Per-candidate recency in (0, 1], decayed by age (RECENCY_HALF_LIFE_DAYS)."""
+    now = timezone.now()
+    out = []
+    for r in candidates:
+        if r.created_at:
+            age_days = max((now - r.created_at).total_seconds() / 86400.0, 0.0)
+            out.append(0.5 ** (age_days / RECENCY_HALF_LIFE_DAYS))
+        else:
+            out.append(0.0)
+    return np.array(out)
+
+
+def _diversify_mmr(order, blended, candidate_matrix, pool_size, lam):
+    """MMR-reorder the top `pool_size` positions of `order` (positions into the
+    candidate arrays, best-first by `blended`) to reduce near-duplicates; the
+    remaining positions keep their blended order. Uses the already-in-memory
+    candidate vectors, so no extra DB work."""
+    head = list(order[:pool_size])
+    tail = list(order[pool_size:])
+    if len(head) <= 2:
+        return head + tail
+
+    sim = cosine_similarity(candidate_matrix[head])  # (h, h) dense
+    rel = _minmax(np.array([blended[i] for i in head]))
+    h = len(head)
+
+    selected = [0]                 # head[0] is the top-relevance item
+    chosen = {0}
+    max_sim = sim[0].copy()        # running max similarity to any selected item
+    while len(selected) < h:
+        mmr = lam * rel - (1.0 - lam) * max_sim
+        for c in chosen:
+            mmr[c] = -np.inf
+        nxt = int(np.argmax(mmr))
+        selected.append(nxt)
+        chosen.add(nxt)
+        max_sim = np.maximum(max_sim, sim[nxt])
+
+    return [head[i] for i in selected] + tail
+
+
+def _rank_similar_recipes_v2(user_id, profile, version):
+    """Build the ranked candidate POOL: taste match (best-matching interest) +
+    directional-downvote penalty, blended with popularity + recency, then
+    MMR-diversified. Returns ALL candidate ids best-first; callers cache this and
+    layer the cheap per-request variety transform (_apply_variety) on top.
+
+    docs/plans/recommendation-algo-v2.md §2-3.
+    """
+    excluded = _excluded_recipe_ids(user_id)
+    candidates = list(Recipe.objects.exclude(id__in=excluded))
+    if not candidates:
+        return []
+
+    tfidf = profile["tfidf"]
+    candidate_matrix, ordered_ids = _candidate_vectors(candidates, tfidf, version)
+
+    # Taste match: best cosine across the user's interest centroids.
+    content = cosine_similarity(profile["centroids"], candidate_matrix).max(axis=0)
+    dislike = profile.get("dislike")
+    if dislike is not None:
+        neg = cosine_similarity(dislike, candidate_matrix).flatten()
+        content = content - DISLIKE_PENALTY * np.clip(neg, 0.0, None)
+
+    # Blend with popularity + recency (all normalized → weights comparable).
+    blended = (
+        (1.0 - POPULARITY_WEIGHT - RECENCY_WEIGHT) * _minmax(content)
+        + POPULARITY_WEIGHT * _popularity_norms(ordered_ids)
+        + RECENCY_WEIGHT * _recency_norms(candidates)
+    )
+
+    # Imageless recipes always sink below image'd ones (a photoless card reads as
+    # broken), so diversify/rank the two groups separately.
+    img_positions, noimg_positions = [], []
+    for i, r in enumerate(candidates):
+        (img_positions if ((r.image and str(r.image)) or r.web_image_url) else noimg_positions).append(i)
+
+    img_sorted = sorted(img_positions, key=lambda i: blended[i], reverse=True)
+    noimg_sorted = sorted(noimg_positions, key=lambda i: blended[i], reverse=True)
+    img_diversified = _diversify_mmr(img_sorted, blended, candidate_matrix, MMR_POOL_SIZE, MMR_LAMBDA)
+
+    return [ordered_ids[i] for i in img_diversified + noimg_sorted]
+
+
+def _band_shuffle(ids, rng):
+    """Shuffle within contiguous relevance bands: strong matches stay near the
+    top, but which ones (and their order) rotate per seed."""
+    out = list(ids)
+    for start in range(0, len(out), VARIETY_BAND_SIZE):
+        band = out[start:start + VARIETY_BAND_SIZE]
+        rng.shuffle(band)
+        out[start:start + VARIETY_BAND_SIZE] = band
+    return out
+
+
+def _apply_variety(pool_ids, seed, want_n, user_id):
+    """Cheap, seeded per-request transform over the cached pool: band-shuffle for
+    freshness + weave popular-but-low-ranked recipes into the visible window for
+    serendipity (the exploration slice). Deterministic for a given seed, so a
+    paginated caller passing a stable session seed gets consistent paging while a
+    new seed (pull-to-refresh) reshuffles the feed."""
+    rng = random.Random(seed)
+    ids = list(pool_ids)
+    n = len(ids)
+    window = want_n or n
+
+    if n <= window:
+        return _band_shuffle(ids, rng)[:want_n] if want_n else _band_shuffle(ids, rng)
+
+    # Exploration: promote the most popular recipes currently ranked *below* the
+    # visible window up into it (removing them from their low position so there
+    # are no duplicates).
+    trending_rank = {rid: i for i, rid in enumerate(_ranked_trending_ids())}
+    below_window = ids[window:]
+    explore_picks = sorted(
+        (r for r in below_window if r in trending_rank),
+        key=lambda r: trending_rank[r],
+    )[:int(round(EXPLORATION_RATIO * window))]
+
+    if explore_picks:
+        pick_set = set(explore_picks)
+        ids = _band_shuffle([r for r in ids if r not in pick_set], rng)
+        for p in explore_picks:
+            # Insert within the visible window so a promoted recipe is actually seen.
+            ids.insert(rng.randint(0, max(0, min(window - 1, len(ids)))), p)
+    else:
+        ids = _band_shuffle(ids, rng)
+
+    return ids[:want_n] if want_n else ids
 
 
 def _rank_similar_recipes(user_id, tfidf, user_profile_vector, version):

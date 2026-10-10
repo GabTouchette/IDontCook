@@ -26,6 +26,12 @@ class ExploreProvider
   bool get isLoading => _isLoading;
   Map<String, dynamic> get filters => _filters;
 
+  // Per-session variety seed: stable across pages of one browse session (so
+  // pagination stays consistent) and regenerated on pull-to-refresh so the feed
+  // reshuffles. The backend uses it for the ranker's band-shuffle + exploration
+  // slice (docs/plans/recommendation-algo-v2.md §3).
+  int _seed = DateTime.now().millisecondsSinceEpoch % 1000000000;
+
   String _lastListenerText = '';
 
   ExploreProvider() {
@@ -64,6 +70,7 @@ class ExploreProvider
     params['max_calories'] = _filters['maxCalories'].toString();
     params['exclude_ai_generated'] = _filters['excludeAIGenerated'].toString();
     params['exclude_own_recipes'] = _filters['excludeOwnRecipes'].toString();
+    params['seed'] = _seed.toString();
 
     return params;
   }
@@ -91,8 +98,11 @@ class ExploreProvider
     }
   }
 
-  /// Refresh resets pagination and reloads data
+  /// Refresh resets pagination and reloads data. A new variety seed is minted so
+  /// the recommendation feed reshuffles (new order + fresh exploration picks)
+  /// rather than returning the exact same ranking.
   Future<void> refresh() async {
+    _seed = DateTime.now().millisecondsSinceEpoch % 1000000000;
     await fetchInitialItems();
   }
 
@@ -158,6 +168,16 @@ class ExploreProvider
   Future<void> recordDownvote(int recipeId) async {
     removeItem(recipeId);
     await ExploreApi().recordInteraction(recipeId, 'downvote');
+  }
+
+  /// Record that the user opened a recipe (weak ranking signal).
+  /// Fire-and-forget: never blocks navigation and swallows failures.
+  Future<void> recordClick(int recipeId) async {
+    try {
+      await ExploreApi().recordClick(recipeId);
+    } catch (_) {
+      // Weak signal — a failed click log must never affect the UX.
+    }
   }
 
   /// Delete the recipe from the database and remove it from the list.
