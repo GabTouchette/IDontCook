@@ -40,6 +40,17 @@ class RecipeApi {
     return response != null;
   }
 
+  /// Forces an LLM re-format of the recipe's ingredients (same pass that runs
+  /// on create). Returns the reformatted recipe JSON, or null on failure.
+  Future<Map<String, dynamic>?> reformatRecipe(int recipeId) async {
+    final response =
+        await _apiHelper.postRequest('recipes/$recipeId/reformat/', {});
+    if (response is Map<String, dynamic> && response['id'] != null) {
+      return response;
+    }
+    return null;
+  }
+
   Future<String> uploadRecipeImage(int recipeId, File imageFile) async {
     return await _apiHelper.imageRequest('recipes/$recipeId/image', imageFile);
   }

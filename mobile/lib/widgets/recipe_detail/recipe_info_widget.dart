@@ -5,6 +5,7 @@ import 'package:i_cant_cook/widgets/recipe_detail/servings_section_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/nutrition_info_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/ingredients_section_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/instructions_section_widget.dart';
+import 'package:i_cant_cook/widgets/recipe_detail/recipe_format_banner_widget.dart';
 
 class RecipeInfo extends StatelessWidget {
   final Recipe recipe;
@@ -19,6 +20,17 @@ class RecipeInfo extends StatelessWidget {
   final Map<int, double> ingredientCalories;
   final bool isNutritionCalculating;
 
+  /// Forwarded to [IngredientsSection]: called with a ready-to-send chat
+  /// question when the user long-presses an ingredient and picks an action.
+  /// Null disables the ingredient long-press menu.
+  final void Function(String question)? onAskAboutIngredient;
+
+  /// When true, shows the "Recipe improperly formatted" banner under the
+  /// prep/cook stat bar with a button that triggers [onReformat].
+  final bool showFormatBanner;
+  final bool isReformatting;
+  final VoidCallback? onReformat;
+
   const RecipeInfo({
     Key? key,
     required this.recipe,
@@ -32,6 +44,10 @@ class RecipeInfo extends StatelessWidget {
     required this.updatedFields,
     this.ingredientCalories = const {},
     this.isNutritionCalculating = false,
+    this.onAskAboutIngredient,
+    this.showFormatBanner = false,
+    this.isReformatting = false,
+    this.onReformat,
   }) : super(key: key);
 
   @override
@@ -47,6 +63,13 @@ class RecipeInfo extends StatelessWidget {
           decrementServings: decrementServings,
           updatedFields: updatedFields,
         ),
+
+        // "Improperly formatted" banner — sits directly under the prep/cook bar
+        if (showFormatBanner)
+          RecipeFormatBanner(
+            isReformatting: isReformatting,
+            onReformat: onReformat,
+          ),
 
         // Servings Section
         ServingsSection(
@@ -71,6 +94,7 @@ class RecipeInfo extends StatelessWidget {
           onCompletedIngredient: onCompletedIngredient,
           updatedFields: updatedFields,
           ingredientCalories: ingredientCalories,
+          onAskAboutIngredient: onAskAboutIngredient,
         ),
 
         // Instructions Section

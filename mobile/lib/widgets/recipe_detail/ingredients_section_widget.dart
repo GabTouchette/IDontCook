@@ -13,6 +13,12 @@ class IngredientsSection extends StatefulWidget {
   final Function onCompletedIngredient;
   final Map<int, double> ingredientCalories;
 
+  /// Called when the user long-presses an ingredient and picks an action from
+  /// the context menu. Receives a ready-to-send chat question about the
+  /// ingredient. When null, the long-press menu is disabled (e.g. for unsaved
+  /// recipes or preview mode, where the recipe chat isn't available).
+  final void Function(String question)? onAskAboutIngredient;
+
   const IngredientsSection({
     Key? key,
     required this.recipe,
@@ -21,6 +27,7 @@ class IngredientsSection extends StatefulWidget {
     required this.onCompletedIngredient,
     required this.updatedFields,
     this.ingredientCalories = const {},
+    this.onAskAboutIngredient,
   }) : super(key: key);
 
   @override
@@ -28,6 +35,106 @@ class IngredientsSection extends StatefulWidget {
 }
 
 class _IngredientsSectionState extends State<IngredientsSection> {
+  /// Opens the long-press action sheet for [ingredientName] and, on selection,
+  /// hands a pre-built chat question up to [IngredientsSection.onAskAboutIngredient].
+  void _showIngredientMenu(BuildContext context, String ingredientName) {
+    final cs = Theme.of(context).colorScheme;
+    const lime = Color(0xFFCAFF00);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Row(
+                  children: [
+                    Container(width: 4, height: 20, color: lime),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        ingredientName,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: cs.outline.withOpacity(0.12),
+              ),
+              _menuTile(
+                context: sheetContext,
+                icon: Icons.help_outline,
+                label: 'What is this?',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  widget.onAskAboutIngredient?.call(
+                    'What is "$ingredientName"?',
+                  );
+                },
+              ),
+              _menuTile(
+                context: sheetContext,
+                icon: Icons.swap_horiz,
+                label: 'Suggest replacements',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  widget.onAskAboutIngredient?.call(
+                    'What can I use instead of "$ingredientName" in this recipe?',
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _menuTile({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: cs.onSurface.withOpacity(0.7)),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUpdated = widget.updatedFields.contains('ingredients');
@@ -109,6 +216,12 @@ class _IngredientsSectionState extends State<IngredientsSection> {
               HapticService.selectionClick();
               widget.onCompletedIngredient(index);
             },
+            onLongPress: widget.onAskAboutIngredient == null
+                ? null
+                : () {
+                    HapticService.selectionClick();
+                    _showIngredientMenu(context, display.name);
+                  },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               color: isCompleted

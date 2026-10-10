@@ -2,6 +2,7 @@ from django.urls import path
 from recipes.views import (
     RecipeListAPIView,
     RecipeDetailAPIView,
+    RecipeReformatAPIView,
     RecipeImageUploadAPIView,
     RecipeInteractionAPIView,
     RecipeClickAPIView,
@@ -14,6 +15,7 @@ from recipes.views import (
 urlpatterns = [
     path("", RecipeListAPIView.as_view(), name="recipe-list"),
     path("<int:pk>/", RecipeDetailAPIView.as_view(), name="recipe-detail"),
+    path("<int:pk>/reformat/", RecipeReformatAPIView.as_view(), name="recipe-reformat"),
     path("<int:pk>/nutrition/", RecipeNutritionAPIView.as_view(), name="recipe-nutrition"),
     path("<int:pk>/interact/", RecipeInteractionAPIView.as_view(), name="recipe-interact"),
     path("<int:pk>/click/", RecipeClickAPIView.as_view(), name="recipe-click"),

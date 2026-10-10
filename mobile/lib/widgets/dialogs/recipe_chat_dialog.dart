@@ -9,7 +9,13 @@ import 'package:provider/provider.dart';
 class RecipeChatDialog extends StatefulWidget {
   final Recipe recipe;
 
-  const RecipeChatDialog({Key? key, required this.recipe}) : super(key: key);
+  /// Optional question to auto-send as soon as the chat opens — used by the
+  /// ingredient long-press actions ("What is this?" / "Suggest replacements")
+  /// so the chat opens with the question already asked.
+  final String? initialQuery;
+
+  const RecipeChatDialog({Key? key, required this.recipe, this.initialQuery})
+      : super(key: key);
 
   @override
   State<RecipeChatDialog> createState() => _RecipeChatDialogState();
@@ -27,6 +33,17 @@ class _RecipeChatDialogState extends State<RecipeChatDialog> {
         provider.addMessage(
           sender: "ai",
           text: "Ask me something about your ${widget.recipe.title} recipe!",
+          isRecipeChat: true,
+        );
+      }
+
+      // Auto-send a pre-built question (e.g. from an ingredient long-press)
+      // so the chat opens with the question already asked and answered.
+      final initialQuery = widget.initialQuery?.trim();
+      if (initialQuery != null && initialQuery.isNotEmpty) {
+        provider.sendMessage(
+          query: initialQuery,
+          recipeId: widget.recipe.id,
           isRecipeChat: true,
         );
       }
