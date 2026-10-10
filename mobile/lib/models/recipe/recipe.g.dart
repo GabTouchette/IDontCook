@@ -28,6 +28,7 @@ _$RecipeImpl _$$RecipeImplFromJson(Map<String, dynamic> json) => _$RecipeImpl(
       notes: json['notes'] as String?,
       is_favorite: json['is_favorite'] as bool?,
       is_saved: json['is_saved'] as bool?,
+      is_formatted: json['is_formatted'] as bool?,
       created_at: json['created_at'] == null
           ? null
           : DateTime.parse(json['created_at'] as String),
@@ -60,6 +61,7 @@ Map<String, dynamic> _$$RecipeImplToJson(_$RecipeImpl instance) =>
       'notes': instance.notes,
       'is_favorite': instance.is_favorite,
       'is_saved': instance.is_saved,
+      'is_formatted': instance.is_formatted,
       'created_at': instance.created_at?.toIso8601String(),
       'created_by': instance.created_by,
       'last_visited_at': instance.last_visited_at?.toIso8601String(),

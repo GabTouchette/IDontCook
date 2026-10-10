@@ -1,3 +1,4 @@
+import logging
 import threading
 from recipes.tasks import format_recipe_ingredients, dispatch_nutrition_calculation
 from rest_framework.views import APIView
@@ -140,6 +141,70 @@ class RecipeDetailAPIView(APIView):
 
         recipe.delete()
         return JsonResponse({"message": "Recipe deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class RecipeReformatAPIView(APIView):
+    """Force-reformat a recipe's ingredients with the LLM — the same formatting
+    pass that runs in the background on create (`format_recipe_ingredients` /
+    `llm_format_ingredients`), exposed as an on-demand action for the
+    "Recipe improperly formatted" banner in the app.
+
+    Runs synchronously so the response carries the reformatted recipe and the
+    detail page can refresh immediately (prod has no Celery worker). Nutrition
+    is recalculated in the background afterwards since the ingredient set changed.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        # Only the owner can reformat their own copy.
+        if recipe.created_by != request.user:
+            return JsonResponse(
+                {"error": "You do not have permission to reformat this recipe."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not recipe.ingredients.exists():
+            return JsonResponse(
+                {"error": "Recipe has no ingredients to format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            result = AnthropicService().llm_format_ingredients(recipe)
+        except Exception as exc:
+            logging.getLogger(__name__).error(
+                "Reformat failed for recipe %s: %s", pk, exc, exc_info=True
+            )
+            return JsonResponse(
+                {"error": "Failed to reformat recipe. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # llm_format_ingredients returns an error string instead of a Recipe when
+        # the LLM response can't be parsed — treat that as a failure.
+        if not isinstance(result, Recipe):
+            return JsonResponse(
+                {"error": "Failed to reformat recipe. Please try again."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        recipe = result
+        recipe.is_formatted = True
+        recipe.save()
+
+        # Ingredient names/units changed, so cached nutrition is stale.
+        try:
+            dispatch_nutrition_calculation(recipe.id)
+        except Exception as exc:
+            logging.getLogger(__name__).warning(
+                "Nutrition re-dispatch after reformat failed for recipe %s: %s",
+                recipe.id, exc,
+            )
+
+        serializer = RecipeSerializer(recipe, context={'request': request})
+        return JsonResponse(serializer.data, status=status.HTTP_200_OK)
 
 
 class RecipeImageUploadAPIView(APIView):

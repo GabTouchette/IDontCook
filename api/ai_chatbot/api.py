@@ -751,6 +751,8 @@ class PromptTemplates:
 
         return (
             "You are a cookbook AI chatbot that helps users with their cooking and recipe needs.\n\n"
+            "ALWAYS keep answers as short as possible: reply in 1-2 short sentences "
+            "and skip any preamble or filler, unless the user explicitly asks for more detail.\n\n"
             f"{settings}\n\n"
             f"User's saved recipes:\n{recipe_info}\n\n"
             "You can:\n"
@@ -798,6 +800,10 @@ class PromptTemplates:
         return (
             "You are an AI assistant helping a user modify or answer questions about a recipe.\n"
             "You can respond to the user, suggest changes to the recipe or ask for more details.\n"
+            "ALWAYS keep answers as short as possible: for plain-text questions "
+            "(e.g. what an ingredient is, or substitutions), reply in 1-2 short "
+            "sentences and skip any preamble or filler. Only use more words when "
+            "the user explicitly asks for detail.\n"
             "When responding with a modified recipe:\n"
             "- Respond only with fields that changed, wrapped in @@{...}@@.\n"
             "- Use valid JSON keys like: title, ingredients, instructions, cooking_time, preparation_time, servings, tags, description, notes.\n"
@@ -924,6 +930,8 @@ class PromptTemplates:
         """
         sections = [
             "You are a cookbook AI chatbot that helps users with their cooking and recipe needs.",
+            "ALWAYS keep your text answers as short as possible — 1-2 short sentences, "
+            "no preamble or filler — unless the user explicitly asks for more detail.",
             PromptTemplates._user_profile_section(user_settings),
             PromptTemplates.taste_summary_section(taste_summary),
             (
@@ -971,7 +979,9 @@ class PromptTemplates:
         sections = [
             (
                 "You are an AI assistant helping a user modify or answer questions about a recipe.\n"
-                "You can respond to the user, suggest changes to the recipe, or ask for more details.\n\n"
+                "You can respond to the user, suggest changes to the recipe, or ask for more details.\n"
+                "ALWAYS keep text answers as short as possible — 1-2 short sentences, no "
+                "preamble or filler — unless the user explicitly asks for more detail.\n\n"
                 "Rules:\n"
                 "- When proposing changes to the recipe, use the `update_recipe` tool with ONLY the changed fields in `changes`.\n"
                 "- If you change `ingredients` or `tags`, return the full updated list.\n"

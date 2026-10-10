@@ -8,6 +8,7 @@ import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 class RecipeDetailProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
+  bool _isReformatting = false;
   bool _isNutritionCalculating = false;
   Recipe? _recipe;
   double _servings = 1.0;
@@ -18,6 +19,7 @@ class RecipeDetailProvider with ChangeNotifier {
 
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
+  bool get isReformatting => _isReformatting;
   bool get isNutritionCalculating => _isNutritionCalculating;
   Recipe? get recipe => _recipe;
   double get servings => _servings;
@@ -203,6 +205,46 @@ class RecipeDetailProvider with ChangeNotifier {
       );
     } finally {
       _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Re-runs the LLM ingredient formatting pass on the current recipe (the same
+  /// formatting that normally runs in the background on create). On success the
+  /// recipe is replaced with the reformatted version and nutrition is re-polled.
+  Future<void> reformatRecipe(BuildContext context) async {
+    if (_recipe == null || _isReformatting) return;
+
+    _isReformatting = true;
+    notifyListeners();
+
+    try {
+      final data = await RecipeApi().reformatRecipe(_recipe!.id);
+      if (data == null) {
+        throw Exception('Reformat failed');
+      }
+
+      _recipe = Recipe.fromJson(data);
+      _completedIngredients =
+          List<bool>.filled(_recipe!.ingredients.length, false);
+      notifyListeners();
+
+      // Ingredients changed, so the backend recalculates nutrition — pick it up.
+      pollNutritionUntilReady(_recipe!.id);
+
+      InformationToast.show(
+        context: context,
+        message: 'Recipe reformatted!',
+        type: ToastType.success,
+      );
+    } catch (e) {
+      InformationToast.show(
+        context: context,
+        message: 'Could not reformat the recipe. Please try again.',
+        type: ToastType.error,
+      );
+    } finally {
+      _isReformatting = false;
       notifyListeners();
     }
   }

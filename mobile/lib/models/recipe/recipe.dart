@@ -23,6 +23,7 @@ class Recipe with _$Recipe {
     String? notes,
     bool? is_favorite,
     bool? is_saved,
+    bool? is_formatted,
     DateTime? created_at,
     User? created_by,
     DateTime? last_visited_at,

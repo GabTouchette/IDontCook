@@ -355,6 +355,20 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     updatedFields: updatedFields,
                     ingredientCalories: provider.ingredientCalories,
                     isNutritionCalculating: provider.isNutritionCalculating,
+                    // Ingredient long-press → chat is only wired when the recipe
+                    // chat is actually available (same gate as the chat FAB).
+                    onAskAboutIngredient: (recipe.is_saved == true &&
+                            widget.viewMode == RecipeViewMode.normal())
+                        ? (question) =>
+                            _openRecipeChat(recipe, initialQuery: question)
+                        : null,
+                    // Show the reformat banner for saved recipes whose
+                    // ingredients haven't been through the LLM format pass.
+                    showFormatBanner: recipe.is_formatted == false &&
+                        recipe.is_saved == true &&
+                        widget.viewMode == RecipeViewMode.normal(),
+                    isReformatting: provider.isReformatting,
+                    onReformat: () => provider.reformatRecipe(context),
                   ),
                   AdditionalSections(
                     tags: recipe.tags,
@@ -374,15 +388,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 bottom: 24,
                 right: 24,
                 child: GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surface,
-                      builder: (_) => RecipeChatDialog(recipe: recipe),
-                    );
-                  },
+                  onTap: () => _openRecipeChat(recipe),
                   child: Container(
                     width: 56,
                     height: 56,
@@ -399,6 +405,20 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         ),
       );
     });
+  }
+
+  /// Opens the recipe chat bottom sheet. When [initialQuery] is provided (e.g.
+  /// from an ingredient long-press action), the dialog auto-sends it on open.
+  void _openRecipeChat(Recipe recipe, {String? initialQuery}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (_) => RecipeChatDialog(
+        recipe: recipe,
+        initialQuery: initialQuery,
+      ),
+    );
   }
 
   void _onSave(BuildContext context) {
