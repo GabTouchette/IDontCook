@@ -134,19 +134,31 @@ class GoogleAuthView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        client_id = getattr(django_settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
-        if not client_id:
+        # Accept id_tokens from any configured client id (mobile/web + macOS
+        # desktop). Falls back to the single GOOGLE_OAUTH_CLIENT_ID if the list
+        # isn't configured.
+        client_ids = list(getattr(django_settings, 'GOOGLE_OAUTH_CLIENT_IDS', []) or [])
+        single_client_id = getattr(django_settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
+        if not client_ids and single_client_id:
+            client_ids = [single_client_id]
+        if not client_ids:
             return JsonResponse(
                 {'error': 'Google OAuth is not configured on this server'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         try:
+            # Verify signature/issuer/expiry without a fixed audience, then
+            # assert the token's audience is one we allow (google-auth's
+            # audience arg only accepts a single value).
             payload = id_token.verify_oauth2_token(
                 token,
                 google_requests.Request(),
-                client_id,
             )
+            if payload.get('aud') not in client_ids:
+                raise ValueError(
+                    f"token aud {payload.get('aud')} is not an allowed client id"
+                )
         except ValueError as exc:
             # TEMP DIAGNOSTIC: log why verification failed and decode the token's
             # own (unverified) claims so we can compare what Google minted against
@@ -156,9 +168,9 @@ class GoogleAuthView(APIView):
                 payload_b64 += '=' * (-len(payload_b64) % 4)  # restore padding
                 unverified = json.loads(base64.urlsafe_b64decode(payload_b64))
                 logger.warning(
-                    'Google auth verify failed: %s | expected_client_id=%s | '
+                    'Google auth verify failed: %s | allowed_client_ids=%s | '
                     'token aud=%s iss=%s azp=%s exp=%s email=%s',
-                    exc, client_id,
+                    exc, client_ids,
                     unverified.get('aud'), unverified.get('iss'),
                     unverified.get('azp'), unverified.get('exp'),
                     unverified.get('email'),

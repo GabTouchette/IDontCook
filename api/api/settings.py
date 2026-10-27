@@ -118,6 +118,22 @@ USE_GCS = bool(GS_BUCKET_NAME and GS_CREDENTIALS)
 
 # Google OAuth client ID used to verify mobile sign-in tokens
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
+# macOS desktop OAuth client. OAuth client IDs are public identifiers (not
+# secrets — the mobile one is already embedded in the app), so baking this in as
+# a default is safe and means the backend accepts desktop id_tokens without any
+# env/Coolify change. Deployed env can still extend the list via GOOGLE_OAUTH_CLIENT_IDS.
+GOOGLE_OAUTH_DESKTOP_CLIENT_ID = (
+    "42379090918-kbqmdopvg7q3lrk201tdeq8an54v2cp1.apps.googleusercontent.com"
+)
+# id_tokens from any of these client ids are accepted.
+GOOGLE_OAUTH_CLIENT_IDS = [
+    cid
+    for cid in (
+        [GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_DESKTOP_CLIENT_ID]
+        + env.list("GOOGLE_OAUTH_CLIENT_IDS", default=[])
+    )
+    if cid
+]
 
 if GS_BUCKET_NAME and not GS_CREDENTIALS and IS_PRODUCTION:
     raise ImproperlyConfigured(
