@@ -5,7 +5,7 @@ class ApiConfig {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
   static const String _iosLocalDefault = 'http://127.0.0.1:8000';
   static const String _androidEmulatorDefault = 'http://10.0.2.2:8000';
-  static const String _webProductionDefault = 'https://web-production-853e.up.railway.app';
+  static const String _webProductionDefault = 'https://api.idontcook.app';
 
   static String get origin {
     if (_apiBaseUrlDefine.isNotEmpty) {
