@@ -9,6 +9,7 @@ from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
 
+import requests as http_requests
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
@@ -128,9 +129,15 @@ class GoogleAuthView(APIView):
         logger.warning('google-auth endpoint HIT (has_id_token=%s)',
                        bool(request.data.get('id_token')))
         token = request.data.get('id_token')
-        if not token:
+        # Flutter web (google_sign_in_web / Google Identity Services) can only
+        # obtain an OAuth access token from its popup flow — GIS mints id_tokens
+        # solely through its own rendered button. Web therefore sends
+        # access_token instead, verified against Google's tokeninfo endpoint
+        # with the same audience allowlist as the id_token path.
+        access_token = request.data.get('access_token')
+        if not token and not access_token:
             return JsonResponse(
-                {'error': 'id_token is required'},
+                {'error': 'id_token or access_token is required'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -148,21 +155,33 @@ class GoogleAuthView(APIView):
             )
 
         try:
-            # Verify signature/issuer/expiry without a fixed audience, then
-            # assert the token's audience is one we allow (google-auth's
-            # audience arg only accepts a single value).
-            payload = id_token.verify_oauth2_token(
-                token,
-                google_requests.Request(),
-            )
-            if payload.get('aud') not in client_ids:
-                raise ValueError(
-                    f"token aud {payload.get('aud')} is not an allowed client id"
+            if token:
+                # Verify signature/issuer/expiry without a fixed audience, then
+                # assert the token's audience is one we allow (google-auth's
+                # audience arg only accepts a single value).
+                payload = id_token.verify_oauth2_token(
+                    token,
+                    google_requests.Request(),
                 )
+                if payload.get('aud') not in client_ids:
+                    raise ValueError(
+                        f"token aud {payload.get('aud')} is not an allowed client id"
+                    )
+            else:
+                payload = self._verify_access_token(access_token, client_ids)
         except ValueError as exc:
             # TEMP DIAGNOSTIC: log why verification failed and decode the token's
             # own (unverified) claims so we can compare what Google minted against
             # the client_id the server expects. Remove once Google login is fixed.
+            if not token:
+                logger.warning(
+                    'Google auth access_token verify failed: %s | allowed_client_ids=%s',
+                    exc, client_ids,
+                )
+                return JsonResponse(
+                    {'error': f'Invalid Google token: {exc}'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             try:
                 payload_b64 = token.split('.')[1]
                 payload_b64 += '=' * (-len(payload_b64) % 4)  # restore padding
@@ -214,6 +233,46 @@ class GoogleAuthView(APIView):
             },
             'created': created,
         }, status=status.HTTP_200_OK)
+
+    def _verify_access_token(self, access_token: str, client_ids: list) -> dict:
+        """Verify a Google OAuth access token (Flutter web flow) and return a
+        payload shaped like the id_token one (email / given_name / family_name).
+
+        tokeninfo validates the token and exposes its audience so we can apply
+        the same client-id allowlist as the id_token path.
+        """
+        try:
+            resp = http_requests.get(
+                'https://oauth2.googleapis.com/tokeninfo',
+                params={'access_token': access_token},
+                timeout=10,
+            )
+        except http_requests.RequestException as exc:
+            raise ValueError(f'could not reach Google tokeninfo: {exc}')
+        if resp.status_code != 200:
+            raise ValueError('Google rejected the access token')
+        info = resp.json()
+        if info.get('aud') not in client_ids:
+            raise ValueError(
+                f"token aud {info.get('aud')} is not an allowed client id"
+            )
+
+        payload = {'email': info.get('email')}
+        # Best-effort profile fetch for first/last name on first sign-in; the
+        # token already carries the `profile` scope requested by the app.
+        try:
+            prof = http_requests.get(
+                'https://www.googleapis.com/oauth2/v3/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'},
+                timeout=10,
+            )
+            if prof.status_code == 200:
+                prof_data = prof.json()
+                payload['given_name'] = prof_data.get('given_name', '')
+                payload['family_name'] = prof_data.get('family_name', '')
+        except http_requests.RequestException:
+            pass
+        return payload
 
     def _generate_username(self, email: str) -> str:
         base = email.split('@')[0][:12].replace('.', '_').replace('+', '_')
