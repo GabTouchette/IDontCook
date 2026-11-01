@@ -10,12 +10,19 @@ from rest_framework.views import APIView
 from django.core.cache import cache
 
 from .collectors import CACHEABLE_COLLECTORS, FeedContext, collect_deals, collect_modules
-from .deals_service import aggregate_deals, nearby_stores, resolve_location, stores_by_ids
+from .deals_service import (
+    aggregate_deals,
+    deals_cache_key,
+    nearby_stores,
+    resolve_location,
+    stores_by_ids,
+)
 from .flipp_client import FlippClient, normalize_postal
 from .geocode import geocode_postal_code, reverse_geocode
 from .greetings import get_greeting
 from .overpass_client import expand_store_locations, nearby_grocery_pois
 from .ranking import MOODS, compute_daypart, rank_modules
+from .tasks import dispatch_deals_warm
 
 
 class HomeFeedView(APIView):
@@ -184,7 +191,12 @@ class StoreSearchView(APIView):
                 center = {'lat': lat, 'lng': lng}
 
         if lat is not None and lng is not None:
-            pois = nearby_grocery_pois(lat, lng)
+            # Cache-only POI lookup (allow_network=False): the store finder must
+            # not block on a slow Overpass. Missing POIs → no map pins this load;
+            # a background warm fills the cache for next time.
+            pois = nearby_grocery_pois(lat, lng, allow_network=False)
+            if not pois:
+                dispatch_deals_warm(deals_cache_key(lat, lng, postal), lat, lng, postal)
             # Expand each banner into its nearby physical locations (multiple
             # Metros/IGAs), ranked by proximity.
             stores = expand_store_locations(stores, pois, center_lat=lat, center_lng=lng)
@@ -238,12 +250,36 @@ class DealsListView(APIView):
                 'stores': [], 'total_count': 0, 'items': [],
             })
 
+        # allow_network=False keeps the slow Overpass POI lookup OUT of the
+        # request path — it reads POIs from the shared cache only. When the POI
+        # cache is cold the stores come back without distances; we kick a
+        # background warm (deduped by a lock) so the next load is nearest-ranked.
         merchant_ids = self._parse_int_list(request.query_params.get('merchant_ids'))
         if merchant_ids:
-            stores = stores_by_ids(postal, lat, lng, merchant_ids)
+            stores = stores_by_ids(postal, lat, lng, merchant_ids, allow_network=False)
         else:
-            stores = nearby_stores(postal, lat, lng, store_limit=self.SEE_ALL_STORE_LIMIT)
+            stores = nearby_stores(
+                postal, lat, lng, store_limit=self.SEE_ALL_STORE_LIMIT,
+                allow_network=False,
+            )
+
+        # Cold POI cache (coords present but every store is unlocated) → warm it
+        # out-of-band for next time. The warm runs the full Flipp/OSM pipeline in
+        # the background and lands in the shared cache; it never blocks this call.
+        if lat is not None and lng is not None and stores and all(
+            s.get('distance_m') is None for s in stores
+        ):
+            dispatch_deals_warm(
+                deals_cache_key(lat, lng, postal), lat, lng, postal,
+                self.SEE_ALL_STORE_LIMIT,
+            )
+
         items = aggregate_deals(stores)
+
+        # Optional cap (?limit=N) — the full list is uncapped by default for
+        # backward compatibility, but the client can request a lighter page.
+        limit = self._parse_int(request.query_params.get('limit'))
+        page_items = items[:limit] if (limit and limit > 0) else items
         return Response({
             'postal_code': postal,
             'center': center,
@@ -257,8 +293,17 @@ class DealsListView(APIView):
                 for s in stores
             ],
             'total_count': len(items),
-            'items': items,
+            'items': page_items,
         })
+
+    @staticmethod
+    def _parse_int(value):
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
 
     @staticmethod
     def _parse_int_list(value):

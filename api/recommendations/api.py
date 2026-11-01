@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import math
+import os
 import pickle
 import random
 from collections import defaultdict
@@ -57,17 +58,32 @@ COLD_START_HALF_LIFE_DAYS = 30.0
 # imageless tail rather than reshuffling the bulk of results. Tune here.
 IMAGELESS_SCORE_PENALTY = 0.1
 
-USER_PROFILE_CACHE_TIMEOUT = 60 * 60  # 1 hour
+def _env_seconds(name, default):
+    """Cache TTL (seconds) from env, falling back to `default`. Lets ops tune the
+    recommendation caches on Coolify without a deploy."""
+    try:
+        return int(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+# These caches are busted explicitly on every real signal change (see
+# invalidate_user_recommendation_cache, called from the vote/interaction views),
+# so the TTL is only a backstop — long values are SAFE and let a scheduled
+# `warm_recommendations` precompute stay warm between runs instead of expiring in
+# minutes. Defaults lengthened from the original 1h/30m for exactly that reason;
+# override via env on Coolify if needed.
+USER_PROFILE_CACHE_TIMEOUT = _env_seconds("REC_PROFILE_CACHE_TTL", 6 * 60 * 60)  # 6h
 # The ranked similar-recipes list per user. Scoring the whole catalog by cosine
 # similarity (loads every candidate + builds a dense TF-IDF matrix) is the
 # dominant cost of the explore/home requests, so cache the ranking and slice it
-# per caller instead of recomputing every request. Kept in line with the 1h
-# profile cache — a refit (new vocab version) busts both.
-SIMILAR_RECIPES_CACHE_TIMEOUT = 30 * 60  # 30 minutes
-# Global (non-personalized) trending ranking. Recomputed at most twice an hour;
-# invoked on every home-feed request via the trending rail, so caching it keeps
-# the feed off the full interaction/save aggregation + Python sort each time.
-TRENDING_CACHE_TIMEOUT = 30 * 60  # 30 minutes
+# per caller instead of recomputing every request. A refit (new vocab version)
+# busts it via the versioned key; a signal change busts it explicitly.
+SIMILAR_RECIPES_CACHE_TIMEOUT = _env_seconds("REC_SIMILAR_CACHE_TTL", 24 * 60 * 60)  # 24h
+# Global (non-personalized) trending ranking. Invoked on every home-feed request
+# via the trending rail; has no explicit invalidation (reflects everyone's
+# activity), so keep it shorter so new popularity surfaces within the hour.
+TRENDING_CACHE_TIMEOUT = _env_seconds("REC_TRENDING_CACHE_TTL", 60 * 60)  # 1h
 
 
 # --- Recommender v2: multi-interest profile + directional downvote -----------

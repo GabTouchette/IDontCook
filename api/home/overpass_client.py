@@ -20,7 +20,11 @@ from django.core.cache import cache
 logger = logging.getLogger(__name__)
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-HTTP_TIMEOUT = 25  # seconds
+# Capped well under a gunicorn worker timeout: this call only ever runs in the
+# background warm path now (never a request), but a wedged Overpass should still
+# fail fast so the warm thread doesn't linger. The query itself asks for
+# [timeout:20] below.
+HTTP_TIMEOUT = 12  # seconds
 POIS_CACHE_TTL = 24 * 60 * 60  # 1 day — store locations rarely move
 DEFAULT_RADIUS_M = 6000  # wide enough to catch multiple locations per chain
 
@@ -82,11 +86,18 @@ def _haversine_m(lat1, lng1, lat2, lng2):
     return 2 * r * asin(sqrt(h))
 
 
-def nearby_grocery_pois(lat, lng, radius_m=DEFAULT_RADIUS_M):
+def nearby_grocery_pois(lat, lng, radius_m=DEFAULT_RADIUS_M, allow_network=True):
     """Grocery POIs (supermarkets + groceries) within `radius_m` of a point.
 
     Returns a list of {name, lat, lng}. Cached per rounded coordinate + radius.
     Empty list on any failure.
+
+    `allow_network=False` makes this cache-only: a cache miss returns [] WITHOUT
+    ever calling Overpass. Request-path callers pass False so a slow/throttled
+    overpass-api.de (seen taking ~25s) can never block a user request — the
+    distance ranking just degrades until the background warm populates the cache.
+    Only the background warm (home.tasks / warm_deals command) calls with
+    network enabled.
     """
     if lat is None or lng is None:
         return []
@@ -95,6 +106,8 @@ def nearby_grocery_pois(lat, lng, radius_m=DEFAULT_RADIUS_M):
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
+    if not allow_network:
+        return []
 
     query = (
         "[out:json][timeout:20];"

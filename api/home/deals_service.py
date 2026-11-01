@@ -56,13 +56,18 @@ def resolve_location(lat=None, lng=None, postal=None):
     return lat, lng, postal
 
 
-def nearby_stores(postal, lat=None, lng=None, store_limit=DEFAULT_STORE_LIMIT):
+def nearby_stores(postal, lat=None, lng=None, store_limit=DEFAULT_STORE_LIMIT,
+                  allow_network=True):
     """The `store_limit` closest distinct grocery banners near the location.
 
     Each returned store is a banner dict (merchant, merchant_id, flyer_id,
     logo_url, valid_to) plus `distance_m` (nearest location) — deduped by banner
     and ordered nearest-first. Falls back to alphabetical banners when there are
     no coordinates.
+
+    `allow_network=False` keeps the Overpass POI lookup out of the request path
+    (cache-only); without cached POIs the banners come back alphabetical with
+    `distance_m=None` until a background warm fills the POI cache.
     """
     if len(postal) < 6:
         return []
@@ -71,7 +76,7 @@ def nearby_stores(postal, lat=None, lng=None, store_limit=DEFAULT_STORE_LIMIT):
         return []
 
     if lat is not None and lng is not None:
-        pois = nearby_grocery_pois(lat, lng)
+        pois = nearby_grocery_pois(lat, lng, allow_network=allow_network)
         entries = expand_store_locations(banners, pois, center_lat=lat, center_lng=lng)
     else:
         entries = [
@@ -93,13 +98,15 @@ def nearby_stores(postal, lat=None, lng=None, store_limit=DEFAULT_STORE_LIMIT):
     return stores
 
 
-def stores_by_ids(postal, lat, lng, merchant_ids):
+def stores_by_ids(postal, lat, lng, merchant_ids, allow_network=True):
     """Resolve an explicit set of banners (by merchant_id) near the location.
 
     Used when the user has curated their own store list on the deals page. Each
     returned store is the banner's nearest location (with `distance_m`), in
     nearest-first order. Requested banners with no flyer in this postal area are
     simply omitted.
+
+    `allow_network=False` keeps the Overpass POI lookup cache-only (request path).
     """
     if len(postal) < 6 or not merchant_ids:
         return []
@@ -109,7 +116,7 @@ def stores_by_ids(postal, lat, lng, merchant_ids):
         return []
 
     if lat is not None and lng is not None:
-        pois = nearby_grocery_pois(lat, lng)
+        pois = nearby_grocery_pois(lat, lng, allow_network=allow_network)
         entries = expand_store_locations(banners, pois, center_lat=lat, center_lng=lng)
     else:
         entries = [
