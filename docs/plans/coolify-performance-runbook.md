@@ -22,25 +22,49 @@ which is why the shared cache + precompute below matter.
 
 ## 1. Provision Redis on Coolify (highest impact, config only)
 
-`api/settings.py` already switches the Django cache to `ResilientRedisCache`
-automatically **in production** when a Redis URL is present — no code change
-needed. Without it, every cache (recommendation profiles, deal aggregates,
-Flipp/OSM/geocode) is per-worker and cold, which is what defeats everything else
-here.
+`api/settings.py` switches the Django cache to `ResilientRedisCache` automatically
+**only when `ENVIRONMENT=production`** AND a Redis URL is present — the Redis
+branch is gated on `IS_PRODUCTION` (settings ~L328). Without both, every cache
+(recommendation profiles, deal aggregates, Flipp/OSM/geocode) falls back to
+per-worker LocMem and stays cold, which defeats everything else here.
 
-1. In Coolify, add a **Redis** service (one-click resource) in the same project.
-2. On the **backend** service, set an env var pointing at it:
-   ```
-   REDIS_URL=redis://<redis-host>:6379/0
-   ```
-   (Use the internal service hostname Coolify gives the Redis resource. Any of
-   `REDIS_PUBLIC_URL`, `REDIS_URL`, or `CELERY_BROKER_URL` is picked up, in that
-   order — `settings.py` ~L340.)
-3. Confirm `IS_PRODUCTION` is true on this service (it gates the Redis branch).
-4. Redeploy the backend.
+> The live app was found running in **development mode** (no HSTS / no HTTPS
+> redirect) — that's why the cache was LocMem even with 2 workers. Fixing this
+> means flipping to production, which also turns off `DEBUG`.
 
-**Verify it took:** hit the home feed a few times in a row; the deals rail should
-stay `ready` instead of alternating `ready/loading`. Or from a shell on the box:
+1. In Coolify, add a **Redis** service (one-click resource) in the same project;
+   copy its connection URL (`redis://default:<pw>@<host>:6379`).
+2. On the **backend** service, set these env vars. The ones marked *(required)*
+   will stop the app from booting if missing once `ENVIRONMENT=production`:
+   ```
+   ENVIRONMENT=production                         # (required) engages Redis + disables DEBUG
+   DJANGO_SECRET_KEY=<long random secret>         # (required) must be set when DEBUG=false
+   ALLOWED_HOSTS=api.idontcook.app                # (required) else ALLOWED_HOSTS is empty -> crash
+   REDIS_URL=redis://default:<pw>@<host>:6379/0   # the Django cache
+   CELERY_BROKER_URL=redis://default:<pw>@<host>:6379/0      # (required in prod)
+   CELERY_RESULT_BACKEND=redis://default:<pw>@<host>:6379/0  # (required in prod)
+   # If a Flutter WEB client exists (DEBUG=false restricts CORS):
+   CORS_ALLOWED_ORIGINS=https://<web-domain>
+   CSRF_TRUSTED_ORIGINS=https://<web-domain>,https://api.idontcook.app
+   ```
+   (`DATABASE_URL` and the GCS creds are already set — leave them. The cache URL
+   resolves from `REDIS_PUBLIC_URL` → `REDIS_URL` → `CELERY_BROKER_URL`.)
+3. Redeploy the backend.
+
+Watch-outs after the flip:
+- **Redirect loop:** `SECURE_SSL_REDIRECT` turns on. Behind Cloudflare, use SSL
+  mode **Full** so `X-Forwarded-Proto: https` reaches the app (settings already
+  trusts it via `SECURE_PROXY_SSL_HEADER`). Escape hatch if it loops:
+  `SECURE_SSL_REDIRECT=false`.
+- **Secret key:** mobile logins survive (DRF tokens are DB rows); only Django
+  admin sessions reset.
+
+**Verify it took:**
+- `curl -sI https://api.idontcook.app/api/recipes/ | grep -i strict-transport` —
+  an HSTS header means production mode is live (and DEBUG is off).
+- Hit the home feed a few times in a row; the deals rail should stay `ready`
+  instead of alternating `ready/loading` = the Redis cache is shared. Or from a
+  shell on the box:
 ```bash
 python manage.py shell -c "from django.core.cache import cache; cache.set('k',1,30); print(cache.get('k'))"
 ```
