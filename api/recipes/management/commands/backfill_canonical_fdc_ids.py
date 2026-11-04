@@ -99,6 +99,11 @@ class Command(BaseCommand):
                             help="Minimum match score to accept a pin (default 0.5)")
         parser.add_argument("--sleep", type=float, default=0.3,
                             help="Seconds between USDA requests (rate limiting)")
+        parser.add_argument("--override-file",
+                            help="JSON {canonical_name: fdc_id} of hand-curated pins. These are "
+                                 "applied verbatim (get-or-create the canonical, set usda_fdc_id) "
+                                 "before any search — the authoritative source for names USDA "
+                                 "search can't match or mis-matches. Can be used alone (no USDA key).")
 
     def handle(self, *args, **options):
         dry = options["dry_run"]
@@ -107,9 +112,18 @@ class Command(BaseCommand):
         min_score = options["min_score"]
         sleep_s = options["sleep"]
 
+        # Hand-curated overrides first (authoritative; replays catalog curation).
+        if options.get("override_file"):
+            self._apply_overrides(options["override_file"], dry)
+
         client = USDAClient()
         if not client.api_key:
-            self.stderr.write(self.style.ERROR("USDA_API_KEY not configured; aborting."))
+            # Overrides don't need USDA; only error if we were also asked to search.
+            msg = "USDA_API_KEY not configured"
+            if options.get("override_file"):
+                self.stdout.write(f"{msg}; applied overrides only, skipping search.")
+                return
+            self.stderr.write(self.style.ERROR(f"{msg}; aborting."))
             return
 
         qs = CanonicalIngredient.objects.all().order_by("id")
@@ -154,5 +168,38 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f"Done. Scanned {scanned}, pinned {pinned}, left-unlinked {weak}"
+            + (" (dry run)" if dry else "")
+        ))
+
+    def _apply_overrides(self, path, dry):
+        """Apply hand-curated {canonical_name: fdc_id} pins verbatim.
+
+        Get-or-creates the canonical (so re-split concepts like "ground beef"
+        materialise on a fresh seed) and sets usda_fdc_id, overwriting any prior
+        (mis-)match. Deterministic; no USDA calls.
+        """
+        import json
+
+        with open(path, encoding="utf-8") as fh:
+            overrides = json.load(fh)
+        applied = created = 0
+        for name, fdc in overrides.items():
+            name = (name or "").strip()
+            if not name or not fdc:
+                continue
+            ci = CanonicalIngredient.objects.filter(canonical_name_en=name).first()
+            if ci is None:
+                if dry:
+                    created += 1
+                    continue
+                ci = CanonicalIngredient.objects.create(canonical_name_en=name)
+                created += 1
+            if str(ci.usda_fdc_id or "") != str(fdc):
+                if not dry:
+                    ci.usda_fdc_id = str(fdc)
+                    ci.save(update_fields=["usda_fdc_id"])
+                applied += 1
+        self.stdout.write(self.style.SUCCESS(
+            f"Overrides: {applied} pinned, {created} canonicals created from {path}"
             + (" (dry run)" if dry else "")
         ))
