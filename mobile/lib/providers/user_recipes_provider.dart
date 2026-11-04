@@ -11,6 +11,7 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
   String? _selectedTag;
   String _tagSearchQuery = '';
   DateTime? _lastRequestTime;
+  bool _hasLoaded = false;
 
   int tileMode = 1; // 0 = small, 1 = medium, 2 = large
 
@@ -18,6 +19,11 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
   List<RecipePreview> get filteredRecipes => _filteredRecipes;
   int get tabIndex => _tabIndex;
   String? get selectedTag => _selectedTag;
+
+  /// True once the first fetch has completed. Used to distinguish the initial
+  /// loading state (show a skeleton) from a genuinely empty library (show the
+  /// first-time empty state).
+  bool get hasLoaded => _hasLoaded;
 
   List<String> get userTags {
     final Map<String, int> tagCounts = {};
@@ -59,6 +65,7 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
         .sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
 
     _allRecipes = recipes;
+    _hasLoaded = true;
     _applyFilters();
     notifyListeners();
   }

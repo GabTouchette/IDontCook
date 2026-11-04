@@ -7,6 +7,7 @@ import 'package:i_cant_cook/pages/create_recipe_page.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
+import 'package:i_cant_cook/widgets/skeletons/skeletons.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -87,6 +88,9 @@ class _RecipesPageState extends State<RecipesPage> {
               Expanded(
                 child: Builder(
                   builder: (context) {
+                    if (!provider.hasLoaded) {
+                      return RecipesListSkeleton(tileMode: provider.tileMode);
+                    }
                     if (provider.tabIndex == 3 &&
                         provider.selectedTag == null) {
                       return _buildTagsGrid(context, provider);
