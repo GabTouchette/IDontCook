@@ -11,6 +11,7 @@ from recipes.models import Recipe
 from .aggregator import aggregate_ingredients
 from .models import GroceryBag, GroceryBagRecipe, GroceryItemOverride
 from .serializers import GroceryBagRecipeSerializer
+from .sorting import prepare_lines
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,14 @@ def _serialize_bag(bag):
     bag_recipes = _bag_recipes(bag)
     lines = aggregate_ingredients([(br.recipe, br.servings) for br in bag_recipes])
 
+    # Staple ordering + always-hidden set (C1): least-likely-to-have first,
+    # salt/pepper/water dropped (surfaced via hidden_count).
+    visible, hidden_count = prepare_lines(lines)
+
     overrides = {o.item_key: o.state for o in bag.overrides.all()}
     items = []
     removed_count = 0
-    for line in lines:
+    for line in visible:
         state = overrides.get(line.key)
         if state == GroceryItemOverride.REMOVED:
             removed_count += 1
@@ -49,6 +54,7 @@ def _serialize_bag(bag):
         "recipes": GroceryBagRecipeSerializer(bag_recipes, many=True).data,
         "items": items,
         "removed_count": removed_count,
+        "hidden_count": hidden_count,
     }
 
 

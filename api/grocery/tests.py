@@ -255,6 +255,50 @@ class UnitsExtractionTests(TestCase):
         self.assertIs(grocery_builder._round_qty, units.round_qty)
 
 
+class StapleSortTests(TestCase):
+    """Part C1: staple ordering + always-hidden set."""
+
+    def _canonical(self, name, category):
+        return CanonicalIngredient.objects.create(
+            canonical_name_en=name, category=category)
+
+    def test_least_likely_first_staple_last(self):
+        from rest_framework.test import APIClient
+        produce = self._canonical("tomato", "PR")   # score 0.05 -> top
+        spice = self._canonical("cumin", "SP")       # score 0.95 -> bottom
+        canned = self._canonical("chickpeas", "CJ")  # score 0.60 -> middle
+        r = _recipe("Stew")
+        _ingredient(r, "cumin", 1, "tsp", canonical=spice, confidence=1.0)
+        _ingredient(r, "tomato", 2, "unit", canonical=produce, confidence=1.0)
+        _ingredient(r, "chickpeas", 1, "can", canonical=canned, confidence=1.0)
+
+        user = get_user_model().objects.create_user(username="sorter", password="x")
+        client = APIClient()
+        client.force_authenticate(user)
+        client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+        items = client.get("/api/grocery/bag/").data["items"]
+        self.assertEqual([i["name"] for i in items], ["tomato", "chickpeas", "cumin"])
+        self.assertEqual(items[0]["staple_score"], 0.05)
+
+    def test_salt_pepper_water_hidden(self):
+        from rest_framework.test import APIClient
+        salt = self._canonical("salt", "SP")
+        tomato = self._canonical("tomato", "PR")
+        r = _recipe("Salad")
+        _ingredient(r, "salt", 1, "tsp", canonical=salt, confidence=1.0)
+        _ingredient(r, "tomato", 2, "unit", canonical=tomato, confidence=1.0)
+
+        user = get_user_model().objects.create_user(username="hider", password="x")
+        client = APIClient()
+        client.force_authenticate(user)
+        client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+        bag = client.get("/api/grocery/bag/").data
+        self.assertEqual([i["name"] for i in bag["items"]], ["tomato"])
+        self.assertEqual(bag["hidden_count"], 1)
+
+
 class GroceryBagEndpointTests(TestCase):
     """Part B CRUD endpoints over the bag."""
 

@@ -273,7 +273,10 @@ confirmed `amount` per concept in the right dimension; that's what makes Layer 3
    POST/PATCH/DELETE, items POST); serializers; admin. Overrides key off the aggregator's stable
    line `key` (`ci:<id>`/`name:<norm>`) to sidestep the nullable-composite-unique gotcha. 10 endpoint
    tests. **Deploy note:** run `migrate grocery` in each environment.
-3. **C1** — static category staple map + sort + always-hidden set in `GET bag/`.
+3. **C1** ✅ *(done 2026-11-04)* — `grocery/sorting.py`: category staple-score map + always-hidden
+   set (salt/pepper/water); `GET bag/` assigns `staple_score`, drops always-hidden (surfaced as
+   `hidden_count`), sorts least-likely-to-have first (tie-break by name). Frontend shows
+   `hidden_count`. 2 tests (32 total).
 4. **D1** ✅ *(done 2026-11-04)* — Flutter: `models/grocery/grocery_models.dart`,
    `api/grocery_api.dart`, `providers/grocery_bag_provider.dart` (registered in `main.dart`),
    `pages/grocery_bag_page.dart` + `/grocery-bag` route. Entry points: reusable
