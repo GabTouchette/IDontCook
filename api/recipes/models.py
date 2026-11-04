@@ -178,6 +178,39 @@ class Recipe(models.Model):
     # Required meal type tags
     REQUIRED_MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert']
 
+    # Fallback serving count when none is given and none can be parsed from the
+    # free-text recipe_yield. Nutrition is stored per-serving (total / servings),
+    # so a null servings would leave the whole-recipe total showing as one
+    # serving — this guarantees a sane divisor instead.
+    DEFAULT_SERVINGS = 4
+
+    @staticmethod
+    def parse_servings_from_yield(recipe_yield):
+        """Best-effort integer serving count from free-text yield.
+
+        Handles "Serves 6", "4 servings", "Makes 12", "8-10 servings" (takes the
+        first number). Returns None when no plausible count is present.
+        """
+        if not recipe_yield:
+            return None
+        import re
+        match = re.search(r'\d+', str(recipe_yield))
+        if not match:
+            return None
+        value = int(match.group())
+        # Guard against nonsense ("350 ml", huge batch text) and zero.
+        if 1 <= value <= 100:
+            return value
+        return None
+
+    def _ensure_servings(self):
+        """Populate a non-null, >=1 servings before save so per-serving nutrition
+        always has a real divisor. Prefers an explicit value, then the parsed
+        recipe_yield, then DEFAULT_SERVINGS."""
+        if self.servings and self.servings >= 1:
+            return
+        self.servings = self.parse_servings_from_yield(self.recipe_yield) or self.DEFAULT_SERVINGS
+
     def clean(self):
         """Validate and auto-correct meal type tags (keep only one)"""
         if self.tags:
@@ -355,7 +388,11 @@ class Recipe(models.Model):
         elif not self._is_drink_or_cocktail():
             # No tags at all, start with Dinner (only for non-drinks)
             self.tags = ['Dinner']
-        
+
+        # Guarantee a real serving count so per-serving nutrition is never the
+        # whole-recipe total (covers user/AI/import creation paths in one place).
+        self._ensure_servings()
+
         # Call clean to validate
         self.full_clean()
         super().save(*args, **kwargs)

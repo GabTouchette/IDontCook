@@ -85,7 +85,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         validated_data["created_by"] = self.context["request"].user
 
-        # Ensure servings is included (default to None if not provided)
+        # Leave servings unset if the client omitted it; Recipe.save() derives a
+        # real count (parsed from recipe_yield, else DEFAULT_SERVINGS) so
+        # per-serving nutrition always has a valid divisor.
         if "servings" not in validated_data:
             validated_data["servings"] = None
 

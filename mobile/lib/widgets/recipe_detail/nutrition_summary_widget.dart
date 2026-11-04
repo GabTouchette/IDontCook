@@ -24,9 +24,10 @@ class NutritionSummary extends StatelessWidget {
       return SizedBox.shrink(); // Don't show anything if no nutrition data
     }
 
+    // recipe.calories/protein are already stored per-serving by the backend
+    // (total / servings). Do NOT divide again here — that double-divides.
     final calories = recipe.calories;
-    final servings = recipe.servings ?? 1;
-    final caloriesPerServing = calories != null ? (calories / servings).round() : null;
+    final caloriesPerServing = calories != null ? calories.round() : null;
 
     return Row(
       children: [
@@ -65,7 +66,7 @@ class NutritionSummary extends StatelessWidget {
           ),
           const SizedBox(width: 2),
           Text(
-            '${(recipe.protein! / servings).toStringAsFixed(0)}g',
+            '${recipe.protein!.toStringAsFixed(0)}g',
             style: GoogleFonts.nunito(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: fontSize - 1,
