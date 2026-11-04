@@ -9,7 +9,7 @@ Usage:
   # Local dev database
   python misc/import_bbc_good_food.py bbc_1000.csv
 
-  # Production database (Railway)
+  # Production database (Coolify)
   DATABASE_URL=<prod_url> python misc/import_bbc_good_food.py bbc_1000.csv
 
   # Dry run (no DB writes)

@@ -2,7 +2,7 @@
 
 ## Backend deployment baseline
 
-The production backend is expected to run on Railway with separate web and worker services.
+The production backend runs on a self-hosted Coolify instance, served at `https://api.idontcook.app` (see "Deploying to Coolify" below). The Coolify service runs the gunicorn web process only; background work runs in-process (there is no separate Celery worker). The runtime commands below still apply if a dedicated worker is ever deployed.
 
 ### Runtime commands
 
@@ -24,14 +24,14 @@ The production backend is expected to run on Railway with separate web and worke
 - `CORS_ALLOWED_ORIGINS`
 - `CSRF_TRUSTED_ORIGINS`
 - `FRONTEND_URL`
-- `RAILWAY_PUBLIC_DOMAIN`
+- `PUBLIC_DOMAIN` (legacy `RAILWAY_PUBLIC_DOMAIN` is still honoured as a fallback)
 - `OPENAI_API_KEY`
 - `USDA_API_KEY`
 - `GS_BUCKET_NAME`
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON`
 - `GOOGLE_APPLICATION_CREDENTIALS`
 
-If Google Cloud Storage credentials are not provided, media files fall back to local filesystem storage. For Railway production, configure both `GS_BUCKET_NAME` and one of the Google credentials variables if media uploads must persist across deploys.
+If Google Cloud Storage credentials are not provided, media files fall back to local filesystem storage. In production, configure both `GS_BUCKET_NAME` and one of the Google credentials variables if media uploads must persist across deploys.
 
 ## Deploying to Coolify (self-hosted)
 

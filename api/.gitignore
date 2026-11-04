@@ -1,0 +1,4 @@
+
+# local sqlite + backups (never commit)
+db.sqlite3
+db.sqlite3.bak-*

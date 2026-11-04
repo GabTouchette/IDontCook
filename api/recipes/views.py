@@ -593,14 +593,15 @@ class RecipeNutritionAPIView(APIView):
         per_ingredient = []
         from recipes.nutrition_service import NutritionService
         service = NutritionService()
-        for ing in recipe.ingredients.select_related('nutrition_data').all():
+        for ing in recipe.ingredients.select_related('nutrition_data', 'canonical').all():
             if ing.nutrition_data and ing.quantity:
                 nd = ing.nutrition_data
                 scaled = service._scale_nutrition(
                     service._nutrition_to_dict(nd),
                     ing.quantity,
                     ing.unit or '',
-                    ing.usda_name or ing.name or '',
+                    (ing.canonical.canonical_name_en if ing.canonical else ing.name) or '',
+                    canonical=ing.canonical,
                 )
                 per_ingredient.append({
                     'ingredient_id': ing.id,

@@ -25,6 +25,34 @@ class NutritionService:
         result, _ = self._lookup_ingredient(ingredient_name, quantity, unit, usda_name)
         return result
 
+    def get_nutrition_for_canonical(self, canonical, quantity: float, unit: str = None):
+        """Look nutrition up through a resolved canonical ingredient.
+
+        Uses the catalog's pinned ``usda_fdc_id`` instead of a per-name search, so
+        the concept always maps to the same FoodData Central entry, and scales
+        with that entry's real household-unit gram weights (canonical.portions /
+        density) when available. Returns ``(scaled_dict, NutritionData|None)``.
+        """
+        fdc_id = getattr(canonical, "usda_fdc_id", None) if canonical else None
+        if not fdc_id:
+            return None, None
+
+        obj = NutritionData.objects.filter(usda_fdc_id=str(fdc_id)).first()
+        if obj is None:
+            data = self.usda_client.get_nutrition_by_fdc_id(str(fdc_id))
+            if not data:
+                return None, None
+            obj = self._save_fdc_nutrition(data, canonical.canonical_name_en)
+
+        scaled = self._scale_nutrition(
+            self._nutrition_to_dict(obj),
+            quantity,
+            unit,
+            canonical.canonical_name_en,
+            canonical=canonical,
+        )
+        return scaled, obj
+
     def _lookup_ingredient(
         self,
         ingredient_name: str,
@@ -84,9 +112,9 @@ class NutritionService:
             'carbs': nutrition_data.carbs_per_100g,
         }
     
-    def _scale_nutrition(self, nutrition_data: Dict[str, float], quantity: float, unit: str, ingredient_name: str = '') -> Dict[str, float]:
+    def _scale_nutrition(self, nutrition_data: Dict[str, float], quantity: float, unit: str, ingredient_name: str = '', canonical=None) -> Dict[str, float]:
         """Scale nutrition data based on quantity and unit."""
-        grams = self._convert_to_grams(quantity, unit, ingredient_name)
+        grams = self._convert_to_grams(quantity, unit, ingredient_name, canonical)
         scale_factor = grams / 100.0  # nutrition_data is per 100g
         
         print(f"SCALING DEBUG: {quantity} {unit} '{ingredient_name}' -> {grams:.1f}g, scale_factor: {scale_factor:.3f}")
@@ -100,13 +128,34 @@ class NutritionService:
         print(f"Scaled nutrition result: {scaled_result}")
         return scaled_result
     
-    def _convert_to_grams(self, quantity: float, unit: str, ingredient_name: str = '') -> float:
-        """Convert quantity/unit to grams, with density hints for volumetric units."""
+    # Count-ish portion labels to try (in order) when an ingredient has no unit
+    # but the canonical entry carries real per-item gram weights.
+    _COUNT_PORTION_PREFERENCE = ('medium', 'piece', 'item', 'unit', 'large', 'small', 'slice')
+
+    def _convert_to_grams(self, quantity: float, unit: str, ingredient_name: str = '', canonical=None) -> float:
+        """Convert quantity/unit to grams.
+
+        Path B: when a resolved ``canonical`` carries USDA ``portions`` or a
+        per-food ``density_g_per_ml``, those real gram weights win over the global
+        density/piece-weight guesses below. The heuristics remain the fallback for
+        ingredients not yet linked or backfilled.
+        """
+        portions = (getattr(canonical, 'portions', None) or {}) if canonical else {}
+        food_density = getattr(canonical, 'density_g_per_ml', None) if canonical else None
+
         if not unit:
-            # No unit: assume it's a count. Default 50g per item (egg, apple, etc.)
+            # No unit: it's a count. Prefer a real per-item weight for this food.
+            for key in self._COUNT_PORTION_PREFERENCE:
+                if portions.get(key):
+                    return quantity * portions[key]
+            # Default 50g per item (egg, apple, etc.)
             return quantity * 50
 
         unit = unit.lower().strip()
+
+        # --- Per-food portion (real USDA gram weight) wins for household units ---
+        if portions.get(unit):
+            return quantity * portions[unit]
 
         # --- Exact mass/weight conversions ---
         mass_conversions = {
@@ -160,7 +209,8 @@ class NutritionService:
 
         if unit in ml_conversions:
             ml = quantity * ml_conversions[unit]
-            density = self._get_volume_density(name_lower)
+            # Per-food density (from the canonical entry) beats the keyword guess.
+            density = food_density if food_density else self._get_volume_density(name_lower)
             return ml * density
 
         # Unknown unit — assume small dried/powdered portion (5g as conservative guess)
@@ -241,6 +291,34 @@ class NutritionService:
         )
         return nutrition_data
 
+    def _save_fdc_nutrition(self, fdc_data: Dict[str, Any], canonical_name: str) -> NutritionData:
+        """Persist nutrition pulled by FDC id, keyed so future lookups skip USDA.
+
+        Unlike ``_save_usda_result`` this also stores fiber/sugar and records the
+        fdc id as the primary cache key (``get_nutrition_for_canonical`` reads it
+        back via ``usda_fdc_id``).
+        """
+        description = fdc_data.get('description') or canonical_name
+        nutrition_data, _ = NutritionData.objects.get_or_create(
+            name=description,
+            defaults={
+                'normalized_name': (canonical_name or description).lower(),
+                'calories_per_100g': fdc_data.get('calories', 0) or 0,
+                'protein_per_100g': fdc_data.get('protein', 0) or 0,
+                'fat_per_100g': fdc_data.get('fat', 0) or 0,
+                'carbs_per_100g': fdc_data.get('carbs', 0) or 0,
+                'fiber_per_100g': fdc_data.get('fiber', 0) or 0,
+                'sugar_per_100g': fdc_data.get('sugar', 0) or 0,
+                'usda_fdc_id': str(fdc_data.get('fdc_id', '')) or None,
+            },
+        )
+        # Backfill the fdc id on a row that pre-existed without one so the
+        # fdc-keyed cache lookup hits next time.
+        if not nutrition_data.usda_fdc_id and fdc_data.get('fdc_id'):
+            nutrition_data.usda_fdc_id = str(fdc_data['fdc_id'])
+            nutrition_data.save(update_fields=['usda_fdc_id'])
+        return nutrition_data
+
     def estimate_nutrition_with_llm(self, recipe) -> Optional[Dict[str, float]]:
         """Ask Claude to estimate per-serving nutrition when USDA data is unavailable/anomalous.
 
@@ -315,11 +393,14 @@ class NutritionService:
         
         for ingredient in recipe.ingredients.all():
             if ingredient.name and ingredient.quantity:
+                search_name = (
+                    ingredient.canonical.canonical_name_en
+                    if ingredient.canonical_id else ingredient.name
+                )
                 nutrition = self.get_nutrition_for_parsed_ingredient(
-                    ingredient.name, 
-                    ingredient.quantity, 
+                    search_name,
+                    ingredient.quantity,
                     ingredient.unit,
-                    ingredient.usda_name
                 )
                 
                 if nutrition:

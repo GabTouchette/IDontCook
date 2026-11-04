@@ -188,12 +188,12 @@ InformationToast.show(
 - `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID for mobile sign-in
 - `CELERY_BROKER_URL` - Redis/broker URL for async task queue
 - `CELERY_RESULT_BACKEND` - Redis/backend URL for task result storage
-- `DEALS_WARM_USE_CELERY` - Route the home-feed deals warm through Celery instead of an in-process thread (default: false). Only enable when a dedicated Celery worker is actually deployed; the Railway web service runs gunicorn only, so the default in-process thread is what makes the deals rail warm in prod.
+- `DEALS_WARM_USE_CELERY` - Route the home-feed deals warm through Celery instead of an in-process thread (default: false). Only enable when a dedicated Celery worker is actually deployed; the Coolify web service runs gunicorn only, so the default in-process thread is what makes the deals rail warm in prod.
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON` - Google Cloud Storage credentials
 
 ### Frontend
 - Development API: `http://10.0.2.2:8000` (Android emulator)
-- Production API: `https://web-production-853e.up.railway.app`
+- Production API: `https://api.idontcook.app`
 
 ## Testing
 
@@ -211,10 +211,10 @@ flutter test
 
 ## Deployment
 
-### Backend (Railway)
-- Deployed on Railway with PostgreSQL database
+### Backend (Coolify, self-hosted)
+- Deployed on a self-hosted Coolify instance (home-lab Mac mini) with Coolify-managed PostgreSQL, served publicly at `https://api.idontcook.app` via a Cloudflare tunnel. See README "Deploying to Coolify" for the full setup.
 - Uses Google Cloud Storage for media files
-- Environment variables configured in Railway dashboard
+- Environment variables configured in Coolify's environment settings
 
 ### Frontend
 - iOS: Build through Xcode after `flutter build ios`

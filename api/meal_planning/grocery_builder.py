@@ -125,16 +125,21 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
         'variants': List[str], # original names seen (deduped, optional)
     }]
     """
-    # Prefetch ingredients + nutrition to reduce queries
+    # Prefetch ingredients + nutrition + canonical to reduce queries
     planned = (
         meal_plan.planned_meals.select_related("recipe")
-        .prefetch_related("recipe__ingredients__nutrition_data")
+        .prefetch_related(
+            "recipe__ingredients__nutrition_data",
+            "recipe__ingredients__canonical",
+        )
     )
 
     # key -> accumulator
-    # key = (name, unit_class, unit_label)
+    # key = (identity, unit_class, unit_label)
+    # identity: ("ci", canonical_id) when the line resolved to a canonical
+    #   ingredient (merge on the concept, not the string), else ("name", name)
     # unit_class: mass/volume/count
-    acc: Dict[Tuple[str, str, str], Dict] = {}
+    acc: Dict[Tuple[Tuple[str, object], str, str], Dict] = {}
 
     for pm in planned:
         recipe = pm.recipe
@@ -154,7 +159,6 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
         scale = max(1, pm_servings) / float(base_servings)
         for ing in recipe.ingredients.all():
             raw_name = (getattr(ing, "name", None) or "").strip()
-            usda_name = getattr(ing, "usda_name", None)
             nut_norm = None
             try:
                 if getattr(ing, "nutrition_data", None):
@@ -162,9 +166,21 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
             except Exception:
                 nut_norm = None
 
-            # Prefer normalized nutrition name/usda when present; otherwise normalize raw
-            preferred = (nut_norm or usda_name or raw_name)
+            # Prefer the cached nutrition name when present; otherwise normalize raw.
+            # (The canonical concept, when resolved, overrides this below.)
+            preferred = (nut_norm or raw_name)
             name, _prep = normalize_name_and_prep(preferred)
+
+            # Merge on the canonical concept when the line resolved to one — this
+            # unifies "scallions"/"green onion", EN/FR variants, etc. that string
+            # normalization alone would leave as separate rows.
+            canonical = getattr(ing, "canonical", None)
+            if canonical is not None:
+                name = canonical.canonical_name_en or name
+                identity: Tuple[str, object] = ("ci", canonical.id)
+            else:
+                identity = ("name", name)
+
             unit_class, unit_label, factor = _normalize_unit(getattr(ing, "unit", None))
 
             qty = getattr(ing, "quantity", None)
@@ -173,7 +189,7 @@ def build_grocery_list(meal_plan: MealPlan) -> List[Dict]:
             except Exception:
                 qty_val = None
 
-            key = (name, unit_class, unit_label)
+            key = (identity, unit_class, unit_label)
 
             entry = acc.get(key)
             if not entry:

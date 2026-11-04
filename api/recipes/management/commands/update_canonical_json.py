@@ -1,11 +1,12 @@
 import json
 import os
+from collections import Counter, defaultdict
 from typing import Set
 
 from django.core.management.base import BaseCommand
-from django.db.models import Count
 
 from recipes.models import Ingredient, CanonicalIngredient
+from recipes.ingredient_normalizer import normalize_name_and_prep
 
 
 class Command(BaseCommand):
@@ -89,17 +90,32 @@ class Command(BaseCommand):
         known |= self._load_existing_names_from_jsonl(jsonl_path)
         known |= self._load_existing_names_from_db()
 
-        # Query normalized ingredient names
-        qs = (
-            Ingredient.objects.exclude(normalized_name__isnull=True)
-            .exclude(normalized_name="")
-            .values("normalized_name")
-            .annotate(n=Count("id"))
-            .filter(n__gte=min_count)
-            .order_by("-n", "normalized_name")
+        # Normalize ingredient names on the fly (the normalized_name column was
+        # dropped in favour of the canonical resolver) and aggregate counts +
+        # example source strings in Python.
+        counts: Counter = Counter()
+        examples_map = defaultdict(list)
+        raw_names = (
+            Ingredient.objects.exclude(name__isnull=True)
+            .exclude(name="")
+            .values_list("name", flat=True)
+            .iterator()
         )
+        for raw in raw_names:
+            norm, _prep = normalize_name_and_prep(raw)
+            norm = (norm or "").strip()
+            if not norm:
+                continue
+            counts[norm] += 1
+            if examples_n and raw not in examples_map[norm] and len(examples_map[norm]) < examples_n:
+                examples_map[norm].append(raw)
 
-        rows = list(qs)
+        rows = [
+            {"normalized_name": name, "n": n}
+            for name, n in counts.items()
+            if n >= min_count
+        ]
+        rows.sort(key=lambda r: (-r["n"], r["normalized_name"]))
 
         # map full category names → 2-letter codes
         CAT2 = {
@@ -125,16 +141,7 @@ class Command(BaseCommand):
                 continue
 
             # Gather example original strings if requested
-            examples_list = []
-            if examples_n > 0:
-                ex_qs = (
-                    Ingredient.objects.filter(normalized_name=name)
-                    .exclude(name__isnull=True)
-                    .exclude(name="")
-                    .values_list("name", flat=True)
-                    .distinct()
-                )
-                examples_list = list(ex_qs[:examples_n])
+            examples_list = examples_map.get(name, []) if examples_n > 0 else []
 
             doc = {
                 # Only the simplified schema fields

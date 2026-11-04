@@ -16,11 +16,11 @@ flutter run --dart-define=API_BASE_URL=http://192.168.0.198:8000
 
 ### Web development
 
-**Against production backend (Railway):**
+**Against production backend (Coolify):**
 ```bash
 flutter run -d chrome
 ```
-The web app automatically points to `https://web-production-853e.up.railway.app`. The production backend is configured to allow CORS requests from `http://localhost:*` on any port.
+The web app automatically points to `https://api.idontcook.app`. The production backend is configured to allow CORS requests from `http://localhost:*` on any port.
 
 **Against local development backend:**
 ```bash
@@ -35,10 +35,10 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
 
 ### Release builds
 
-Release builds require an explicit backend URL and should point at the Railway deployment:
+Release builds require an explicit backend URL and should point at the Coolify deployment:
 
 ```bash
-flutter build ios --release --dart-define=API_BASE_URL=https://web-production-853e.up.railway.app
+flutter build ios --release --dart-define=API_BASE_URL=https://api.idontcook.app
 ```
 
 The value should be the backend origin without `/api`. The app appends `/api` internally.

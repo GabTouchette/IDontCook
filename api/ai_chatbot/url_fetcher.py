@@ -1,9 +1,12 @@
+import re
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 _MAX_CONTENT_CHARS = 6000
 _FETCH_TIMEOUT = 10
+
+_INSTAGRAM_HOSTS = ("instagram.com", "instagr.am", "cdninstagram.com")
 _STRIP_TAGS = {"script", "style", "nav", "footer", "header", "aside", "noscript"}
 
 _BROWSER_HEADERS = {
@@ -142,21 +145,89 @@ def fetch_and_clean_html(url: str) -> tuple[str, str]:
     return cleaned[:_MAX_CONTENT_CHARS], image_url
 
 
+def is_instagram_url(url: str) -> bool:
+    """True if the URL points at an Instagram post/reel/tv."""
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except Exception:
+        return False
+    return any(host == h or host.endswith("." + h) for h in _INSTAGRAM_HOSTS)
+
+
+def _clean_instagram_caption(raw: str) -> str:
+    """
+    Instagram's og:description looks like:
+        `1,234 likes, 56 comments - handle on January 1, 2024: "the real caption"`
+    Strip the engagement/handle prefix and surrounding quotes so only the caption
+    (which holds the recipe) is fed to the model. Falls back to the raw string when
+    the pattern doesn't match.
+    """
+    if not raw:
+        return ""
+    text = raw.strip()
+    # Drop a leading "N likes, M comments - handle on <date>:" prefix if present.
+    prefix = re.match(r'^[\d,\.]+ likes?,?.*?:\s*', text, re.IGNORECASE | re.DOTALL)
+    if prefix:
+        text = text[prefix.end():]
+    # Unwrap a single pair of surrounding double quotes.
+    text = text.strip()
+    if len(text) >= 2 and text[0] in "“\"" and text[-1] in "”\"":
+        text = text[1:-1].strip()
+    return text
+
+
+def fetch_instagram_content(url: str) -> tuple[str, str]:
+    """
+    Best-effort extraction of an Instagram post/reel's caption + cover image from
+    Open Graph / meta tags (no login, no paid API). Returns (caption, image_url).
+
+    Raises ValueError with a user-facing message when Instagram serves a login wall
+    or the caption can't be read (private post, removed content, or markup change).
+    """
+    html = _fetch_page_html(url)
+    soup = BeautifulSoup(html, "html.parser")
+
+    def _meta(attr: str, value: str) -> str:
+        tag = soup.find("meta", attrs={attr: value})
+        return (tag.get("content") or "").strip() if tag else ""
+
+    caption = _meta("property", "og:description") or _meta("name", "description")
+    caption = _clean_instagram_caption(caption)
+
+    image_url = _meta("property", "og:image")
+    if image_url:
+        image_url = urljoin(url, image_url)
+
+    # Login wall / private / removed: Instagram returns a generic interstitial with
+    # no usable caption. Signal a clear, user-facing error instead of feeding junk
+    # to the model.
+    login_walled = "loginForm" in html or "Login • Instagram" in html
+    if not caption or (login_walled and len(caption) < 40):
+        raise ValueError(
+            "Couldn't read this Instagram post — it may be private, removed, "
+            "or Instagram blocked the request. Try a public reel or post."
+        )
+
+    return caption[:_MAX_CONTENT_CHARS], image_url
+
+
 def import_recipe_from_url(url: str, service) -> str:
     import json
-    import re
     import logging
     from .api import PromptTemplates, LIGHT_MODEL
     import anthropic
     from django.conf import settings
 
     logger = logging.getLogger(__name__)
-    content, image_url = fetch_and_clean_html(url)
+    if is_instagram_url(url):
+        content, image_url = fetch_instagram_content(url)
+        prompt = PromptTemplates.instagram_import_prompt(content, image_url)
+    else:
+        content, image_url = fetch_and_clean_html(url)
+        if not content:
+            raise ValueError("No readable content found at this URL.")
+        prompt = PromptTemplates.url_import_prompt(content, image_url)
     logger.debug(f"Extracted image_url from {url}: {image_url}")
-    if not content:
-        raise ValueError("No readable content found at this URL.")
-
-    prompt = PromptTemplates.url_import_prompt(content, image_url)
 
     # Runs synchronously in the URL-import request path (already preceded by a
     # blocking page fetch); bound the LLM wall-clock instead of inheriting the

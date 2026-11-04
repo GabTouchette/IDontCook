@@ -244,9 +244,9 @@ class ScrapedRecipeImporter:
                 return recipe
         except Exception as e:
             logger.error("Error importing '%s': %s", row.get("title", "Unknown"), e)
-            # A dropped DB connection (common over the Railway public proxy on long
-            # runs) leaves the connection unusable — every later row would fail with
-            # "connection already closed". Close it so Django reconnects next row.
+            # A dropped DB connection (common over a remote/proxied DB connection on
+            # long runs) leaves the connection unusable — every later row would fail
+            # with "connection already closed". Close it so Django reconnects next row.
             try:
                 connection.close()
             except Exception:

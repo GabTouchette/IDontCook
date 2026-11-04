@@ -54,9 +54,9 @@ def warm_deals_cache(cache_key, lat, lng, postal, store_limit=DEFAULT_STORE_LIMI
 
 
 # Whether a dedicated Celery worker is deployed to consume warm_deals_cache.
-# The Railway prod service runs gunicorn ONLY (see railway.json) — the Procfile's
-# `worker:` process is not launched — so with a healthy broker, `.delay()` would
-# enqueue a task nothing ever runs and the rail would hang on `loading` forever.
+# The Coolify prod service runs gunicorn ONLY — there is no separate Celery worker
+# process — so with a healthy broker, `.delay()` would enqueue a task nothing ever
+# runs and the rail would hang on `loading` forever.
 # Default to running the warm in an in-process daemon thread (bounded ~6s work,
 # deduped by the Redis lock, out of the request path). Set DEALS_WARM_USE_CELERY=
 # true only once a real Celery worker is actually running.

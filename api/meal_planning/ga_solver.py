@@ -339,7 +339,7 @@ def _estimate_cost_per_serving(recipe) -> Optional[float]:
     total = base
     for ing in ings:
         try:
-            nm = (getattr(ing, 'usda_name', None) or getattr(ing, 'name', None) or '').strip()
+            nm = (getattr(ing, 'name', None) or '').strip()
         except Exception:
             nm = ''
         if not nm:
@@ -426,7 +426,7 @@ def _primary_protein_category(recipe) -> str:
 
     for ing in ings:
         try:
-            nm = (getattr(ing, 'usda_name', None) or getattr(ing, 'name', None) or '').strip()
+            nm = (getattr(ing, 'name', None) or '').strip()
         except Exception:
             nm = ''
         c = cat_for_name(nm)

@@ -68,22 +68,25 @@ def load_gcs_credentials() -> Credentials | None:
 
 SECRET_KEY = get_secret_key()
 
-railway_public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
-railway_public_origin = f"https://{railway_public_domain}" if railway_public_domain else None
+# Public domain of the deployed backend. On Coolify this is set explicitly
+# (ALLOWED_HOSTS / PUBLIC_DOMAIN); the Railway-injected RAILWAY_PUBLIC_DOMAIN is
+# still honoured as a legacy fallback so older environments keep working.
+public_domain = os.getenv("PUBLIC_DOMAIN") or os.getenv("RAILWAY_PUBLIC_DOMAIN")
+public_origin = f"https://{public_domain}" if public_domain else None
 
 default_allowed_hosts = ["127.0.0.1", "localhost"]
 if DEBUG:
     default_allowed_hosts.append("*")  # Allow any host in local development
-if railway_public_domain:
-    default_allowed_hosts.append(railway_public_domain)
+if public_domain:
+    default_allowed_hosts.append(public_domain)
 
 configured_allowed_hosts = [host for host in env.list("ALLOWED_HOSTS", default=[]) if host]
-ALLOWED_HOSTS = sorted(set(configured_allowed_hosts or default_allowed_hosts if DEBUG else configured_allowed_hosts + ([railway_public_domain] if railway_public_domain else [])))
+ALLOWED_HOSTS = sorted(set(configured_allowed_hosts or default_allowed_hosts if DEBUG else configured_allowed_hosts + ([public_domain] if public_domain else [])))
 
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS must be set for non-debug environments.")
 
-default_cors_origins = [origin for origin in [os.getenv("FRONTEND_URL"), railway_public_origin] if origin]
+default_cors_origins = [origin for origin in [os.getenv("FRONTEND_URL"), public_origin] if origin]
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=default_cors_origins)
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=default_cors_origins)
 CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
@@ -335,10 +338,10 @@ RECOMMENDER_MULTI_INTEREST_ENABLED = env.bool("RECOMMENDER_MULTI_INTEREST_ENABLE
 # (home/flipp_client.py, 6h TTL) — turning warm reads back into slow external
 # calls and TF-IDF refits on every request. Falls back to LocMem when no Redis
 # URL is configured (e.g. local dev).
-# Prefer an explicit public/cache-specific URL when set (e.g. Railway's public
-# Redis proxy endpoint) — the private `redis.railway.internal` host only works
-# when private networking is actually enabled + same-environment, and falls back
-# to the Celery broker URL otherwise.
+# Prefer an explicit public/cache-specific URL when set (REDIS_PUBLIC_URL) — some
+# hosts expose a separate public Redis endpoint; otherwise use the in-network
+# REDIS_URL (e.g. Coolify's internal Docker-network Redis), falling back to the
+# Celery broker URL.
 _redis_cache_url = (
     os.getenv("REDIS_PUBLIC_URL")
     or os.getenv("REDIS_URL")

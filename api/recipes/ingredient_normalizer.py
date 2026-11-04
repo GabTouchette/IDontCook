@@ -102,8 +102,15 @@ def normalize_name_and_prep(raw_name: str) -> Tuple[str, Optional[str]]:
     name_tokens, prep_tokens = _split_prep_tokens(tokens)
     name = ' '.join(name_tokens).strip()
 
-    # simple plural normalization
-    if name.endswith('es') and len(name) > 4:
+    # simple plural normalization. The order matters: only strip "es" for the
+    # endings where the "e" is inflectional (potatoes->potato, dishes->dish,
+    # berries->berry); otherwise drop a trailing "s" so the stem's own "e" is
+    # kept (olives->olive, not "oliv"; cloves->clove).
+    if name.endswith('ies') and len(name) > 4:
+        name = name[:-3] + 'y'
+    elif name.endswith('oes') and len(name) > 4:
+        name = name[:-2]
+    elif name.endswith(('ses', 'xes', 'zes', 'ches', 'shes')) and len(name) > 4:
         name = name[:-2]
     elif name.endswith('s') and len(name) > 3 and not name.endswith('ss'):
         name = name[:-1]

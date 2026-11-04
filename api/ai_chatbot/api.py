@@ -607,7 +607,6 @@ class AnthropicService:
                 name=item.get("name"),
                 quantity=item.get("quantity"),
                 unit=item.get("unit"),
-                usda_name=item.get("usda_name"),
                 substitutes=item.get("substitutes", [])
             )
             ingredient.save()
@@ -1005,18 +1004,15 @@ class PromptTemplates:
             - name: string
             - quantity: float (e.g. 2.5)
             - unit: string — use standard abbreviations: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg. Can be empty if not applicable (e.g. "2 eggs" → "")
-            - usda_name: string (simplified name for USDA nutrition lookup, e.g. "flour" for "all-purpose flour, sifted")
 
             Important formatting rules:
             1. Units must use standard abbreviations: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg. Do NOT use full words like "tablespoon", "teaspoon", "piece(s)", "clove(s)", etc.
-            2. usda_name should be the core food item without qualifiers (sifted, chopped, etc.)
-            3. Translate French ingredients in usda_name: "porc" → "pork", "boeuf" → "beef", etc.
-            4. Make sure the unit is not contained in the name and in the unit field
+            2. Make sure the unit is not contained in the name and in the unit field
 
             Examples:
-            - "2 cups all-purpose flour, sifted" → name: "all-purpose flour, sifted", quantity: 2, unit: "cup(s)", usda_name: "flour"
-            - "3 large eggs" → name: "large eggs", quantity: 3, unit: "piece(s)", usda_name: "egg"
-            - "1 lb porc haché" → name: "porc haché", quantity: 1, unit: "lb", usda_name: "pork ground"
+            - "2 cups all-purpose flour, sifted" → name: "all-purpose flour, sifted", quantity: 2, unit: "cup(s)"
+            - "3 large eggs" → name: "large eggs", quantity: 3, unit: "piece(s)"
+            - "1 lb porc haché" → name: "porc haché", quantity: 1, unit: "lb"
 
             Here is the ingredient list:
 
@@ -1085,4 +1081,40 @@ class PromptTemplates:
             f"Image URL available: {image_url if image_url else '(none found)'}\n"
             f"Use the image_url field to store: {image_url if image_url else '(empty string if not available)'}\n\n"
             f"Webpage content:\n{page_content}"
+        )
+
+    @staticmethod
+    def instagram_import_prompt(caption: str, image_url: str = "") -> str:
+        return (
+            "You are a recipe extraction assistant. The text below is the caption of an "
+            "Instagram post or reel written by a food creator. Extract the recipe and output "
+            "it wrapped in $$ ... $$ with valid JSON — no other text.\n\n"
+            "JSON schema (all fields required, use null/empty if unknown):\n"
+            "{\n"
+            '  "title": string,\n'
+            '  "image_url": string (URL if provided, empty string if none),\n'
+            '  "ingredients": [{"name": string, "quantity": decimal, "unit": string}],\n'
+            '  "instructions": [string],\n'
+            '  "preparation_time": integer (minutes),\n'
+            '  "cooking_time": integer (minutes),\n'
+            '  "servings": integer,\n'
+            '  "tags": [string],\n'
+            '  "description": string,\n'
+            '  "notes": string\n'
+            "}\n\n"
+            "Rules:\n"
+            "- ALL ingredient quantities must be decimals (e.g. 1.0, 0.5)\n"
+            "- Use abbreviated units: tbsp, tsp, cup, oz, lb, g, kg, ml, L, pc, clove, pinch, bunch, can, pkg\n"
+            "- Instructions must be a list of strings, one step per entry\n"
+            "- Captions are informal: ingredients may be a bulleted/emoji list and steps may be "
+            "run-on sentences. Reconstruct a clean, ordered recipe from them.\n"
+            "- Infer reasonable preparation_time, cooking_time, and servings when the caption "
+            "doesn't state them (default servings to 4 unless a single-serving is implied).\n"
+            "- Ignore hashtags, @mentions, 'link in bio', follow/save calls-to-action, and emojis "
+            "that aren't ingredients.\n"
+            "- If the caption contains NO actual recipe (just a promo, a vibe, or a link), "
+            "output exactly: $$ null $$\n\n"
+            f"Image URL available: {image_url if image_url else '(none found)'}\n"
+            f"Use the image_url field to store: {image_url if image_url else '(empty string if not available)'}\n\n"
+            f"Instagram caption:\n{caption}"
         )

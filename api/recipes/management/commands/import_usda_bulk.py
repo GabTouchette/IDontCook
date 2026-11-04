@@ -14,7 +14,7 @@ Usage:
 Options:
     --file PATH       Path to a plain-text file with one ingredient per line.
     --names ...       One or more ingredient names as positional CLI args.
-    --from-db         Import names found in the Ingredient table (usda_name or name).
+    --from-db         Import distinct names found in the Ingredient table.
     --delay SECONDS   Seconds to sleep between API calls (default: 0.5; be kind to USDA).
     --skip-existing   Skip names that already have a NutritionData record.
 """
@@ -139,10 +139,8 @@ class Command(BaseCommand):
                 raise CommandError(f"Cannot read file '{path}': {exc}") from exc
 
         if options.get('from_db'):
-            # Gather USDA names first, then fall back to ingredient names
+            # Gather distinct ingredient names from the DB.
             names = set()
-            for row in Ingredient.objects.exclude(usda_name='').exclude(usda_name__isnull=True).values_list('usda_name', flat=True):
-                names.add(row.strip())
             for row in Ingredient.objects.exclude(name='').exclude(name__isnull=True).values_list('name', flat=True):
                 names.add(row.strip())
             return sorted(names)

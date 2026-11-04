@@ -85,8 +85,8 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = (
         'name', 'quantity', 'unit', 'get_canonical_link', 'get_nutrition_link', 'get_recipes_count', 'get_substitutes'
     )
-    search_fields = ('name', 'normalized_name')
-    list_filter = ('unit', 'nutrition_data', 'canonical')
+    search_fields = ('name',)
+    list_filter = ('unit', 'nutrition_data', 'canonical', 'resolution_method')
     ordering = ('name',)
     autocomplete_fields = ('nutrition_data',)
     actions = ['link_to_nutrition_data']

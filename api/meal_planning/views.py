@@ -149,8 +149,6 @@ class MealPlanViewSet(viewsets.ModelViewSet):
                 for ing in recipe.ingredients.all():
                     if getattr(ing, 'name', None):
                         tokens |= _tokenize(ing.name)
-                    if getattr(ing, 'usda_name', None):
-                        tokens |= _tokenize(ing.usda_name)
             except Exception:
                 pass
             return tokens

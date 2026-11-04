@@ -1,7 +1,5 @@
 from django.db import models
-from django.core.exceptions import ValidationError
 from accounts.models import CustomUser
-from rest_framework.pagination import PageNumberPagination
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 import os
@@ -23,11 +21,33 @@ class NutritionData(models.Model):
         return self.name
 
 class CanonicalIngredient(models.Model):
-    """Catalog entry for a canonical ingredient concept (multilingual)."""
+    """Catalog entry for a canonical ingredient concept (multilingual).
+
+    This is the single resolution hub: free-text ingredient lines resolve to one
+    of these rows (see ``recipes.ingredient_resolver``), and nutrition + grocery
+    merging key off the row rather than off raw strings. ``usda_fdc_id`` pins the
+    concept to one stable USDA FoodData Central entry so nutrition no longer
+    depends on a per-name search returning the right first hit, and ``portions``
+    carries that entry's real gram-weights per household unit (USDA foodPortions)
+    instead of the global density guesses in ``nutrition_service``.
+    """
     canonical_name_en = models.CharField(max_length=255, db_index=True)
     canonical_name_fr = models.CharField(max_length=255, blank=True, null=True)
     # category now stores a 2-letter code (e.g., PR, MS, DE, ... HO)
     category = models.CharField(max_length=2, blank=True, null=True)
+    # Alias/synonym surface forms used for resolution (EN + FR). Lowercased.
+    aliases_en = models.JSONField(default=list, blank=True)
+    aliases_fr = models.JSONField(default=list, blank=True)
+    # Stable nutrition linkage. usda_fdc_id anchors one FoodData Central entry;
+    # off_gtin optionally anchors a branded Open Food Facts product (barcode).
+    usda_fdc_id = models.CharField(max_length=50, blank=True, null=True, db_index=True)
+    off_gtin = models.CharField(max_length=32, blank=True, null=True)
+    # Path B — per-ingredient portions. density_g_per_ml converts volumetric units
+    # for this specific food; portions maps a household unit label -> grams
+    # (e.g. {"cup": 136.0, "medium": 118.0, "clove": 3.0}), sourced from USDA
+    # foodPortions by backfill_canonical_portions.
+    density_g_per_ml = models.FloatField(blank=True, null=True)
+    portions = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -41,16 +61,23 @@ class CanonicalIngredient(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     substitutes = models.JSONField(default=list, blank=True, null=True)
-    quantity = models.FloatField(blank=True, null=True)  # Keep for backward compatibility
-    unit = models.CharField(max_length=50, blank=True, null=True)  # Keep for backward compatibility
-    quantity_unit = models.CharField(max_length=100, blank=True, null=True)  # New combined field
-    preparation = models.CharField(max_length=255, blank=True, null=True)  # New preparation field
-    original_text = models.CharField(max_length=500, blank=True, null=True)  # Full ingredient string
-    usda_name = models.CharField(max_length=255, blank=True, null=True)  # Simplified name for USDA lookup
+    # quantity/unit are the parsed numeric amount; quantity_unit/original_text
+    # preserve the raw amount string for lines that never got a numeric quantity
+    # ("pinch of", "salt to taste"); preparation is the trailing note ("minced").
+    quantity = models.FloatField(blank=True, null=True)
+    unit = models.CharField(max_length=50, blank=True, null=True)
+    quantity_unit = models.CharField(max_length=100, blank=True, null=True)
+    preparation = models.CharField(max_length=255, blank=True, null=True)
+    original_text = models.CharField(max_length=500, blank=True, null=True)
     nutrition_data = models.ForeignKey(NutritionData, on_delete=models.SET_NULL, null=True, blank=True)
-    # Catalog architecture: normalized_name feeds canonical linking/dedup tooling.
-    normalized_name = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    # Resolution hub: the canonical concept this line maps to, plus how the link
+    # was made (exact/alias/fuzzy/llm — see recipes.ingredient_resolver) and how
+    # much to trust it (0..1). This FK replaced the old usda_name / normalized_name
+    # free-text fields — the catalog is now the single matching anchor for
+    # nutrition and grocery merging.
     canonical = models.ForeignKey(CanonicalIngredient, on_delete=models.SET_NULL, null=True, blank=True, related_name="ingredients")
+    canonical_confidence = models.FloatField(blank=True, null=True)
+    resolution_method = models.CharField(max_length=16, blank=True, null=True)
 
     def __str__(self):
         parts = []
@@ -211,41 +238,63 @@ class Recipe(models.Model):
     def calculate_nutrition(self):
         """Calculate nutrition from ingredients"""
         from .nutrition_service import NutritionService
+        from .ingredient_resolver import resolve
         service = NutritionService()
-        
+
         print(f"🥦 [CALC] Nutrition for: {self.title} (ID: {self.id})")
-        
+
         total_calories = 0.0
         total_protein = 0.0
         total_fat = 0.0
         total_carbs = 0.0
         ingredients_found = 0
         ingredients_missed = 0
-        
+
         for ingredient in self.ingredients.all():
             qty = ingredient.quantity
             if not qty:
                 continue
-                
-            # Strategy: Canonical -> USDA Name -> Name
-            search_name = ingredient.name
-            if ingredient.canonical:
-                search_name = ingredient.canonical.canonical_name_en
-            elif ingredient.usda_name:
-                search_name = ingredient.usda_name
 
-            data, nutrition_obj = service._lookup_ingredient(
-                ingredient_name=search_name,
-                quantity=qty,
-                unit=ingredient.unit,
-                usda_name=ingredient.usda_name
-            )
+            # Resolve to a canonical concept once (the catalog is the hub). Only
+            # resolve when not already linked, and persist the link + confidence
+            # so repeat calls and grocery merging reuse it.
+            if ingredient.canonical_id is None:
+                res = resolve(ingredient.name)
+                if res.matched:
+                    ingredient.canonical_id = res.canonical_id
+                    ingredient.canonical_confidence = res.confidence
+                    ingredient.resolution_method = res.method
+                    ingredient.save(update_fields=[
+                        'canonical', 'canonical_confidence', 'resolution_method'
+                    ])
+
+            data = None
+            nutrition_obj = None
+
+            # Preferred path: nutrition pinned to the canonical entry's USDA id.
+            if ingredient.canonical and ingredient.canonical.usda_fdc_id:
+                data, nutrition_obj = service.get_nutrition_for_canonical(
+                    ingredient.canonical, qty, ingredient.unit
+                )
+
+            # Fallback: legacy per-name search (unlinked / not-yet-pinned foods).
+            if data is None:
+                # Prefer the canonical concept name; otherwise the raw name.
+                search_name = ingredient.name
+                if ingredient.canonical:
+                    search_name = ingredient.canonical.canonical_name_en
+
+                data, nutrition_obj = service._lookup_ingredient(
+                    ingredient_name=search_name,
+                    quantity=qty,
+                    unit=ingredient.unit,
+                )
 
             # Cache the FK so future calls skip USDA entirely
             if nutrition_obj and ingredient.nutrition_data_id != nutrition_obj.pk:
                 ingredient.nutrition_data = nutrition_obj
                 ingredient.save(update_fields=['nutrition_data'])
-            
+
             if data:
                 cal = data.get('calories', 0)
                 total_calories += cal
