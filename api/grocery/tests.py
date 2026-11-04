@@ -110,6 +110,62 @@ class SameDimensionSumTests(TestCase):
         self.assertEqual(len(lines), 1)
 
 
+class DimensionFromUnitsTests(TestCase):
+    """Dimension follows the recipe's units, not a mis-curated category."""
+
+    def test_count_item_in_mass_category(self):
+        # pork chops: category MS (mass prior) but the recipe counts them
+        chop = CanonicalIngredient.objects.create(
+            canonical_name_en="pork chop", category="MS")
+        r = _recipe("BBQ")
+        _ingredient(r, "pork chops", 4, "piece", canonical=chop, confidence=1.0)
+
+        line = _by_name(aggregate_ingredients([(r, 1)]))["pork chop"]
+        self.assertEqual(line.amount.dimension, "count")
+        self.assertEqual(line.amount.value, 4.0)
+        self.assertEqual(line.amount.unit, "piece")
+        self.assertEqual(line.components, [])  # no stray "g + 4 piece"
+
+    def test_volume_only_line_stays_volume(self):
+        ginger = CanonicalIngredient.objects.create(
+            canonical_name_en="ginger", category="PR")
+        r = _recipe("Stir-fry")
+        _ingredient(r, "ginger", 1, "ml", canonical=ginger, confidence=1.0)
+
+        line = _by_name(aggregate_ingredients([(r, 1)]))["ginger"]
+        self.assertEqual(line.amount.dimension, "volume")
+        self.assertEqual(line.amount.value, 1.0)
+        self.assertEqual(line.components, [])  # no stray "6 g + 1 ml"
+
+    def test_pc_normalizes_and_merges_with_piece(self):
+        pepper = CanonicalIngredient.objects.create(
+            canonical_name_en="bell pepper", category="PR")
+        r1 = _recipe("A")
+        r2 = _recipe("B")
+        _ingredient(r1, "bell pepper", 1, "pc", canonical=pepper, confidence=1.0)
+        _ingredient(r2, "bell peppers", 2, "piece", canonical=pepper, confidence=1.0)
+
+        line = _by_name(aggregate_ingredients([(r1, 1), (r2, 1)]))["bell pepper"]
+        self.assertEqual(line.amount.unit, "piece")
+        self.assertEqual(line.amount.value, 3.0)  # 1 pc + 2 piece merged
+        self.assertEqual(line.components, [])
+
+
+class SourceUnitTests(TestCase):
+    """Provenance keeps the recipe's own unit, not the normalized base label."""
+
+    def test_source_keeps_tablespoon_not_ml(self):
+        oil = CanonicalIngredient.objects.create(
+            canonical_name_en="canola oil", category="CO")
+        r = _recipe("Fry")
+        _ingredient(r, "canola oil", 2, "tbsp", canonical=oil, confidence=1.0)
+
+        line = _by_name(aggregate_ingredients([(r, 1)]))["canola oil"]
+        self.assertEqual(line.amount.value, 30.0)        # 2 tbsp -> 30 ml
+        self.assertEqual(line.sources[0].unit, "tbsp")   # not "ml"
+        self.assertEqual(line.sources[0].quantity, 2.0)
+
+
 class BridgeFoldingTests(TestCase):
     """(b) a stray-unit line folds into the chosen dimension via portions."""
 

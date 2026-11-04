@@ -24,6 +24,7 @@ nutrition tables are deliberately not consulted here.
 """
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -85,7 +86,11 @@ def line_key_for_ingredient(ing) -> str:
 
 
 def purchase_dimension(name: str, category: Optional[str]) -> str:
-    """Pick the dimension (mass/volume/count) a concept is combined in."""
+    """Category/name prior for the dimension (mass/volume/count) a concept sells in.
+
+    Used as the fallback/tie-breaker; the actual recipe units take precedence
+    (see :func:`_choose_dimension`).
+    """
     key = (name or "").strip().lower()
     if key in _DIMENSION_OVERRIDES:
         return _DIMENSION_OVERRIDES[key]
@@ -96,6 +101,28 @@ def purchase_dimension(name: str, category: Optional[str]) -> str:
     if category and category in _DIMENSION_BY_CATEGORY:
         return _DIMENSION_BY_CATEGORY[category]
     return _DEFAULT_DIMENSION
+
+
+def _choose_dimension(records, name, category) -> str:
+    """Pick the combine dimension from the actual recipe units, not just category.
+
+    The category prior is frequently ``HO``/mis-curated, which produced nonsense
+    like "4 piece" pork chops shown as grams or "1 ml" ginger shown as "6 g".
+    So: use the unit class most contributing lines actually use; the category
+    prior only breaks ties or fills in when there are no numeric lines.
+    """
+    classes = [r.unit_class for r in records if r.has_qty]
+    cat_dim = purchase_dimension(name, category)
+    if not classes:
+        return cat_dim
+    counts = Counter(classes)
+    top = max(counts.values())
+    tied = [c for c in counts if counts[c] == top]
+    if cat_dim in tied:
+        return cat_dim
+    if len(tied) == 1:
+        return tied[0]
+    return cat_dim
 
 
 # --------------------------------------------------------------------------
@@ -310,18 +337,21 @@ def _add_line(groups: Dict[Tuple[str, object], _Group], recipe, ing, scale: floa
 
     if raw_name:
         group.variants.add(raw_name.lower())
+    # Provenance keeps the recipe's OWN unit (e.g. "tbsp"), not the normalized
+    # base label — else "2 tbsp" would read as "2 ml" against the g/ml base.
+    raw_unit = (getattr(ing, "unit", None) or "").strip().lower() or label
     group.sources.append(Source(
         recipe_id=getattr(recipe, "id", None),
         title=getattr(recipe, "title", None) or "",
         quantity=round_qty(qty_scaled) if qty_scaled is not None else None,
-        unit=label,
+        unit=raw_unit,
     ))
     if conf is not None:
         group.confidences.append(conf)
 
 
 def _finalize(group: _Group, lang: str = "en") -> ShoppableLine:
-    dimension = purchase_dimension(group.name, group.category)
+    dimension = _choose_dimension(group.records, group.name, group.category)
     display_name = group.name_fr if (lang == "fr" and group.name_fr) else group.name
     records = group.records
     components: List[Component] = []
@@ -400,11 +430,14 @@ def _finalize_count(group: _Group, records: List[_LineRecord]) -> Tuple[Amount, 
             components.append(Component(round_qty(v), lbl))
         return amount, components
 
-    # No usable count unit at all. Degrade to grams if we have any, else an
-    # empty count amount (concept still appears, quantity unknown).
+    # No usable count unit at all. Degrade to grams if we have any — keeping only
+    # the lines that couldn't convert as residuals (don't both sum a line into
+    # grams AND list it as a component).
     total_g = _sum_opt([r.grams for r in records])
     if total_g is not None:
-        return Amount(round_qty(total_g), "g", "mass"), components
+        leftover = [Component(round_qty(r.qty), r.label)
+                    for r in records if r.has_qty and r.grams is None]
+        return Amount(round_qty(total_g), "g", "mass"), leftover
     first_label = records[0].label if records else "unit"
     return Amount(None, first_label, "count"), components
 

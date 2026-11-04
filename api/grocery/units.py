@@ -60,6 +60,8 @@ COUNT_UNITS = {
     "units": "unit",
     "piece": "piece",
     "pieces": "piece",
+    "pc": "piece",
+    "pcs": "piece",
     "item": "item",
     "items": "item",
     "clove": "clove",
