@@ -173,8 +173,9 @@ class ChatV2TestCase(TestCase):
         self.assertEqual(summary["title"], "Saved Tacos")
         self.assertEqual(summary["total_time"], 25)
         self.assertEqual(summary["calories"], 450)
-        # Recipe.save() auto-appends a meal-type tag ("Dinner")
-        self.assertIn("mexican", summary["tags"])
+        # Recipe.save() canonicalizes tags ("mexican" -> "Mexican") and
+        # auto-appends a meal-type tag ("Dinner")
+        self.assertIn("Mexican", summary["tags"])
 
     def test_reference_recipe_allows_catalog_recipe_owned_by_another_user(self):
         other = User.objects.create_user(username="chef", password="pw")

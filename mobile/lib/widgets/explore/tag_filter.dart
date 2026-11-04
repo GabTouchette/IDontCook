@@ -26,10 +26,14 @@ class TagFiltersState extends State<TagFilters> {
     try {
       var data = await RecipeApi().fetchRecipeTags();
 
+      // Match case-insensitively: backend tags are canonicalized, but guard
+      // against any lingering casing drift between the DB and the vocabulary.
+      final usedLower = data.map((t) => t.toLowerCase()).toSet();
+
       Map<String, List<String>> filteredTags = {};
       tagOptions.forEach((category, tags) {
         final usedCategoryTags =
-            tags.where((tag) => data.contains(tag)).toList();
+            tags.where((tag) => usedLower.contains(tag.toLowerCase())).toList();
         if (usedCategoryTags.isNotEmpty) {
           filteredTags[category] = usedCategoryTags;
         }

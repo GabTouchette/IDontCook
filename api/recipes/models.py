@@ -375,6 +375,15 @@ class Recipe(models.Model):
     
     def save(self, *args, **kwargs):
         """Auto-assign meal type if missing before save (except for drinks/cocktails)"""
+        # Enforce the curated tag vocabulary on every write path (user, AI,
+        # import, auto-tag, admin, serializer) at this single chokepoint:
+        # near-miss variants are remapped and anything off-vocabulary is dropped.
+        # Runs before the meal-type logic so that if canonicalization strips a
+        # non-canonical meal-ish tag, the blocks below still backfill one. Meal
+        # types are themselves canonical, so a real one always survives.
+        from .tag_vocabulary import canonicalize_tags
+        self.tags = canonicalize_tags(self.tags, enforce_single_meal_type=False)
+
         if self.tags:
             meal_type_tags = [tag for tag in self.tags if tag in self.REQUIRED_MEAL_TYPES]
             if len(meal_type_tags) == 0 and not self._is_drink_or_cocktail():

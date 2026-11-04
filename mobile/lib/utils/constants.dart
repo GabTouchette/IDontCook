@@ -1,133 +1,73 @@
+// Curated recipe-tag vocabulary for the picker and explore filters.
+//
+// This MIRRORS the backend source of truth in `api/recipes/tag_vocabulary.py`
+// (CANONICAL_TAGS). The backend enforces this set on every write and when
+// cleaning the catalog, so keep the two in sync — if you add/remove a tag here,
+// change it there too (and vice versa). The "Meal Types" category is handled
+// specially by the create/edit form (single-select, five required types).
 const Map<String, List<String>> tagOptions = {
-  "Convenience": [
-    "5 Ingredients or Less",
-    "5-Minute Meal",
-    "10-Minute Meal",
-    "30-Minute Meal",
-    "Batch Cooking",
-    "Budget-Friendly",
-    "Easy Clean-Up",
-    "Meal Prep",
-    "Quick",
-    "Under 1 Hour"
-  ],
-  "Cooking Methods": [
-    "Air Fryer",
-    "Baked",
-    "Grilled",
-    "Instant Pot",
-    "No Cook",
-    "One-Pot",
-    "Raw",
-    "Sheet Pan Meal",
-    "Slow Cooker"
-  ],
-  "Cuisine & Style": [
-    "Comfort Food",
-    "Exotic",
-    "Farm-to-Table",
-    "Fusion",
-    "Gourmet",
-    "International Cuisine",
-    "Luxury",
-    "Street Food",
-    "Traditional"
-  ],
-  "Dietary Preferences": [
-    "Dairy-Free",
-    "Diabetes-Friendly",
-    "Gluten-Free",
-    "High Fiber",
-    "High Protein",
-    "Keto",
-    "Low Carb",
-    "Low Fat",
-    "Nut-Free",
-    "Organic",
-    "Paleo",
-    "Sugar-Free",
-    "Vegan",
-    "Vegetarian",
-    "Whole30",
-    "GMO-Free"
-  ],
-  "Ethnic Cuisines": [
-    "African",
-    "American",
-    "Asian",
-    "Caribbean",
-    "Chinese",
-    "Ethiopian",
-    "French",
-    "Greek",
-    "Indian",
-    "Italian",
-    "Japanese",
-    "Korean",
-    "Latin American",
-    "Mediterranean",
-    "Mexican",
-    "Middle Eastern",
-    "Moroccan",
-    "Southern",
-    "Spanish",
-    "Thai",
-    "Vietnamese",
-    "Hawaiian"
-  ],
-  "Food Categories": [
-    "Burger",
-    "Burrito",
-    "Casserole",
-    "Curry",
-    "Pizza",
-    "Pasta",
-    "Rice Dish",
-    "Salad",
-    "Sandwich",
-    "Soup",
-    "Stir-Fry",
-    "Stew",
-    "Sushi",
-    "Taco",
-    "Wrap"
-  ],
-  "Health Benefits": [
-    "Anti-Inflammatory",
-    "Brain-Boosting",
-    "Energy-Boosting",
-    "Gut Health",
-    "Heart Healthy",
-    "Immune-Boosting",
-    "Mood-Boosting",
-    "Post-Workout",
-    "Pre-Workout",
-    "Skin-Glowing"
-  ],
-  "Lifestyle & Audience": [
-    "Athlete-Friendly",
-    "Bodybuilding",
-    "Detox",
-    "Elderly-Friendly",
-    "Kid-Friendly",
-    "Pregnancy-Safe",
-    "Toddler-Friendly",
-    "Weight Gain",
-    "Weight Loss",
-    "Juicing"
-  ],
   "Meal Types": [
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Snack",
+    "Dessert",
+    "Brunch",
     "Appetizer",
     "Beverage",
-    "Brunch",
-    "Cocktail",
-    "Dessert",
-    "Dinner",
-    "Lunch",
-    "Mocktail",
-    "Snack",
-    "Smoothie",
-    "Breakfast"
+    "Cocktail"
   ],
-  "Special Occasions": ["BBQ", "Holiday", "Picnic", "Seasonal"]
+  "Dietary": [
+    "Vegetarian",
+    "Vegan",
+    "Gluten-Free",
+    "Dairy-Free",
+    "Keto",
+    "High Protein",
+    "Low Carb"
+  ],
+  "Cooking Methods": [
+    "Baked",
+    "Grilled",
+    "Air Fryer",
+    "Slow Cooker",
+    "One-Pot",
+    "No Cook"
+  ],
+  "Dish Types": [
+    "Soup",
+    "Salad",
+    "Pasta",
+    "Pizza",
+    "Curry",
+    "Stir-Fry",
+    "Sandwich",
+    "Stew",
+    "Bread"
+  ],
+  "Cuisines": [
+    "Italian",
+    "Mexican",
+    "Asian",
+    "Indian",
+    "Mediterranean",
+    "American",
+    "French",
+    "Thai",
+    "Chinese",
+    "Japanese",
+    "Middle Eastern"
+  ],
+  "Convenience": [
+    "Quick",
+    "30-Minute Meal",
+    "Budget-Friendly",
+    "Meal Prep",
+    "5 Ingredients or Less"
+  ],
+  "Other": [
+    "Comfort Food",
+    "Healthy",
+    "Spicy"
+  ]
 };
