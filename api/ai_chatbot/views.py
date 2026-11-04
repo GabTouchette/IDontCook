@@ -254,6 +254,14 @@ class ChatbotV2View(APIView):
         recipe_id = request.data.get("recipe_id")
         conversation_id = request.data.get("conversation_id")
 
+        # Generic snapshot of what the user is currently looking at (page name +
+        # on-screen data), folded into the global system prompt so the chat can
+        # answer "what's on this page" from anywhere in the app. Best-effort and
+        # non-fatal: a malformed blob is simply ignored.
+        page_context = request.data.get("page_context")
+        if page_context is not None and not isinstance(page_context, dict):
+            page_context = None
+
         # --- Conversation (server-side history) ---
         if conversation_id is not None:
             try:
@@ -306,6 +314,7 @@ class ChatbotV2View(APIView):
                 user_settings=user_settings,
                 mood=mood,
                 home_feed=home_feed,
+                page_context=page_context,
             )
             tools = [SEARCH_RECIPES_TOOL, CREATE_RECIPE_TOOL, REFERENCE_RECIPE_TOOL, WEB_SEARCH_TOOL]
 

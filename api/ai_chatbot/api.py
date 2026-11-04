@@ -894,6 +894,46 @@ class PromptTemplates:
         return "\n".join(lines)
 
     @staticmethod
+    def page_context_section(page_context):
+        """
+        Compact serialization of what the user is currently looking at in the
+        app, so the global chat can answer "what's on this page" questions
+        wherever it is opened. Shape (client-supplied, best-effort):
+            {"label": "Explore", "summary": "...", "data": {...}}
+        `data` is page-specific (active filters, visible recipe titles/ids,
+        the recipe being viewed, the meal-plan week, ...). It is rendered
+        verbatim-ish and length-capped so a large page can't blow up the
+        prompt.
+        """
+        if not isinstance(page_context, dict):
+            return ""
+        label = page_context.get("label")
+        summary = page_context.get("summary")
+        data = page_context.get("data")
+        lines = []
+        if label:
+            lines.append(f"The user is currently viewing: {label}.")
+        else:
+            lines.append("The user is currently viewing a page in the app.")
+        lines.append(
+            "When they ask about \"this page\", \"here\", \"what I'm looking at\", "
+            "or similar, use the on-screen context below. For anything else, "
+            "answer normally as a general cooking assistant."
+        )
+        if summary:
+            lines.append(f"Summary: {summary}")
+        if data is not None:
+            try:
+                data_json = json.dumps(data, ensure_ascii=False)
+            except (TypeError, ValueError):
+                data_json = None
+            if data_json:
+                if len(data_json) > 4000:
+                    data_json = data_json[:4000] + "… (truncated)"
+                lines.append(f"On screen:\n{data_json}")
+        return "\n".join(lines)
+
+    @staticmethod
     def taste_summary_section(taste_summary):
         """
         Compact taste-summary section (catalog-first-pivot.md §2 WS-P2) —
@@ -921,7 +961,7 @@ class PromptTemplates:
         return "\n".join(lines)
 
     @staticmethod
-    def chatbot_v2_system(taste_summary=None, user_settings=None, mood=None, home_feed=None):
+    def chatbot_v2_system(taste_summary=None, user_settings=None, mood=None, home_feed=None, page_context=None):
         """System prompt for chat v2 in 'global' / 'home' context (tool use).
 
         Librarian-first policy (catalog-first-pivot.md §2 WS-P2): search the
@@ -969,6 +1009,7 @@ class PromptTemplates:
             ),
             PromptTemplates.mood_section(mood),
             PromptTemplates.home_feed_section(home_feed),
+            PromptTemplates.page_context_section(page_context),
         ]
         return "\n\n".join(s for s in sections if s)
 
