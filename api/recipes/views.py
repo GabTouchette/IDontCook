@@ -535,8 +535,22 @@ class RecipeTagsAPIView(APIView):
         Return a list of all unique tags used in recipes.
         """
         tags = Recipe.objects.values_list('tags', flat=True).distinct()
-        unique_tags = set(tag for sublist in tags for tag in sublist)
+        unique_tags = set(tag for sublist in (tags or []) if sublist for tag in sublist)
         return JsonResponse(list(unique_tags), safe=False, status=status.HTTP_200_OK)
+
+
+class RecipeTagVocabularyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Return the curated tag vocabulary, grouped by category. This is the
+        single source of truth that both the create-recipe form and the explore
+        filter pull from so the app's selectable tags always match what the
+        backend enforces on save (recipes.tag_vocabulary.CANONICAL_TAGS).
+        """
+        from .tag_vocabulary import CANONICAL_TAGS
+        return JsonResponse(dict(CANONICAL_TAGS), status=status.HTTP_200_OK)
 
 
 class CanonicalIngredientAutocompleteAPIView(APIView):
