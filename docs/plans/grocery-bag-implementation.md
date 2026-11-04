@@ -307,8 +307,16 @@ Steps 1–5 deliver a fully usable Grocery Bag with zero grocery-site integratio
   a reveal affordance (§5.1).
 - Unresolved / low-confidence lines get an **in-app confirm step** (§5.3).
 
+**Done (follow-ups, 2026-11-04):**
+- **Always-hidden reveal UI** — `GET bag/` returns `hidden_items` alongside `hidden_count`; the page
+  footer has a "Show N staple(s)" / "Hide staples" toggle that reveals those rows inline.
+- **Localization** — `aggregate_ingredients(lang=)` sets a localized `display_name`
+  (`canonical_name_fr` when `?lang=fr`, else EN), emitted as `name`; internal identity/sort/dimension
+  stay EN-based so keys and matching are language-independent. The app sends its device locale on
+  bag-returning calls.
+
 **Still open:**
-- Localization: `name` from `canonical_name_en` now; wire `_fr` via request locale later?
 - Purchase-dimension override map — seed list of count-vs-mass produce exceptions to curate (garlic,
   lemon, onion, pepper… = count; spinach, grapes… = mass).
 - Confirm-step threshold value for `needs_confirmation` (what `match_confidence` counts as "low").
+- Implicit pantry learning (auto-pantry after N removals).

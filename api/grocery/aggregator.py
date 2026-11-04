@@ -153,6 +153,9 @@ class ShoppableLine:
     variants: List[str]
     # Populated by Part C (grocery/sorting.py); left None by the aggregator.
     staple_score: Optional[float] = None
+    # Localized name for display; internal `name` stays English so keys,
+    # dimension, and always-hidden matching are language-independent.
+    display_name: Optional[str] = None
 
     @property
     def key(self) -> str:
@@ -169,7 +172,7 @@ class ShoppableLine:
         return {
             "key": self.key,
             "concept_id": self.concept_id,
-            "name": self.name,
+            "name": self.display_name or self.name,
             "category": self.category,
             "amount": self.amount.to_dict(),
             "approx_g": self.approx_g,
@@ -202,6 +205,7 @@ class _LineRecord:
 @dataclass
 class _Group:
     name: str
+    name_fr: Optional[str]
     category: Optional[str]
     concept_id: Optional[int]
     portions: Dict[str, float]
@@ -266,6 +270,7 @@ def _add_line(groups: Dict[Tuple[str, object], _Group], recipe, ing, scale: floa
 
     if canonical is not None:
         name = canonical.canonical_name_en or normalize_name_and_prep(raw_name)[0]
+        name_fr = canonical.canonical_name_fr
         identity: Tuple[str, object] = ("ci", canonical.id)
         category = canonical.category
         portions = canonical.portions or {}
@@ -276,6 +281,7 @@ def _add_line(groups: Dict[Tuple[str, object], _Group], recipe, ing, scale: floa
         name, _ = normalize_name_and_prep(raw_name)
         if not name:
             name = raw_name.lower()
+        name_fr = None
         identity = ("name", name)
         category = None
         portions = {}
@@ -286,7 +292,7 @@ def _add_line(groups: Dict[Tuple[str, object], _Group], recipe, ing, scale: floa
     group = groups.get(identity)
     if group is None:
         group = _Group(
-            name=name, category=category, concept_id=concept_id,
+            name=name, name_fr=name_fr, category=category, concept_id=concept_id,
             portions=portions, density=density,
         )
         groups[identity] = group
@@ -314,8 +320,9 @@ def _add_line(groups: Dict[Tuple[str, object], _Group], recipe, ing, scale: floa
         group.confidences.append(conf)
 
 
-def _finalize(group: _Group) -> ShoppableLine:
+def _finalize(group: _Group, lang: str = "en") -> ShoppableLine:
     dimension = purchase_dimension(group.name, group.category)
+    display_name = group.name_fr if (lang == "fr" and group.name_fr) else group.name
     records = group.records
     components: List[Component] = []
 
@@ -351,6 +358,7 @@ def _finalize(group: _Group) -> ShoppableLine:
     return ShoppableLine(
         concept_id=group.concept_id,
         name=group.name,
+        display_name=display_name,
         category=group.category,
         amount=amount,
         approx_g=approx_g,
@@ -401,11 +409,16 @@ def _finalize_count(group: _Group, records: List[_LineRecord]) -> Tuple[Amount, 
     return Amount(None, first_label, "count"), components
 
 
-def aggregate_ingredients(recipe_servings: List[Tuple[object, int]]) -> List[ShoppableLine]:
+def aggregate_ingredients(
+    recipe_servings: List[Tuple[object, int]], lang: str = "en"
+) -> List[ShoppableLine]:
     """Aggregate ingredients across (recipe, servings) pairs into shoppable lines.
 
     Caller is responsible for prefetching ``recipe.ingredients`` and each
     ingredient's ``canonical`` to avoid N+1 queries.
+
+    ``lang`` selects the display name (``"fr"`` → ``canonical_name_fr`` when
+    present); internal identity/sorting stay English-based.
 
     Returns one :class:`ShoppableLine` per canonical concept (unresolved lines
     group by normalized name), sorted by name for a stable order. Staple
@@ -419,6 +432,6 @@ def aggregate_ingredients(recipe_servings: List[Tuple[object, int]]) -> List[Sho
         for ing in recipe.ingredients.all():
             _add_line(groups, recipe, ing, scale)
 
-    lines = [_finalize(g) for g in groups.values()]
+    lines = [_finalize(g, lang) for g in groups.values()]
     lines.sort(key=lambda line: (line.name or "", line.amount.unit or ""))
     return lines

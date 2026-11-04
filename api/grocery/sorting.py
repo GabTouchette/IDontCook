@@ -46,24 +46,24 @@ def is_always_hidden(name) -> bool:
     return (name or "").strip().lower() in _ALWAYS_HIDDEN
 
 
-def prepare_lines(lines, pantry_keys=frozenset()) -> Tuple[List, int]:
-    """Assign ``staple_score``, drop always-hidden items, sort least-likely first.
+def prepare_lines(lines, pantry_keys=frozenset()) -> Tuple[List, List]:
+    """Assign ``staple_score``, split off always-hidden items, sort each group.
 
     Mutates each line's ``staple_score`` in place. Items in the user's pantry
     (``pantry_keys``, a set of line keys) are forced to 1.0 so they sink to the
-    bottom (Part C2). Returns ``(visible_sorted, hidden_count)``. Ties break
-    alphabetically by name.
+    bottom (Part C2). Returns ``(visible_sorted, hidden_sorted)`` — the hidden
+    list (salt/pepper/water) is returned so the UI can reveal it on demand. Ties
+    break alphabetically by name.
     """
     visible = []
-    hidden_count = 0
+    hidden = []
     for line in lines:
         if line.key in pantry_keys:
             line.staple_score = 1.0
         else:
             line.staple_score = staple_score(line.category)
-        if is_always_hidden(line.name):
-            hidden_count += 1
-            continue
-        visible.append(line)
-    visible.sort(key=lambda line: (line.staple_score, line.name or ""))
-    return visible, hidden_count
+        (hidden if is_always_hidden(line.name) else visible).append(line)
+    sort_key = lambda line: (line.staple_score, line.name or "")  # noqa: E731
+    visible.sort(key=sort_key)
+    hidden.sort(key=sort_key)
+    return visible, hidden

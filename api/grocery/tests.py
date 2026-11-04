@@ -281,7 +281,7 @@ class StapleSortTests(TestCase):
         self.assertEqual([i["name"] for i in items], ["tomato", "chickpeas", "cumin"])
         self.assertEqual(items[0]["staple_score"], 0.05)
 
-    def test_salt_pepper_water_hidden(self):
+    def test_salt_pepper_water_hidden_and_revealable(self):
         from rest_framework.test import APIClient
         salt = self._canonical("salt", "SP")
         tomato = self._canonical("tomato", "PR")
@@ -297,6 +297,46 @@ class StapleSortTests(TestCase):
         bag = client.get("/api/grocery/bag/").data
         self.assertEqual([i["name"] for i in bag["items"]], ["tomato"])
         self.assertEqual(bag["hidden_count"], 1)
+        # The hidden item is returned separately so the UI can reveal it.
+        self.assertEqual([i["name"] for i in bag["hidden_items"]], ["salt"])
+
+
+class LocalizationTests(TestCase):
+    """Open question resolved: display names localize via ?lang=, keys don't."""
+
+    def test_fr_display_name_keeps_en_key(self):
+        from rest_framework.test import APIClient
+        garlic = CanonicalIngredient.objects.create(
+            canonical_name_en="garlic", canonical_name_fr="ail", category="PR")
+        r = _recipe("Aioli")
+        _ingredient(r, "garlic", 2, "clove", canonical=garlic, confidence=1.0)
+
+        user = get_user_model().objects.create_user(username="fruser", password="x")
+        client = APIClient()
+        client.force_authenticate(user)
+        client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+        fr = client.get("/api/grocery/bag/", {"lang": "fr"}).data["items"][0]
+        self.assertEqual(fr["name"], "ail")            # localized display
+        self.assertEqual(fr["key"], f"ci:{garlic.id}")  # identity unchanged
+
+        en = client.get("/api/grocery/bag/").data["items"][0]
+        self.assertEqual(en["name"], "garlic")
+
+    def test_fr_falls_back_to_en_when_missing(self):
+        from rest_framework.test import APIClient
+        thyme = CanonicalIngredient.objects.create(
+            canonical_name_en="thyme", category="SP")  # no fr
+        r = _recipe("Stock")
+        _ingredient(r, "thyme", 1, "unit", canonical=thyme, confidence=1.0)
+
+        user = get_user_model().objects.create_user(username="fru2", password="x")
+        client = APIClient()
+        client.force_authenticate(user)
+        client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+        fr = client.get("/api/grocery/bag/", {"lang": "fr"}).data["items"][0]
+        self.assertEqual(fr["name"], "thyme")
 
 
 class PantryTests(TestCase):
