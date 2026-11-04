@@ -69,6 +69,21 @@ _DIMENSION_OVERRIDES = {
 }
 
 
+def line_key_for_ingredient(ing) -> str:
+    """The aggregator line key an individual ``Ingredient`` row would fall under.
+
+    Mirrors :attr:`ShoppableLine.key` so the resolve/pantry endpoints can match
+    the rows behind a given list line. ``ci:<id>`` when resolved, else
+    ``name:<normalized>``.
+    """
+    canonical = getattr(ing, "canonical", None)
+    if canonical is not None:
+        return f"ci:{canonical.id}"
+    raw = (getattr(ing, "name", None) or "").strip()
+    name, _ = normalize_name_and_prep(raw)
+    return f"name:{name or raw.lower()}"
+
+
 def purchase_dimension(name: str, category: Optional[str]) -> str:
     """Pick the dimension (mass/volume/count) a concept is combined in."""
     key = (name or "").strip().lower()

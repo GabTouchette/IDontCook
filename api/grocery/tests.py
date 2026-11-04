@@ -299,6 +299,110 @@ class StapleSortTests(TestCase):
         self.assertEqual(bag["hidden_count"], 1)
 
 
+class PantryTests(TestCase):
+    """Part C2: 'I always have this' sinks items to the bottom."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        self.user = get_user_model().objects.create_user(username="pantryuser", password="x")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.tomato = CanonicalIngredient.objects.create(
+            canonical_name_en="tomato", category="PR")   # 0.05 normally top
+        self.beef = CanonicalIngredient.objects.create(
+            canonical_name_en="beef", category="MS")      # 0.05 normally top
+        r = _recipe("Bolognese")
+        _ingredient(r, "tomato", 2, "unit", canonical=self.tomato, confidence=1.0)
+        _ingredient(r, "beef", 400, "g", canonical=self.beef, confidence=1.0)
+        self.client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+    def test_mark_pantry_sinks_to_bottom(self):
+        key = f"ci:{self.tomato.id}"
+        resp = self.client.post(
+            "/api/grocery/pantry/", {"key": key, "in_pantry": True}, format="json")
+        self.assertEqual(resp.status_code, 200)
+        items = resp.data["items"]
+        tomato = next(i for i in items if i["key"] == key)
+        self.assertEqual(tomato["staple_score"], 1.0)
+        self.assertTrue(tomato["in_pantry"])
+        self.assertEqual(items[-1]["key"], key)  # sorted to the very bottom
+
+    def test_unmark_pantry(self):
+        key = f"ci:{self.tomato.id}"
+        self.client.post("/api/grocery/pantry/", {"key": key, "in_pantry": True}, format="json")
+        resp = self.client.post(
+            "/api/grocery/pantry/", {"key": key, "in_pantry": False}, format="json")
+        tomato = next(i for i in resp.data["items"] if i["key"] == key)
+        self.assertFalse(tomato["in_pantry"])
+        self.assertEqual(tomato["staple_score"], 0.05)
+
+
+class ResolveTests(TestCase):
+    """Part D2: confirm step links unresolved lines to a canonical concept."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        self.user = get_user_model().objects.create_user(username="resolver", password="x")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_search_canonical(self):
+        CanonicalIngredient.objects.create(canonical_name_en="smoked paprika", category="SP")
+        CanonicalIngredient.objects.create(canonical_name_en="garlic", category="PR")
+        resp = self.client.get("/api/grocery/bag/resolve/search/", {"q": "papri"})
+        self.assertEqual(resp.status_code, 200)
+        names = [r["name"] for r in resp.data["results"]]
+        self.assertIn("smoked paprika", names)
+        self.assertNotIn("garlic", names)
+
+    def test_search_too_short(self):
+        resp = self.client.get("/api/grocery/bag/resolve/search/", {"q": "a"})
+        self.assertEqual(resp.data["results"], [])
+
+    def test_resolve_links_unresolved_line(self):
+        sumac = CanonicalIngredient.objects.create(canonical_name_en="sumac", category="SP")
+        r = _recipe("Fattoush")
+        ing = _ingredient(r, "sumac", 1, "tsp")  # unresolved, canonical=None
+        self.client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+        key = "name:sumac"
+        bag = self.client.get("/api/grocery/bag/").data
+        line = next(i for i in bag["items"] if i["key"] == key)
+        self.assertTrue(line["needs_confirmation"])
+
+        resp = self.client.post(
+            "/api/grocery/bag/resolve/",
+            {"key": key, "concept_id": sumac.id}, format="json")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["updated"], 1)
+
+        # The ingredient row now points at the canonical, method=user.
+        ing.refresh_from_db()
+        self.assertEqual(ing.canonical_id, sumac.id)
+        self.assertEqual(ing.canonical_confidence, 1.0)
+        self.assertEqual(ing.resolution_method, "user")
+
+        # The list line is now resolved (keyed on ci:) and no longer flagged.
+        bag2 = self.client.get("/api/grocery/bag/").data
+        line2 = next(i for i in bag2["items"] if i["name"] == "sumac")
+        self.assertEqual(line2["key"], f"ci:{sumac.id}")
+        self.assertFalse(line2["needs_confirmation"])
+
+    def test_resolve_does_not_overwrite_high_confidence(self):
+        existing = CanonicalIngredient.objects.create(canonical_name_en="basil", category="PR")
+        other = CanonicalIngredient.objects.create(canonical_name_en="mint", category="PR")
+        r = _recipe("Pesto")
+        ing = _ingredient(r, "basil", 10, "g", canonical=existing, confidence=0.99)
+        self.client.post("/api/grocery/bag/recipes/", {"recipe_id": r.id}, format="json")
+
+        resp = self.client.post(
+            "/api/grocery/bag/resolve/",
+            {"key": f"ci:{existing.id}", "concept_id": other.id}, format="json")
+        self.assertEqual(resp.data["updated"], 0)  # high-confidence row left alone
+        ing.refresh_from_db()
+        self.assertEqual(ing.canonical_id, existing.id)
+
+
 class GroceryBagEndpointTests(TestCase):
     """Part B CRUD endpoints over the bag."""
 

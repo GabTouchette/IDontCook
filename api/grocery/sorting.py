@@ -46,16 +46,21 @@ def is_always_hidden(name) -> bool:
     return (name or "").strip().lower() in _ALWAYS_HIDDEN
 
 
-def prepare_lines(lines) -> Tuple[List, int]:
+def prepare_lines(lines, pantry_keys=frozenset()) -> Tuple[List, int]:
     """Assign ``staple_score``, drop always-hidden items, sort least-likely first.
 
-    Mutates each line's ``staple_score`` in place. Returns
-    ``(visible_sorted, hidden_count)``. Ties break alphabetically by name.
+    Mutates each line's ``staple_score`` in place. Items in the user's pantry
+    (``pantry_keys``, a set of line keys) are forced to 1.0 so they sink to the
+    bottom (Part C2). Returns ``(visible_sorted, hidden_count)``. Ties break
+    alphabetically by name.
     """
     visible = []
     hidden_count = 0
     for line in lines:
-        line.staple_score = staple_score(line.category)
+        if line.key in pantry_keys:
+            line.staple_score = 1.0
+        else:
+            line.staple_score = staple_score(line.category)
         if is_always_hidden(line.name):
             hidden_count += 1
             continue

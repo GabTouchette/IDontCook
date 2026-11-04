@@ -6,10 +6,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from recipes.models import Recipe
+from django.db.models import Q
 
-from .aggregator import aggregate_ingredients
-from .models import GroceryBag, GroceryBagRecipe, GroceryItemOverride
+from recipes.models import CanonicalIngredient, Recipe
+
+from .aggregator import (
+    NEEDS_CONFIRMATION_THRESHOLD,
+    aggregate_ingredients,
+    line_key_for_ingredient,
+)
+from .models import (
+    GroceryBag,
+    GroceryBagRecipe,
+    GroceryItemOverride,
+    UserPantryItem,
+)
 from .serializers import GroceryBagRecipeSerializer
 from .sorting import prepare_lines
 
@@ -34,9 +45,12 @@ def _serialize_bag(bag):
     bag_recipes = _bag_recipes(bag)
     lines = aggregate_ingredients([(br.recipe, br.servings) for br in bag_recipes])
 
-    # Staple ordering + always-hidden set (C1): least-likely-to-have first,
-    # salt/pepper/water dropped (surfaced via hidden_count).
-    visible, hidden_count = prepare_lines(lines)
+    # Staple ordering + always-hidden set (C1), with pantry items forced to the
+    # bottom (C2): least-likely-to-have first, salt/pepper/water dropped.
+    pantry_keys = set(
+        bag.user.pantry_items.values_list("item_key", flat=True)
+    )
+    visible, hidden_count = prepare_lines(lines, pantry_keys)
 
     overrides = {o.item_key: o.state for o in bag.overrides.all()}
     items = []
@@ -48,6 +62,7 @@ def _serialize_bag(bag):
             continue
         d = line.to_dict()
         d["checked"] = state == GroceryItemOverride.CHECKED
+        d["in_pantry"] = line.key in pantry_keys
         items.append(d)
 
     return {
@@ -156,3 +171,84 @@ class GroceryBagItemsView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         return Response(_serialize_bag(bag))
+
+
+class GroceryPantryView(APIView):
+    """POST to toggle a concept in the user's pantry ("I always have this").
+
+    Body: ``{"key": "<line key>", "in_pantry": true|false}``. Pantry items are
+    forced to the bottom of every bag (C2). Returns the refreshed bag.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        bag = _get_or_create_bag(request.user)
+        key = request.data.get("key")
+        if not key:
+            return Response({"detail": "key is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        in_pantry = request.data.get("in_pantry", True)
+        if in_pantry:
+            UserPantryItem.objects.get_or_create(user=request.user, item_key=key)
+        else:
+            UserPantryItem.objects.filter(user=request.user, item_key=key).delete()
+
+        return Response(_serialize_bag(bag))
+
+
+class GroceryResolveSearchView(APIView):
+    """GET canonical-ingredient search for the confirm picker (§5.3). ``?q=``."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        q = (request.query_params.get("q") or "").strip()
+        if len(q) < 2:
+            return Response({"results": []})
+        matches = CanonicalIngredient.objects.filter(
+            Q(canonical_name_en__icontains=q) | Q(canonical_name_fr__icontains=q)
+        ).order_by("canonical_name_en")[:20]
+        return Response({
+            "results": [
+                {"concept_id": c.id, "name": c.canonical_name_en, "category": c.category}
+                for c in matches
+            ]
+        })
+
+
+class GroceryResolveView(APIView):
+    """POST to link a needs-confirmation line to a canonical concept (§5.3).
+
+    Body: ``{"key": "<line key>", "concept_id": <id>}``. Writes the chosen
+    canonical back onto the matching ingredient rows in the bag's recipes
+    (``resolution_method="user"``), only filling/raising confidence — never
+    overwriting an already high-confidence match. Returns the refreshed bag.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        bag = _get_or_create_bag(request.user)
+        key = request.data.get("key")
+        concept_id = request.data.get("concept_id")
+        if not key or not concept_id:
+            return Response({"detail": "key and concept_id are required."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        concept = get_object_or_404(CanonicalIngredient, pk=concept_id)
+
+        updated = 0
+        for br in _bag_recipes(bag):
+            for ing in br.recipe.ingredients.all():
+                if line_key_for_ingredient(ing) != key:
+                    continue
+                conf = ing.canonical_confidence
+                # Only fill/raise: skip rows already confidently resolved.
+                if ing.canonical_id is not None and conf is not None \
+                        and conf >= NEEDS_CONFIRMATION_THRESHOLD:
+                    continue
+                ing.canonical = concept
+                ing.canonical_confidence = 1.0
+                ing.resolution_method = "user"
+                ing.save(update_fields=[
+                    "canonical", "canonical_confidence", "resolution_method"])
+                updated += 1
+
+        return Response({**_serialize_bag(bag), "updated": updated})

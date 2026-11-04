@@ -63,3 +63,24 @@ class GroceryItemOverride(models.Model):
 
     def __str__(self):
         return f"{self.item_key}={self.state} (bag {self.bag_id})"
+
+
+class UserPantryItem(models.Model):
+    """A concept the user always keeps on hand ("I always have this").
+
+    Applies across every bag: a pantry member's effective staple score is forced
+    to 1.0 so it sinks to the bottom of the list (see grocery.sorting). ``item_key``
+    is the aggregator's stable line key (``ci:<id>`` / ``name:<norm>``), matching
+    GroceryItemOverride. See docs/plans/grocery-bag-implementation.md §5.2.
+    """
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="pantry_items"
+    )
+    item_key = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "item_key")
+
+    def __str__(self):
+        return f"{self.item_key} (pantry user {self.user_id})"

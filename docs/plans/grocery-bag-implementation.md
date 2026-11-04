@@ -285,8 +285,13 @@ confirmed `amount` per concept in the right dimension; that's what makes Layer 3
    "add to grocery bag" button on recipe detail. Stub Order button toasts "coming soon".
    `flutter analyze` clean (only pre-existing `withOpacity` infos). Built against the current
    backend (name-sorted list; staple sort C1 still pending).
-5. **D2 / 5.3** — confirm step: `resolve` endpoints + picker sheet.
-6. **C2** — pantry model + "I always have this" gesture.
+5. **D2 / 5.3** ✅ *(done 2026-11-04)* — `bag/resolve/search/` + `bag/resolve/` endpoints
+   (writes chosen canonical back onto matching bag ingredient rows, `resolution_method="user"`,
+   fill/raise-confidence only); `line_key_for_ingredient` helper. Frontend: tappable confirm marker
+   + long-press action → `_ConfirmIngredientSheet` (debounced canonical search → commit). 4 tests.
+6. **C2** ✅ *(done 2026-11-04)* — `UserPantryItem` model + migration `0002`; `pantry/` toggle
+   endpoint; `prepare_lines(pantry_keys)` forces pantry items to score 1.0 (bottom); `in_pantry`
+   flag in payload. Frontend: long-press → "I always have this" + pantry indicator. 2 tests.
 7. (parallel, separate) **Layer 3** spike against the `ShoppableLine` contract.
 
 Steps 1–5 deliver a fully usable Grocery Bag with zero grocery-site integration.
