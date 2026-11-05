@@ -29,8 +29,8 @@ class OwnRecipesFilter extends StatelessWidget {
               value: provider.filters['excludeOwnRecipes'] ?? true,
               onChanged: (value) =>
                   provider.updateFilter('excludeOwnRecipes', value),
-              activeColor: const Color(0xFF0A0A0A),
-              activeTrackColor: const Color(0xFFCAFF00),
+              activeColor: Theme.of(context).colorScheme.onSecondary,
+              activeTrackColor: Theme.of(context).colorScheme.secondary,
               inactiveThumbColor: Theme.of(context).colorScheme.outline,
               inactiveTrackColor:
                   Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),

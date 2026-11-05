@@ -33,8 +33,8 @@ class _LoginDrawerState extends State<LoginDrawer>
   late AnimationController _shakeController;
   late bool _isSigningIn;
 
-  static const _lime = Color(0xFFCAFF00);
-  static const _btnFg = Color(0xFF0A0A0A);
+  Color get _lime => Theme.of(context).colorScheme.secondary;
+  Color get _btnFg => Theme.of(context).colorScheme.onSecondary;
 
   @override
   void initState() {
@@ -256,7 +256,7 @@ class _LoginDrawerState extends State<LoginDrawer>
                           height: 52,
                           color: (_hasRequiredInput && !busy) ? _lime : Colors.grey.shade300,
                           child: busy
-                              ? const Center(
+                              ? Center(
                                   child: SizedBox(
                                     width: 20,
                                     height: 20,
@@ -410,7 +410,7 @@ class _LoginDrawerState extends State<LoginDrawer>
                   Theme.of(context).colorScheme.outline.withValues(alpha: 0.35),
               width: 1),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: _lime, width: 1.5),
         ),

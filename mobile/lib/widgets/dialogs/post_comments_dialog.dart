@@ -241,10 +241,10 @@ class _CommentDrawerState extends State<CommentDrawer> {
               child: Container(
                 width: 48,
                 height: 48,
-                color: const Color(0xFFCAFF00),
-                child: const Icon(
+                color: Theme.of(context).colorScheme.secondary,
+                child: Icon(
                   Icons.send,
-                  color: Color(0xFF0A0A0A),
+                  color: Theme.of(context).colorScheme.onSecondary,
                   size: 18,
                 ),
               ),

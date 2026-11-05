@@ -87,7 +87,10 @@ class _TagsSectionState extends State<TagsSection> {
             ),
           ),
           const SizedBox(height: 4),
-          Container(width: 28, height: 2, color: const Color(0xFFCAFF00)),
+          Container(
+              width: 28,
+              height: 2,
+              color: Theme.of(context).colorScheme.secondary),
           const SizedBox(height: 16),
           _buildMealTypeSection(),
           const SizedBox(height: 4),
@@ -158,11 +161,11 @@ class _TagsSectionState extends State<TagsSection> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
-                        color: const Color(0xFFCAFF00),
+                        color: Theme.of(context).colorScheme.secondary,
                         child: Text(
                           '$categorySelectedCount',
                           style: GoogleFonts.spaceGrotesk(
-                            color: const Color(0xFF0A0A0A),
+                            color: Theme.of(context).colorScheme.onSecondary,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -219,12 +222,12 @@ class _TagsSectionState extends State<TagsSection> {
                                 horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFFCAFF00)
+                                  ? Theme.of(context).colorScheme.secondary
                                   : Colors.transparent,
                               borderRadius: BorderRadius.zero,
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFFCAFF00)
+                                    ? Theme.of(context).colorScheme.secondary
                                     : Theme.of(context)
                                         .colorScheme
                                         .outline
@@ -236,7 +239,7 @@ class _TagsSectionState extends State<TagsSection> {
                               tag,
                               style: GoogleFonts.spaceGrotesk(
                                 color: isSelected
-                                    ? const Color(0xFF0A0A0A)
+                                    ? Theme.of(context).colorScheme.onSecondary
                                     : Theme.of(context)
                                         .colorScheme
                                         .onSurface
@@ -306,12 +309,12 @@ class _TagsSectionState extends State<TagsSection> {
                     horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFFCAFF00)
+                      ? Theme.of(context).colorScheme.secondary
                       : Colors.transparent,
                   borderRadius: BorderRadius.zero,
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFFCAFF00)
+                        ? Theme.of(context).colorScheme.secondary
                         : Theme.of(context)
                             .colorScheme
                             .outline
@@ -323,7 +326,7 @@ class _TagsSectionState extends State<TagsSection> {
                   mealType,
                   style: GoogleFonts.spaceGrotesk(
                     color: isSelected
-                        ? const Color(0xFF0A0A0A)
+                        ? Theme.of(context).colorScheme.onSecondary
                         : Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,

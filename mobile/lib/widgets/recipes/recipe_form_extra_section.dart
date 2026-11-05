@@ -58,7 +58,10 @@ class ExtraSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Container(width: 28, height: 2, color: const Color(0xFFCAFF00)),
+        Container(
+            width: 28,
+            height: 2,
+            color: Theme.of(context).colorScheme.secondary),
         const SizedBox(height: 10),
         TextField(
           controller: controller,
@@ -99,10 +102,10 @@ class ExtraSection extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            focusedBorder: const OutlineInputBorder(
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.zero,
               borderSide: BorderSide(
-                color: Color(0xFFCAFF00),
+                color: Theme.of(context).colorScheme.secondary,
                 width: 1.5,
               ),
             ),

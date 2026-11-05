@@ -353,11 +353,13 @@ class _UserPostCardState extends State<UserPostCard>
   }
 
   Widget _buildImagePlaceholder() {
-    const lime = Color(0xFFCAFF00);
+    final theme = Theme.of(context);
+    final lime = theme.colorScheme.secondary;
+    final ink = theme.colorScheme.onSecondary;
     final bg = widget.post.recipe_id != null && (widget.post.recipe_id! % 2 == 0)
         ? const Color(0xFFE0DFD9)
-        : const Color(0xFF0A0A0A);
-    final iconColor = bg == const Color(0xFF0A0A0A) ? lime : const Color(0xFF0A0A0A);
+        : ink;
+    final iconColor = bg == ink ? lime : theme.colorScheme.onSurface;
     return Container(
       width: 100,
       height: 100,

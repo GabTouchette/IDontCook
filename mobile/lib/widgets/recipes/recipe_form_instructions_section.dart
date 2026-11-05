@@ -18,10 +18,10 @@ class InstructionsSection extends StatefulWidget {
 }
 
 class _InstructionsSectionState extends State<InstructionsSection> {
-  static const _lime = Color(0xFFCAFF00);
-
   List<Widget> _buildInstructionsInputFields() {
     List<Widget> inputFields = [];
+    final lime = Theme.of(context).colorScheme.secondary;
+    final onLime = Theme.of(context).colorScheme.onSecondary;
 
     for (int i = 0; i < widget.instructions.length; i++) {
       inputFields.add(
@@ -34,12 +34,12 @@ class _InstructionsSectionState extends State<InstructionsSection> {
               Container(
                 width: 32,
                 height: 32,
-                color: _lime,
+                color: lime,
                 alignment: Alignment.center,
                 child: Text(
                   '${i + 1}',
                   style: GoogleFonts.spaceGrotesk(
-                    color: const Color(0xFF0A0A0A),
+                    color: onLime,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -100,10 +100,10 @@ class _InstructionsSectionState extends State<InstructionsSection> {
                         width: 1.5,
                       ),
                     ),
-                    focusedBorder: const OutlineInputBorder(
+                    focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.zero,
                       borderSide: BorderSide(
-                        color: _lime,
+                        color: lime,
                         width: 1.5,
                       ),
                     ),
@@ -173,7 +173,10 @@ class _InstructionsSectionState extends State<InstructionsSection> {
             ),
           ),
           const SizedBox(height: 4),
-          Container(width: 28, height: 2, color: _lime),
+          Container(
+              width: 28,
+              height: 2,
+              color: Theme.of(context).colorScheme.secondary),
           const SizedBox(height: 12),
           ..._buildInstructionsInputFields(),
         ],

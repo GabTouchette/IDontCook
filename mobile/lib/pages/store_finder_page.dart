@@ -23,8 +23,6 @@ class StoreFinderPage extends StatefulWidget {
 
 class _StoreFinderPageState extends State<StoreFinderPage>
     with SingleTickerProviderStateMixin {
-  static const _lime = Color(0xFFCAFF00);
-
   final DealsApi _dealsApi = DealsApi();
   final LocationService _locationService = LocationService();
   final TextEditingController _queryController = TextEditingController();
@@ -336,8 +334,8 @@ class _StoreFinderPageState extends State<StoreFinderPage>
             child: ElevatedButton(
               onPressed: _isLoading ? null : _onSubmit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _lime,
-                foregroundColor: const Color(0xFF0A0A0A),
+                backgroundColor: theme.colorScheme.secondary,
+                foregroundColor: theme.colorScheme.onSecondary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -393,7 +391,7 @@ class _StoreFinderPageState extends State<StoreFinderPage>
     final mapCount = _mappableStores.length;
     return TabBar(
       controller: _tabController,
-      indicatorColor: _lime,
+      indicatorColor: theme.colorScheme.secondary,
       indicatorWeight: 3,
       labelColor: theme.colorScheme.onSurface,
       unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -513,7 +511,7 @@ class _StoreTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFFCAFF00)
+                  ? theme.colorScheme.secondary
                   : theme.colorScheme.outline.withValues(alpha: 0.2),
               width: isSelected ? 2 : 1.5,
             ),
@@ -592,7 +590,7 @@ class _StoreTile extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               else if (isSelected)
-                const Icon(Icons.check_circle, color: Color(0xFF0A0A0A))
+                Icon(Icons.check_circle, color: theme.colorScheme.onSurface)
               else
                 Icon(Icons.chevron_right,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),

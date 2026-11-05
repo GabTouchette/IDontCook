@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:i_cant_cook/mixins/chat_context_mixin.dart';
+import 'package:i_cant_cook/models/chat/chat_page_context.dart';
 import 'package:i_cant_cook/providers/explore_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
-import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
+import 'package:i_cant_cook/widgets/appbar/search_app_bar_scaffold.dart';
 import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
 import 'package:i_cant_cook/widgets/explore/reel_recipe_card.dart';
+import 'package:i_cant_cook/widgets/skeletons/skeletons.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:provider/provider.dart';
@@ -16,9 +19,11 @@ class ExplorePage extends StatefulWidget {
   State<ExplorePage> createState() => _ExplorePageState();
 }
 
-class _ExplorePageState extends State<ExplorePage> {
+class _ExplorePageState extends State<ExplorePage>
+    with ChatContextRegistrar {
   bool _hasFetched = false;
   final PageController _pageController = PageController();
+  int _currentIndex = 0;
 
   @override
   void didChangeDependencies() {
@@ -41,113 +46,129 @@ class _ExplorePageState extends State<ExplorePage> {
 
   void _onPageChanged(int index, ExploreProvider provider) {
     HapticService.selectionClick();
+    _currentIndex = index;
     if (index >= provider.items.length - 3) {
       provider.fetchNextPage();
     }
   }
 
+  /// Snapshot of the reel for the global chat: the recipe currently in view,
+  /// the ones just below it, and any active search/filters.
+  ChatPageContext _buildChatContext(ExploreProvider provider) {
+    final items = provider.items;
+    final idx =
+        (items.isEmpty) ? 0 : _currentIndex.clamp(0, items.length - 1);
+    final current = items.isNotEmpty ? items[idx] : null;
+    final upcoming = items
+        .skip(idx)
+        .take(6)
+        .map((r) => {'id': r.id, 'title': r.title})
+        .toList();
+    final selectedTags =
+        (provider.filters['selectedTags'] as List?)?.cast<String>() ??
+            const <String>[];
+    final search = provider.searchQuery;
+
+    final summaryParts = <String>[];
+    if (current != null) summaryParts.add('Viewing "${current.title}"');
+    if (search.isNotEmpty) summaryParts.add('search: "$search"');
+    if (selectedTags.isNotEmpty) {
+      summaryParts.add('filters: ${selectedTags.join(', ')}');
+    }
+
+    return ChatPageContext(
+      label: 'Explore',
+      pageKey: 'explore',
+      summary: summaryParts.isEmpty ? null : summaryParts.join(' · '),
+      data: {
+        'surface': 'explore_reel',
+        if (current != null)
+          'current_recipe': {'id': current.id, 'title': current.title},
+        if (search.isNotEmpty) 'search': search,
+        if (selectedTags.isNotEmpty) 'selected_tags': selectedTags,
+        'visible_recipes': upcoming,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        title: Text(
-          'EXPLORE',
-          style: GoogleFonts.spaceGrotesk(
-            fontWeight: FontWeight.w700,
-            fontSize: 22,
-            letterSpacing: 2.5,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        centerTitle: true,
-        actions: [UserMenuWidget()],
+    return SearchAppBarScaffold(
+      title: 'EXPLORE',
+      expandedBuilder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSearchBar(context),
+          _buildFilterNotification(context),
+        ],
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,
-        child: Column(
-        children: [
-          _buildSearchBar(context),
-          _buildFilterNotification(context),
-          const SizedBox(height: 14),
-          Expanded(
-            child: Consumer<ExploreProvider>(
-              builder: (context, provider, _) {
-                if (provider.isLoading && provider.items.isEmpty) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      strokeWidth: 2,
-                    ),
-                  );
-                }
+        child: Consumer<ExploreProvider>(
+          builder: (context, provider, _) {
+            registerChatContext(_buildChatContext(provider));
+            if (provider.isLoading && provider.items.isEmpty) {
+              return const ExploreReelSkeleton();
+            }
 
-                if (provider.items.isEmpty) {
-                  return _buildExploreEmptyState(context, provider);
-                }
+            if (provider.items.isEmpty) {
+              return _buildExploreEmptyState(context, provider);
+            }
 
-                return Stack(
-                  children: [
-                    PageView.builder(
-                      controller: _pageController,
-                      scrollDirection: Axis.vertical,
-                      itemCount: provider.items.length,
-                      onPageChanged: (index) =>
-                          _onPageChanged(index, provider),
-                      itemBuilder: (context, index) {
-                        final recipe = provider.items[index];
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: ReelRecipeCard(
-                              key: ValueKey(recipe.id),
-                              recipe: recipe,
-                              onThumbsUp: () =>
-                                  provider.recordUpvote(recipe.id),
-                              onThumbsDown: () =>
-                                  provider.recordDownvote(recipe.id),
-                              onOpen: () => provider.recordClick(recipe.id),
-                              onDelete: () async {
-                                final success =
-                                    await provider.adminDeleteRecipe(recipe.id);
-                                if (!success && context.mounted) {
-                                  InformationToast.show(
-                                    context: context,
-                                    message:
-                                        'Delete failed — make sure your account has staff permissions',
-                                    type: ToastType.error,
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    if (provider.isFetching)
-                      Positioned(
-                        top: 24,
-                        right: 32,
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
+            return Stack(
+              children: [
+                PageView.builder(
+                  controller: _pageController,
+                  scrollDirection: Axis.vertical,
+                  itemCount: provider.items.length,
+                  onPageChanged: (index) => _onPageChanged(index, provider),
+                  itemBuilder: (context, index) {
+                    final recipe = provider.items[index];
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: ReelRecipeCard(
+                          key: ValueKey(recipe.id),
+                          recipe: recipe,
+                          onFavorited: () => provider.recordUpvote(recipe.id),
+                          onThumbsDown: () =>
+                              provider.recordDownvote(recipe.id),
+                          onOpen: () => provider.recordClick(recipe.id),
+                          onDelete: () async {
+                            final success =
+                                await provider.adminDeleteRecipe(recipe.id);
+                            if (!success && context.mounted) {
+                              InformationToast.show(
+                                context: context,
+                                message:
+                                    'Delete failed — make sure your account has staff permissions',
+                                type: ToastType.error,
+                              );
+                            }
+                          },
                         ),
                       ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+                    );
+                  },
+                ),
+                if (provider.isFetching)
+                  Positioned(
+                    top: 24,
+                    right: 32,
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -196,6 +217,7 @@ class _ExplorePageState extends State<ExplorePage> {
             Expanded(
               child: TextField(
                 controller: provider.searchController,
+                autofocus: true,
                 style: GoogleFonts.spaceGrotesk(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 15,
@@ -321,8 +343,8 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Widget _buildExploreEmptyState(BuildContext context, ExploreProvider provider) {
-    const lime = Color(0xFFCAFF00);
     final scheme = Theme.of(context).colorScheme;
+    final lime = scheme.secondary;
 
     return Center(
       child: Padding(
@@ -334,9 +356,9 @@ class _ExplorePageState extends State<ExplorePage> {
               width: 56,
               height: 56,
               color: lime,
-              child: const Icon(
+              child: Icon(
                 Icons.explore_outlined,
-                color: Color(0xFF0A0A0A),
+                color: scheme.onSecondary,
                 size: 24,
               ),
             ),
@@ -388,7 +410,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                       letterSpacing: 1.1,
-                      color: const Color(0xFF0A0A0A),
+                      color: scheme.onSecondary,
                     ),
                   ),
                 ),
@@ -400,4 +422,3 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 }
-

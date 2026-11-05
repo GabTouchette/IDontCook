@@ -138,17 +138,18 @@ class RecipeCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20, vertical: 14),
-                color: const Color(0xFFCAFF00),
+                color: Theme.of(context).colorScheme.secondary,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.menu_book_rounded,
-                        color: const Color(0xFF0A0A0A), size: 18),
+                        color: Theme.of(context).colorScheme.onSecondary,
+                        size: 18),
                     const SizedBox(width: 8),
                     Text(
                       'FULL RECIPE',
                       style: GoogleFonts.spaceGrotesk(
-                        color: const Color(0xFF0A0A0A),
+                        color: Theme.of(context).colorScheme.onSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.5,

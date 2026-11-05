@@ -179,9 +179,10 @@ class _StorePin extends StatelessWidget {
             width: selected ? 30 : 26,
             height: selected ? 30 : 26,
             decoration: BoxDecoration(
-              color: selected ? kBlockAccent : scheme.surface,
+              color: selected ? kBlockAccent(context) : scheme.surface,
               shape: BoxShape.circle,
-              border: Border.all(color: kBlockAccent, width: selected ? 3 : 2.5),
+              border: Border.all(
+                  color: kBlockAccent(context), width: selected ? 3 : 2.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.2),
@@ -193,7 +194,7 @@ class _StorePin extends StatelessWidget {
             child: Icon(
               Icons.storefront,
               size: selected ? 16 : 14,
-              color: selected ? kBlockAccentInk : scheme.onSurface,
+              color: selected ? kBlockAccentInk(context) : scheme.onSurface,
             ),
           ),
           const SizedBox(height: 3),
@@ -202,11 +203,11 @@ class _StorePin extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 120),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: selected ? kBlockAccent : scheme.surface,
+              color: selected ? kBlockAccent(context) : scheme.surface,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: selected
-                    ? kBlockAccent
+                    ? kBlockAccent(context)
                     : scheme.outline.withValues(alpha: 0.25),
                 width: 1,
               ),
@@ -226,7 +227,7 @@ class _StorePin extends StatelessWidget {
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
-                color: selected ? kBlockAccentInk : scheme.onSurface,
+                color: selected ? kBlockAccentInk(context) : scheme.onSurface,
               ),
             ),
           ),

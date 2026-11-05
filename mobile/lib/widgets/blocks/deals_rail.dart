@@ -153,7 +153,7 @@ class _DealTile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: kBlockAccent,
+                        color: kBlockAccent(context),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -161,7 +161,7 @@ class _DealTile extends StatelessWidget {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: kBlockAccentInk,
+                          color: kBlockAccentInk(context),
                         ),
                       ),
                     ),
@@ -395,8 +395,8 @@ class _SetupCardState extends State<_SetupCard> {
                     )
                   : const Icon(Icons.my_location, size: 18),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kBlockAccent,
-                foregroundColor: kBlockAccentInk,
+                backgroundColor: kBlockAccent(context),
+                foregroundColor: kBlockAccentInk(context),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(

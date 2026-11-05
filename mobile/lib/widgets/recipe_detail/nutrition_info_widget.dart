@@ -36,7 +36,10 @@ class NutritionInfo extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Container(width: 28, height: 3, color: const Color(0xFFCAFF00)),
+                Container(
+                    width: 28,
+                    height: 3,
+                    color: Theme.of(context).colorScheme.secondary),
               ],
             ),
             const SizedBox(width: 12),
@@ -100,7 +103,10 @@ class NutritionInfo extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Container(width: 28, height: 3, color: const Color(0xFFCAFF00)),
+              Container(
+                  width: 28,
+                  height: 3,
+                  color: Theme.of(context).colorScheme.secondary),
             ],
           ),
         ),

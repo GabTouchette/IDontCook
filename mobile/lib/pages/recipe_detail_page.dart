@@ -6,17 +6,23 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
 import 'package:i_cant_cook/enums/toast_type.dart';
-import 'package:i_cant_cook/widgets/dialogs/recipe_chat_dialog.dart';
+import 'package:i_cant_cook/widgets/sheets/app_sheet.dart';
+import 'package:i_cant_cook/mixins/chat_context_mixin.dart';
+import 'package:i_cant_cook/models/chat/chat_page_context.dart';
+import 'package:i_cant_cook/widgets/chat/global_chat_launcher.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/widgets/common/pressable.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/additional_section_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_detail_skeleton.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_image_widget.dart';
 import 'package:i_cant_cook/widgets/recipe_detail/recipe_info_widget.dart';
 import 'package:i_cant_cook/providers/recipe_detail_provider.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
+import 'package:i_cant_cook/providers/grocery_bag_provider.dart';
+import 'package:i_cant_cook/pages/grocery_bag_page.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/pages/update_recipe_page.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
@@ -43,8 +49,40 @@ class RecipeDetailPage extends StatefulWidget {
   _RecipeDetailPageState createState() => _RecipeDetailPageState();
 }
 
-class _RecipeDetailPageState extends State<RecipeDetailPage> {
+class _RecipeDetailPageState extends State<RecipeDetailPage>
+    with ChatContextRegistrar {
   late RecipeDetailProvider recipeDetailProvider;
+
+  /// Full snapshot of the recipe being viewed, so the global chat can answer
+  /// about it (replaces the old per-recipe v1 chat dialog).
+  ChatPageContext _buildChatContext(Recipe recipe) {
+    return ChatPageContext(
+      label: recipe.title,
+      pageKey: 'recipe_detail',
+      summary: 'Viewing the "${recipe.title}" recipe',
+      data: {
+        'surface': 'recipe_detail',
+        'recipe': {
+          'id': recipe.id,
+          'title': recipe.title,
+          'ingredients': recipe.ingredients
+              .map((i) => {
+                    'name': i.name,
+                    'quantity': i.quantity,
+                    'unit': i.unit,
+                  })
+              .toList(),
+          'instructions': recipe.instructions,
+          if (recipe.tags != null) 'tags': recipe.tags,
+          if (recipe.description != null) 'description': recipe.description,
+          if (recipe.notes != null) 'notes': recipe.notes,
+          if (recipe.preparation_time != null)
+            'preparation_time': recipe.preparation_time,
+          if (recipe.cooking_time != null) 'cooking_time': recipe.cooking_time,
+        },
+      },
+    );
+  }
 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
@@ -103,6 +141,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       }
 
       final recipe = provider.recipe!;
+      registerChatContext(_buildChatContext(recipe));
 
       return Scaffold(
         extendBodyBehindAppBar: true,
@@ -126,13 +165,36 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 ),
               ),
               child: const Icon(
-                Icons.arrow_back,
+                Icons.chevron_left,
                 color: Colors.white,
                 size: 20,
               ),
             ),
           ),
           actions: [
+            Pressable(
+              haptic: PressHaptic.medium,
+              child: IconButton(
+                tooltip: 'Add to grocery bag',
+                onPressed: () => _addToGroceryBag(context, recipe.id),
+                icon: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.55),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.add_shopping_cart,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
             if (recipe.is_saved == true) ...[
               widget.viewMode.when(
                 // CASE: NORMAL
@@ -142,10 +204,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     child: Container(
                       width: 42,
                       height: 42,
-                      color: const Color(0xFFCAFF00),
-                      child: const Icon(
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: Icon(
                         Icons.more_vert,
-                        color: Color(0xFF0A0A0A),
+                        color: Theme.of(context).colorScheme.onSecondary,
                         size: 22,
                       ),
                     ),
@@ -221,9 +283,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ),
                     _popupItem(
                       value: 'favorite',
-                      icon: recipe.is_favorite ?? false
-                          ? FontAwesomeIcons.solidHeart
-                          : FontAwesomeIcons.heart,
+                      materialIcon: recipe.is_favorite ?? false
+                          ? Icons.favorite
+                          : Icons.favorite_border,
                       iconColor: recipe.is_favorite ?? false
                           ? Colors.red
                           : Theme.of(context).colorScheme.onSurface,
@@ -257,10 +319,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     child: Container(
                       width: 36,
                       height: 36,
-                      color: const Color(0xFFCAFF00),
-                      child: const Icon(
-                        Icons.save,
-                        color: Color(0xFF0A0A0A),
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: Icon(
+                        Icons.bookmark_border,
+                        color: Theme.of(context).colorScheme.onSecondary,
                         size: 18,
                       ),
                     ),
@@ -283,7 +345,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   itemBuilder: (context) => [
                     _popupItem(
                       value: 'save',
-                      icon: FontAwesomeIcons.floppyDisk,
+                      icon: FontAwesomeIcons.bookmark,
                       label: "Save",
                     ),
                     _popupItem(
@@ -298,7 +360,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               // If not saved, show floppy save icon or loading indicator
               Consumer<RecipeDetailProvider>(
                 builder: (context, provider, child) {
-                  return IconButton(
+                  final button = IconButton(
                     onPressed: provider.isSaving ? null : _showSaveDialog,
                     icon: Container(
                       padding: const EdgeInsets.only(right: 12),
@@ -307,21 +369,28 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                               width: 32,
                               height: 32,
                               child: CircularProgressIndicator(
-                                color: const Color(0xFFCAFF00),
+                                color: Theme.of(context).colorScheme.secondary,
                                 strokeWidth: 2.5,
                               ),
                             )
                           : Container(
                               width: 36,
                               height: 36,
-                              color: const Color(0xFFCAFF00),
-                              child: const Icon(
-                                Icons.save,
-                                color: Color(0xFF0A0A0A),
+                              color: Theme.of(context).colorScheme.secondary,
+                              child: Icon(
+                                Icons.bookmark_border,
+                                color: Theme.of(context).colorScheme.onSecondary,
                                 size: 18,
                               ),
                             ),
                     ),
+                  );
+                  // Only add press feedback while the button is actionable —
+                  // during a save it's disabled and shows a spinner.
+                  if (provider.isSaving) return button;
+                  return Pressable(
+                    haptic: PressHaptic.medium,
+                    child: button,
                   );
                 },
               ),
@@ -355,13 +424,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     updatedFields: updatedFields,
                     ingredientCalories: provider.ingredientCalories,
                     isNutritionCalculating: provider.isNutritionCalculating,
-                    // Ingredient long-press → chat is only wired when the recipe
-                    // chat is actually available (same gate as the chat FAB).
-                    onAskAboutIngredient: (recipe.is_saved == true &&
-                            widget.viewMode == RecipeViewMode.normal())
-                        ? (question) =>
-                            _openRecipeChat(recipe, initialQuery: question)
-                        : null,
+                    // Ingredient long-press → opens the global chat (already
+                    // scoped to this recipe) with the question pre-asked.
+                    onAskAboutIngredient: (question) =>
+                        openGlobalChat(context, initialQuery: question),
                     // Show the reformat banner for saved recipes whose
                     // ingredients haven't been through the LLM format pass.
                     showFormatBanner: recipe.is_formatted == false &&
@@ -381,43 +447,30 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ),
             ),
 
-            // Floating Action Button for Chat
-            if (recipe.is_saved == true &&
-                widget.viewMode == RecipeViewMode.normal())
-              Positioned(
-                bottom: 24,
-                right: 24,
-                child: GestureDetector(
-                  onTap: () => _openRecipeChat(recipe),
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    color: const Color(0xFFCAFF00),
-                    child: const Icon(
-                      Icons.chat_bubble_outline,
-                      color: Color(0xFF0A0A0A),
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
+            // App-wide assistant launcher — opens the global chat already
+            // scoped to this recipe (replaces the old per-recipe chat dialog).
+            const GlobalChatLauncher(),
           ],
         ),
       );
     });
   }
 
-  /// Opens the recipe chat bottom sheet. When [initialQuery] is provided (e.g.
-  /// from an ingredient long-press action), the dialog auto-sends it on open.
-  void _openRecipeChat(Recipe recipe, {String? initialQuery}) {
-    showModalBottomSheet(
+  Future<void> _addToGroceryBag(BuildContext context, int recipeId) async {
+    final ok =
+        await context.read<GroceryBagProvider>().addRecipe(recipeId);
+    if (!context.mounted) return;
+    InformationToast.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (_) => RecipeChatDialog(
-        recipe: recipe,
-        initialQuery: initialQuery,
-      ),
+      message: ok ? 'Added to grocery bag' : 'Could not add to grocery bag',
+      type: ok ? ToastType.success : ToastType.error,
+      actionLabel: ok ? 'VIEW CART' : null,
+      onAction: ok
+          ? () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GroceryBagPage()),
+              )
+          : null,
     );
   }
 
@@ -446,18 +499,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
   PopupMenuItem<String> _popupItem({
     required String value,
-    required FaIconData icon,
+    FaIconData? icon,
+    IconData? materialIcon,
     required String label,
     Color? iconColor,
     Color? textColor,
   }) {
+    assert(icon != null || materialIcon != null,
+        'Either icon or materialIcon must be provided');
     return PopupMenuItem<String>(
       value: value,
       child: Row(
         children: [
-          FaIcon(icon,
-              size: 18,
-              color: iconColor ?? Theme.of(context).colorScheme.onSurface),
+          materialIcon != null
+              ? Icon(materialIcon,
+                  size: 18,
+                  color: iconColor ?? Theme.of(context).colorScheme.onSurface)
+              : FaIcon(icon!,
+                  size: 18,
+                  color: iconColor ?? Theme.of(context).colorScheme.onSurface),
           const SizedBox(width: 12),
           Text(
             label,
@@ -518,11 +578,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   Future<ImageSource?> _showImageSourceSheet() async {
-    return showModalBottomSheet<ImageSource>(
+    return showAppSheet<ImageSource>(
       context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      builder: (_) => SafeArea(
+      builder: (_) => AppSheet(
+        title: 'ADD PHOTO',
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -702,8 +761,8 @@ class _DigitalizeLoadingDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(
-              color: Color(0xFFCAFF00),
+            CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.secondary,
               strokeWidth: 3,
             ),
             const SizedBox(height: 20),

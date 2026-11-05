@@ -240,13 +240,13 @@ class SocialPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
           child: isSelected
               ? Container(
-                  color: const Color(0xFFCAFF00),
+                  color: Theme.of(context).colorScheme.secondary,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   child: Text(
                     title.toUpperCase(),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.spaceGrotesk(
-                      color: const Color(0xFF0A0A0A),
+                      color: Theme.of(context).colorScheme.onSecondary,
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       letterSpacing: 1.2,

@@ -42,8 +42,8 @@ class _OnboardingProfileSetupPageState
 
   bool _isSaving = false;
 
-  static const _lime = Color(0xFFCAFF00);
-  static const _btnFg = Color(0xFF0A0A0A);
+  Color get _lime => Theme.of(context).colorScheme.secondary;
+  Color get _btnFg => Theme.of(context).colorScheme.onSecondary;
 
   @override
   void initState() {
@@ -390,7 +390,7 @@ class _OnboardingProfileSetupPageState
                                 height: 52,
                                 color: _lime,
                                 child: _isSaving
-                                    ? const Center(
+                                    ? Center(
                                         child: SizedBox(
                                           width: 20,
                                           height: 20,
@@ -404,7 +404,7 @@ class _OnboardingProfileSetupPageState
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          const Icon(Icons.check,
+                                          Icon(Icons.check,
                                               color: _btnFg, size: 18),
                                           const SizedBox(width: 10),
                                           Text(
@@ -515,7 +515,7 @@ class _OnboardingProfileSetupPageState
             width: 1,
           ),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: _lime, width: 1.5),
         ),
@@ -617,7 +617,7 @@ class _OnboardingProfileSetupPageState
                   width: 1,
                 ),
               ),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: _lime, width: 1.5),
               ),
@@ -634,7 +634,7 @@ class _OnboardingProfileSetupPageState
             height: 44,
             width: 44,
             color: _lime,
-            child: const Icon(Icons.add, color: _btnFg, size: 20),
+            child: Icon(Icons.add, color: _btnFg, size: 20),
           ),
         ),
       ],

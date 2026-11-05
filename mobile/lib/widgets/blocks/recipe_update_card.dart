@@ -36,10 +36,10 @@ class RecipeUpdateCard extends StatelessWidget {
               Container(
                 width: 22,
                 height: 22,
-                color: kBlockAccent,
-                child: const Icon(
+                color: kBlockAccent(context),
+                child: Icon(
                   Icons.edit_outlined,
-                  color: kBlockAccentInk,
+                  color: kBlockAccentInk(context),
                   size: 13,
                 ),
               ),

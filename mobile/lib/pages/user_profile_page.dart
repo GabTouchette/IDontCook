@@ -90,7 +90,7 @@ class UserProfilePage extends StatelessWidget {
                             const SizedBox(height: 8),
                             Text(
                               '@${user.username}',
-                              style: GoogleFonts.nunito(
+                              style: GoogleFonts.spaceGrotesk(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 color:
@@ -123,7 +123,7 @@ class UserProfilePage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 100),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             backgroundColor: provider.isFollowing
                                 ? Theme.of(context)
@@ -144,7 +144,7 @@ class UserProfilePage extends StatelessWidget {
                           ),
                           label: Text(
                             provider.isFollowing ? 'Following' : 'Follow',
-                            style: GoogleFonts.nunito(
+                            style: GoogleFonts.spaceGrotesk(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
@@ -197,7 +197,7 @@ class UserProfilePage extends StatelessWidget {
       return Center(
         child: Text(
           'No recipes available.',
-          style: GoogleFonts.nunito(
+          style: GoogleFonts.spaceGrotesk(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -216,7 +216,7 @@ class UserProfilePage extends StatelessWidget {
                 const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: Text(
               'Showing ${provider.recipes.length} recipes',
-              style: GoogleFonts.nunito(
+              style: GoogleFonts.spaceGrotesk(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -239,7 +239,7 @@ class UserProfilePage extends StatelessWidget {
       return Center(
         child: Text(
           'No posts available.',
-          style: GoogleFonts.nunito(
+          style: GoogleFonts.spaceGrotesk(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -258,7 +258,7 @@ class UserProfilePage extends StatelessWidget {
                 const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: Text(
               'Showing ${provider.posts.length} posts',
-              style: GoogleFonts.nunito(
+              style: GoogleFonts.spaceGrotesk(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -302,7 +302,7 @@ class UserProfilePage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.nunito(
+                  style: GoogleFonts.spaceGrotesk(
                     color: isSelected
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -324,7 +324,7 @@ class UserProfilePage extends StatelessWidget {
       children: [
         Text(
           value.toString(),
-          style: GoogleFonts.nunito(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: Theme.of(context).colorScheme.onSurface,
@@ -332,7 +332,7 @@ class UserProfilePage extends StatelessWidget {
         ),
         Text(
           label,
-          style: GoogleFonts.nunito(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurfaceVariant,

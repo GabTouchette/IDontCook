@@ -11,6 +11,8 @@ class InformationToast {
     Duration duration = const Duration(seconds: 3),
     Color? backgroundColor,
     ToastType type = ToastType.info,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     Color toastBackgroundColor;
 
@@ -60,6 +62,13 @@ class InformationToast {
         backgroundColor: toastBackgroundColor,
         duration: duration,
         behavior: SnackBarBehavior.floating,
+        action: (actionLabel != null && onAction != null)
+            ? SnackBarAction(
+                label: actionLabel,
+                textColor: Theme.of(context).colorScheme.onPrimary,
+                onPressed: onAction,
+              )
+            : null,
       ),
     );
   }

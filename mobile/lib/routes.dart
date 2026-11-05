@@ -10,10 +10,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       page = const OnboardingPage();
       break;
     case '/recipes':
-    case '/chat':
-    case '/recommendations':
-    case '/explore':
-    case '/meal-plans':
       page = const DashboardPage();
       break;
     default:

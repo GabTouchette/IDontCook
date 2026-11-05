@@ -14,9 +14,21 @@ import 'package:i_cant_cook/widgets/recipes/recipe_form_time_section.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_title_section.dart';
 import 'package:i_cant_cook/models/recipe_form_fields/recipe_form_fields.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/widgets/sheets/app_sheet.dart';
 
 class CreateRecipePage extends StatefulWidget {
-  const CreateRecipePage({super.key});
+  /// Optional recipe map to pre-populate the form with (same shape produced by
+  /// the OCR/URL/Instagram import paths: title, ingredients[], instructions[],
+  /// times, servings, tags[], description, notes). When null the form starts empty.
+  final Map<String, dynamic>? prefillData;
+
+  /// When true the form renders inside the shared [AppSheet] chrome (rounded
+  /// top, grab handle, "NEW RECIPE" header) for use as a bottom sheet. When
+  /// false it's a full-page [Scaffold] (used when pushed as a route, e.g. the
+  /// import-share flow).
+  final bool asSheet;
+
+  const CreateRecipePage({super.key, this.prefillData, this.asSheet = false});
 
   @override
   _CreateRecipePageState createState() => _CreateRecipePageState();
@@ -38,6 +50,14 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   List<String> _selectedTags = [];
   List<File> _pendingImages = [];
   bool _isDigitizing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prefillData != null) {
+      _prefillFromDigitizedRecipe(widget.prefillData!);
+    }
+  }
 
   @override
   void dispose() {
@@ -241,6 +261,13 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (widget.asSheet) {
+      return AppSheet(
+        fullHeight: true,
+        title: 'NEW RECIPE',
+        child: _buildFormBody(context),
+      );
+    }
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -265,7 +292,13 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
           ),
         ),
       ),
-      body: LayoutBuilder(builder: (context, constraints) {
+      body: _buildFormBody(context),
+    );
+  }
+
+  Widget _buildFormBody(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return LayoutBuilder(builder: (context, constraints) {
         return Stack(
           children: [
             Positioned.fill(child: Container(color: Theme.of(context).scaffoldBackgroundColor)),
@@ -339,8 +372,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
             )
           ],
         );
-      }),
-    );
+      });
   }
 
   Widget _buildPhotoSection() {
@@ -351,12 +383,12 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
         width: double.infinity,
         height: 52,
         color: const Color(0xFF0A0A0A),
-        child: const Center(
+        child: Center(
           child: SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(
-              color: Color(0xFFCAFF00),
+              color: cs.secondary,
               strokeWidth: 2,
             ),
           ),
@@ -374,12 +406,12 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.camera_alt, color: Color(0xFFCAFF00), size: 18),
+              Icon(Icons.camera_alt, color: cs.secondary, size: 18),
               const SizedBox(width: 10),
               Text(
                 'NEW FROM PHOTO',
                 style: GoogleFonts.spaceGrotesk(
-                  color: const Color(0xFFCAFF00),
+                  color: cs.secondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,
@@ -472,12 +504,12 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.auto_fix_high, size: 16, color: Color(0xFFCAFF00)),
+                      Icon(Icons.auto_fix_high, size: 16, color: cs.secondary),
                       const SizedBox(width: 8),
                       Text(
                         'DIGITIZE  (${_pendingImages.length})',
                         style: GoogleFonts.spaceGrotesk(
-                          color: const Color(0xFFCAFF00),
+                          color: cs.secondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.5,
@@ -495,6 +527,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
   }
 
   Widget _buildCreateButton() {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: GestureDetector(
@@ -502,16 +535,16 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
         child: Container(
           width: double.infinity,
           height: 52,
-          color: const Color(0xFFCAFF00),
+          color: cs.secondary,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check, color: Color(0xFF0A0A0A), size: 20),
+              Icon(Icons.check, color: cs.onSecondary, size: 20),
               const SizedBox(width: 10),
               Text(
                 'CREATE RECIPE',
                 style: GoogleFonts.spaceGrotesk(
-                  color: const Color(0xFF0A0A0A),
+                  color: cs.onSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,

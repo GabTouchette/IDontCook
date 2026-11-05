@@ -89,7 +89,7 @@ class _WeeklyCalendarState extends State<WeeklyCalendar>
                   Expanded(
                     child: Text(
                       monthLabel,
-                      style: GoogleFonts.nunito(
+                      style: GoogleFonts.spaceGrotesk(
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
                         color: theme.colorScheme.onSurface,
@@ -242,7 +242,7 @@ class _DayTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: selected
               ? theme.colorScheme.primary
@@ -272,7 +272,7 @@ class _DayTile extends StatelessWidget {
               child: isToday
                   ? Text(
                       'Today',
-                      style: GoogleFonts.nunito(
+                      style: GoogleFonts.spaceGrotesk(
                         color: theme.colorScheme.primary,
                         fontSize: 8,
                         fontWeight: FontWeight.w800,
@@ -283,7 +283,7 @@ class _DayTile extends StatelessWidget {
             const SizedBox(height: 1),
             Text(
               weekdayLabel,
-              style: GoogleFonts.nunito(
+              style: GoogleFonts.spaceGrotesk(
                 color: fg, 
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
@@ -297,7 +297,7 @@ class _DayTile extends StatelessWidget {
               child: Text(
                 '${day.day}',
                 key: ValueKey<int>(day.day),
-                style: GoogleFonts.nunito(
+                style: GoogleFonts.spaceGrotesk(
                     color: sub,
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -315,7 +315,7 @@ class _DayTile extends StatelessWidget {
         painter: _DottedBorderPainter(
           color: theme.colorScheme.primary.withOpacity(0.8),
           strokeWidth: 2,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(4),
         ),
         child: container,
       );
@@ -353,7 +353,7 @@ class _DottedBorderPainter extends CustomPainter {
     final rrect = RRect.fromRectAndRadius(
       Rect.fromLTWH(strokeWidth / 2, strokeWidth / 2, size.width - strokeWidth,
           size.height - strokeWidth),
-      const Radius.circular(14),
+      const Radius.circular(4),
     );
 
     final path = Path()..addRRect(rrect);

@@ -4,8 +4,8 @@ import 'package:i_cant_cook/models/mood/mood.dart';
 
 /// Shared visual constants for block renderers, matching the existing
 /// chatbot cards (sharp corners, thin outline, lime accent).
-const Color kBlockAccent = Color(0xFFCAFF00);
-const Color kBlockAccentInk = Color(0xFF0A0A0A);
+Color kBlockAccent(BuildContext context) => Theme.of(context).colorScheme.secondary;
+Color kBlockAccentInk(BuildContext context) => Theme.of(context).colorScheme.onSecondary;
 
 /// Vertical breathing room between feed items (greeting, module cards).
 /// Applied once in `home_page.dart`'s block list — individual block widgets

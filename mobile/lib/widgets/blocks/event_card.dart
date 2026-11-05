@@ -32,10 +32,10 @@ class EventCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Color.alphaBlend(
-          kBlockAccent.withValues(alpha: 0.06),
+          kBlockAccent(context).withValues(alpha: 0.06),
           Theme.of(context).colorScheme.surface,
         ),
-        border: Border.all(color: kBlockAccent, width: 2.0),
+        border: Border.all(color: kBlockAccent(context), width: 2.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,12 +58,12 @@ class EventCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(
                       vertical: 4.0, horizontal: 10.0),
-                  color: kBlockAccent,
+                  color: kBlockAccent(context),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.celebration_outlined,
-                          size: 13, color: kBlockAccentInk),
+                          size: 13, color: kBlockAccentInk(context)),
                       const SizedBox(width: 6),
                       Text(
                         title.toUpperCase(),
@@ -71,7 +71,7 @@ class EventCard extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.8,
-                          color: kBlockAccentInk,
+                          color: kBlockAccentInk(context),
                         ),
                       ),
                     ],
@@ -111,7 +111,7 @@ class EventCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12.0),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        border: Border.all(color: kBlockAccent, width: 1.5),
+                        border: Border.all(color: kBlockAccent(context), width: 1.5),
                       ),
                       child: Text(
                         payload.cta!,

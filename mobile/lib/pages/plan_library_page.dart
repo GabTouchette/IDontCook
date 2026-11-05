@@ -12,11 +12,23 @@ class PlanLibraryPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        title: Text('Plan Library',
-            style:
-                GoogleFonts.nunito(fontWeight: FontWeight.w900, fontSize: 24)),
+        centerTitle: true,
+        title: Text(
+          'PLAN LIBRARY',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, size: 32),
+          padding: const EdgeInsets.only(left: 16.0),
+          icon: Icon(
+            Icons.chevron_left,
+            color: Theme.of(context).colorScheme.primary,
+            size: 32,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -29,7 +41,8 @@ class PlanLibraryPage extends StatelessWidget {
           final plans = snapshot.data ?? [];
           if (plans.isEmpty) {
             return Center(
-              child: Text('No saved plans yet', style: GoogleFonts.nunito()),
+              child:
+                  Text('No saved plans yet', style: GoogleFonts.spaceGrotesk()),
             );
           }
           return ListView.separated(
@@ -44,7 +57,7 @@ class PlanLibraryPage extends StatelessWidget {
                   ((p['planned_meals'] as List?)?.length ?? 0).toString();
               return ListTile(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                   side: BorderSide(
                       color: Theme.of(context)
                           .colorScheme
@@ -52,7 +65,7 @@ class PlanLibraryPage extends StatelessWidget {
                           .withOpacity(0.2)),
                 ),
                 title: Text(name,
-                    style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                    style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600)),
                 subtitle: Text('Week of $ws • $count meals'),
                 trailing: TextButton(
                   onPressed: () async {

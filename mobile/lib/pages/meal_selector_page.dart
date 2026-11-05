@@ -41,8 +41,25 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        title: Text('Select ${widget.mealType}',
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w900)),
+        centerTitle: true,
+        leading: IconButton(
+          padding: const EdgeInsets.only(left: 16.0),
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.chevron_left,
+            color: Theme.of(context).colorScheme.primary,
+            size: 32,
+          ),
+        ),
+        title: Text(
+          'SELECT ${widget.mealType.toUpperCase()}',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -52,7 +69,7 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
                 final r = _recipes[i];
                 return ListTile(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       side: BorderSide(
                           color: Theme.of(context)
                               .colorScheme
@@ -61,7 +78,7 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
                   tileColor: Theme.of(context).colorScheme.surface,
                   leading: r.thumbnail_url != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(4),
                           child: Image.network(
                               ApiConfig.resolveImageUrl(r.thumbnail_url!),
                               width: 56,
@@ -74,7 +91,7 @@ class _MealSelectorPageState extends State<MealSelectorPage> {
                               )))
                       : const Icon(Icons.image_outlined),
                   title: Text(r.title,
-                      style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                      style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600)),
                   subtitle: Text(
                       '${r.preparation_time ?? '-'} + ${r.cooking_time ?? '-'} min'),
                   onTap: () {

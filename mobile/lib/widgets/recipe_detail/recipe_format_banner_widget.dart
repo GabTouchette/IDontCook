@@ -60,7 +60,7 @@ class RecipeFormatBanner extends StatelessWidget {
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0A0A0A),
+                        color: cs.onSurface,
                       ),
                     ),
             ),

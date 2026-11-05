@@ -34,9 +34,6 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
   String get _line2Text => _headline2.substring(
       0, (_typeChars - _headline1.length).clamp(0, _headline2.length));
 
-  static const _lime = Color(0xFFCAFF00);
-  static const _black = Color(0xFF0A0A0A);
-
   @override
   void initState() {
     super.initState();
@@ -86,6 +83,8 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
 
   @override
   Widget build(BuildContext context) {
+    final lime = Theme.of(context).colorScheme.secondary;
+    final black = Theme.of(context).colorScheme.onSecondary;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -110,7 +109,7 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                 opacity: _logoFade,
                 child: Container(
                   height: 1,
-                  color: _lime.withValues(alpha: 0.35),
+                  color: lime.withValues(alpha: 0.35),
                 ),
               ),
               const SizedBox(height: 20),
@@ -139,7 +138,7 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 76,
                         fontWeight: FontWeight.w700,
-                        color: _lime,
+                        color: lime,
                         letterSpacing: -2.5,
                         height: 0.92,
                       ),
@@ -176,14 +175,14 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                           widget.googleLoading ? null : widget.onContinueWithGoogle,
                       child: Container(
                         height: 52,
-                        color: _lime,
+                        color: lime,
                         child: widget.googleLoading
-                            ? const Center(
+                            ? Center(
                                 child: SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                    color: _black,
+                                    color: black,
                                     strokeWidth: 2.5,
                                   ),
                                 ),
@@ -191,13 +190,13 @@ class _OnboardingWelcomePageState extends State<OnboardingWelcomePage>
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const FaIcon(FontAwesomeIcons.google,
-                                      color: _black, size: 16),
+                                  FaIcon(FontAwesomeIcons.google,
+                                      color: black, size: 16),
                                   const SizedBox(width: 12),
                                   Text(
                                     'CONTINUE WITH GOOGLE',
                                     style: GoogleFonts.spaceGrotesk(
-                                      color: _black,
+                                      color: black,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.5,

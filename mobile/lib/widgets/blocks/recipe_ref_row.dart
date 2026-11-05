@@ -97,10 +97,10 @@ class RecipeRefRow extends StatelessWidget {
             Container(
               width: 34,
               height: 34,
-              color: kBlockAccent,
-              child: const Icon(
+              color: kBlockAccent(context),
+              child: Icon(
                 Icons.restaurant_menu,
-                color: kBlockAccentInk,
+                color: kBlockAccentInk(context),
                 size: 16,
               ),
             ),

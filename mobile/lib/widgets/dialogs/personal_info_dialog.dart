@@ -9,8 +9,6 @@ import 'package:provider/provider.dart';
 class PersonalInfoDialog extends StatelessWidget {
   const PersonalInfoDialog({super.key});
 
-  static const _lime = Color(0xFFCAFF00);
-
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
@@ -277,9 +275,10 @@ class PersonalInfoDialog extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
+    final lime = Theme.of(context).colorScheme.secondary;
     return Row(
       children: [
-        Container(width: 20, height: 2, color: _lime),
+        Container(width: 20, height: 2, color: lime),
         const SizedBox(width: 8),
         Text(
           title,
@@ -416,6 +415,7 @@ class PersonalInfoDialog extends StatelessWidget {
     bool value,
     Function(bool) onChanged,
   ) {
+    final lime = Theme.of(context).colorScheme.secondary;
     return Material(
       color: Colors.transparent,
       child: SwitchListTile(
@@ -429,8 +429,8 @@ class PersonalInfoDialog extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        activeColor: _lime,
-        activeTrackColor: _lime.withOpacity(0.35),
+        activeColor: lime,
+        activeTrackColor: lime.withOpacity(0.35),
         inactiveTrackColor:
             Theme.of(context).colorScheme.outline.withOpacity(0.2),
         contentPadding: EdgeInsets.zero,

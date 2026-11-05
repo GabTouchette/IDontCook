@@ -30,7 +30,10 @@ class TimeSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Container(width: 28, height: 2, color: const Color(0xFFCAFF00)),
+          Container(
+              width: 28,
+              height: 2,
+              color: Theme.of(context).colorScheme.secondary),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -121,10 +124,10 @@ class TimeSection extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            focusedBorder: const OutlineInputBorder(
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.zero,
               borderSide: BorderSide(
-                color: Color(0xFFCAFF00),
+                color: Theme.of(context).colorScheme.secondary,
                 width: 1.5,
               ),
             ),
@@ -178,9 +181,11 @@ class TimeSection extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            focusedBorder: const OutlineInputBorder(
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Color(0xFFCAFF00), width: 1.5),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.secondary,
+                  width: 1.5),
             ),
           ),
         ),

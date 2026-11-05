@@ -22,8 +22,13 @@ class RecipeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barBg = isDark ? const Color(0xFFF5F4EF) : const Color(0xFF0A0A0A);
-    final barText = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F4EF);
+    final cs = Theme.of(context).colorScheme;
+    // This bar intentionally inverts relative to theme brightness (near-black
+    // bar w/ pale text in light mode, pale bar w/ near-black text in dark
+    // mode), so it maps to onSurface/onSecondary per-branch rather than a
+    // single token.
+    final barBg = isDark ? const Color(0xFFF5F4EF) : cs.onSurface;
+    final barText = isDark ? cs.onSecondary : const Color(0xFFF5F4EF);
     final changeColor = Theme.of(context).colorScheme.success;
 
     final stats = <_StatItem>[];

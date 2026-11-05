@@ -22,19 +22,18 @@ class AppSlider extends StatelessWidget {
     this.label,
   });
 
-  static const _lime = Color(0xFFCAFF00);
-
   @override
   Widget build(BuildContext context) {
+    final lime = Theme.of(context).colorScheme.secondary;
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
-        activeTrackColor: _lime,
+        activeTrackColor: lime,
         inactiveTrackColor:
             Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        thumbColor: _lime,
-        overlayColor: _lime.withValues(alpha: 0.15),
+        thumbColor: lime,
+        overlayColor: lime.withValues(alpha: 0.15),
         trackHeight: 2,
-        thumbShape: const _SquareSliderThumbShape(thumbSize: 14),
+        thumbShape: _SquareSliderThumbShape(thumbSize: 14, fallbackColor: lime),
         valueIndicatorColor: Theme.of(context).colorScheme.onSurface,
         valueIndicatorTextStyle: GoogleFonts.spaceGrotesk(
           color: Theme.of(context).colorScheme.surface,
@@ -42,6 +41,8 @@ class AppSlider extends StatelessWidget {
           fontSize: 12,
         ),
         showValueIndicator: ShowValueIndicator.onDrag,
+      ),
+      child: Slider(
         value: value,
         min: min,
         max: max,
@@ -72,19 +73,19 @@ class AppRangeSlider extends StatelessWidget {
     this.labels,
   });
 
-  static const _lime = Color(0xFFCAFF00);
-
   @override
   Widget build(BuildContext context) {
+    final lime = Theme.of(context).colorScheme.secondary;
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
-        activeTrackColor: _lime,
+        activeTrackColor: lime,
         inactiveTrackColor:
             Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        thumbColor: _lime,
-        overlayColor: _lime.withValues(alpha: 0.15),
+        thumbColor: lime,
+        overlayColor: lime.withValues(alpha: 0.15),
         trackHeight: 2,
-        rangeThumbShape: const _SquareRangeSliderThumbShape(thumbSize: 14),
+        rangeThumbShape:
+            _SquareRangeSliderThumbShape(thumbSize: 14, fallbackColor: lime),
         valueIndicatorColor: Theme.of(context).colorScheme.onSurface,
         valueIndicatorTextStyle: GoogleFonts.spaceGrotesk(
           color: Theme.of(context).colorScheme.surface,
@@ -92,6 +93,8 @@ class AppRangeSlider extends StatelessWidget {
           fontSize: 12,
         ),
         showValueIndicator: ShowValueIndicator.onDrag,
+      ),
+      child: RangeSlider(
         values: values,
         min: min,
         max: max,
@@ -107,8 +110,12 @@ class AppRangeSlider extends StatelessWidget {
 
 class _SquareSliderThumbShape extends SliderComponentShape {
   final double thumbSize;
+  final Color fallbackColor;
 
-  const _SquareSliderThumbShape({this.thumbSize = 14});
+  const _SquareSliderThumbShape({
+    this.thumbSize = 14,
+    required this.fallbackColor,
+  });
 
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) =>
@@ -131,7 +138,7 @@ class _SquareSliderThumbShape extends SliderComponentShape {
   }) {
     final canvas = context.canvas;
     final paint = Paint()
-      ..color = sliderTheme.thumbColor ?? const Color(0xFFCAFF00)
+      ..color = sliderTheme.thumbColor ?? fallbackColor
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -143,8 +150,12 @@ class _SquareSliderThumbShape extends SliderComponentShape {
 
 class _SquareRangeSliderThumbShape extends RangeSliderThumbShape {
   final double thumbSize;
+  final Color fallbackColor;
 
-  const _SquareRangeSliderThumbShape({this.thumbSize = 14});
+  const _SquareRangeSliderThumbShape({
+    this.thumbSize = 14,
+    required this.fallbackColor,
+  });
 
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) =>
@@ -162,11 +173,11 @@ class _SquareRangeSliderThumbShape extends RangeSliderThumbShape {
     bool isPressed = false,
     required SliderThemeData sliderTheme,
     TextDirection textDirection = TextDirection.ltr,
-    required Thumb thumb,
+    Thumb thumb = Thumb.start,
   }) {
     final canvas = context.canvas;
     final paint = Paint()
-      ..color = sliderTheme.thumbColor ?? const Color(0xFFCAFF00)
+      ..color = sliderTheme.thumbColor ?? fallbackColor
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(

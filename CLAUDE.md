@@ -69,7 +69,7 @@ flutter build android
 - **Provider pattern** for state management with 9 specialized providers
 - **Freezed** for immutable data models with JSON serialization
 - **Material Design 3** theming with light/dark mode support
-- **Google Fonts (Nunito)** typography throughout the app
+- **Google Fonts (Space Grotesk)** typography throughout the app
 - **Tab-based navigation** with 4 main sections: Recipes, AI Chat, Explore, Social
 
 ### Adaptive Home (in progress)
@@ -105,10 +105,11 @@ All state is managed through Provider with these specialized providers:
 - **Consistent AppBar styling** across all pages:
   - Transparent background with `surfaceTintColor: Colors.transparent`
   - Primary color icons with 32px size
-  - GoogleFonts.nunito titles with `fontWeight: FontWeight.w900`
+  - GoogleFonts.spaceGrotesk ALL CAPS titles with `fontWeight: FontWeight.w700`, `fontSize: 22`, `letterSpacing: 2.5`
   - Centered titles with proper padding
 - **Toast notification system** with enum-based types (info, warning, success, error)
 - **Material Design 3** with extended ColorScheme for semantic colors
+- **Lime accent** (`#CAFF00`) is the brand accent color app-wide, exposed as `Theme.of(context).colorScheme.secondary` (its paired ink/foreground color is `colorScheme.onSecondary`) — always reference the theme token, never hardcode `Color(0xFFCAFF00)`/`Color(0xFF0A0A0A)` literals
 
 ### Data Models
 All models use Freezed with these patterns:
@@ -146,18 +147,19 @@ appBar: AppBar(
   title: Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     child: Text(
-      'Page Title',
-      style: GoogleFonts.nunito(
-        fontWeight: FontWeight.w900,
-        fontSize: 28,
-        letterSpacing: -0.5,
+      'PAGE TITLE',
+      style: GoogleFonts.spaceGrotesk(
+        fontWeight: FontWeight.w700,
+        fontSize: 22,
+        letterSpacing: 2.5,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     ),
   ),
 ),
 ```
 
-**Note:** Chat pages and home-feed block surfaces use `GoogleFonts.spaceGrotesk` with a lime accent (`#CAFF00`) instead of Nunito.
+Titles are rendered in ALL CAPS. This is the single app-wide standard — it is no longer a chat/home-feed-only exception; `GoogleFonts.spaceGrotesk` is used throughout the app, including meal-planning and profile screens.
 
 ### Toast Notifications
 Use the enhanced InformationToast with semantic types:

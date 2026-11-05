@@ -13,8 +13,9 @@ class PersonalInfoPage extends StatefulWidget {
 }
 
 class _PersonalInfoPageState extends State<PersonalInfoPage> {
-  static const _lime = Color(0xFFCAFF00);
-  static const _btnFg = Color(0xFF0A0A0A);
+  Color _lime(BuildContext context) => Theme.of(context).colorScheme.secondary;
+  Color _btnFg(BuildContext context) =>
+      Theme.of(context).colorScheme.onSecondary;
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -462,7 +463,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
           ),
         ),
         const SizedBox(height: 4),
-        Container(width: 20, height: 2, color: _lime),
+        Container(width: 20, height: 2, color: _lime(context)),
       ],
     );
   }
@@ -495,7 +496,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
-      cursorColor: _lime,
+      cursorColor: _lime(context),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.spaceGrotesk(
@@ -517,9 +518,9 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
             width: 1,
           ),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: _lime, width: 1.5),
+          borderSide: BorderSide(color: _lime(context), width: 1.5),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -543,11 +544,11 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         duration: const Duration(milliseconds: 120),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         decoration: BoxDecoration(
-          color: selected ? _lime : Colors.transparent,
+          color: selected ? _lime(context) : Colors.transparent,
           borderRadius: BorderRadius.zero,
           border: Border.all(
             color: selected
-                ? _lime
+                ? _lime(context)
                 : Theme.of(context)
                     .colorScheme
                     .outline
@@ -559,7 +560,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
           label,
           style: GoogleFonts.spaceGrotesk(
             color: selected
-                ? _btnFg
+                ? _btnFg(context)
                 : Theme.of(context)
                     .colorScheme
                     .onSurface

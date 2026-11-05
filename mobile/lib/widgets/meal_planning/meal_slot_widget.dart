@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/api/api_config.dart';
+import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 
 class MealSlot extends StatelessWidget {
   final String label;
@@ -85,12 +86,12 @@ class MealSlot extends StatelessWidget {
               strokeWidth: 1.5,
               dashPattern: const [6, 4],
               borderType: BorderType.RRect,
-              radius: const Radius.circular(14),
+              radius: const Radius.circular(4),
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: backgroundColor,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
                   children: [
@@ -99,7 +100,7 @@ class MealSlot extends StatelessWidget {
                       height: 52,
                       decoration: BoxDecoration(
                         color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: borderColor.withOpacity(0.6),
                           style: BorderStyle.solid,
@@ -117,7 +118,7 @@ class MealSlot extends StatelessWidget {
                             children: [
                               Text(
                                 label,
-                                style: GoogleFonts.nunito(
+                                style: GoogleFonts.spaceGrotesk(
                                   fontSize: 12,
                                   color: Theme.of(context)
                                       .colorScheme
@@ -140,7 +141,7 @@ class MealSlot extends StatelessWidget {
                             displayText,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.nunito(
+                            style: GoogleFonts.spaceGrotesk(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: emptyReason != null
@@ -161,7 +162,7 @@ class MealSlot extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: backgroundColor,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: borderColor),
                 boxShadow: [
                   BoxShadow(
@@ -182,11 +183,11 @@ class MealSlot extends StatelessWidget {
                           .colorScheme
                           .surfaceContainerHighest
                           .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: thumbnailUrl != null && thumbnailUrl!.isNotEmpty
                         ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(4),
                             child: Image.network(
                               ApiConfig.resolveImageUrl(thumbnailUrl!),
                               fit: BoxFit.cover,
@@ -206,7 +207,7 @@ class MealSlot extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 label,
-                                style: GoogleFonts.nunito(
+                                style: GoogleFonts.spaceGrotesk(
                                   fontSize: 12,
                                   color: Theme.of(context)
                                       .colorScheme
@@ -232,7 +233,7 @@ class MealSlot extends StatelessWidget {
                           displayText,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.nunito(
+                          style: GoogleFonts.spaceGrotesk(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: Theme.of(context).colorScheme.onSurface,
@@ -247,7 +248,20 @@ class MealSlot extends StatelessWidget {
                           color:
                               Theme.of(context).colorScheme.onSurfaceVariant),
                       tooltip: 'Remove',
-                      onPressed: onRemove,
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => ConfirmationDialog(
+                            message:
+                                'This removes "${title ?? 'this meal'}" from this slot.',
+                            onConfirm: () => Navigator.pop(ctx, true),
+                            onCancel: () => Navigator.pop(ctx, false),
+                          ),
+                        );
+                        if (confirmed == true) {
+                          onRemove?.call();
+                        }
+                      },
                     )
                 ],
               ),

@@ -195,18 +195,18 @@ class _PostDialogState extends State<PostDialog> {
                                                       Container(
                                                         width: 32,
                                                         height: 32,
-                                                        color: const Color(0xFF0A0A0A),
-                                                        child: const Icon(Icons.restaurant, size: 18, color: Color(0xFFCAFF00)),
+                                                        color: Theme.of(context).colorScheme.onSecondary,
+                                                        child: Icon(Icons.restaurant, size: 18, color: Theme.of(context).colorScheme.secondary),
                                                       ),
                                                 )
                                               : Container(
                                                   width: 32,
                                                   height: 32,
-                                                  color: const Color(0xFF0A0A0A),
-                                                  child: const Icon(
+                                                  color: Theme.of(context).colorScheme.onSecondary,
+                                                  child: Icon(
                                                     Icons.restaurant,
                                                     size: 18,
-                                                    color: Color(0xFFCAFF00),
+                                                    color: Theme.of(context).colorScheme.secondary,
                                                   ),
                                                 ),
                                           const SizedBox(width: 12),
@@ -291,16 +291,16 @@ class _PostDialogState extends State<PostDialog> {
                       onTap: handlePost,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        color: const Color(0xFFCAFF00),
+                        color: Theme.of(context).colorScheme.secondary,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.send_rounded, size: 16, color: Color(0xFF0A0A0A)),
+                            Icon(Icons.send_rounded, size: 16, color: Theme.of(context).colorScheme.onSecondary),
                             const SizedBox(width: 8),
                             Text(
                               'POST',
                               style: GoogleFonts.spaceGrotesk(
-                                color: const Color(0xFF0A0A0A),
+                                color: Theme.of(context).colorScheme.onSecondary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.0,
@@ -329,11 +329,11 @@ class _PostDialogState extends State<PostDialog> {
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
               height: 150,
-              color: const Color(0xFF0A0A0A),
-              child: const Center(
+              color: Theme.of(context).colorScheme.onSecondary,
+              child: Center(
                 child: Icon(
                   Icons.restaurant,
-                  color: Color(0xFFCAFF00),
+                  color: Theme.of(context).colorScheme.secondary,
                   size: 48,
                 ),
               ),
@@ -341,11 +341,11 @@ class _PostDialogState extends State<PostDialog> {
           )
         : Container(
             height: 150,
-            color: const Color(0xFF0A0A0A),
-            child: const Center(
+            color: Theme.of(context).colorScheme.onSecondary,
+            child: Center(
               child: Icon(
                 Icons.restaurant,
-                color: Color(0xFFCAFF00),
+                color: Theme.of(context).colorScheme.secondary,
                 size: 48,
               ),
             ),

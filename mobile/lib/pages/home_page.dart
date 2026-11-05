@@ -758,14 +758,14 @@ class _AssistantAvatar extends StatelessWidget {
       width: 28,
       height: 28,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: kBlockAccent,
+      decoration: BoxDecoration(
+        color: kBlockAccent(context),
         shape: BoxShape.circle,
       ),
-      child: const Icon(
+      child: Icon(
         Icons.smart_toy_outlined,
         size: 16,
-        color: kBlockAccentInk,
+        color: kBlockAccentInk(context),
       ),
     );
   }

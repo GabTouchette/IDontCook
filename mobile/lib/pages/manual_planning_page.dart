@@ -81,21 +81,25 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        centerTitle: false,
-        titleSpacing: 16,
+        centerTitle: true,
         title: Text(
-          'Manual Planning',
-          style: GoogleFonts.nunito(
-            fontWeight: FontWeight.w900,
-            fontSize: 24,
+          'MANUAL PLANNING',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
             color: Theme.of(context).colorScheme.onSurface,
-            letterSpacing: -0.5,
           ),
         ),
         leading: const SizedBox.shrink(),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            padding: const EdgeInsets.only(right: 16.0),
+            icon: Icon(
+              Icons.close,
+              color: Theme.of(context).colorScheme.primary,
+              size: 32,
+            ),
             onPressed: () => Navigator.pop(context),
             tooltip: 'Close',
           ),
@@ -223,7 +227,7 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
         Expanded(
           child: Scrollbar(
             thumbVisibility: true,
-            radius: const Radius.circular(8),
+            radius: const Radius.circular(4),
             thickness: 6,
             child: RecipeBrowserList(
               query: _searchCtrl.text,
@@ -259,7 +263,7 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
                         .colorScheme
                         .surfaceContainerHighest
                         .withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
                     children: [
@@ -270,7 +274,7 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
                       const SizedBox(width: 8),
                       Text(
                         label,
-                        style: GoogleFonts.nunito(
+                        style: GoogleFonts.spaceGrotesk(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
                         ),
@@ -390,7 +394,7 @@ class _SlotRow extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
             color: canAssign ? Colors.green : Colors.grey.shade300,
             width: canAssign ? 2 : 1),

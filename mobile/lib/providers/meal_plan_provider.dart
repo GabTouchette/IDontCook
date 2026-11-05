@@ -5,6 +5,8 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/models/meal_planning/meal_plan.dart';
 import 'package:i_cant_cook/models/meal_planning/grocery_item.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 
 class MealPlanProvider with ChangeNotifier {
   List<MealPlan> _mealPlans = [];
@@ -209,12 +211,11 @@ class MealPlanProvider with ChangeNotifier {
     } catch (error) {
       print('Error generating AI meal plan: $error');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to generate meal plan: ${error.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 4),
-          ),
+        InformationToast.show(
+          context: context,
+          message: 'Failed to generate meal plan: ${error.toString()}',
+          type: ToastType.error,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -233,19 +234,16 @@ class MealPlanProvider with ChangeNotifier {
         (metadata['low_quality_count'] as num?)?.toInt() ?? 0;
 
     // Determine feedback type and message
-    Color backgroundColor;
+    ToastType toastType;
     String message;
-    IconData icon;
 
     if (fillRate >= 0.9 && lowQualityCount == 0) {
       // Great success
-      backgroundColor = Theme.of(context).colorScheme.primary;
-      icon = Icons.check_circle;
+      toastType = ToastType.success;
       message = 'Meal plan generated successfully!';
     } else if (fillRate >= 0.8) {
       // Good with some warnings
-      backgroundColor = Theme.of(context).colorScheme.secondary;
-      icon = Icons.info;
+      toastType = ToastType.info;
       if (lowQualityCount > 0) {
         message =
             'Meal plan generated with $lowQualityCount recipe(s) that may not fully match your preferences';
@@ -254,14 +252,12 @@ class MealPlanProvider with ChangeNotifier {
       }
     } else if (fillRate >= 0.5) {
       // Partial success with significant issues
-      backgroundColor = Colors.orange;
-      icon = Icons.warning;
+      toastType = ToastType.warning;
       message =
           'Only ${filledSlots}/${totalSlots} meal slots could be filled. Consider relaxing dietary restrictions.';
     } else {
       // Poor results
-      backgroundColor = Theme.of(context).colorScheme.error;
-      icon = Icons.error;
+      toastType = ToastType.error;
       message =
           'Very few suitable recipes found (${filledSlots}/${totalSlots}). Try different preferences.';
     }
@@ -271,19 +267,11 @@ class MealPlanProvider with ChangeNotifier {
       // Show detailed dialog for problematic cases
       _showGenerationWarningDialog(context, message, warnings, metadata);
     } else {
-      // Simple snackbar for successful cases
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: backgroundColor,
-          duration: const Duration(seconds: 3),
-        ),
+      // Simple toast for successful cases
+      InformationToast.show(
+        context: context,
+        message: message,
+        type: toastType,
       );
     }
   }

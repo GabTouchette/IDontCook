@@ -332,7 +332,7 @@ class _FeedbackButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 18,
-          color: isActive ? const Color(0xFFCAFF00) : Colors.white,
+          color: isActive ? Theme.of(context).colorScheme.secondary : Colors.white,
         ),
       ),
     );

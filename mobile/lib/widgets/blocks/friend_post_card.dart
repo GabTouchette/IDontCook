@@ -191,8 +191,8 @@ class _AvatarFallback extends StatelessWidget {
       width: 36,
       height: 36,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: kBlockAccent,
+      decoration: BoxDecoration(
+        color: kBlockAccent(context),
         shape: BoxShape.circle,
       ),
       child: Text(
@@ -200,7 +200,7 @@ class _AvatarFallback extends StatelessWidget {
         style: GoogleFonts.spaceGrotesk(
           fontSize: 15,
           fontWeight: FontWeight.w800,
-          color: kBlockAccentInk,
+          color: kBlockAccentInk(context),
         ),
       ),
     );

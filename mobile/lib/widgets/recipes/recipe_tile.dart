@@ -9,6 +9,7 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
+import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
 import 'package:i_cant_cook/widgets/dialogs/recipe_preview_dialog.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
@@ -298,11 +299,11 @@ class RecipeTile extends StatelessWidget {
       children: [
         CustomSlidableAction(
           flex: 1,
-          backgroundColor: const Color(0xFFCAFF00),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           onPressed: (_) => _toggleFavorite(context),
           child: Icon(
             isFav ? Icons.favorite : Icons.favorite_border,
-            color: const Color(0xFF0A0A0A),
+            color: Theme.of(context).colorScheme.onSecondary,
             size: 30,
           ),
         ),
@@ -336,6 +337,16 @@ class RecipeTile extends StatelessWidget {
   }
 
   Future<void> _deleteRecipe(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => ConfirmationDialog(
+        message: 'Are you sure you want to delete this recipe?',
+        onConfirm: () => Navigator.pop(ctx, true),
+        onCancel: () => Navigator.pop(ctx, false),
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
     HapticService.mediumImpact();
     try {
       final ok = await RecipeApi().deleteRecipe(recipe.id);

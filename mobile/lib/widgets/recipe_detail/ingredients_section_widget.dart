@@ -39,7 +39,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
   /// hands a pre-built chat question up to [IngredientsSection.onAskAboutIngredient].
   void _showIngredientMenu(BuildContext context, String ingredientName) {
     final cs = Theme.of(context).colorScheme;
-    const lime = Color(0xFFCAFF00);
+    final lime = cs.secondary;
 
     showModalBottomSheet(
       context: context,
@@ -138,7 +138,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
   @override
   Widget build(BuildContext context) {
     final isUpdated = widget.updatedFields.contains('ingredients');
-    const lime = Color(0xFFCAFF00);
+    final lime = Theme.of(context).colorScheme.secondary;
     final changeColor = Theme.of(context).colorScheme.success;
 
     return Column(
@@ -225,7 +225,7 @@ class _IngredientsSectionState extends State<IngredientsSection> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               color: isCompleted
-                  ? const Color(0xFFCAFF00).withOpacity(0.06)
+                  ? lime.withOpacity(0.06)
                   : Colors.transparent,
               child: Column(
                 children: [

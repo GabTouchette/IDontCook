@@ -95,7 +95,8 @@ class _MealIngredientsSectionState extends State<MealIngredientsSection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const lime = Color(0xFFCAFF00);
+    final lime = theme.colorScheme.secondary;
+    final ink = theme.colorScheme.onSecondary;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Column(
@@ -138,7 +139,7 @@ class _MealIngredientsSectionState extends State<MealIngredientsSection> {
                       child: Text(
                         '${i + 1}',
                         style: GoogleFonts.spaceGrotesk(
-                          color: const Color(0xFF0A0A0A),
+                          color: ink,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -184,12 +185,12 @@ class _MealIngredientsSectionState extends State<MealIngredientsSection> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.add, size: 16, color: Color(0xFF0A0A0A)),
+                  Icon(Icons.add, size: 16, color: ink),
                   const SizedBox(width: 8),
                   Text(
                     'ADD INGREDIENT',
                     style: GoogleFonts.spaceGrotesk(
-                      color: const Color(0xFF0A0A0A),
+                      color: ink,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.5,
@@ -225,8 +226,6 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
   List<Map<String, dynamic>> _suggestions = [];
   bool _loading = false;
 
-  static const _lime = Color(0xFFCAFF00);
-  static const _btnFg = Color(0xFF0A0A0A);
   static const _units = [
     '',
     'piece',
@@ -322,9 +321,9 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
             color: theme.colorScheme.outline.withValues(alpha: 0.25),
             width: 1.5),
       ),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: _lime, width: 1.5),
+        borderSide: BorderSide(color: theme.colorScheme.secondary, width: 1.5),
       ),
     );
   }
@@ -332,6 +331,8 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final lime = theme.colorScheme.secondary;
+    final btnFg = theme.colorScheme.onSecondary;
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
       child: Padding(
@@ -351,7 +352,7 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
               ),
             ),
             const SizedBox(height: 4),
-            Container(width: 28, height: 2, color: _lime),
+            Container(width: 28, height: 2, color: lime),
             const SizedBox(height: 16),
             // Qty + Unit
             Row(
@@ -464,7 +465,7 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
                             child: Row(
                               children: [
                                 Icon(Icons.north_west,
-                                    size: 12, color: _lime),
+                                    size: 12, color: lime),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -506,12 +507,12 @@ class _AddIngredientSheetState extends State<_AddIngredientSheet> {
                     onTap: () => _handleSave(addAnother: false),
                     child: Container(
                       height: 48,
-                      color: _lime,
+                      color: lime,
                       alignment: Alignment.center,
                       child: Text(
                         'SAVE',
                         style: GoogleFonts.spaceGrotesk(
-                          color: _btnFg,
+                          color: btnFg,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.5,

@@ -158,7 +158,7 @@ class DealDetailSheet extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
               decoration: BoxDecoration(
-                color: kBlockAccent,
+                color: kBlockAccent(context),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -166,7 +166,7 @@ class DealDetailSheet extends StatelessWidget {
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: kBlockAccentInk,
+                  color: kBlockAccentInk(context),
                 ),
               ),
             ),

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/providers/meal_plan_provider.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 
 class MealPlanGeneratorPage extends StatefulWidget {
   const MealPlanGeneratorPage({super.key});
@@ -89,8 +91,25 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        title: Text('Generate Meal Plan',
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w900)),
+        centerTitle: true,
+        leading: IconButton(
+          padding: const EdgeInsets.only(left: 16.0),
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.chevron_left,
+            color: Theme.of(context).colorScheme.primary,
+            size: 32,
+          ),
+        ),
+        title: Text(
+          'GENERATE MEAL PLAN',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -109,7 +128,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                       final ws = mp.visibleWeekStart;
                       return Card(
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(4)),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
@@ -117,14 +136,14 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('You\'re planning for:',
-                                  style: GoogleFonts.nunito(
+                                  style: GoogleFonts.spaceGrotesk(
                                       fontWeight: FontWeight.w800)),
                               const SizedBox(height: 8),
                               Text(
                                 selected
                                     .map((d) => _dayLabelPlain(ws, d))
                                     .join(', '),
-                                style: GoogleFonts.nunito(
+                                style: GoogleFonts.spaceGrotesk(
                                     fontWeight: FontWeight.w700),
                               ),
                             ],
@@ -323,7 +342,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                       Theme.of(context).colorScheme.primary.withOpacity(0.4),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 onPressed: _loading
@@ -340,10 +359,11 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         if (selectedMealTypes.isEmpty) {
                           // Require at least one meal type to avoid backend defaulting unexpectedly
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Please select at least one meal type.')),
+                            InformationToast.show(
+                              context: context,
+                              message:
+                                  'Please select at least one meal type.',
+                              type: ToastType.warning,
                             );
                           }
                           setState(() => _loading = false);
@@ -372,7 +392,7 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                       )
                     : Text(
                         'Generate Meal Plan',
-                        style: GoogleFonts.nunito(
+                        style: GoogleFonts.spaceGrotesk(
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
                             color: Theme.of(context).colorScheme.onPrimary),
@@ -393,7 +413,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+      style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700),
     );
   }
 }

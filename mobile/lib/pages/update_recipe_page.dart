@@ -224,11 +224,11 @@ class _UpdateRecipePageState extends State<UpdateRecipePage> {
               child: Container(
                 width: 36,
                 height: 36,
-                color: const Color(0xFFCAFF00),
-                child: const Icon(
+                color: Theme.of(context).colorScheme.secondary,
+                child: Icon(
                   Icons.check,
                   size: 18,
-                  color: Color(0xFF0A0A0A),
+                  color: Theme.of(context).colorScheme.onSecondary,
                 ),
               ),
             ),

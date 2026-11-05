@@ -103,7 +103,7 @@ class MealPlanNudgeCard extends StatelessWidget {
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0A0A0A),
+                    color: onSurface,
                   ),
                 ),
               ),

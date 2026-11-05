@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/mixins/chat_context_mixin.dart';
+import 'package:i_cant_cook/models/chat/chat_page_context.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/pages/create_recipe_page.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
-import 'package:i_cant_cook/widgets/appbar/appbar_user_menu.dart';
+import 'package:i_cant_cook/widgets/appbar/search_app_bar_scaffold.dart';
+import 'package:i_cant_cook/widgets/sheets/app_sheet.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_tile.dart';
 import 'package:i_cant_cook/widgets/skeletons/skeletons.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
@@ -20,7 +23,7 @@ class RecipesPage extends StatefulWidget {
   _RecipesPageState createState() => _RecipesPageState();
 }
 
-class _RecipesPageState extends State<RecipesPage> {
+class _RecipesPageState extends State<RecipesPage> with ChatContextRegistrar {
   @override
   void initState() {
     super.initState();
@@ -29,115 +32,116 @@ class _RecipesPageState extends State<RecipesPage> {
     recipesProvider.fetchRecipes();
   }
 
+  /// Snapshot of the user's recipe list for the global chat.
+  ChatPageContext _buildChatContext(UserRecipesProvider provider) {
+    final recipes = provider.filteredRecipes;
+    final tag = provider.selectedTag;
+    return ChatPageContext(
+      label: 'My recipes',
+      pageKey: 'my_recipes',
+      summary: tag != null
+          ? '${recipes.length} recipes · tag: $tag'
+          : '${recipes.length} recipes',
+      data: {
+        'surface': 'my_recipes',
+        if (tag != null) 'selected_tag': tag,
+        'recipe_count': recipes.length,
+        'visible_recipes': recipes
+            .take(20)
+            .map((r) => {'id': r.id, 'title': r.title})
+            .toList(),
+      },
+    );
+  }
+
+  /// The "+" button that opens the create-recipe sheet — sits leftmost in the
+  /// app bar, before the search toggle.
+  Widget _buildAddButton(BuildContext context) {
+    return IconButton(
+      tooltip: 'New recipe',
+      onPressed: () {
+        HapticService.mediumImpact();
+        showAppSheet(
+          context: context,
+          builder: (_) => const CreateRecipePage(asSheet: true),
+        ).then((_) {
+          if (mounted) {
+            Provider.of<UserRecipesProvider>(context, listen: false)
+                .fetchRecipes();
+          }
+        });
+      },
+      icon: Icon(
+        Icons.add,
+        color: Theme.of(context).colorScheme.primary,
+        size: 28,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<UserRecipesProvider>(
       builder: (context, provider, child) {
-        return Scaffold(
-          appBar: AppBar(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            surfaceTintColor: Colors.transparent,
-            automaticallyImplyLeading: false,
-            elevation: 0,
-            leading: IconButton(
-              padding: const EdgeInsets.only(left: 16.0),
-              onPressed: () {
-                HapticService.mediumImpact();
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  builder: (_) => const CreateRecipePage(),
-                ).then((_) {
-                  if (mounted) {
-                    Provider.of<UserRecipesProvider>(context, listen: false)
-                        .fetchRecipes();
-                  }
-                });
-              },
-              icon: Icon(
-                Icons.add,
-                color: Theme.of(context).colorScheme.primary,
-                size: 28,
-              ),
-            ),
-            title: Text(
-              'RECIPES',
-              style: GoogleFonts.spaceGrotesk(
-                fontWeight: FontWeight.w700,
-                fontSize: 22,
-                letterSpacing: 2.5,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            centerTitle: true,
-            actions: [UserMenuWidget()],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(116),
-              child: Column(
-                children: [
-                  _buildSearchBar(context, provider),
-                  _buildTabRow(context, provider),
-                ],
-              ),
-            ),
-          ),
-          body: Column(
+        registerChatContext(_buildChatContext(provider));
+        return SearchAppBarScaffold(
+          title: 'RECIPES',
+          // Order: [+] [search] · RECIPES · [cart] [profile].
+          leadingActions: [_buildAddButton(context)],
+          expandedBuilder: (context) => Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    if (!provider.hasLoaded) {
-                      return RecipesListSkeleton(tileMode: provider.tileMode);
-                    }
-                    if (provider.tabIndex == 3 &&
-                        provider.selectedTag == null) {
-                      return _buildTagsGrid(context, provider);
-                    }
-                    if (provider.allRecipes.isEmpty) {
-                      return _buildFirstTimeEmptyState(context);
-                    }
-                    if (provider.filteredRecipes.isEmpty) {
-                      return _buildNoResultsState(context);
-                    }
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: CurvedAnimation(
-                            parent: animation, curve: Curves.easeOut),
-                        child: child,
-                      ),
-                      child: KeyedSubtree(
-                        key: ValueKey(
-                            '${provider.tileMode}_${provider.tabIndex}_${provider.selectedTag}'),
-                        child: SlidableAutoCloseBehavior(
-                          child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          itemCount: provider.filteredRecipes.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0)
-                              return _buildListHeader(context, provider);
-                            final recipe = provider.filteredRecipes[index - 1];
-                            final itemIndex = index - 1;
-                            return _buildRecipeTile(recipe)
-                                .animate(
-                                  delay: (itemIndex < 12 ? itemIndex * 30 : 0).ms,
-                                )
-                                .fadeIn(duration: 200.ms)
-                                .slideY(
-                                  begin: 0.05,
-                                  curve: Curves.easeOut,
-                                  duration: 200.ms,
-                                );
-                          },
-                        )),
-                      ),
-                    );
-                  },
-                ),
-              ),
+              _buildSearchBar(context, provider),
+              _buildTabRow(context, provider),
+              _buildListHeader(context, provider),
             ],
+          ),
+          body: Builder(
+            builder: (context) {
+              if (!provider.hasLoaded) {
+                return RecipesListSkeleton(tileMode: provider.tileMode);
+              }
+              if (provider.tabIndex == 3 && provider.selectedTag == null) {
+                return _buildTagsGrid(context, provider);
+              }
+              if (provider.allRecipes.isEmpty) {
+                return _buildFirstTimeEmptyState(context);
+              }
+              if (provider.filteredRecipes.isEmpty) {
+                return _buildNoResultsState(context);
+              }
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: CurvedAnimation(
+                      parent: animation, curve: Curves.easeOut),
+                  child: child,
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(
+                      '${provider.tileMode}_${provider.tabIndex}_${provider.selectedTag}'),
+                  child: SlidableAutoCloseBehavior(
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: provider.filteredRecipes.length,
+                      itemBuilder: (context, index) {
+                        final recipe = provider.filteredRecipes[index];
+                        return _buildRecipeTile(recipe)
+                            .animate(
+                              delay: (index < 12 ? index * 30 : 0).ms,
+                            )
+                            .fadeIn(duration: 200.ms)
+                            .slideY(
+                              begin: 0.05,
+                              curve: Curves.easeOut,
+                              duration: 200.ms,
+                            );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -159,6 +163,8 @@ class _RecipesPageState extends State<RecipesPage> {
         ),
         child: TextField(
           controller: provider.searchController,
+          // Focuses the moment the app bar's search area is revealed.
+          autofocus: true,
           style: GoogleFonts.spaceGrotesk(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 15,
@@ -188,6 +194,8 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   Widget _buildTabRow(BuildContext context, UserRecipesProvider provider) {
+    final lime = Theme.of(context).colorScheme.secondary;
+    final onLime = Theme.of(context).colorScheme.onSecondary;
     const tabs = ['ALL', 'RECENT', 'FAVORITES', 'TAGS'];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -214,7 +222,7 @@ class _RecipesPageState extends State<RecipesPage> {
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 3),
                 child: isSelected
                     ? Container(
-                        color: const Color(0xFFCAFF00),
+                        color: lime,
                         padding: const EdgeInsets.fromLTRB(4, 7, 4, 4),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -226,10 +234,10 @@ class _RecipesPageState extends State<RecipesPage> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.0,
-                                color: const Color(0xFF0A0A0A),
+                                color: onLime,
                               ),
                             ),
-                            
+
                           ],
                         ),
                       )
@@ -398,8 +406,8 @@ class _RecipesPageState extends State<RecipesPage> {
   // ── Empty states ─────────────────────────────────────────────────────
 
   Widget _buildFirstTimeEmptyState(BuildContext context) {
-    const lime = Color(0xFFCAFF00);
     final scheme = Theme.of(context).colorScheme;
+    final lime = scheme.secondary;
 
     return Center(
       child: SingleChildScrollView(
@@ -412,9 +420,9 @@ class _RecipesPageState extends State<RecipesPage> {
               width: 56,
               height: 56,
               color: lime,
-              child: const Icon(
+              child: Icon(
                 Icons.menu_book,
-                color: Color(0xFF0A0A0A),
+                color: scheme.onSecondary,
                 size: 24,
               ),
             ),
@@ -451,12 +459,9 @@ class _RecipesPageState extends State<RecipesPage> {
               label: 'CREATE RECIPE',
               icon: Icons.add,
               filled: true,
-              onTap: () => showModalBottomSheet(
+              onTap: () => showAppSheet(
                 context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                builder: (_) => const CreateRecipePage(),
+                builder: (_) => const CreateRecipePage(asSheet: true),
               ).then((_) {
                 Provider.of<UserRecipesProvider>(context, listen: false)
                     .fetchRecipes();
@@ -543,8 +548,8 @@ class _RecipesPageState extends State<RecipesPage> {
     required bool filled,
     required VoidCallback onTap,
   }) {
-    const lime = Color(0xFFCAFF00);
     final scheme = Theme.of(context).colorScheme;
+    final lime = scheme.secondary;
 
     return GestureDetector(
       onTap: onTap,
@@ -568,7 +573,7 @@ class _RecipesPageState extends State<RecipesPage> {
               icon,
               size: 14,
               color:
-                  filled ? const Color(0xFF0A0A0A) : scheme.onSurface,
+                  filled ? scheme.onSecondary : scheme.onSurface,
             ),
             const SizedBox(width: 7),
             Text(
@@ -578,7 +583,7 @@ class _RecipesPageState extends State<RecipesPage> {
                 fontSize: 11,
                 letterSpacing: 1.1,
                 color: filled
-                    ? const Color(0xFF0A0A0A)
+                    ? scheme.onSecondary
                     : scheme.onSurface,
               ),
             ),

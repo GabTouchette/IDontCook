@@ -18,7 +18,7 @@ class AdditionalSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const lime = Color(0xFFCAFF00);
+    final lime = Theme.of(context).colorScheme.secondary;
     final changeColor = Theme.of(context).colorScheme.success;
 
     return Column(
@@ -168,7 +168,7 @@ class AdditionalSections extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
-                  color: const Color(0xFFCAFF00),
+                  color: lime,
                   width: 3,
                 ),
               ),

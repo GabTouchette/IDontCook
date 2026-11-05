@@ -38,13 +38,13 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
             .colorScheme
             .surfaceContainerHighest
             .withOpacity(0.5),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: const Icon(Icons.image_outlined, size: 20),
     );
     if (url == null || url.trim().isEmpty) return placeholder;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(4),
       child: Image.network(
         ApiConfig.resolveImageUrl(url),
         width: 48,
@@ -101,7 +101,7 @@ class _RecipeBrowserListState extends State<RecipeBrowserList> {
           leading: _thumb(context, r.thumbnail_url),
           title: Text(
             r.title,
-            style: GoogleFonts.nunito(
+            style: GoogleFonts.spaceGrotesk(
               fontWeight: FontWeight.w800,
               fontSize: 15,
               color: Theme.of(context).colorScheme.onSurface,

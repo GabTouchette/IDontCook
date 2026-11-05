@@ -168,20 +168,20 @@ class RecipeModificationSuggestion extends StatelessWidget {
               width: double.infinity,
               padding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              color: const Color(0xFFCAFF00),
+              color: Theme.of(context).colorScheme.secondary,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.preview_outlined,
-                    color: Color(0xFF0A0A0A),
+                    color: Theme.of(context).colorScheme.onSecondary,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'PREVIEW CHANGES',
                     style: GoogleFonts.spaceGrotesk(
-                      color: const Color(0xFF0A0A0A),
+                      color: Theme.of(context).colorScheme.onSecondary,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.5,

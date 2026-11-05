@@ -21,7 +21,7 @@ class InstructionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUpdated = updatedFields.contains('instructions');
-    const lime = Color(0xFFCAFF00);
+    final lime = Theme.of(context).colorScheme.secondary;
     final changeColor = Theme.of(context).colorScheme.success;
 
     return Column(
@@ -89,7 +89,7 @@ class InstructionsSection extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               color: isCompleted
-                  ? const Color(0xFFCAFF00).withOpacity(0.06)
+                  ? lime.withOpacity(0.06)
                   : Colors.transparent,
               child: Column(
                 children: [
@@ -119,7 +119,9 @@ class InstructionsSection extends StatelessWidget {
                                   style: GoogleFonts.spaceGrotesk(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.black,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondary,
                                     letterSpacing: -0.5,
                                   ),
                                 ),

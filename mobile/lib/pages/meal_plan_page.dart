@@ -7,8 +7,8 @@ class MealPlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const lime = Color(0xFFCAFF00);
     final scheme = Theme.of(context).colorScheme;
+    final lime = scheme.secondary;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -39,9 +39,9 @@ class MealPlanPage extends StatelessWidget {
                 width: 72,
                 height: 72,
                 color: lime,
-                child: const Icon(
+                child: Icon(
                   Icons.calendar_today,
-                  color: Color(0xFF0A0A0A),
+                  color: scheme.onSecondary,
                   size: 30,
                 ),
               ),

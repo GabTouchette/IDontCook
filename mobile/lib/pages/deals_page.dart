@@ -276,7 +276,7 @@ class _DealsPageState extends State<DealsPage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kBlockAccent, width: 1.5),
+            borderSide: BorderSide(color: kBlockAccent(context), width: 1.5),
           ),
         ),
       ),
@@ -407,11 +407,11 @@ class _Chip extends StatelessWidget {
         padding: EdgeInsets.only(
             left: icon != null ? 10 : 14, right: onRemove != null ? 6 : 14),
         decoration: BoxDecoration(
-          color: selected ? kBlockAccent : theme.colorScheme.surface,
+          color: selected ? kBlockAccent(context) : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: selected
-                ? kBlockAccent
+                ? kBlockAccent(context)
                 : theme.colorScheme.outline.withValues(alpha: 0.25),
             width: 1.5,
           ),
@@ -428,7 +428,8 @@ class _Chip extends StatelessWidget {
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: selected ? kBlockAccentInk : theme.colorScheme.onSurface,
+                color:
+                    selected ? kBlockAccentInk(context) : theme.colorScheme.onSurface,
               ),
             ),
             if (onRemove != null) ...[
@@ -438,9 +439,10 @@ class _Chip extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   size: 15,
-                  color:
-                      (selected ? kBlockAccentInk : theme.colorScheme.onSurface)
-                          .withValues(alpha: 0.6),
+                  color: (selected
+                          ? kBlockAccentInk(context)
+                          : theme.colorScheme.onSurface)
+                      .withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -497,7 +499,7 @@ class _DealGridCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: kBlockAccent,
+                        color: kBlockAccent(context),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -505,7 +507,7 @@ class _DealGridCard extends StatelessWidget {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: kBlockAccentInk,
+                          color: kBlockAccentInk(context),
                         ),
                       ),
                     ),

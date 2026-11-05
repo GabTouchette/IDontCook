@@ -18,22 +18,22 @@ class Navbar extends StatefulWidget {
 class _NavbarState extends State<Navbar> {
   int? _activeIndex; // tracks tab during drag to avoid redundant callbacks
 
-  static const _lime = Color(0xFFCAFF00);
-
   static const _iconsOutlined = [
-    Icons.home_outlined,
-    Icons.explore_outlined,
+    // Icons.home_outlined, // Home tab removed from nav
     Icons.menu_book_outlined,
+    Icons.explore_outlined,
     Icons.people_outline,
     Icons.calendar_today_outlined,
+    Icons.local_offer_outlined, // Deals catalog
   ];
 
   static const _iconsFilled = [
-    Icons.home,
-    Icons.explore,
+    // Icons.home, // Home tab removed from nav
     Icons.menu_book,
+    Icons.explore,
     Icons.people,
     Icons.calendar_today,
+    Icons.local_offer, // Deals catalog
   ];
 
   int _indexFromX(double x) {
@@ -70,9 +70,10 @@ class _NavbarState extends State<Navbar> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = Theme.of(context).colorScheme.surface;
+    final bg = Theme.of(context).colorScheme.surfaceContainer;
     final outline = Theme.of(context).colorScheme.outline;
     final onSurface = Theme.of(context).colorScheme.onSurface;
+    final lime = Theme.of(context).colorScheme.secondary;
 
     return Container(
       color: bg,
@@ -102,7 +103,7 @@ class _NavbarState extends State<Navbar> {
                             duration: const Duration(milliseconds: 150),
                             height: 3,
                             width: isSelected ? 32 : 0,
-                            color: _lime,
+                            color: lime,
                           ),
                           const SizedBox(height: 14),
                           Icon(

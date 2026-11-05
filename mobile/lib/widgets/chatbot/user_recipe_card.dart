@@ -131,10 +131,10 @@ class _UserRecipeCardState extends State<UserRecipeCard> {
                 Container(
                   width: 34,
                   height: 34,
-                  color: const Color(0xFFCAFF00),
-                  child: const Icon(
+                  color: Theme.of(context).colorScheme.secondary,
+                  child: Icon(
                     Icons.restaurant_menu,
-                    color: Color(0xFF0A0A0A),
+                    color: Theme.of(context).colorScheme.onSecondary,
                     size: 16,
                   ),
                 ),

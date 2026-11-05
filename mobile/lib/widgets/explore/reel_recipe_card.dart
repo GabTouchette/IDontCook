@@ -6,13 +6,11 @@ import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/recipes/placeholder_image.dart';
 import 'package:i_cant_cook/api/api_config.dart';
 
-const _lime = Color(0xFFCAFF00);
-
 /// Full-bleed, single-card recipe surface for the reel-style Explore feed.
 /// One of these fills the viewport per page of the snapping [PageView].
 class ReelRecipeCard extends StatefulWidget {
   final RecipePreview recipe;
-  final VoidCallback? onThumbsUp;
+  final VoidCallback? onFavorited;
   final VoidCallback? onThumbsDown;
   final VoidCallback? onDelete;
 
@@ -22,7 +20,7 @@ class ReelRecipeCard extends StatefulWidget {
   const ReelRecipeCard({
     Key? key,
     required this.recipe,
-    this.onThumbsUp,
+    this.onFavorited,
     this.onThumbsDown,
     this.onDelete,
     this.onOpen,
@@ -33,7 +31,7 @@ class ReelRecipeCard extends StatefulWidget {
 }
 
 class _ReelRecipeCardState extends State<ReelRecipeCard> {
-  bool _thumbedUp = false;
+  bool _favorited = false;
 
   void _showDownvoteSheet(BuildContext context) {
     HapticService.lightImpact();
@@ -135,7 +133,7 @@ class _ReelRecipeCardState extends State<ReelRecipeCard> {
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final showFeedback = widget.onThumbsUp != null || widget.onThumbsDown != null;
+    final showFeedback = widget.onFavorited != null || widget.onThumbsDown != null;
     final timeText = _timeText();
 
     return GestureDetector(
@@ -188,14 +186,14 @@ class _ReelRecipeCardState extends State<ReelRecipeCard> {
               bottom: 130,
               child: Column(
                 children: [
-                  if (widget.onThumbsUp != null)
+                  if (widget.onFavorited != null)
                     _ActionButton(
-                      icon: _thumbedUp ? Icons.favorite : Icons.favorite_border,
-                      isActive: _thumbedUp,
+                      icon: _favorited ? Icons.favorite : Icons.favorite_border,
+                      isActive: _favorited,
                       onTap: () {
                         HapticService.lightImpact();
-                        setState(() => _thumbedUp = !_thumbedUp);
-                        widget.onThumbsUp!();
+                        setState(() => _favorited = !_favorited);
+                        widget.onFavorited!();
                       },
                     ),
                   if (widget.onThumbsDown != null) ...[
@@ -313,6 +311,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lime = Theme.of(context).colorScheme.secondary;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -327,7 +326,7 @@ class _ActionButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 24,
-          color: isActive ? _lime : Colors.white,
+          color: isActive ? lime : Colors.white,
         ),
       ),
     );

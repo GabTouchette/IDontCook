@@ -84,6 +84,8 @@ class TagFiltersState extends State<TagFilters> {
   Widget _buildTagFilters(Map<String, List<String>> tagsByCategory) {
     return Consumer<ExploreProvider>(
       builder: (context, provider, _) {
+        final lime = Theme.of(context).colorScheme.secondary;
+        final ink = Theme.of(context).colorScheme.onSecondary;
         final selectedTags =
             List<String>.from(provider.filters['selectedTags'] ?? []);
         final totalSelected = selectedTags.length;
@@ -107,11 +109,11 @@ class TagFiltersState extends State<TagFilters> {
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    color: const Color(0xFFCAFF00),
+                    color: lime,
                     child: Text(
                       '$totalSelected',
                       style: GoogleFonts.spaceGrotesk(
-                        color: const Color(0xFF0A0A0A),
+                        color: ink,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -143,6 +145,8 @@ class TagFiltersState extends State<TagFilters> {
     required List<String> tags,
     required List<String> selectedTags,
   }) {
+    final lime = Theme.of(context).colorScheme.secondary;
+    final ink = Theme.of(context).colorScheme.onSecondary;
     final isExpanded = _expansionStates[category] ?? false;
     final categorySelectedCount = tags
         .where((tag) =>
@@ -191,11 +195,11 @@ class TagFiltersState extends State<TagFilters> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
-                        color: const Color(0xFFCAFF00),
+                        color: lime,
                         child: Text(
                           '$categorySelectedCount',
                           style: GoogleFonts.spaceGrotesk(
-                            color: const Color(0xFF0A0A0A),
+                            color: ink,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -250,12 +254,12 @@ class TagFiltersState extends State<TagFilters> {
                                 horizontal: 9, vertical: 5),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFFCAFF00)
+                                  ? lime
                                   : Colors.transparent,
                               borderRadius: BorderRadius.zero,
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFFCAFF00)
+                                    ? lime
                                     : Theme.of(context)
                                         .colorScheme
                                         .outline
@@ -267,7 +271,7 @@ class TagFiltersState extends State<TagFilters> {
                               tag,
                               style: GoogleFonts.spaceGrotesk(
                                 color: isSelected
-                                    ? const Color(0xFF0A0A0A)
+                                    ? ink
                                     : Theme.of(context)
                                         .colorScheme
                                         .onSurface

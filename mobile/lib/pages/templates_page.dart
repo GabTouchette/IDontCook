@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
+import 'package:i_cant_cook/enums/toast_type.dart';
 
 class TemplatesPage extends StatelessWidget {
   const TemplatesPage({super.key});
@@ -15,11 +17,23 @@ class TemplatesPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        title: Text('Templates',
-            style:
-                GoogleFonts.nunito(fontWeight: FontWeight.w900, fontSize: 24)),
+        centerTitle: true,
+        title: Text(
+          'TEMPLATES',
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            letterSpacing: 2.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, size: 32),
+          padding: const EdgeInsets.only(left: 16.0),
+          icon: Icon(
+            Icons.chevron_left,
+            color: Theme.of(context).colorScheme.primary,
+            size: 32,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -31,20 +45,20 @@ class TemplatesPage extends StatelessWidget {
           final t = templates[i];
           return ListTile(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               side: BorderSide(
                   color:
                       Theme.of(context).colorScheme.outline.withOpacity(0.2)),
             ),
             title: Text(t['name']!,
-                style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600)),
             subtitle: Text(t['desc']!),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text('Applying template: ${t['name']} (coming soon)')),
+              InformationToast.show(
+                context: context,
+                message: 'Applying template: ${t['name']} (coming soon)',
+                type: ToastType.info,
               );
             },
           );

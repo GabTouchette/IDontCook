@@ -10,6 +10,7 @@ class PrepTimeFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ExploreProvider>(
       builder: (context, provider, child) {
+        final lime = Theme.of(context).colorScheme.secondary;
         final value = (provider.filters['prepTime'] ?? 60).toDouble();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,7 +31,7 @@ class PrepTimeFilter extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Container(width: 20, height: 2, color: const Color(0xFFCAFF00)),
+                    Container(width: 20, height: 2, color: lime),
                   ],
                 ),
                 Text(
@@ -46,16 +47,16 @@ class PrepTimeFilter extends StatelessWidget {
             const SizedBox(height: 4),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(0xFFCAFF00),
+                activeTrackColor: lime,
                 inactiveTrackColor:
                     Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                thumbColor: const Color(0xFFCAFF00),
-                overlayColor: const Color(0xFFCAFF00).withValues(alpha: 0.15),
+                thumbColor: lime,
+                overlayColor: lime.withValues(alpha: 0.15),
                 trackHeight: 2,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                valueIndicatorColor: const Color(0xFF0A0A0A),
+                valueIndicatorColor: Theme.of(context).colorScheme.onSurface,
                 valueIndicatorTextStyle: GoogleFonts.spaceGrotesk(
-                  color: const Color(0xFFCAFF00),
+                  color: lime,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),

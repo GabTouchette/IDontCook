@@ -19,7 +19,7 @@ class ServingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUpdated = updatedFields.contains('servings');
-    const lime = Color(0xFFCAFF00);
+    final lime = Theme.of(context).colorScheme.secondary;
     final labelColor = isUpdated
         ? lime
         : Theme.of(context).colorScheme.onSurface;
