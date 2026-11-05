@@ -7,9 +7,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:i_cant_cook/api/grocery_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/grocery/grocery_models.dart';
-import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 /// Layer 3 — "Order" flow (iOS/Android only; web can't embed grocer sites).
 ///
@@ -139,6 +137,7 @@ class _GroceryOrderWebViewPageState extends State<GroceryOrderWebViewPage> {
   bool _filling = false;
   bool _filledOnce = false;
   bool _autoStarted = false;
+  Timer? _connectTimer; // reveals the site if we can't harvest a cart id in time
 
   final GroceryApi _api = GroceryApi();
 
@@ -174,9 +173,29 @@ class _GroceryOrderWebViewPageState extends State<GroceryOrderWebViewPage> {
   void _maybeAutoStart() {
     if (_grocer != null && _ready && !_autoStarted) {
       _autoStarted = true;
+      _connectTimer?.cancel();
       setState(() => _showBrowser = false);
       WidgetsBinding.instance.addPostFrameCallback((_) => _fillCart());
     }
+  }
+
+  /// The cart id is learned passively by intercepting the site's own
+  /// `/carts/<uuid>` request. If that never fires (e.g. a store-selection or
+  /// cookie wall is blocking it behind our overlay), reveal the site so the user
+  /// can get past it — harvesting then resumes and the fill auto-starts.
+  void _startConnectWatchdog() {
+    _connectTimer?.cancel();
+    _connectTimer = Timer(const Duration(seconds: 12), () {
+      if (mounted && !_ready && !_showBrowser) {
+        setState(() => _showBrowser = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectTimer?.cancel();
+    super.dispose();
   }
 
   /// The site we preload in the background while the user is on the picker —
@@ -187,6 +206,7 @@ class _GroceryOrderWebViewPageState extends State<GroceryOrderWebViewPage> {
   void _selectGrocer(_Grocer g) {
     final alreadyLoading = g.url == _firstEnabledUrl;
     setState(() => _grocer = g);
+    if (!_ready) _startConnectWatchdog();
     if (alreadyLoading) {
       // The background preload is this grocer — fill now if it's already ready.
       _maybeAutoStart();
@@ -807,6 +827,7 @@ class _GroceryOrderWebViewPageState extends State<GroceryOrderWebViewPage> {
   }
 
   Widget _connecting(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -816,6 +837,15 @@ class _GroceryOrderWebViewPageState extends State<GroceryOrderWebViewPage> {
           Text('Connecting to ${_grocer!.name}…',
               style: GoogleFonts.spaceGrotesk(
                   fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text('If it asks you to pick a store, open the site.',
+              style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => setState(() => _showBrowser = true),
+            child: Text('Open ${_grocer!.name}'),
+          ),
         ],
       ),
     );
