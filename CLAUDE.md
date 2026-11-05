@@ -162,14 +162,25 @@ appBar: AppBar(
 Titles are rendered in ALL CAPS. This is the single app-wide standard — it is no longer a chat/home-feed-only exception; `GoogleFonts.spaceGrotesk` is used throughout the app, including meal-planning and profile screens.
 
 ### Toast Notifications
-Use the enhanced InformationToast with semantic types:
+`InformationToast` is the **single** app-wide notification surface (floating `SnackBar` with semantic color + haptic). Never call `ScaffoldMessenger`/`SnackBar` directly in feature code — that produces an unstyled grey toast that looks nothing like the rest of the app.
+
+Prefer the semantic shortcuts — one per `ToastType` — which take positional `(context, message)` and force an explicit intent at every call site (so an error can't accidentally ship as a neutral info toast by omitting `type`):
 ```dart
-InformationToast.show(
-  context: context,
-  message: "Operation completed!",
-  type: ToastType.success, // info, warning, success, error
+InformationToast.success(context, 'Recipe saved successfully!');
+InformationToast.error(context, 'Failed to save recipe.');
+InformationToast.warning(context, 'Enter your full postal code (e.g. H2X 1Y4).');
+InformationToast.info(context, 'Removed Milk.');
+```
+For a conditional type, pick the method rather than branching `type:`:
+```dart
+(success ? InformationToast.success : InformationToast.error)(
+  context,
+  success ? 'Post deleted successfully!' : 'Failed to delete post.',
 );
 ```
+Reach for `InformationToast.show(context: ..., message: ..., type: ...)` only when the type is a runtime variable, or when you need `actionLabel`/`onAction`, a non-default `duration`, or `replacePrevious: true` (hide the current toast before showing this one — used for rapid repeat actions like list-item Undo).
+
+**Message copy:** sentence case, end with a period. **Never interpolate a raw exception** (`'Error: $e'`) — show clean static copy, or `InformationToast.messageForError(e)` when the exception carries a user-meaningful backend message (it strips the `Exception:` prefix and falls back for empty strings).
 
 ### Django Backend
 - **Token authentication** required for most endpoints

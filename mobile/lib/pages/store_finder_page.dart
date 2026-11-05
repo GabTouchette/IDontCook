@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/deals_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/grocery_store/grocery_store.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/services/location_service.dart';
@@ -117,11 +116,7 @@ class _StoreFinderPageState extends State<StoreFinderPage>
         'Location is blocked in Settings. Enable it, or enter a postal code.',
       _ => 'Couldn’t get your location. Enter a postal code instead.',
     };
-    InformationToast.show(
-      context: context,
-      message: message,
-      type: ToastType.warning,
-    );
+    InformationToast.warning(context, message);
     if (status == LocationStatus.deniedForever) _locationService.openSettings();
   }
 
@@ -147,11 +142,7 @@ class _StoreFinderPageState extends State<StoreFinderPage>
       return;
     }
     if (_postalish.hasMatch(_query.trim())) {
-      InformationToast.show(
-        context: context,
-        message: 'Enter your full postal code (e.g. H2X 1Y4).',
-        type: ToastType.warning,
-      );
+      InformationToast.warning(context, 'Enter your full postal code (e.g. H2X 1Y4).');
       return;
     }
     // Name query: results are filtered live. If nothing is loaded yet, pull the
@@ -161,11 +152,7 @@ class _StoreFinderPageState extends State<StoreFinderPage>
       if (saved.isNotEmpty) {
         _fetchByPostal(saved, keepNameFilter: true);
       } else {
-        InformationToast.show(
-          context: context,
-          message: 'Enter a postal code first to load nearby stores.',
-          type: ToastType.info,
-        );
+        InformationToast.info(context, 'Enter a postal code first to load nearby stores.');
       }
     }
   }

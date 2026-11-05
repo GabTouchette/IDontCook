@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 
 class TemplatesPage extends StatelessWidget {
   const TemplatesPage({super.key});
@@ -55,10 +54,9 @@ class TemplatesPage extends StatelessWidget {
             subtitle: Text(t['desc']!),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              InformationToast.show(
-                context: context,
-                message: 'Applying template: ${t['name']} (coming soon)',
-                type: ToastType.info,
+              InformationToast.info(
+                context,
+                'Applying template: ${t['name']} (coming soon)',
               );
             },
           );

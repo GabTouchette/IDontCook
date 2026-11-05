@@ -4,7 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
 import 'package:i_cant_cook/mixins/scroll_mixin.dart';
 import 'package:i_cant_cook/models/block/block.dart';
+import 'package:i_cant_cook/models/chat/chat_page_context.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
+
+/// One step in the "assistant is working" progression for a v2 turn
+/// (Thinking… → a tool label like Searching the cookbook… → Writing…).
+/// Surfaced as an ordered list via [ChatProvider.v2Stages]; the working
+/// indicator renders the most recent stage's [label].
+class ChatStage {
+  final String label;
+  const ChatStage(this.label);
+}
 
 /// A chat v2 message: an ordered list of typed [Block]s (plan §1.1/§1.6).
 /// The streamed assistant text is itself one or more `text` blocks,
@@ -248,6 +258,35 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
   bool _isV2Sending = false;
   String? _v2LastError;
   String? _v2ActivityLabel;
+  final List<ChatStage> _v2Stages = [];
+
+  // ── Page context ──────────────────────────────────────────────────────────
+  // What the user is currently looking at, registered by the visible page and
+  // forwarded to the v2 endpoint as `page_context` so the global chat can
+  // answer "what's on this page". [_pageContextOwner] guards against a disposed
+  // page clearing context that a newer page has since taken over.
+  ChatPageContext? _pageContext;
+  Object? _pageContextOwner;
+
+  ChatPageContext? get pageContext => _pageContext;
+
+  /// Registers [context] as the active page context, owned by [owner] (the
+  /// page's State or a stable per-page sentinel). The newest caller always
+  /// wins, so navigating between surfaces hands ownership forward cleanly.
+  void setPageContext(ChatPageContext context, Object owner) {
+    _pageContext = context;
+    _pageContextOwner = owner;
+  }
+
+  /// Clears the page context, but only if [owner] still holds it — a page
+  /// disposing after a newer page already registered must not wipe the newer
+  /// context.
+  void clearPageContext(Object owner) {
+    if (identical(_pageContextOwner, owner)) {
+      _pageContext = null;
+      _pageContextOwner = null;
+    }
+  }
 
   /// Monotonic id bumped every time the conversation is reset (or otherwise
   /// invalidated). Each [sendMessageV2] call captures the current value; an
@@ -259,6 +298,18 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
   List<ChatV2Message> get v2Messages => List.unmodifiable(_v2Messages);
   int? get v2ConversationId => _v2ConversationId;
   bool get isV2Sending => _isV2Sending;
+
+  /// Ordered "assistant is working" stages for the in-flight turn (Thinking… →
+  /// tool label → Writing…). Empty when nothing is in flight; the working
+  /// indicator shows the most recent stage. See [ChatStage].
+  List<ChatStage> get v2Stages => List.unmodifiable(_v2Stages);
+
+  /// Appends [label] as the current stage unless it already is the latest one
+  /// (so repeated deltas don't pile up duplicate "Writing…" stages).
+  void _pushStage(String label) {
+    if (_v2Stages.isNotEmpty && _v2Stages.last.label == label) return;
+    _v2Stages.add(ChatStage(label));
+  }
 
   /// Human-readable label for the "data tool" (e.g. `search_recipes`)
   /// currently in flight for the message being streamed — e.g. "Searching
@@ -281,9 +332,8 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     }
   }
 
-  /// Last v2 error message, for surfacing via `InformationToast.show(...,
-  /// type: ToastType.error)` — see also the `onError` callback of
-  /// [sendMessageV2].
+  /// Last v2 error message, for surfacing via `InformationToast.error(...)`
+  /// — see also the `onError` callback of [sendMessageV2].
   String? get v2LastError => _v2LastError;
 
   /// Seeds the v2 thread with an assistant message (e.g. the home feed's
@@ -322,6 +372,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     _v2ConversationId = null;
     _v2LastError = null;
     _v2ActivityLabel = null;
+    _v2Stages.clear();
     _isV2Sending = false;
     notifyListeners();
   }
@@ -353,6 +404,8 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
     _v2LastError = null;
     _isV2Sending = true;
     _v2ActivityLabel = null;
+    _v2Stages.clear();
+    _pushStage('Thinking…');
     _v2Messages.add(ChatV2Message(
         sender: 'user',
         blocks: [Block.text(text: trimmed)],
@@ -400,6 +453,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
             recipeId: recipeId,
             mood: mood,
             homeFeed: homeFeed,
+            pageContext: _pageContext,
           )
           .timeout(const Duration(seconds: 30));
 
@@ -414,6 +468,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
             }
           },
           textDelta: (text) {
+            _pushStage('Writing…');
             updateAssistant((current) {
               final blocks = List<Block>.of(current.blocks);
               if (appendToOpenTextBlock &&
@@ -441,6 +496,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
           },
           toolActivity: (tool) {
             _v2ActivityLabel = _activityLabelFor(tool);
+            _pushStage(_activityLabelFor(tool));
             notifyListeners();
           },
           error: (errorMessage) {
@@ -474,6 +530,7 @@ class ChatProvider extends ChangeNotifier with ScrollMixin {
         }
         _isV2Sending = false;
         _v2ActivityLabel = null;
+        _v2Stages.clear();
         notifyListeners();
         scrollToBottom();
       }

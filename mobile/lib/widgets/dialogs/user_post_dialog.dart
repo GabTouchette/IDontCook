@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
@@ -86,11 +85,9 @@ class _PostDialogState extends State<PostDialog> {
       widget.onPostSuccess();
     }
 
-    InformationToast.show(
-      context: context,
-      message:
-          success ? 'Post created successfully!' : 'Failed to create post.',
-      type: success ? ToastType.success : ToastType.error,
+    (success ? InformationToast.success : InformationToast.error)(
+      context,
+      success ? 'Post created successfully!' : 'Failed to create post.',
     );
   }
 

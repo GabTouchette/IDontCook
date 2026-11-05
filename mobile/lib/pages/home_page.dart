@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/block/block.dart';
 import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
@@ -154,11 +153,7 @@ class _HomePageState extends State<HomePage> {
       hideUserMessage: true,
       onError: (errorMessage) {
         if (!mounted) return;
-        InformationToast.show(
-          context: context,
-          message: errorMessage,
-          type: ToastType.error,
-        );
+        InformationToast.error(context, errorMessage);
       },
     );
 
@@ -221,11 +216,7 @@ class _HomePageState extends State<HomePage> {
       mood: _activeMood ?? homeFeedProvider.currentMood,
       homeFeed: feedPayload,
       onError: (errorMessage) {
-        InformationToast.show(
-          context: context,
-          message: errorMessage,
-          type: ToastType.error,
-        );
+        InformationToast.error(context, errorMessage);
       },
     );
 

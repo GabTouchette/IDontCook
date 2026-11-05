@@ -211,10 +211,9 @@ class MealPlanProvider with ChangeNotifier {
     } catch (error) {
       print('Error generating AI meal plan: $error');
       if (context.mounted) {
-        InformationToast.show(
-          context: context,
-          message: 'Failed to generate meal plan: ${error.toString()}',
-          type: ToastType.error,
+        InformationToast.error(
+          context,
+          'Could not generate your meal plan. Please try again.',
           duration: const Duration(seconds: 4),
         );
       }

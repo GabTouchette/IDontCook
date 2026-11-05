@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/settings_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
@@ -113,11 +112,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     if (success) {
       Navigator.of(context).pop();
     } else {
-      InformationToast.show(
-        context: context,
-        message: 'Failed to save settings',
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Failed to save settings.');
     }
   }
 

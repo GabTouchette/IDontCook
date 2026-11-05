@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/grocery/grocery_models.dart';
 import 'package:i_cant_cook/pages/grocery_order_webview_page.dart';
 import 'package:i_cant_cook/providers/grocery_bag_provider.dart';
@@ -273,11 +272,7 @@ class _GroceryBagPageState extends State<GroceryBagPage> {
           if (confirmed == true) {
             provider.removeItem(line.key);
             if (context.mounted) {
-              InformationToast.show(
-                context: context,
-                message: 'Removed ${line.name}',
-                type: ToastType.info,
-              );
+              InformationToast.info(context, 'Removed ${line.name}.');
             }
           }
         } else {
@@ -355,11 +350,7 @@ class _GroceryBagPageState extends State<GroceryBagPage> {
     if (conceptId == null || !context.mounted) return;
     await provider.resolveItem(line.key, conceptId);
     if (!context.mounted) return;
-    InformationToast.show(
-      context: context,
-      message: 'Updated ${line.name}',
-      type: ToastType.success,
-    );
+    InformationToast.success(context, 'Updated ${line.name}.');
   }
 
   Widget _buildOrderBar(BuildContext context, GroceryBagProvider provider) {
@@ -525,6 +516,22 @@ class _ConfirmIngredientSheetState extends State<_ConfirmIngredientSheet> {
               decoration: InputDecoration(
                 hintText: 'Search ingredients…',
                 prefixIcon: const Icon(Icons.search),
+                // Clear button — only shown while the field has text.
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _controller,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      tooltip: 'Clear',
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () {
+                        _controller.clear();
+                        _debounce?.cancel();
+                        setState(() => _results = []);
+                      },
+                    );
+                  },
+                ),
                 border: const OutlineInputBorder(
                     borderRadius: BorderRadius.zero),
               ),

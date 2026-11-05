@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
@@ -117,12 +116,9 @@ Future<void> submitRecipe({
 
     if (success && resultRecipeId != null) {
       // Show success toast
-      InformationToast.show(
-        context: context,
-        message: isUpdate
-            ? 'Recipe updated successfully!'
-            : 'Recipe saved successfully!',
-        type: ToastType.success,
+      InformationToast.success(
+        context,
+        isUpdate ? 'Recipe updated successfully!' : 'Recipe saved successfully!',
       );
 
       // Navigate if requested
@@ -141,10 +137,9 @@ Future<void> submitRecipe({
     }
   } catch (e) {
     // Show error toast
-    InformationToast.show(
-      context: context,
-      message: isUpdate ? 'Failed to update recipe' : 'Failed to save recipe',
-      type: ToastType.error,
+    InformationToast.error(
+      context,
+      isUpdate ? 'Failed to update recipe.' : 'Failed to save recipe.',
     );
   }
 }

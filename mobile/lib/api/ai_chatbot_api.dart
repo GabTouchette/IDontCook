@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:i_cant_cook/api/api_helper.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
+import 'package:i_cant_cook/models/chat/chat_page_context.dart';
 import 'package:i_cant_cook/models/chat_v2_event/chat_v2_event.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
 
@@ -26,6 +27,7 @@ class AiChatbotApi {
     int? recipeId,
     Mood? mood,
     Map<String, dynamic>? homeFeed,
+    ChatPageContext? pageContext,
   }) async* {
     final payload = {
       'message': message,
@@ -34,6 +36,7 @@ class AiChatbotApi {
       if (recipeId != null) 'recipe_id': recipeId,
       'mood': mood?.wireValue,
       'home_feed': homeFeed,
+      if (pageContext != null) 'page_context': pageContext.toJson(),
     };
 
     final data = jsonEncode(payload);

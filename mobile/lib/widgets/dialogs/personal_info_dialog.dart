@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/settings_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/providers/settings_provider.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'package:provider/provider.dart';
@@ -234,11 +233,7 @@ class PersonalInfoDialog extends StatelessWidget {
                       if (success && context.mounted) {
                         Navigator.of(context).pop();
                       } else if (context.mounted) {
-                        InformationToast.show(
-                          context: context,
-                          message: 'Failed to save settings',
-                          type: ToastType.error,
-                        );
+                        InformationToast.error(context, 'Failed to save settings.');
                       }
                     },
                     child: Container(

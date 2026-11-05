@@ -79,7 +79,28 @@ class RecipeSearchEngine:
             phrase_sim = _trigram_similarity(query_norm, title_norm)
             score += phrase_sim * 25
 
-            # 5. Ingredients — exact phrase, then per-word fuzzy
+            # 5. Tags — many searches ("pasta", "dinner", "vegan") are tag-shaped
+            #    rather than title words, so a tagged recipe is a strong match even
+            #    when the tag never appears in the title.
+            recipe_tags = [_normalize(t) for t in (recipe.tags or []) if t]
+            if recipe_tags:
+                # Whole query equals a tag exactly ("quick dinner" == a "quick dinner" tag)
+                if query_norm in recipe_tags:
+                    score += 50
+                # Per query word: best fuzzy match across all tag words
+                for qw in query_words:
+                    best = max(
+                        (
+                            _word_match_score(qw, tag_word)
+                            for tag in recipe_tags
+                            for tag_word in tag.split()
+                        ),
+                        default=0.0,
+                    )
+                    if best > 0:
+                        score += best * 20
+
+            # 6. Ingredients — exact phrase, then per-word fuzzy
             ingredients_text = _normalize(
                 ' '.join(i.name for i in recipe.ingredients.all() if i.name)
             )

@@ -32,6 +32,14 @@ class _RecipesPageState extends State<RecipesPage> with ChatContextRegistrar {
     recipesProvider.fetchRecipes();
   }
 
+  @override
+  void dispose() {
+    // Reset the search when leaving so a stale query doesn't linger on the next
+    // visit. The provider outlives this page, so it must be cleared explicitly.
+    Provider.of<UserRecipesProvider>(context, listen: false).resetSearch();
+    super.dispose();
+  }
+
   /// Snapshot of the user's recipe list for the global chat.
   ChatPageContext _buildChatContext(UserRecipesProvider provider) {
     final recipes = provider.filteredRecipes;
@@ -175,6 +183,28 @@ class _RecipesPageState extends State<RecipesPage> with ChatContextRegistrar {
               Icons.search,
               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
               size: 20,
+            ),
+            // Clear button — only shown while the field has text.
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: provider.searchController,
+              builder: (context, value, _) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  tooltip: 'Clear',
+                  onPressed: () {
+                    HapticService.lightImpact();
+                    provider.resetSearch();
+                  },
+                  icon: Icon(
+                    Icons.close,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5),
+                    size: 20,
+                  ),
+                );
+              },
             ),
             hintText: isTagSearch ? 'Search tags…' : 'Search recipes…',
             hintStyle: GoogleFonts.spaceGrotesk(

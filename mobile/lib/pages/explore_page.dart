@@ -9,7 +9,6 @@ import 'package:i_cant_cook/widgets/explore/recipe_search_filter_drawer.dart';
 import 'package:i_cant_cook/widgets/explore/reel_recipe_card.dart';
 import 'package:i_cant_cook/widgets/skeletons/skeletons.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:provider/provider.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -40,6 +39,9 @@ class _ExplorePageState extends State<ExplorePage>
 
   @override
   void dispose() {
+    // Reset the search when leaving so a stale query doesn't linger on the next
+    // visit. The provider outlives this page, so it must be cleared explicitly.
+    Provider.of<ExploreProvider>(context, listen: false).resetSearch();
     _pageController.dispose();
     super.dispose();
   }
@@ -140,11 +142,9 @@ class _ExplorePageState extends State<ExplorePage>
                             final success =
                                 await provider.adminDeleteRecipe(recipe.id);
                             if (!success && context.mounted) {
-                              InformationToast.show(
-                                context: context,
-                                message:
-                                    'Delete failed — make sure your account has staff permissions',
-                                type: ToastType.error,
+                              InformationToast.error(
+                                context,
+                                'Delete failed — make sure your account has staff permissions.',
                               );
                             }
                           },

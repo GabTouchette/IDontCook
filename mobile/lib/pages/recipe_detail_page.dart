@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/widgets/sheets/app_sheet.dart';
 import 'package:i_cant_cook/mixins/chat_context_mixin.dart';
 import 'package:i_cant_cook/models/chat/chat_page_context.dart';
@@ -87,6 +87,12 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
+  /// Local in-flight flag for the "add to grocery bag" action, so the appbar
+  /// cart button can show a spinner like the save button does. We keep it local
+  /// (rather than reading `GroceryBagProvider.isMutating`) so unrelated bag
+  /// mutations elsewhere don't spin this button.
+  bool _isAddingToBag = false;
+
   Future<void> _showSaveDialog() async {
     final provider = Provider.of<RecipeDetailProvider>(context, listen: false);
 
@@ -98,18 +104,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
       }
 
       // Show success toast
-      InformationToast.show(
-        context: context,
-        message: 'Recipe saved successfully!',
-        type: ToastType.success,
-      );
+      InformationToast.success(context, 'Recipe saved successfully!');
     } catch (e) {
       // Show error toast
-      InformationToast.show(
-        context: context,
-        message: 'Failed to save recipe',
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Failed to save recipe.');
     }
   }
 
@@ -124,6 +122,12 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
         recipe: widget.recipe,
         recipeId: widget.recipeId,
       );
+
+      // Load the grocery bag once so we know whether this recipe is already in
+      // it (locks the cart button into its confirmed state on open).
+      final bagProvider =
+          Provider.of<GroceryBagProvider>(context, listen: false);
+      if (!bagProvider.hasLoaded) bagProvider.fetchBag();
     });
   }
 
@@ -172,29 +176,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
             ),
           ),
           actions: [
-            Pressable(
-              haptic: PressHaptic.medium,
-              child: IconButton(
-                tooltip: 'Add to grocery bag',
-                onPressed: () => _addToGroceryBag(context, recipe.id),
-                icon: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.55),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.4),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.add_shopping_cart,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ),
+            _buildGroceryBagAction(recipe.id),
             if (recipe.is_saved == true) ...[
               widget.viewMode.when(
                 // CASE: NORMAL
@@ -259,14 +241,13 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
                               bool success =
                                   await RecipeApi().deleteRecipe(recipe.id);
                               if (success) Navigator.pop(context);
-                              InformationToast.show(
-                                context: context,
-                                message: success
-                                    ? "Recipe deleted successfully!"
-                                    : "There was an error deleting the recipe.",
-                                type: success
-                                    ? ToastType.success
-                                    : ToastType.error,
+                              (success
+                                  ? InformationToast.success
+                                  : InformationToast.error)(
+                                context,
+                                success
+                                    ? 'Recipe deleted successfully!'
+                                    : 'There was an error deleting the recipe.',
                               );
                             },
                             onCancel: () => Navigator.pop(context),
@@ -456,22 +437,119 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
     });
   }
 
-  Future<void> _addToGroceryBag(BuildContext context, int recipeId) async {
-    final ok =
-        await context.read<GroceryBagProvider>().addRecipe(recipeId);
-    if (!context.mounted) return;
-    InformationToast.show(
-      context: context,
-      message: ok ? 'Added to grocery bag' : 'Could not add to grocery bag',
-      type: ok ? ToastType.success : ToastType.error,
-      actionLabel: ok ? 'VIEW CART' : null,
-      onAction: ok
-          ? () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GroceryBagPage()),
-              )
-          : null,
+  /// Appbar action to add the recipe to the grocery bag. Mirrors the save
+  /// button's three visual states: idle (add-cart), in-flight (spinner), and
+  /// done (cart-with-check). Once the recipe is in the bag the button is
+  /// disabled so it can't be added twice.
+  Widget _buildGroceryBagAction(int recipeId) {
+    return Consumer<GroceryBagProvider>(
+      builder: (context, bag, _) {
+        final inBag = bag.recipes.any((r) => r.recipeId == recipeId);
+        final loading = _isAddingToBag;
+
+        Widget icon;
+        if (loading) {
+          icon = const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2.5,
+            ),
+          );
+        } else if (inBag) {
+          icon = _cartCheckIcon(context);
+        } else {
+          icon = const Icon(
+            Icons.add_shopping_cart,
+            color: Colors.white,
+            size: 18,
+          );
+        }
+
+        final button = IconButton(
+          tooltip: inBag ? 'In your grocery bag' : 'Add to grocery bag',
+          onPressed: (inBag || loading)
+              ? null
+              : () => _addToGroceryBag(context, recipeId),
+          icon: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.55),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.4),
+                width: 1,
+              ),
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: icon,
+            ),
+          ),
+        );
+
+        // No press feedback once it's confirmed or in-flight — the button is
+        // disabled in both states.
+        if (inBag || loading) return button;
+        return Pressable(haptic: PressHaptic.medium, child: button);
+      },
     );
+  }
+
+  /// Cart-with-checkmark shown once the recipe is in the bag. The check badge
+  /// pops in with an elastic bounce to confirm the add landed.
+  Widget _cartCheckIcon(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        const Icon(Icons.shopping_cart, color: Colors.white, size: 18),
+        Positioned(
+          right: -4,
+          bottom: -4,
+          child: Container(
+            padding: const EdgeInsets.all(1.5),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check,
+              size: 10,
+              color: Theme.of(context).colorScheme.onSecondary,
+            ),
+          )
+              .animate()
+              .scaleXY(begin: 0.0, end: 1.0, curve: Curves.elasticOut, duration: 450.ms)
+              .fadeIn(duration: 120.ms),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addToGroceryBag(BuildContext context, int recipeId) async {
+    setState(() => _isAddingToBag = true);
+    final ok = await context.read<GroceryBagProvider>().addRecipe(recipeId);
+    if (!mounted) return;
+    setState(() => _isAddingToBag = false);
+    if (!context.mounted) return;
+    if (ok) {
+      InformationToast.success(
+        context,
+        'Added to grocery bag.',
+        actionLabel: 'VIEW CART',
+        onAction: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const GroceryBagPage()),
+        ),
+      );
+    } else {
+      InformationToast.error(context, 'Could not add to grocery bag.');
+    }
   }
 
   void _onSave(BuildContext context) {
@@ -549,17 +627,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
             await _uploadImageToServer(_imageFile!, recipe.id);
         if (newImageUrl.isNotEmpty) {
           provider.image_url = newImageUrl;
-          InformationToast.show(
-            context: context,
-            message: "Photo saved!",
-            type: ToastType.success,
-          );
+          InformationToast.success(context, 'Photo saved!');
         } else {
-          InformationToast.show(
-            context: context,
-            message: "Failed to upload photo.",
-            type: ToastType.error,
-          );
+          InformationToast.error(context, 'Failed to upload photo.');
         }
       }
     } on Exception catch (e) {
@@ -568,11 +638,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
           msg.contains('photo_access_denied')) {
         _showCameraPermissionDialog();
       } else {
-        InformationToast.show(
-          context: context,
-          message: "Could not open camera.",
-          type: ToastType.error,
-        );
+        InformationToast.error(context, 'Could not open camera.');
       }
     }
   }
@@ -666,11 +732,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
     Navigator.pop(context); // dismiss loading
 
     if (data == null) {
-      InformationToast.show(
-        context: context,
-        message: "Could not read the recipe. Try a clearer photo.",
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Could not read the recipe. Try a clearer photo.');
       return;
     }
 
@@ -694,11 +756,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage>
     try {
       return await RecipeApi().uploadRecipeImage(recipeId, imageFile);
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: "An error occurred while uploading the image.",
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'An error occurred while uploading the image.');
       return "";
     }
   }

@@ -149,9 +149,18 @@ class _ManualPlanningPageState extends State<ManualPlanningPage> {
               Expanded(
                 child: TextField(
                   controller: _searchCtrl,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
                     hintText: 'Search recipes…',
+                    // Clear button — only shown while the field has text.
+                    suffixIcon: _searchCtrl.text.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Clear',
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () =>
+                                setState(() => _searchCtrl.clear()),
+                          ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),

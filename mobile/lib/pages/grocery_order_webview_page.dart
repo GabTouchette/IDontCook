@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:i_cant_cook/api/grocery_api.dart';
 import 'package:i_cant_cook/models/grocery/grocery_models.dart';
+import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
 /// Layer 3 — "Order" flow (iOS/Android only; web can't embed grocer sites).
 ///
@@ -566,22 +567,15 @@ class _GroceryOrderWebViewPageState extends State<GroceryOrderWebViewPage> {
     setState(() => _items.remove(item));
     if (sel != null) _setQty(sel.code, 0);
 
-    // NOTE: InformationToast.show() doesn't currently expose an action slot
-    // (actionLabel/onAction), so this one keeps the raw SnackBar to preserve
-    // the working Undo affordance rather than silently dropping it.
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text('Removed ${item.line.name}'),
-        action: SnackBarAction(
-          label: 'UNDO',
-          onPressed: () {
-            setState(() =>
-                _items.insert(index.clamp(0, _items.length), item));
-            if (sel != null) _setQty(sel.code, item.quantity);
-          },
-        ),
-      ));
+    InformationToast.info(
+      context,
+      'Removed ${item.line.name}.',
+      actionLabel: 'UNDO',
+      onAction: () {
+        setState(() => _items.insert(index.clamp(0, _items.length), item));
+        if (sel != null) _setQty(sel.code, item.quantity);
+      },
+    );
   }
 
   void _reviewCart() {

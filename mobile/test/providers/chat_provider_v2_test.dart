@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
 import 'package:i_cant_cook/models/block/block.dart';
+import 'package:i_cant_cook/models/chat/chat_page_context.dart';
 import 'package:i_cant_cook/models/chat_v2_event/chat_v2_event.dart';
 import 'package:i_cant_cook/models/mood/mood.dart';
 import 'package:i_cant_cook/models/recipe_summary/recipe_summary.dart';
@@ -28,6 +29,7 @@ class FakeAiChatbotApi extends AiChatbotApi {
     int? recipeId,
     Mood? mood,
     Map<String, dynamic>? homeFeed,
+    ChatPageContext? pageContext,
   }) {
     lastMessage = message;
     lastConversationId = conversationId;
@@ -252,6 +254,7 @@ class _ThrowingApi extends AiChatbotApi {
     int? recipeId,
     Mood? mood,
     Map<String, dynamic>? homeFeed,
+    ChatPageContext? pageContext,
   }) {
     return Stream.error(Exception('connection refused'));
   }

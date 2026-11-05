@@ -77,7 +77,9 @@ class AuthProvider with ChangeNotifier {
 
       final user = await _authApi.googleAuthWithIdToken(idToken);
       _currentUser = user;
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('signInWithGoogle failed: $e');
+      debugPrint('$st');
       rethrow;
     } finally {
       _isLoading = false;

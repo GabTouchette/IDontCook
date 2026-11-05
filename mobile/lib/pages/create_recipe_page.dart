@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:i_cant_cook/api/ai_chatbot_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/utils/recipe_submit_utils.dart';
 import 'package:i_cant_cook/widgets/recipes/recipe_form_extra_section.dart';
 import 'package:i_cant_cook/widgets/meal_planning/meal_ingredients_section.dart';
@@ -130,10 +129,9 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       }
     } catch (e) {
       if (mounted) {
-        InformationToast.show(
-          context: context,
-          message: "Could not open ${source == ImageSource.camera ? 'camera' : 'gallery'}. Please try again.",
-          type: ToastType.error,
+        InformationToast.error(
+          context,
+          "Could not open ${source == ImageSource.camera ? 'camera' : 'gallery'}. Please try again.",
         );
       }
     }
@@ -152,11 +150,7 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       if (mounted) setState(() => _pendingImages = []);
     } catch (e) {
       if (mounted) {
-        InformationToast.show(
-          context: context,
-          message: e.toString().replaceFirst('Exception: ', ''),
-          type: ToastType.error,
-        );
+        InformationToast.error(context, InformationToast.messageForError(e));
       }
     } finally {
       if (mounted) setState(() => _isDigitizing = false);

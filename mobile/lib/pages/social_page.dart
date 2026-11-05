@@ -13,8 +13,21 @@ import 'package:i_cant_cook/widgets/social/user_post_card.dart';
 import 'package:i_cant_cook/widgets/dialogs/user_post_dialog.dart';
 import 'package:provider/provider.dart';
 
-class SocialPage extends StatelessWidget {
+class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
+
+  @override
+  State<SocialPage> createState() => _SocialPageState();
+}
+
+class _SocialPageState extends State<SocialPage> {
+  @override
+  void dispose() {
+    // Reset the user search when leaving so a stale query doesn't linger on the
+    // next visit. The provider outlives this page, so clear it explicitly.
+    Provider.of<SocialProvider>(context, listen: false).resetSearch();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +114,30 @@ class SocialPage extends StatelessWidget {
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 14.0, horizontal: 8.0),
+                            // Clear button — only shown while the field has text.
+                            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: provider.searchController,
+                              builder: (context, value, _) {
+                                if (value.text.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return IconButton(
+                                  tooltip: 'Clear',
+                                  onPressed: () {
+                                    HapticService.lightImpact();
+                                    provider.resetSearch();
+                                  },
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.5),
+                                    size: 20,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                           onChanged: (query) => provider.onSearchChanged(
                               query, provider.fetchUsers),

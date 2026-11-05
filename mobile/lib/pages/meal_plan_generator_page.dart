@@ -5,7 +5,6 @@ import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/providers/meal_plan_provider.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 
 class MealPlanGeneratorPage extends StatefulWidget {
   const MealPlanGeneratorPage({super.key});
@@ -359,11 +358,9 @@ class _MealPlanGeneratorPageState extends State<MealPlanGeneratorPage> {
                         if (selectedMealTypes.isEmpty) {
                           // Require at least one meal type to avoid backend defaulting unexpectedly
                           if (mounted) {
-                            InformationToast.show(
-                              context: context,
-                              message:
-                                  'Please select at least one meal type.',
-                              type: ToastType.warning,
+                            InformationToast.warning(
+                              context,
+                              'Please select at least one meal type.',
                             );
                           }
                           setState(() => _loading = false);

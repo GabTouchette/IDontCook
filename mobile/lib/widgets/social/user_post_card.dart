@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/auth_api.dart';
 import 'package:i_cant_cook/api/social_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/post/post.dart';
 import 'package:i_cant_cook/models/user/user.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
@@ -392,10 +391,9 @@ class _UserPostCardState extends State<UserPostCard>
     Navigator.pop(context);
     widget.provider.refresh();
 
-    InformationToast.show(
-      context: context,
-      message: result ? "Post deleted successfully!" : "Failed to delete post.",
-      type: result ? ToastType.success : ToastType.error,
+    (result ? InformationToast.success : InformationToast.error)(
+      context,
+      result ? 'Post deleted successfully!' : 'Failed to delete post.',
     );
   }
 }

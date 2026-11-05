@@ -1,13 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 import 'welcome_page.dart';
 import 'login_drawer.dart';
 import 'profile_setup_page.dart';
+
+// TEMP: surface the raw Google auth error in the toast regardless of build
+// mode (Xcode Release runs have kDebugMode == false). Set back to false — or
+// revert to the kDebugMode gate — once the google-auth issue is diagnosed.
+const bool _debugGoogleAuth = true;
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -47,10 +52,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
     } catch (e) {
       if (mounted) {
         HapticService.notificationError();
-        InformationToast.show(
-          context: context,
-          message: 'Google sign-in failed. Please try again.',
-          type: ToastType.error,
+        InformationToast.error(
+          context,
+          (kDebugMode || _debugGoogleAuth)
+              ? 'Google sign-in failed: $e'
+              : 'Google sign-in failed. Please try again.',
         );
       }
     } finally {

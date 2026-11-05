@@ -120,6 +120,16 @@ class ExploreProvider
     refresh();
   }
 
+  /// Clears the search text and reloads the unfiltered feed. Called when the
+  /// page is left so a stale query doesn't persist to the next visit. (We refresh
+  /// explicitly because clearSearch() resets the debounce baseline, which would
+  /// otherwise suppress the controller-listener's own refresh.)
+  void resetSearch() {
+    if (searchController.text.isEmpty && searchQuery.isEmpty) return;
+    clearSearch();
+    refresh();
+  }
+
   void updateFilter(String key, dynamic value) {
     _filters[key] = value;
     notifyListeners();

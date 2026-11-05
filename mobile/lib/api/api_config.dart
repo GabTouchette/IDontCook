@@ -5,21 +5,19 @@ class ApiConfig {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
   static const String _iosLocalDefault = 'http://127.0.0.1:8000';
   static const String _androidEmulatorDefault = 'http://10.0.2.2:8000';
-  static const String _webProductionDefault = 'https://api.idontcook.app';
+  static const String _productionDefault = 'https://api.idontcook.app';
 
   static String get origin {
     if (_apiBaseUrlDefine.isNotEmpty) {
       return _normalizeBaseUrl(_apiBaseUrlDefine);
     }
 
-    if (kReleaseMode) {
-      throw UnsupportedError(
-        'API_BASE_URL must be provided for release builds.',
-      );
-    }
-
-    if (kIsWeb) {
-      return _webProductionDefault;
+    // Release builds (and all web builds) default to production unless an
+    // explicit API_BASE_URL override is supplied via --dart-define. This lets
+    // the app be built straight from Xcode (Release config, no Flutter CLI
+    // dart-defines) without throwing on the first API call.
+    if (kReleaseMode || kIsWeb) {
+      return _productionDefault;
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {

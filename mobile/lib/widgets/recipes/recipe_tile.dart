@@ -3,10 +3,11 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
 import 'package:i_cant_cook/enums/recipe_view_mode.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
+import 'package:i_cant_cook/pages/grocery_bag_page.dart';
 import 'package:i_cant_cook/pages/recipe_detail_page.dart';
+import 'package:i_cant_cook/providers/grocery_bag_provider.dart';
 import 'package:i_cant_cook/providers/user_recipes_provider.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/dialogs/confirmation_dialog.dart';
@@ -43,6 +44,7 @@ class RecipeTile extends StatelessWidget {
   Widget _buildSmallTile(BuildContext context) {
     return Slidable(
       key: ValueKey(recipe.id),
+      startActionPane: _buildStartActionPane(context),
       endActionPane: _buildActionPane(context),
       child: _PressScaleWrapper(
         onTap: () => _openDetailPage(context),
@@ -107,6 +109,7 @@ class RecipeTile extends StatelessWidget {
   Widget _buildMediumTile(BuildContext context) {
     return Slidable(
       key: ValueKey(recipe.id),
+      startActionPane: _buildStartActionPane(context),
       endActionPane: _buildActionPane(context),
       child: _PressScaleWrapper(
         onTap: () => _openDetailPage(context),
@@ -317,6 +320,52 @@ class RecipeTile extends StatelessWidget {
     );
   }
 
+  // Swipe-right (leading) pane — adds the recipe to the grocery bag.
+  ActionPane _buildStartActionPane(BuildContext context) {
+    return ActionPane(
+      motion: const DrawerMotion(),
+      extentRatio: 0.28,
+      children: [
+        CustomSlidableAction(
+          flex: 1,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          onPressed: (_) => _addToCart(context),
+          child: Icon(
+            Icons.add_shopping_cart,
+            color: Theme.of(context).colorScheme.onPrimary,
+            size: 30,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addToCart(BuildContext context) async {
+    HapticService.lightImpact();
+    try {
+      final ok =
+          await context.read<GroceryBagProvider>().addRecipe(recipe.id);
+      if (!context.mounted) return;
+      if (ok) {
+        InformationToast.success(
+          context,
+          'Added to grocery bag.',
+          actionLabel: 'VIEW CART',
+          onAction: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const GroceryBagPage()),
+          ),
+        );
+      } else {
+        InformationToast.error(context, 'Could not add to grocery bag.');
+      }
+    } catch (_) {
+      if (context.mounted) {
+        InformationToast.error(context, 'Could not add to grocery bag.');
+      }
+    }
+  }
+
   Future<void> _toggleFavorite(BuildContext context) async {
     HapticService.lightImpact();
     final isFav = recipe.is_favorite ?? false;
@@ -327,11 +376,7 @@ class RecipeTile extends StatelessWidget {
       }
     } catch (_) {
       if (context.mounted) {
-        InformationToast.show(
-          context: context,
-          message: 'Could not update recipe',
-          type: ToastType.error,
-        );
+        InformationToast.error(context, 'Could not update recipe.');
       }
     }
   }
@@ -351,20 +396,12 @@ class RecipeTile extends StatelessWidget {
     try {
       final ok = await RecipeApi().deleteRecipe(recipe.id);
       if (ok && context.mounted) {
-        InformationToast.show(
-          context: context,
-          message: 'Recipe deleted',
-          type: ToastType.success,
-        );
+        InformationToast.success(context, 'Recipe deleted.');
         Provider.of<UserRecipesProvider>(context, listen: false).fetchRecipes();
       }
     } catch (_) {
       if (context.mounted) {
-        InformationToast.show(
-          context: context,
-          message: 'Could not delete recipe',
-          type: ToastType.error,
-        );
+        InformationToast.error(context, 'Could not delete recipe.');
       }
     }
   }
@@ -450,11 +487,7 @@ class RecipeTile extends StatelessWidget {
         builder: (_) => RecipePreviewDialog(recipe: fullRecipe),
       );
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: 'Could not load preview',
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Could not load preview.');
     }
   }
 }
@@ -483,6 +516,10 @@ class _PressScaleWrapperState extends State<_PressScaleWrapper> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      // Opaque so the entire tile area — including whitespace/padding around the
+      // title — registers taps. With the default deferToChild, only taps landing
+      // directly on the text/thumbnail worked, which read as "taps don't work."
+      behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
       onTapDown: (_) => setState(() => _pressed = true),

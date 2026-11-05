@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/settings_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
@@ -118,11 +117,7 @@ class _OnboardingProfileSetupPageState
       if (success) {
         widget.onComplete();
       } else {
-        InformationToast.show(
-          context: context,
-          message: 'Failed to save settings. Continuing anyway.',
-          type: ToastType.warning,
-        );
+        InformationToast.warning(context, 'Failed to save settings. Continuing anyway.');
         widget.onComplete();
       }
     }

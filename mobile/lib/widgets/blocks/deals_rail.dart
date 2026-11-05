@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i_cant_cook/api/api_config.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/home_module/module_payloads.dart';
 import 'package:i_cant_cook/pages/deals_page.dart';
 import 'package:i_cant_cook/providers/home_feed_provider.dart';
@@ -339,8 +338,7 @@ class _SetupCardState extends State<_SetupCard> {
         'Location is blocked in Settings. Enable it to see nearby deals.',
       _ => 'Couldn’t get your location. Please try again.',
     };
-    InformationToast.show(
-        context: context, message: message, type: ToastType.warning);
+    InformationToast.warning(context, message);
     if (result.status == LocationStatus.deniedForever) {
       _location.openSettings();
     }

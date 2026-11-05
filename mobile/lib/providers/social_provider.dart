@@ -87,6 +87,20 @@ class SocialProvider
     notifyListeners();
   }
 
+  /// Clears the user-search text, results and dropdown. Called when the page is
+  /// left so a stale query doesn't linger on the next visit.
+  void resetSearch() {
+    if (searchController.text.isEmpty &&
+        _searchResults.isEmpty &&
+        !_showDropdown) {
+      return;
+    }
+    clearSearch();
+    _searchResults = [];
+    _showDropdown = false;
+    notifyListeners();
+  }
+
   void disposeProvider() {
     disposeSearch();
     disposeScroll();

@@ -28,5 +28,12 @@ api/allrecipes_filtered.csv
 api/allrecipes_ranked.csv
 api/recipes_merged.csv
 
+# Scraped third-party recipe datasets (AllRecipes / BBC Good Food / Ricardo) — not distributed
+api/allrecipes.csv
+api/bbc_1000.csv
+api/bbc_1000.csv.progress
+api/misc/allrecipes_data.csv
+api/misc/ricardo_recipes.csv
+
 # Local uploaded media — served from Google Cloud Storage in production
 api/media/

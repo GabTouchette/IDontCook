@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/providers/auth_provider.dart';
 import 'package:i_cant_cook/services/haptic_service.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
@@ -86,11 +85,7 @@ class _LoginDrawerState extends State<LoginDrawer>
       if (context.mounted) {
         HapticService.notificationError();
         _shakeController.forward(from: 0);
-        InformationToast.show(
-          context: context,
-          message: 'Invalid username or password.',
-          type: ToastType.error,
-        );
+        InformationToast.error(context, 'Invalid username or password.');
       }
     }
   }
@@ -108,11 +103,7 @@ class _LoginDrawerState extends State<LoginDrawer>
       if (context.mounted) {
         HapticService.notificationError();
         _shakeController.forward(from: 0);
-        InformationToast.show(
-          context: context,
-          message: 'Failed to register. Please try again.',
-          type: ToastType.error,
-        );
+        InformationToast.error(context, 'Failed to register. Please try again.');
       }
     }
   }

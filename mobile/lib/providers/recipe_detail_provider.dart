@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:i_cant_cook/api/recipe_api.dart';
-import 'package:i_cant_cook/enums/toast_type.dart';
 import 'package:i_cant_cook/models/recipe/recipe.dart';
 import 'package:i_cant_cook/widgets/toasts/information_toast.dart';
 
@@ -127,17 +126,9 @@ class RecipeDetailProvider with ChangeNotifier {
       // Start background polling for nutrition (non-blocking)
       pollNutritionUntilReady(newId);
 
-      InformationToast.show(
-        context: context,
-        message: "Recipe saved successfully!",
-        type: ToastType.success,
-      );
+      InformationToast.success(context, 'Recipe saved successfully!');
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: "Error saving recipe: $e",
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Could not save the recipe. Please try again.');
       rethrow; // Let dialog handle the error
     } finally {
       _isSaving = false;
@@ -191,18 +182,12 @@ class RecipeDetailProvider with ChangeNotifier {
         pollNutritionUntilReady(newId);
       }
 
-      InformationToast.show(
-        context: context,
-        message:
-            success ? "Recipe saved successfully!" : "Failed to save recipe.",
-        type: success ? ToastType.success : ToastType.error,
+      (success ? InformationToast.success : InformationToast.error)(
+        context,
+        success ? 'Recipe saved successfully!' : 'Failed to save recipe.',
       );
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: "Error saving recipe: $e",
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Could not save the recipe. Please try again.');
     } finally {
       _isSaving = false;
       notifyListeners();
@@ -232,17 +217,9 @@ class RecipeDetailProvider with ChangeNotifier {
       // Ingredients changed, so the backend recalculates nutrition — pick it up.
       pollNutritionUntilReady(_recipe!.id);
 
-      InformationToast.show(
-        context: context,
-        message: 'Recipe reformatted!',
-        type: ToastType.success,
-      );
+      InformationToast.success(context, 'Recipe reformatted!');
     } catch (e) {
-      InformationToast.show(
-        context: context,
-        message: 'Could not reformat the recipe. Please try again.',
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'Could not reformat the recipe. Please try again.');
     } finally {
       _isReformatting = false;
       notifyListeners();
@@ -316,11 +293,7 @@ class RecipeDetailProvider with ChangeNotifier {
       _recipe = _recipe!.copyWith(is_favorite: updatedFavoriteStatus);
       notifyListeners();
     } else {
-      InformationToast.show(
-        context: context,
-        message: 'There was an error updating the favorite status.',
-        type: ToastType.error,
-      );
+      InformationToast.error(context, 'There was an error updating the favorite status.');
     }
   }
 

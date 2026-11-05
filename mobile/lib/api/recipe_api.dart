@@ -7,6 +7,22 @@ import 'package:i_cant_cook/models/recipe_preview/recipe_preview.dart';
 class RecipeApi {
   final ApiHelper _apiHelper = ApiHelper();
 
+  /// Fetches the curated tag vocabulary (`GET recipes/tags/vocabulary/`),
+  /// grouped by category — the single source of truth the backend enforces on
+  /// save. Returns an empty map on failure so callers keep their fallback.
+  Future<Map<String, List<String>>> fetchTagVocabulary() async {
+    final data = await _apiHelper.getRequest('recipes/tags/vocabulary/');
+    if (data is Map) {
+      return data.map(
+        (key, value) => MapEntry(
+          key.toString(),
+          (value as List).map((tag) => tag.toString()).toList(),
+        ),
+      );
+    }
+    return {};
+  }
+
   Future<List<RecipePreview>> fetchRecipes() async {
     var data = await _apiHelper.getRequest('recipes/');
     if (data != null) {

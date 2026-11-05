@@ -133,6 +133,21 @@ class UserRecipesProvider with ChangeNotifier, SearchMixin {
     });
   }
 
+  /// Clears the search text (and any tag-search query) and re-applies filters so
+  /// the list returns to its unfiltered state. Called when the page is left so a
+  /// stale query doesn't linger on the next visit.
+  void resetSearch() {
+    if (searchQuery.isEmpty &&
+        searchController.text.isEmpty &&
+        _tagSearchQuery.isEmpty) {
+      return;
+    }
+    _tagSearchQuery = '';
+    clearSearch();
+    _applyFilters();
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     disposeSearch();
