@@ -499,6 +499,74 @@ class ResolveTests(TestCase):
         self.assertEqual(ing.canonical_id, existing.id)
 
 
+class MatchLearnEndpointTests(TestCase):
+    """POST /match/learn/ remembers the products chosen during a fill."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        self.user = get_user_model().objects.create_user(username="matcher", password="x")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_upserts_matches(self):
+        from grocery.models import GrocerProductMatch
+        resp = self.client.post("/api/grocery/match/learn/", {
+            "grocer": "maxi",
+            "matches": [
+                {"key": "ci:5", "code": "B", "title": "Oignons rouges", "uom": "EA"},
+                {"key": "ci:6", "code": "", "title": "no code -> skipped"},
+            ],
+        }, format="json")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["saved"], 1)
+        row = GrocerProductMatch.objects.get(grocer="maxi", item_key="ci:5")
+        self.assertEqual(row.product_code, "B")
+        self.assertFalse(
+            GrocerProductMatch.objects.filter(item_key="ci:6").exists()
+        )
+
+    def test_reupsert_overwrites(self):
+        from grocery.models import GrocerProductMatch
+        for code in ("OLD", "NEW"):
+            self.client.post("/api/grocery/match/learn/", {
+                "grocer": "maxi",
+                "matches": [{"key": "ci:9", "code": code, "title": "t", "uom": "EA"}],
+            }, format="json")
+        rows = GrocerProductMatch.objects.filter(grocer="maxi", item_key="ci:9")
+        self.assertEqual(rows.count(), 1)
+        self.assertEqual(rows.first().product_code, "NEW")
+
+
+class MatchCacheEndpointTests(TestCase):
+    """POST /match/cached/ returns learned matches for repeat fills."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        from grocery.models import GrocerProductMatch
+        self.user = get_user_model().objects.create_user(username="cacher", password="x")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        GrocerProductMatch.objects.create(
+            grocer="maxi", item_key="ci:7", product_code="20135581001_KG",
+            product_title="Ail à gros bulbe", product_uom="KG",
+        )
+
+    def test_returns_hit_only(self):
+        resp = self.client.post("/api/grocery/match/cached/", {
+            "grocer": "maxi", "keys": ["ci:7", "ci:999"],
+        }, format="json")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("ci:7", resp.data["matches"])
+        self.assertNotIn("ci:999", resp.data["matches"])
+        self.assertEqual(resp.data["matches"]["ci:7"]["code"], "20135581001_KG")
+
+    def test_grocer_scoped(self):
+        resp = self.client.post("/api/grocery/match/cached/", {
+            "grocer": "superc", "keys": ["ci:7"],
+        }, format="json")
+        self.assertEqual(resp.data["matches"], {})
+
+
 class GroceryBagEndpointTests(TestCase):
     """Part B CRUD endpoints over the bag."""
 

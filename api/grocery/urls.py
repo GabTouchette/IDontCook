@@ -5,6 +5,8 @@ from .views import (
     GroceryBagRecipeDetailView,
     GroceryBagRecipesView,
     GroceryBagView,
+    GroceryMatchCacheView,
+    GroceryMatchLearnView,
     GroceryPantryView,
     GroceryResolveSearchView,
     GroceryResolveView,
@@ -18,4 +20,6 @@ urlpatterns = [
     path("bag/resolve/search/", GroceryResolveSearchView.as_view(), name="grocery-resolve-search"),
     path("bag/resolve/", GroceryResolveView.as_view(), name="grocery-resolve"),
     path("pantry/", GroceryPantryView.as_view(), name="grocery-pantry"),
+    path("match/cached/", GroceryMatchCacheView.as_view(), name="grocery-match-cached"),
+    path("match/learn/", GroceryMatchLearnView.as_view(), name="grocery-match-learn"),
 ]

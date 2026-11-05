@@ -84,3 +84,26 @@ class UserPantryItem(models.Model):
 
     def __str__(self):
         return f"{self.item_key} (pantry user {self.user_id})"
+
+
+class GrocerProductMatch(models.Model):
+    """A learned product match: a grocer's product code for a list line.
+
+    Lets the Order flow skip search + scoring on repeat fills — once a line has
+    been matched to a real product it is read straight from here, with no LLM and
+    no in-page search. Keyed by the aggregator's stable line key so resolved
+    ingredients (``ci:<id>``) share a match across every user and bag. See
+    docs/plans/grocery-bag-implementation.md §6 (matching).
+    """
+    grocer = models.CharField(max_length=32)
+    item_key = models.CharField(max_length=300)
+    product_code = models.CharField(max_length=64)
+    product_title = models.CharField(max_length=255, blank=True, default="")
+    product_uom = models.CharField(max_length=8, blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("grocer", "item_key")
+
+    def __str__(self):
+        return f"{self.grocer}:{self.item_key} -> {self.product_code}"

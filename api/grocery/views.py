@@ -19,6 +19,7 @@ from .models import (
     GroceryBag,
     GroceryBagRecipe,
     GroceryItemOverride,
+    GrocerProductMatch,
     UserPantryItem,
 )
 from .serializers import GroceryBagRecipeSerializer
@@ -279,3 +280,71 @@ class GroceryResolveView(APIView):
                 updated += 1
 
         return Response({**_serialize_bag(bag, _lang(request)), "updated": updated})
+
+
+# ---------------------------------------------------------------------------
+# LLM-assisted product matching (Layer 3)
+# ---------------------------------------------------------------------------
+# Product matching is a thin learned cache. Picking is done client-side in the
+# Order flow (it trusts the grocer's own search ranking and chooses the better
+# value among the top results); the backend only remembers what was chosen so
+# the next fill is an instant lookup instead of a fresh search.
+
+class GroceryMatchCacheView(APIView):
+    """Return previously-learned product matches for a set of line keys.
+
+    Body: ``{"grocer": "maxi", "keys": ["ci:12", "name:rice", ...]}``
+    Returns ``{"matches": {"ci:12": {"code": "...", "title": "...",
+    "uom": "EA"}, ...}}`` — only keys with a stored match. Lets the Order flow
+    skip search entirely on repeat fills.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        grocer = (request.data.get("grocer") or "").strip() or "default"
+        keys = request.data.get("keys") or []
+        if not isinstance(keys, list) or not keys:
+            return Response({"matches": {}})
+        rows = GrocerProductMatch.objects.filter(grocer=grocer, item_key__in=keys)
+        matches = {
+            r.item_key: {
+                "code": r.product_code,
+                "title": r.product_title,
+                "uom": r.product_uom,
+            }
+            for r in rows if r.product_code
+        }
+        return Response({"matches": matches})
+
+
+class GroceryMatchLearnView(APIView):
+    """Remember the products chosen during a fill, for cross-user recall.
+
+    Body: ``{"grocer": "maxi", "matches": [{"key": "ci:12", "code": "...",
+    "title": "...", "uom": "EA"}, ...]}``. Because ``ci:<id>`` keys are shared,
+    a match learned once is reused by every user and bag. Returns ``{"saved": N}``.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        grocer = (request.data.get("grocer") or "").strip() or "default"
+        matches = request.data.get("matches") or []
+        if not isinstance(matches, list):
+            return Response({"saved": 0})
+        saved = 0
+        for m in matches:
+            key = (m.get("key") or "").strip()
+            code = str(m.get("code") or "").strip()
+            if not key or not code:
+                continue
+            GrocerProductMatch.objects.update_or_create(
+                grocer=grocer,
+                item_key=key,
+                defaults={
+                    "product_code": code,
+                    "product_title": (m.get("title") or "")[:255],
+                    "product_uom": (m.get("uom") or "")[:8],
+                },
+            )
+            saved += 1
+        return Response({"saved": saved})
