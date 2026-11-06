@@ -279,7 +279,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Local media root. Override MEDIA_ROOT in prod (Coolify) to point at a mounted
+# persistent volume so user-uploaded recipe images survive container rebuilds.
+MEDIA_ROOT = os.getenv('MEDIA_ROOT') or (BASE_DIR / 'media')
 
 STORAGES = {
     'staticfiles': {
