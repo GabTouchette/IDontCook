@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Recipe, Ingredient, NutritionData, CanonicalIngredient
+from .media_urls import absolute_media_url
 from accounts.serializers import UserSerializer
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -67,14 +68,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         if isinstance(instance.instructions, str):
             representation['instructions'] = eval(instance.instructions)
 
-        # Absolutize relative media URLs (local dev stores /media/... paths that
-        # Flutter's Image.network can't resolve; GCS URLs are already absolute).
+        # image_url is declared as a writable CharField bound to web_image_url so
+        # URL-based recipes can set it on create. On read that ignores uploaded
+        # files, so prefer the uploaded image.image here when one exists (falling
+        # back to the external web_image_url). absolute_media_url turns local
+        # relative /media/... paths into absolute https URLs; GCS URLs pass through.
         request = self.context.get('request')
-        if request:
-            for key in ('image_url', 'thumnbnail_url'):
-                val = representation.get(key)
-                if val and val.startswith('/'):
-                    representation[key] = request.build_absolute_uri(val)
+        if instance.image:
+            representation['image_url'] = absolute_media_url(request, instance.image.url)
+        else:
+            representation['image_url'] = absolute_media_url(request, representation.get('image_url'))
+        representation['thumnbnail_url'] = absolute_media_url(request, representation.get('thumnbnail_url'))
 
         return representation
     
@@ -338,12 +342,11 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # Absolutize relative media URLs for local dev (GCS URLs are absolute).
+        # Absolutize + force https on relative media URLs (GCS URLs pass through).
         request = self.context.get('request')
-        if request:
-            val = representation.get('thumbnail_url')
-            if val and val.startswith('/'):
-                representation['thumbnail_url'] = request.build_absolute_uri(val)
+        representation['thumbnail_url'] = absolute_media_url(
+            request, representation.get('thumbnail_url')
+        )
         return representation
 
     def get_thumbnail_url(self, obj):

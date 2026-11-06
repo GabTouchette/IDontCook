@@ -18,6 +18,7 @@ from io import BytesIO
 
 from ai_chatbot.api import AnthropicService
 from recipes.models import Recipe, SavedRecipe, CanonicalIngredient
+from recipes.media_urls import absolute_media_url
 from recipes.search import RecipeSearchEngine
 from recipes.serializers import RecipeSerializer, RecipePreviewSerializer
 from recommendations.models import MixedRecommendationPagination, RecipeEvent, UserRecipeInteraction
@@ -236,8 +237,8 @@ class RecipeImageUploadAPIView(APIView):
 
                 return JsonResponse(
                     {
-                        "image_url": recipe.image.url,
-                        "thumbnail_url": recipe.thumbnail.url
+                        "image_url": absolute_media_url(request, recipe.image.url),
+                        "thumbnail_url": absolute_media_url(request, recipe.thumbnail.url),
                     },
                     status=status.HTTP_200_OK
                 )
